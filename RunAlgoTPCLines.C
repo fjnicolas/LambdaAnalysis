@@ -17,18 +17,17 @@
 #include "src/DistanceUtils.h"
 
 
-int RunAlgoTPCLines(int Debug=1, int DebugMode=-1, int event=-1,  const char *directory_path=".", std::string file_name="", const char *ext=".root")
+void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, int sr=-1, std::string file_name="", const char *directory_path=".", const char *ext=".root")
 {
 
-
     //file_name = "analyzeItOutput_CCQE_R1-1_SR1-103.root";
-    file_name = "analyzeItOutput_V0Lambda_R1-1_SR1-195.root";
-    
+    //file_name = "analyzeItOutput_V0Lambda_R1-1_SR1-195.root";
+    std::cout<<"DEBUG "<<Debug<<std::endl;
     // program control variables
-    int fNEv = 1e6;
-    int fEv = -1;
-    int fSubRun = -1;
-    int fNEvSkip = -1;
+    int fNEv = n;
+    int fEv = event;
+    int fSubRun = sr;
+    int fNEvSkip = nskip;
 
     std::string fView="C";
     std::string fAppDisplayPath = "plots/";
@@ -83,9 +82,11 @@ int RunAlgoTPCLines(int Debug=1, int DebugMode=-1, int event=-1,  const char *di
         
     // Get the candidate Files
     std::vector<TString> fFilePaths;
-    TSystemDirectory dir(directory_path, directory_path);
+    TSystemDirectory dir(".", ".");
     TList *files = dir.GetListOfFiles();
     TString targetFileName(file_name);
+    std::cout<<" Target file name "<<targetFileName<<std::endl;
+    gSystem->Exec("ls");
     if (files){
         TSystemFile *file;
         TString fname;
