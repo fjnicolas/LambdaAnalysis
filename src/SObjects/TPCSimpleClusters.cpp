@@ -209,10 +209,6 @@ double SLinearCluster::GetIntegral(){
 }
 
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
-
 std::vector<int> detect_outliers_iqr(std::vector<float> data, float threshold = 1.5) {
     std::vector<int> outlier_indices;
 

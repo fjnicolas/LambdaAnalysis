@@ -21,7 +21,7 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string di
     fHoughAlgo(tpcLinesAlgoPset.HoughAlgorithmPset),
     fTrackFinder(tpcLinesAlgoPset.TrackFinderAlgorithmPset),
     fVertexFinder(),
-    fDisplay(TPCLinesDisplay(displayPath))
+    fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, displayPath))
 {}
 
 
@@ -315,17 +315,10 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
     
     fVertexFinder.GetOrigins(finalLinearClusterV, vertexList, originList, mainDirection);
 
-
-    if(fTPCLinesPset.Verbose>=1){
-        std::cout<<" Final display\n";
-        fDisplay.Show(true, "Final reco "+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList);
-    }
-    else if(fTPCLinesPset.DebugMode==0 && vertexList.size()!=0){
-        fDisplay.Show(false, "Final reco "+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList);
-    }
-    else if(fTPCLinesPset.DebugMode==1 && vertexList.size()==0){
-        fDisplay.Show(false, "Final reco "+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList);
-    }
+    bool accepted = vertexList.size()>0;
+    std::string outNamePreffix = accepted? "Accepted Final Reco":"Rejected Final Reco";
+    
+    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList);
     
 
     return vertexList.size();
@@ -338,7 +331,6 @@ void TPCLinesAlgo::Display(){
 
 
     fDisplay.Show(
-        true,
         "Final reco", 
         fHitList,
         LineEquation(0, 0),

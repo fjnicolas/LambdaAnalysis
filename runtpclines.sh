@@ -11,7 +11,7 @@ default_nskip=-1
 
 
 # Parse the optional flags using getopts
-while getopts ":s:d:m:n:e:r:nskip:" opt; do
+while getopts ":s:d:m:n:e:r:k:" opt; do
   case $opt in
     s) argFile="$OPTARG";;
     d) argDebug="$OPTARG";;
@@ -19,7 +19,7 @@ while getopts ":s:d:m:n:e:r:nskip:" opt; do
     n) argN="$OPTARG";;
     e) argE="$OPTARG";;
     r) argSr="$OPTARG";;
-    nskip) argNskip="$OPTARG";;
+    k) argNskip="$OPTARG";;
     \?) echo "Invalid option: -$OPTARG" >&2
         exit 1;;
   esac

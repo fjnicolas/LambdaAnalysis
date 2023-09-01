@@ -27,7 +27,7 @@
 // Constructor
 TPCLinesTrackFinder::TPCLinesTrackFinder(TrackFinderAlgorithmPsetType tpcLinesTrackFinderPset):
     fTPCLinesTrackFinderPset(tpcLinesTrackFinderPset),
-    fDisplay(TPCLinesDisplay())
+    fDisplay(TPCLinesDisplay(tpcLinesTrackFinderPset.Verbose>0))
 {}
 
 
@@ -430,7 +430,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "Hough direction", hitList, houghLine, hitHoughTubeList);
+        fDisplay.Show("Hough direction", hitList, houghLine, hitHoughTubeList);
     }
     
     //---------- PCA tube block
@@ -454,7 +454,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "PCA direction", hitList, pcaLine, hitPCATubeList);
+        fDisplay.Show("PCA direction", hitList, pcaLine, hitPCATubeList);
     }
 
 
@@ -479,7 +479,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "Connectedness clusters", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
+        fDisplay.Show("Connectedness clusters", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
     }
 
     // Capture missing hits by the original PCA direction
@@ -492,7 +492,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "Connectedness clusters with capture", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
+        fDisplay.Show("Connectedness clusters with capture", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
     }
     
     //---------- Compactness clusters block
@@ -530,7 +530,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "Compactness clusters", hitList, houghLine, hitPCATubeList, compactLinearClustersV);
+        fDisplay.Show("Compactness clusters", hitList, houghLine, hitPCATubeList, compactLinearClustersV);
     }
 
     // Vector of SLinearClusters to return

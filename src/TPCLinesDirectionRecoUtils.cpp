@@ -118,8 +118,8 @@ namespace TPCLinesDirectionUtils{
         double yHypoEdgeTrack = mergeTrackEq.Slope() * trackEdgeHit.X() + mergeTrackEq.Intercept();
         double yHypoEdgeMergeTrack = trackEq.Slope() * mergeTrackEdgeHit.X() + trackEq.Intercept();
 
-        std::cout << "     FreeSeg hit " << trackEdgeHit << std::endl;
-        std::cout << "     OverEdge hit " << mergeTrackEdgeHit << std::endl;
+        std::cout << "     FreeSeg hit " << trackEdgeHit;
+        std::cout << "     OverEdge hit " << mergeTrackEdgeHit;
         std::cout << "      YEdge=" << trackEdgeHit.Y() << " YWidth=" << trackEdgeHit.Width() << " HypoY=" << yHypoEdgeTrack << std::endl;
         std::cout << "      YEdgeMergeTrack=" << mergeTrackEdgeHit.Y() << " YWidth=" << mergeTrackEdgeHit.Width() << " HypoY=" << yHypoEdgeMergeTrack << std::endl;
         

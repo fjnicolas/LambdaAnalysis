@@ -15,6 +15,7 @@
 #include "src/TPCLinesDBSCAN.cpp"
 #include "src/TPCLinesDirectionRecoUtils.cpp"*/
 
+
 // Display
 #include "src/TPCLinesDisplay.cpp"
 
@@ -31,7 +32,7 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
     int fSubRun = sr;
     int fNEvSkip = nskip;
 
-    std::string fView="C";
+    std::string fView="V";
     std::string fAppDisplayPath = "plots/";
     if(DebugMode==0) fAppDisplayPath = "plotsbg";
     else if(DebugMode==1) fAppDisplayPath = "plotssignal";

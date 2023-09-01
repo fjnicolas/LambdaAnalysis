@@ -24,6 +24,7 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "THistPainter.h"
+#include <TROOT.h>
 
 
 #include "SObjects/TPCSimpleHits.h"
@@ -42,17 +43,27 @@ class TPCLinesDisplay {
         void SetStyle();
 
         std::vector<int> fColors;
+        std::vector<int> fColorsOrigins;
         double fLegendFontSize=0.13;
         std::string fOutputPath;
     public:
-        TPCLinesDisplay(std::string outputPath="Plots/"):
+        TPCLinesDisplay(bool show, std::string outputPath="Plots/"):
             fOutputPath(outputPath)
         {
-           fColors = {kOrange+7, kGreen+2, kRed, kViolet, kOrange+3, kPink, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet, kOrange+3, kPink, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5};
+           fColors = {kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5};
+
+           fColorsOrigins = {40, 42, 46, 30, 35, 40, 42, 46, 30, 35};
+
+           if(show==false){
+                gROOT->SetBatch(true);
+           }
+
+           // clean the directory
+            gSystem->Exec(("rm -rf "+fOutputPath).c_str());
+           
         }
 
         void Show(
-            bool show,
             std::string eventLabel,
             std::vector<SHit> allHitsV,
             LineEquation houghLine,
@@ -132,20 +143,15 @@ void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend& leg, std:
         err.push_back(hitsV[ix].Width());
     }
 
-    double X[3] = {1,2,3};
-    double Y[3] = {1,2,3};
-    double Z[3] = {1,2,3};
-
-    //TGraphErrors *g = new TGraphErrors(x.size(),&x[0],&y[0], nullptr, &err[0]); 
-     /*TGraphErrors g(3,X, Y, nullptr, Z); 
-    g.SetMarkerColorAlpha(color, 0.5);
-    g.SetMarkerStyle(style);
-    g.SetMarkerSize(size);
-    g.SetLineColorAlpha(kGray, errorAlpha);
-    g.Draw("p");
+    TGraphErrors *g = new TGraphErrors(x.size(),&x[0],&y[0], nullptr, &err[0]); 
+    g->SetMarkerColorAlpha(color, 0.5);
+    g->SetMarkerStyle(style);
+    g->SetMarkerSize(size);
+    g->SetLineColorAlpha(kGray, errorAlpha);
+    g->Draw("p");
     
     if(label!="")
-        leg.AddEntry(&g, label.c_str(), "p");*/
+        leg.AddEntry(g, label.c_str(), "p");
 
     return;
 }
@@ -206,7 +212,6 @@ void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend& leg, st
 
 
 void TPCLinesDisplay::Show(
-    bool show,
     std::string eventLabel,
     std::vector<SHit> allHitsV,
     LineEquation houghLine,
@@ -217,17 +222,19 @@ void TPCLinesDisplay::Show(
 {
     
     SetStyle();
+
+    
+
     if(allHitsV.size()==0){return;}
     TCanvas c("c", eventLabel.c_str(), 0, 0, 1000, 800);
+
     TPad *pad1 = new TPad("pad1", "Graph Pad", 0.0, 0., .8, 1.0);
     TPad *pad2 = new TPad("pad2", "Legend Pad", 0.75, 0., 1.0, 1.);
+
     pad1->SetLeftMargin(0.15);
     pad2->SetLeftMargin(0.);
     pad1->Draw();
     pad2->Draw();
-    
-    if(!show){c.SetBatch(kFALSE);}
-    
     
     TLegend legend(0.1, 0.1, 0.9, 0.9); // (x1, y1, x2, y2)
 
@@ -266,11 +273,9 @@ void TPCLinesDisplay::Show(
     // triangles
     for(size_t oIx=0; oIx<origins.size(); oIx++){
         std::cout<<"Drawing origin "<<oIx<<std::endl;
-        DrawTriangle(origins[oIx], legend, "Origin "+std::to_string(oIx), 51, 90, 0.5);
+        DrawTriangle(origins[oIx], legend, "Origin "+std::to_string(oIx), fColorsOrigins[oIx], 90, 0.5);
     }
     
-
-
 
     // Create a legend
     pad2->cd();
@@ -283,9 +288,10 @@ void TPCLinesDisplay::Show(
     gSystem->Exec(("pwd "+fOutputPath).c_str());
     if (!gSystem->OpenDirectory(fOutputPath.c_str())) {
         gSystem->Exec(("mkdir "+fOutputPath).c_str());
+        gSystem->Exec(("mkdir "+fOutputPath+"/rootfiles").c_str());
     }  
     std::cout<<"SAVING";
-    TFile* rootFile = new TFile((fOutputPath + "/root_"+eventLabel).c_str(), "RECREATE");
+    TFile* rootFile = new TFile((fOutputPath + "/rootfiles/"+eventLabel).c_str(), "RECREATE");
     c.Write();
     rootFile->Close();
     c.SaveAs((fOutputPath + "/" + eventLabel+".pdf").c_str());
@@ -293,10 +299,8 @@ void TPCLinesDisplay::Show(
     c.cd();
 
     
-    if(show==true) {
-        c.Update();
-        c.WaitPrimitive(); 
-    }
+    c.Update();
+    c.WaitPrimitive(); 
 
 
 
