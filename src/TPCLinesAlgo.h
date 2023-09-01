@@ -16,13 +16,13 @@
 #include <map>
 
 
-#include "TPCLinesParameters.cpp"
-#include "TPCSimpleHits.h"
+#include "SObjects/TPCLinesParameters.cpp"
+#include "SObjects/TPCSimpleHits.h"
+#include "SObjects/TPCSimpleClusters.h"
+#include "SObjects/TPCSimpleTriangles.h"
 #include "TPCLinesHough.h"
-#include "TPCSimpleClusters.h"
-#include "TPCSimpleTriangles.h"
 #include "TPCLinesTrackFinder.h"
-#include "TPCLinesVertexAlgo.h"
+#include "TPCLinesVertexFinder.h"
 #include "TPCLinesDisplay.cpp"
 
 
@@ -53,7 +53,7 @@ class TPCLinesAlgo {
         TPCLinesTrackFinder fTrackFinder;
 
         // Vertex finder algorithm
-        TPCLinesVertexAlgo fVertexFinder;
+        TPCLinesVertexFinder fVertexFinder;
 
         // Display app directory
         TPCLinesDisplay fDisplay;

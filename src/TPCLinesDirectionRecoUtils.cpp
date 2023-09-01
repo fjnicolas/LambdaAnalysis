@@ -16,9 +16,9 @@
 #include <algorithm>
 #include <numeric>
 
-#include "TPCSimpleHits.h"
-#include "TPCSimpleClusters.h"
-#include "TPCSimpleLines.h"
+#include "SObjects/TPCSimpleHits.h"
+#include "SObjects/TPCSimpleClusters.h"
+#include "SObjects/TPCSimpleLines.h"
 
 
 namespace TPCLinesDirectionUtils{

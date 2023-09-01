@@ -14,7 +14,7 @@ double get_momentum(double ke, double m) {
     return ke * std::sqrt(1 + 2. * m / ke);
 }
 
-STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, double weight_b=1, double weight_c=1)
+STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, double weight_b, double weight_c)
 {
     fMainVertex = main_vertex;
     fMainVertexHit = mainhit;

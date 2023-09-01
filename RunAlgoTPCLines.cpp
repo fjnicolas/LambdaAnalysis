@@ -1,20 +1,22 @@
-#include "src/TPCLinesParameters.cpp"
-#include "src/TPCSimpleHits.cpp"
-#include "src/TPCSimpleLines.cpp"
-#include "src/TPCSimpleClusters.cpp"
-#include "src/TPCSimpleTriangles.cpp"
+// Objects
+#include "src/SObjects/TPCLinesParameters.cpp"
+#include "src/SObjects/TPCSimpleHits.cpp"
+#include "src/SObjects/TPCSimpleLines.cpp"
+#include "src/SObjects/TPCSimpleClusters.cpp"
+#include "src/SObjects/TPCSimpleTriangles.cpp"
 
+// Algorithms
 #include "src/TPCLinesHough.cpp"
 #include "src/TPCLinesTrackFinder.cpp"
-#include "src/TPCLinesVertexAlgo.cpp"
+#include "src/TPCLinesVertexFinder.cpp"
 #include "src/TPCLinesAlgo.cpp"
-
+/*#include "src/SObjects/TPCLinesDistanceUtils.cpp"
+#include "src/SObjects/TPCLinesPCA.cpp"
 #include "src/TPCLinesDBSCAN.cpp"
-#include "src/TPCLinesPCA.cpp"
+#include "src/TPCLinesDirectionRecoUtils.cpp"*/
 
+// Display
 #include "src/TPCLinesDisplay.cpp"
-#include "src/DirectionRecoUtils.h"
-#include "src/DistanceUtils.h"
 
 
 void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, int sr=-1, std::string file_name="", const char *directory_path=".", const char *ext=".root")

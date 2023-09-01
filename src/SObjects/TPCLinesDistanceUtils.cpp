@@ -17,6 +17,7 @@
 #include <numeric>
 
 #include "TPCSimpleHits.h"
+#include "TPCSimpleClusters.h"
 
 namespace TPCLinesDistanceUtils{
     // Mean and Std Dev function for std::vector

@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "TPCLinesAlgo.h"
-#include "DirectionRecoUtils.h"
+#include "TPCLinesDirectionRecoUtils.cpp"
 
 //----------------------------------------------------------------------
 // Constructor

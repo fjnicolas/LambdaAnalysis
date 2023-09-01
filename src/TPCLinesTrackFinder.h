@@ -11,10 +11,10 @@
 #define TPC_LINES_TRACKFINDER_H
 
 
-#include "TPCLinesParameters.cpp"
-#include "TPCSimpleHits.h"
-#include "TPCSimpleLines.h"
-#include "TPCSimpleClusters.h"
+#include "SObjects/TPCLinesParameters.cpp"
+#include "SObjects/TPCSimpleHits.h"
+#include "SObjects/TPCSimpleLines.h"
+#include "SObjects/TPCSimpleClusters.h"
 #include "TPCLinesDisplay.cpp"
 
 
@@ -30,7 +30,7 @@ class TPCLinesTrackFinder {
         
         void GetHitsInTubeSingleWire(std::vector<SHit> & hitsIn, std::vector<SHit> & hitsOut, LineEquation& line, std::vector<SHit>& hitList, double maxD);
         
-        std::vector<std::pair<int, int>> GetListFrequency(vector<int> vList);
+        std::vector<std::pair<int, int>> GetListFrequency(std::vector<int> vList);
         
         std::pair<double, double> ComputeConnectivityMode(std::vector<double> v, int minClusterHits, double weightWidth);
 

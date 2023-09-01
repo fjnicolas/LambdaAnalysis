@@ -14,7 +14,7 @@
 #include <vector>
 #include <cmath>
 
-#include "TPCSimpleHits.h"
+#include "SObjects/TPCSimpleHits.h"
 
 class DBSCAN {
 public:

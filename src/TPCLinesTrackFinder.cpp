@@ -17,10 +17,10 @@
 
 
 #include "TPCLinesTrackFinder.h"
-#include "DistanceUtils.h"
-#include "DirectionRecoUtils.h"
+#include "SObjects/TPCLinesDistanceUtils.cpp"
+#include "TPCLinesDirectionRecoUtils.cpp"
 #include "TPCLinesDBSCAN.cpp"
-#include "TPCLinesPCA.cpp"
+#include "SObjects/TPCLinesPCA.cpp"
 
 
 //----------------------------------------------------------------------
@@ -137,7 +137,7 @@ void TPCLinesTrackFinder::GetHitsInTubeSingleWire(std::vector<SHit> & hitsIn, st
 
 //----------------------------------------------------------------------
 // Vector to map of frequencies
-std::vector<std::pair<int, int>> TPCLinesTrackFinder::GetListFrequency(vector<int> vList) {
+std::vector<std::pair<int, int>> TPCLinesTrackFinder::GetListFrequency(std::vector<int> vList) {
 
     // Count the frequency of each element in the list
     std::unordered_map<int, int> frequency_dict;

@@ -11,14 +11,14 @@ default_nskip=-1
 
 
 # Parse the optional flags using getopts
-while getopts ":s:d:m:n:e:sr:nskip:" opt; do
+while getopts ":s:d:m:n:e:r:nskip:" opt; do
   case $opt in
     s) argFile="$OPTARG";;
     d) argDebug="$OPTARG";;
     m) argMode="$OPTARG";;
     n) argN="$OPTARG";;
     e) argE="$OPTARG";;
-    sr) argSr="$OPTARG";;
+    r) argSr="$OPTARG";;
     nskip) argNskip="$OPTARG";;
     \?) echo "Invalid option: -$OPTARG" >&2
         exit 1;;
@@ -38,7 +38,7 @@ argNskip="${argNskip:-$default_nskip}"
 
 # Launch the ROOT interactive session
 root -l <<EOF
-.L $TPCLINES_DIR/RunAlgoTPCLines.C
+.L $TPCLINES_DIR/RunAlgoTPCLines.cpp
 
 
 RunAlgoTPCLines($argDebug, $argMode, $argN, $argNskip, $argE, $argSr, "$argFile", "", "")

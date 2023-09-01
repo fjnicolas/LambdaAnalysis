@@ -74,7 +74,7 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
 }
 
 
-LineEquation TPCLinesPCA::PerformPCA2DThreshold(std::vector<SHit> &hitList, float th, bool reverse = false) {
+LineEquation TPCLinesPCA::PerformPCA2DThreshold(std::vector<SHit> &hitList, float th, bool reverse) {
     if(th > 1) th = 1;
 
     std::vector<SHit> points = hitList;

@@ -15,7 +15,7 @@
 #include <numeric>
 #include <cmath>
 
-#include "TPCLinesVertexAlgo.h"
+#include "TPCLinesVertexFinder.h"
 
 double GetAngle360(double x, double y) {
     double a = std::atan(std::abs(y / x)) * 180.0 / M_PI;
@@ -227,8 +227,26 @@ SPoint GetTracksIntersection(SLinearCluster track1, SLinearCluster track2, doubl
     }
 }
 
+int GetHitsContainedInLineEquation(LineEquation trackEq, std::vector<SHit> hitList, float tol = 1.0) {
+    
+    int nhits = 0;
 
-std::vector<SHit> GetHitsContainedInHypo(SLinearCluster track1, SLinearCluster track2,  SPoint intP, int nHits, float tol = 1.0) {
+    for (SHit& hit : hitList){
+        float yHypo = trackEq.Slope() * hit.X() + trackEq.Intercept();
+        if (std::abs(hit.Y() - yHypo) < tol * hit.Width()) {
+            nhits++;
+            //std::cout << hit.X() << " " << hit.Y() << " " << yHypo << std::endl;
+        }
+    }
+
+    return nhits;
+}
+
+
+// GetHitsContainedInHypo
+// Input two tracks, get the NHits closer to a vertex
+// Check how many hits of each track are contained in the line equation of the other track
+std::vector<SHit> GetMutualHitsContainedInHypo(SLinearCluster track1, SLinearCluster track2,  SPoint intP, int nHits, float tol = 1.0) {
     int maxHits = std::min(nHits, track1.NHits());
     std::vector<SHit> track1Hits_ = track1.GetHits();
     std::vector<SHit> track1Hits;
@@ -305,14 +323,14 @@ SPoint GetTrackssEuationOppositePoint(SLinearCluster track, std::vector<SLinearC
         maxX1 = std::max(maxX1, trk.GetMaxX());
     }
 
-    vector<float> Xpoints;
+    std::vector<float> Xpoints;
     Xpoints.push_back( std::min(p.X(), minX1) );
     Xpoints.push_back( std::max(p.X(), maxX1) );
 
     double m1 = track.GetTrackEquation().Slope();
     double n1 = track.GetTrackEquation().Intercept();
 
-    vector<float> Ypoints;
+    std::vector<float> Ypoints;
     for (auto x : Xpoints) {
         Ypoints.push_back(m1 * x + n1);
     }
@@ -329,7 +347,7 @@ SPoint GetTrackssEuationOppositePoint(SLinearCluster track, std::vector<SLinearC
 
 
 
-void TPCLinesVertexAlgo::GetOrigins(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection){
+void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection){
 
     std::cout<<" In Origin finder\n";    
 
@@ -337,6 +355,7 @@ void TPCLinesVertexAlgo::GetOrigins(std::vector<SLinearCluster> trackList, std::
     double fMaxDistToEdge = 3;
     bool fRefineVertexIntersection = true;
     bool fUseEdgesDiscard = true;
+    float fMaxTrackFractionInMain = 0.75;
     vertexList.clear();
     originList.clear();
 
@@ -517,8 +536,8 @@ void TPCLinesVertexAlgo::GetOrigins(std::vector<SLinearCluster> trackList, std::
                     dHit = dHit2;
                 }
 
-                // GetHitsContainedInHypo implementation needed
-                std::vector<SHit> vertexHits = GetHitsContainedInHypo(track1, track2, intP, 5);
+
+                std::vector<SHit> vertexHits = GetMutualHitsContainedInHypo(track1, track2, intP, 5);
                 std::cout << "NVERTEX HITS " << vertexHits.size() << std::endl;
 
                 // Study the edhes
@@ -644,9 +663,51 @@ void TPCLinesVertexAlgo::GetOrigins(std::vector<SLinearCluster> trackList, std::
                         std::cout << "NHits in middle" << nHitsInMiddle << "Pass?" <<passJunctionIsFree  << std::endl;
 
 
-                        if(passIntersectionArea && junctionContained && passJunctionIsFree){
+                        
+                        // CHECK 4: how many hits of triangle tracks are contained in the main direciton hypothesis
+                        bool passAngleTracksNotInMain = true;
+                        int nhits_track1_inMainDir = GetHitsContainedInLineEquation(mainDirection.GetTrackEquation(), track1.GetHits());
+                        int nhits_track2_inMainDir = GetHitsContainedInLineEquation(mainDirection.GetTrackEquation(), track2.GetHits());
+                        std::cout<<" NHits of track "<<track1.GetId()<<" in main direction: "<<nhits_track1_inMainDir<<std::endl;
+                        std::cout<<" NHits of track "<<track2.GetId()<<" in main direction: "<<nhits_track2_inMainDir<<std::endl;
+                        passAngleTracksNotInMain = (1.*nhits_track1_inMainDir/track1.NHits()<fMaxTrackFractionInMain && 
+                        1.*nhits_track2_inMainDir/track2.NHits()<fMaxTrackFractionInMain);
+                        std::cout<<" Pass AngleTracksNotInMain: "<<passAngleTracksNotInMain<<std::endl;
+                        
+
+
+                        // CHECK 5: triangle tracks start/end are not next to the main track edge hit
+                        bool passTriangleEdgesNotInMain = true; 
+                        std::cout<<" Triangle vertex BC: "<<triangle.GetVertexB().X()<<" "<<triangle.GetVertexB().Y()<<
+                        " "<<triangle.GetVertexC().X()<<" "<<triangle.GetVertexC().Y()<<std::endl;
+                        std::cout<<" MainDirectionEdgeHits: "<<mainDirection.GetStartPoint().X()<<" "<<mainDirection.GetStartPoint().Y()<<" "<<mainDirection.GetEndPoint().X()<<" "<<mainDirection.GetEndPoint().Y()<<std::endl;
+                        
+                        double distanceBMainStart = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexB(), mainDirection.GetStartPoint());
+                        double distanceBMainEnd = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexB(), mainDirection.GetEndPoint());
+                        double distanceCMainStart = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexC(), mainDirection.GetStartPoint());
+                        double distanceCMainEnd = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexC(), mainDirection.GetEndPoint());
+                        // get the average compactness of all the tracks in the main direction
+                        double meanComp = 0;
+                        for(SLinearCluster & trk:MainDirTrackList){
+                            meanComp+=trk.GetCompactness();
+                        }
+                        meanComp/=MainDirTrackList.size();
+                        std::cout<<" MainDir compactness:"<<meanComp<<std::endl;
+                        std::cout << " Distances B: "<<distanceBMainStart<<" "<<distanceBMainEnd<<std::endl;
+                        std::cout << " Distances C: "<<distanceCMainStart<<" "<<distanceCMainEnd<<std::endl;
+                        
+                        double _tol = 1.;
+
+                        passTriangleEdgesNotInMain = distanceBMainStart>_tol*meanComp &&
+                                                     distanceBMainEnd>_tol*meanComp &&
+                                                     distanceCMainStart>_tol*meanComp &&
+                                                     distanceCMainEnd>_tol*meanComp;
+
+                        std::cout<<" Pass edge triangle hits not in main track edges: "<<passTriangleEdgesNotInMain<<std::endl;
+                        
+                        if(passIntersectionArea && junctionContained && passJunctionIsFree && passAngleTracksNotInMain && passTriangleEdgesNotInMain){
                             std::cout<<"FOUND ORIGIN!\n";
-                            vertexList.push_back(triangle); 
+                            vertexList.push_back(triangle);
                             originList.push_back(intP);
                         }
                     }

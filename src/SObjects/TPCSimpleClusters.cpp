@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "TPCSimpleClusters.h"
-#include "DistanceUtils.h"
+#include "TPCLinesDistanceUtils.cpp"
 #include "TPCLinesPCA.cpp"
 
 SCluster::SCluster(std::vector<SHit> hitList){

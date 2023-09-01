@@ -3,34 +3,35 @@
 //
 // \file TPCLinesAlgo.h
 //
-// \brief Definition of TPCLinesVertexAlgo
+// \brief Definition of TPCLinesVertexFinder
 //
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
-#ifndef TPCLINES_VERTEXALGO_H
-#define TPCLINES_VERTEXALGO_H
+#ifndef TPCLINES_VERTEXFINDER_H
+#define TPCLINES_VERTEXFINDER_H
 
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include <map>
 
-#include "TPCSimpleHits.h"
-#include "TPCSimpleLines.h"
-#include "TPCSimpleTriangles.h"
+#include "SObjects/TPCSimpleHits.h"
+#include "SObjects/TPCSimpleLines.h"
+#include "SObjects/TPCSimpleTriangles.h"
+#include "SObjects/TPCLinesDistanceUtils.cpp"
+#include "TPCLinesDirectionRecoUtils.cpp"
 
 
 
-
-class TPCLinesVertexAlgo {
+class TPCLinesVertexFinder {
     private:
 
 
 
     public:
         // constructor
-        TPCLinesVertexAlgo(){};
+        TPCLinesVertexFinder(){};
 
         // main function
         void GetOrigins(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection);

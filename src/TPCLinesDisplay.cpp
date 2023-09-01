@@ -10,14 +10,27 @@
 #ifndef TPC_LINES_DISPLAY_H
 #define TPC_LINES_DISPLAY_H
 
+#include <vector>
+
+// ROOT includes
 #include "TGraphErrors.h"
-#include "TH1F.h"
+#include "TH2F.h"
 #include "TGraph.h"
 #include "TCanvas.h"
+#include "TLine.h"
+#include "TPolyLine.h"
+#include "TLegend.h"
+#include "TFile.h"
+#include "TSystem.h"
+#include "TStyle.h"
+#include "THistPainter.h"
 
-#include "TPCSimpleHits.h"
-#include "TPCSimpleClusters.h"
-#include "TPCSimpleTriangles.h"
+
+#include "SObjects/TPCSimpleHits.h"
+#include "SObjects/TPCSimpleClusters.h"
+#include "SObjects/TPCSimpleTriangles.h"
+
+
 
 class TPCLinesDisplay {
     private:
@@ -119,15 +132,20 @@ void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend& leg, std:
         err.push_back(hitsV[ix].Width());
     }
 
-    TGraph *g = new TGraphErrors(x.size(),&x[0],&y[0], 0, &err[0]); 
-    g->SetMarkerColorAlpha(color, 0.5);
-    g->SetMarkerStyle(style);
-    g->SetMarkerSize(size);
-    g->SetLineColorAlpha(kGray, errorAlpha);
-    g->Draw("p");
+    double X[3] = {1,2,3};
+    double Y[3] = {1,2,3};
+    double Z[3] = {1,2,3};
+
+    //TGraphErrors *g = new TGraphErrors(x.size(),&x[0],&y[0], nullptr, &err[0]); 
+     /*TGraphErrors g(3,X, Y, nullptr, Z); 
+    g.SetMarkerColorAlpha(color, 0.5);
+    g.SetMarkerStyle(style);
+    g.SetMarkerSize(size);
+    g.SetLineColorAlpha(kGray, errorAlpha);
+    g.Draw("p");
     
     if(label!="")
-        leg.AddEntry(g, label.c_str(), "p");
+        leg.AddEntry(&g, label.c_str(), "p");*/
 
     return;
 }
@@ -248,7 +266,7 @@ void TPCLinesDisplay::Show(
     // triangles
     for(size_t oIx=0; oIx<origins.size(); oIx++){
         std::cout<<"Drawing origin "<<oIx<<std::endl;
-        DrawTriangle(origins[oIx], legend, "Origin "+to_string(oIx), 51, 90, 0.5);
+        DrawTriangle(origins[oIx], legend, "Origin "+std::to_string(oIx), 51, 90, 0.5);
     }
     
 

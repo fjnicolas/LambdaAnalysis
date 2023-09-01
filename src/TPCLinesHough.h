@@ -16,9 +16,9 @@
 #include <map>
 
 
-#include "TPCLinesParameters.cpp"
-#include "TPCSimpleHits.h"
-#include "TPCSimpleLines.h"
+#include "SObjects/TPCLinesParameters.cpp"
+#include "SObjects/TPCSimpleHits.h"
+#include "SObjects/TPCSimpleLines.h"
 
 
 class TPCLinesHough {
