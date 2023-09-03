@@ -20,7 +20,7 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string di
     fVertex(SPoint(-1, -1), ""),
     fHoughAlgo(tpcLinesAlgoPset.HoughAlgorithmPset),
     fTrackFinder(tpcLinesAlgoPset.TrackFinderAlgorithmPset),
-    fVertexFinder(),
+    fVertexFinder(tpcLinesAlgoPset.VertexFinderAlgorithmPset),
     fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, displayPath))
 {}
 
@@ -318,7 +318,7 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
     bool accepted = vertexList.size()>0;
     std::string outNamePreffix = accepted? "Accepted Final Reco":"Rejected Final Reco";
     
-    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList);
+    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList, fVertex);
     
 
     return vertexList.size();

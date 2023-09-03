@@ -10,11 +10,6 @@
 #include "src/TPCLinesTrackFinder.cpp"
 #include "src/TPCLinesVertexFinder.cpp"
 #include "src/TPCLinesAlgo.cpp"
-/*#include "src/SObjects/TPCLinesDistanceUtils.cpp"
-#include "src/SObjects/TPCLinesPCA.cpp"
-#include "src/TPCLinesDBSCAN.cpp"
-#include "src/TPCLinesDirectionRecoUtils.cpp"*/
-
 
 // Display
 #include "src/TPCLinesDisplay.cpp"
@@ -22,30 +17,16 @@
 
 void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, int sr=-1, std::string file_name="", const char *directory_path=".", const char *ext=".root")
 {
-
-    //file_name = "analyzeItOutput_CCQE_R1-1_SR1-103.root";
-    //file_name = "analyzeItOutput_V0Lambda_R1-1_SR1-195.root";
-    std::cout<<"DEBUG "<<Debug<<std::endl;
-    // program control variables
-    int fNEv = n;
-    int fEv = event;
-    int fSubRun = sr;
-    int fNEvSkip = nskip;
-
-    std::string fView="V";
+    // View to use
+    std::string fView="C";
+    // Output paths for displays
     std::string fAppDisplayPath = "plots/";
     if(DebugMode==0) fAppDisplayPath = "plotsbg";
     else if(DebugMode==1) fAppDisplayPath = "plotssignal";
 
-    std::vector<double> fReadoutWindow = {-200, 1500};
-    int fStampTime = -200;
-    double fSamplingFrequency = 500;
-    double fSamplingTime = 0.5;
-    int fReadoutWindowSize = 3400;
 
-
-    // Algorithm paramters
-    // Track finder parameters
+    // ----------- ALGORITHM PARAMETERS --------------------------------- 
+    // ---- Track finder parameters
     double fMaxDTube = 10;
     double fMaxDCluster = fMaxDTube/2;
     bool fSingleWireMode = false;
@@ -56,10 +37,18 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
     bool fCaptureMissingHits = true;
     int fMinTrackHits = 3;
     int fVerboseTrack = Debug;
-    TrackFinderAlgorithmPsetType fPsetTrackFinder(fMaxDTube, fMaxDCluster, fSingleWireMode, fMinClusterHits,
-                                    fDCleaning, fClusterCompletenessCut, fClusterAngleCut,
-                                    fCaptureMissingHits, fMinTrackHits, fVerboseTrack);
-    // Hough algorithm parameters
+    TrackFinderAlgorithmPsetType fPsetTrackFinder(fMaxDTube,
+                                                  fMaxDCluster,
+                                                  fSingleWireMode,
+                                                  fMinClusterHits,
+                                                  fDCleaning,
+                                                  fClusterCompletenessCut,
+                                                  fClusterAngleCut,
+                                                  fCaptureMissingHits,
+                                                  fMinTrackHits,
+                                                  fVerboseTrack);
+
+    // ---- Hough algorithm parameters
     double fMaxRadiusLineHypothesis = 25; //in cm
     double fThetaRes=25; //degrees
     double fMaxDistanceTube = 10;
@@ -70,7 +59,24 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
                                 fMaxDistanceTube,
                                 fMinHoughHits,
                                 fVerboseHough);
-    //Ana view parameters
+
+    // ---- Vertex finder parameters
+    double fMaxDistToEdge = 3;
+    bool fRefineVertexIntersection = true;
+    bool fUseEdgesDiscard = true;
+    float fMaxTrackFractionInMain = 0.75;
+    bool fDecideMainTrack = true;
+    bool fAddCollinearLines = false;
+    int fVerboseVertexFinder = Debug;
+    VertexFinderAlgorithmPsetType fPsetVertexFinder(fMaxDistToEdge,
+                                                    fRefineVertexIntersection,
+                                                    fUseEdgesDiscard,
+                                                    fMaxTrackFractionInMain,
+                                                    fDecideMainTrack,
+                                                    fAddCollinearLines,
+                                                    fVerboseVertexFinder);
+                      
+    // ---- Ana view parameters
     double fMaxRadius = 250;
     double fDriftConversion = 1.;
     int fMaxHoughTracks = 15;
@@ -79,10 +85,22 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
     double fMinNeighboursHits = 2;
     int fVerbose = Debug;
     int fDebugMode = DebugMode;
-    TPCLinesAlgoPsetType fPsetAnaView(fMaxRadius, fDriftConversion, fMaxHoughTracks, fMinTrackHits,
-    fRemoveIsolatedHits, fMaxNeighbourDistance, fMinNeighboursHits,
-    fVerbose, fDebugMode, fPsetHough, fPsetTrackFinder);
-        
+    TPCLinesAlgoPsetType fPsetAnaView(fMaxRadius,
+                                      fDriftConversion,
+                                      fMaxHoughTracks,
+                                      fMinTrackHits,
+                                      fRemoveIsolatedHits,
+                                      fMaxNeighbourDistance,
+                                      fMinNeighboursHits,
+                                      fVerbose,
+                                      fDebugMode,
+                                      fPsetHough,
+                                      fPsetTrackFinder,
+                                      fPsetVertexFinder);
+
+    // ------------------------------------------------------------------ 
+
+
     // Get the candidate Files
     std::vector<TString> fFilePaths;
     TSystemDirectory dir(".", ".");
@@ -109,6 +127,15 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
         }
     }
 
+    // PROGRAM CONTROL VARIABLES
+    int fNEv = n;
+    int fEv = event;
+    int fSubRun = sr;
+    int fNEvSkip = nskip;
+    // SBND READOUT PARAMETERS
+    int fStampTime = -200;
+    double fSamplingFrequency = 500;
+    double fSamplingTime = 0.5;
 
     // TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);

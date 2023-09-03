@@ -40,11 +40,12 @@ class TPCLinesDisplay {
         void DrawLine(LineEquation line, double xmin, double xmax, TLegend& leg, std::string label, int color, int style);
         TH2F GetFrame(std::vector<SHit> hitsV, std::string label);
         void DrawTriangle(STriangle tri, TLegend& leg, std::string label, int colorP, int color, double alpha);
+        void DrawVertex(SVertex vertex, TLegend& leg, std::string label, int color, int marker, double alpha);
         void SetStyle();
 
         std::vector<int> fColors;
         std::vector<int> fColorsOrigins;
-        double fLegendFontSize=0.13;
+        double fLegendFontSize=0.12;
         std::string fOutputPath;
     public:
         TPCLinesDisplay(bool show, std::string outputPath="Plots/"):
@@ -70,8 +71,10 @@ class TPCLinesDisplay {
             std::vector<SHit> selectedHitsV={},
             std::vector<SLinearCluster> clustersV={},
             SLinearCluster mainDirection = SLinearCluster(std::vector<SHit> {}),
-            std::vector<STriangle> origins = {});
+            std::vector<STriangle> origins = {}, 
+            SVertex recoVertex = SVertex());
 };
+
 void TPCLinesDisplay::SetStyle(){
     //TITLES SIZE AND FONT
     gStyle->SetPalette(112,0);
@@ -97,6 +100,21 @@ void TPCLinesDisplay::SetStyle(){
     gStyle->SetTitleYSize (0.05);*/
 
 
+}
+
+void TPCLinesDisplay::DrawVertex(SVertex vertex, TLegend& leg, std::string label, int color, int marker, double alpha){
+    TGraph *pointGraph = new TGraph();
+    pointGraph->SetPoint(0, vertex.Point().X(), vertex.Point().Y()); // Set the point's coordinates
+    // Set marker style and size for the point
+    pointGraph->SetMarkerStyle(marker);
+    pointGraph->SetMarkerSize(2.);
+    pointGraph->SetMarkerColorAlpha(color, alpha);
+
+    if(label!="")
+        leg.AddEntry(pointGraph, label.c_str(), "p");
+
+    // Draw the point
+    pointGraph->Draw("P");
 }
 
 TH2F TPCLinesDisplay::GetFrame(std::vector<SHit> hitsV, std::string label){
@@ -218,7 +236,8 @@ void TPCLinesDisplay::Show(
     std::vector<SHit> selectedHitsV,
     std::vector<SLinearCluster> clustersV,
     SLinearCluster mainDirection,
-    std::vector<STriangle> origins)
+    std::vector<STriangle> origins,
+    SVertex recoVertex)
 {
     
     SetStyle();
@@ -232,11 +251,11 @@ void TPCLinesDisplay::Show(
     TPad *pad2 = new TPad("pad2", "Legend Pad", 0.75, 0., 1.0, 1.);
 
     pad1->SetLeftMargin(0.15);
-    pad2->SetLeftMargin(0.);
+    pad2->SetLeftMargin(-0.2);
     pad1->Draw();
     pad2->Draw();
     
-    TLegend legend(0.1, 0.1, 0.9, 0.9); // (x1, y1, x2, y2)
+    TLegend legend(0., 0.1, 0.99, 0.9); // (x1, y1, x2, y2)
 
     pad1->cd();
 
@@ -275,8 +294,13 @@ void TPCLinesDisplay::Show(
         std::cout<<"Drawing origin "<<oIx<<std::endl;
         DrawTriangle(origins[oIx], legend, "Origin "+std::to_string(oIx), fColorsOrigins[oIx], 90, 0.5);
     }
-    
 
+    // draw PANDORA vertex
+    if(recoVertex.Point().X()!=-1 && recoVertex.Point().Y()!=-1){
+        DrawVertex(recoVertex, legend, "PANDORA vtx", kPink-9, 33, 1);
+    }
+    
+    
     // Create a legend
     pad2->cd();
     legend.SetBorderSize(0);
@@ -290,7 +314,6 @@ void TPCLinesDisplay::Show(
         gSystem->Exec(("mkdir "+fOutputPath).c_str());
         gSystem->Exec(("mkdir "+fOutputPath+"/rootfiles").c_str());
     }  
-    std::cout<<"SAVING";
     TFile* rootFile = new TFile((fOutputPath + "/rootfiles/"+eventLabel).c_str(), "RECREATE");
     c.Write();
     rootFile->Close();

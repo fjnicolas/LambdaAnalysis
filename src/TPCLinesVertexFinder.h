@@ -19,6 +19,7 @@
 #include "SObjects/TPCSimpleHits.h"
 #include "SObjects/TPCSimpleLines.h"
 #include "SObjects/TPCSimpleTriangles.h"
+#include "SObjects/TPCLinesParameters.cpp"
 #include "SObjects/TPCLinesDistanceUtils.cpp"
 #include "TPCLinesDirectionRecoUtils.cpp"
 
@@ -26,12 +27,13 @@
 
 class TPCLinesVertexFinder {
     private:
-
+        // configuration parameters
+        VertexFinderAlgorithmPsetType fTPCLinesVertexFinderPset;
 
 
     public:
         // constructor
-        TPCLinesVertexFinder(){};
+        TPCLinesVertexFinder(VertexFinderAlgorithmPsetType tpcLinesVertexFinderPset);
 
         // main function
         void GetOrigins(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection);

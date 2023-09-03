@@ -10,6 +10,7 @@
 #ifndef TPC_LINES_PARAMETERS_H
 #define TPC_LINES_PARAMETERS_H
 
+
 struct TrackFinderAlgorithmPsetType {
     int MaxDTube;
     double MaxDCluster;
@@ -47,6 +48,37 @@ struct TrackFinderAlgorithmPsetType {
     {}
 };
 
+
+struct VertexFinderAlgorithmPsetType {
+ 
+    double MaxDistToEdge = 3;
+    bool RefineVertexIntersection = true;
+    bool UseEdgesDiscard = true;
+    float MaxTrackFractionInMain = 0.75;
+    bool DecideMainTrack = false;
+    bool AddCollinearLines = false;
+    int Verbose;
+
+    // constructor
+    VertexFinderAlgorithmPsetType(
+        double _maxDistToEdge,
+        bool _refineVertexIntersection,
+        bool _useEdgesDiscard,
+        float _maxTrackFractionInMain,
+        bool _decideMainTrack,
+        bool _addCollinearLines,
+        int _verbose): 
+        MaxDistToEdge(_maxDistToEdge),
+        RefineVertexIntersection(_refineVertexIntersection),
+        UseEdgesDiscard(_useEdgesDiscard),
+        MaxTrackFractionInMain(_maxTrackFractionInMain),
+        DecideMainTrack(_decideMainTrack),
+        AddCollinearLines(_addCollinearLines),
+        Verbose(_verbose)
+    {}
+};
+
+
 struct HoughAlgorithmPsetType {
 
     double MaxRadiusLineHypothesis;
@@ -70,6 +102,7 @@ struct HoughAlgorithmPsetType {
     {}
 };
 
+
 struct TPCLinesAlgoPsetType{
 
     double MaxRadius;
@@ -83,6 +116,7 @@ struct TPCLinesAlgoPsetType{
     int DebugMode;
     HoughAlgorithmPsetType HoughAlgorithmPset;
     TrackFinderAlgorithmPsetType TrackFinderAlgorithmPset;
+    VertexFinderAlgorithmPsetType VertexFinderAlgorithmPset;
     
     // constructor
     TPCLinesAlgoPsetType(
@@ -96,7 +130,8 @@ struct TPCLinesAlgoPsetType{
         int _verbose,
         int _debugMode,
         HoughAlgorithmPsetType _houghAlgorithmPset,
-        TrackFinderAlgorithmPsetType _trackFinderPset) :
+        TrackFinderAlgorithmPsetType _trackFinderPset,
+        VertexFinderAlgorithmPsetType _vertexFinderPset) :
         MaxRadius(_maxRadius),
         DriftConversion(_driftConversion),
         MaxHoughTracks(_maxHoughTracks),
@@ -107,7 +142,8 @@ struct TPCLinesAlgoPsetType{
         Verbose(_verbose),
         DebugMode(_debugMode),
         HoughAlgorithmPset(_houghAlgorithmPset),
-        TrackFinderAlgorithmPset(_trackFinderPset)
+        TrackFinderAlgorithmPset(_trackFinderPset),
+        VertexFinderAlgorithmPset(_vertexFinderPset)
     {}
 };
 

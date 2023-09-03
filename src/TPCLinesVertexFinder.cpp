@@ -17,6 +17,12 @@
 
 #include "TPCLinesVertexFinder.h"
 
+
+// ------- constructor
+TPCLinesVertexFinder::TPCLinesVertexFinder(VertexFinderAlgorithmPsetType tpcLinesVertexFinderPset):
+    fTPCLinesVertexFinderPset(tpcLinesVertexFinderPset)
+{};
+
 double GetAngle360(double x, double y) {
     double a = std::atan(std::abs(y / x)) * 180.0 / M_PI;
 
@@ -471,12 +477,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
 
     std::cout<<" In Origin finder\n";    
 
-    // ------ Parameters
-    double fMaxDistToEdge = 3;
-    bool fRefineVertexIntersection = true;
-    bool fUseEdgesDiscard = true;
-    float fMaxTrackFractionInMain = 0.75;
-    bool fDecideMainTrack = false;
+    // ------- reset variables
     vertexList.clear();
     originList.clear();
 
@@ -537,11 +538,11 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
     bool downIsLong = areVectorsEqual(DownDirectionIndexes, LongDirectionIndexes);
     bool useLargest = true;
 
-    if(fDecideMainTrack==true){
+    if(fTPCLinesVertexFinderPset.DecideMainTrack==true){
         if (!downIsLong) {
             double connTol = 3 * (LongDirection.GetConnectedness() + DownDirection.GetConnectedness()) / 2;
             double conn = TPCLinesDistanceUtils::GetClusterConnectedness(LongDirection.GetHitCluster(), DownDirection.GetHitCluster());
-            SPoint intP = GetTracksIntersection(LongDirection, DownDirection, 20, fRefineVertexIntersection);
+            SPoint intP = GetTracksIntersection(LongDirection, DownDirection, 20, fTPCLinesVertexFinderPset.RefineVertexIntersection);
 
             std::cout << "Long/main direction intersection: " << intP << " Connectedness: " << conn << " ConnTol: " << connTol << std::endl;
 
@@ -647,7 +648,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                 std::cout << "      ...connected, looking for intersection point" << std::endl;
 
                 // GetTracksIntersection implementation needed
-                SPoint intP = GetTracksIntersection(track1, track2, 50, fRefineVertexIntersection);
+                SPoint intP = GetTracksIntersection(track1, track2, 50, fTPCLinesVertexFinderPset.RefineVertexIntersection);
                 if(intP.X()==-1 and intP.Y()==-1) continue;
 
                 // Get closest hits and vertex hits
@@ -691,7 +692,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                 std::cout << "Clo Hit1/2 " << cloHit1 << " " << cloHit2 << " DEdges: " << dEdge1 << " " << dEdge2 << std::endl;
                 std::cout << "Clo Hit " << cloHit << std::endl;
 
-                if (fUseEdgesDiscard && (dEdge2 >= fMaxDistToEdge || dEdge1 >= fMaxDistToEdge)) {
+                if (fTPCLinesVertexFinderPset.UseEdgesDiscard && (dEdge2 >= fTPCLinesVertexFinderPset.MaxDistToEdge || dEdge1 >= fTPCLinesVertexFinderPset.MaxDistToEdge)) {
                     std::cout << "Skipping...intersection is not with edge hits" << std::endl;
                     continue;
                 }
@@ -809,8 +810,8 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                         int nhits_track2_inMainDir = GetHitsContainedInLineEquation(mainDirection.GetTrackEquation(), track2.GetHits());
                         std::cout<<" NHits of track "<<track1.GetId()<<" in main direction: "<<nhits_track1_inMainDir<<std::endl;
                         std::cout<<" NHits of track "<<track2.GetId()<<" in main direction: "<<nhits_track2_inMainDir<<std::endl;
-                        passAngleTracksNotInMain = (1.*nhits_track1_inMainDir/track1.NHits()<fMaxTrackFractionInMain && 
-                        1.*nhits_track2_inMainDir/track2.NHits()<fMaxTrackFractionInMain);
+                        passAngleTracksNotInMain = (1.*nhits_track1_inMainDir/track1.NHits()<fTPCLinesVertexFinderPset.MaxTrackFractionInMain && 
+                        1.*nhits_track2_inMainDir/track2.NHits()<fTPCLinesVertexFinderPset.MaxTrackFractionInMain);
                         std::cout<<" Pass AngleTracksNotInMain: "<<passAngleTracksNotInMain<<std::endl;
                         
 
@@ -859,17 +860,18 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
 
 
     // Look for collinear clusters
-    std::vector<SLinearCluster> collinearTriangles = GetCollinearTracks(MainDirection, FreeTracksList);
-    if(collinearTriangles.size()>0){
-        for(SLinearCluster& colTrack:collinearTriangles){
-            SHit intHit(colTrack.GetStartPoint().X(), colTrack.GetStartPoint().Y());
-            STriangle triangle = STriangle(colTrack.GetStartPoint(), colTrack.GetEndPoint(), colTrack.GetEndPoint(), intHit);
-            vertexList.push_back(triangle);
-            originList.push_back(triangle.GetMainVertex());
+    if(fTPCLinesVertexFinderPset.AddCollinearLines){
+        std::vector<SLinearCluster> collinearTriangles = GetCollinearTracks(MainDirection, FreeTracksList);
+        if(collinearTriangles.size()>0){
+            for(SLinearCluster& colTrack:collinearTriangles){
+                SHit intHit(colTrack.GetStartPoint().X(), colTrack.GetStartPoint().Y());
+                STriangle triangle = STriangle(colTrack.GetStartPoint(), colTrack.GetEndPoint(), colTrack.GetEndPoint(), intHit);
+                vertexList.push_back(triangle);
+                originList.push_back(triangle.GetMainVertex());
+            }
         }
-        
     }
-
+    
 
     return;
 }
