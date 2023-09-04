@@ -32,7 +32,6 @@
 #include "SObjects/TPCSimpleTriangles.h"
 
 
-
 class TPCLinesDisplay {
     private:
         void DrawHitScatter(std::vector<SHit> hitV, TLegend& leg, std::string label, int color, int style, double size, double errorAlpha);

@@ -26,6 +26,16 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string di
 
 
 //----------------------------------------------------------------------
+// Display function
+void TPCLinesAlgo::Display(){
+
+    fDisplay.Show("Final reco", fHitList,LineEquation(0, 0),fHitList);
+
+    return;
+}
+
+
+//----------------------------------------------------------------------
 // Set the input hits
 void TPCLinesAlgo::SetHitList(std::string view,
                             std::vector<int>& vertex,
@@ -106,6 +116,7 @@ void TPCLinesAlgo::SetHitList(std::string view,
 // Remove isolated hits
 std::vector<SHit> TPCLinesAlgo::RemoveIsolatedHits(std::vector<SHit> hitListForHough, std::vector<SHit>& discardedHits, double maxD, int minNeighbours) {
 
+    std::cout << "\n\n +-+-+-+-+-+-+- Removing isolated hits +-+-+-+-+-+-+-" << std::endl;
 
     std::vector<SHit> hitListForHoughWithoutIsolatedHits;
 
@@ -236,56 +247,61 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 int TPCLinesAlgo::AnaView(std::string eventLabel)
 {
 
-    // loop over the hough tracks
+    // --- Objects for the Hough tracks
     int trkIter = 0;
     std::vector<SHit> hitListForHough = fHitList;
     std::vector<SHit> discardedHits;
-    // vector to store the reconstructed tracks
     std::vector<SLinearCluster> finalLinearClusterV;
 
+    // --- Loop over the hough tracks
     while(trkIter<fTPCLinesPset.MaxHoughTracks){
 
         std::cout<<" **** Track finder iteration: "<<trkIter<< " # hough hits:"<<hitListForHough.size()<<std::endl;
 
-        // Get the best Hough line       
+        // -- Get the best Hough line       
         HoughLine houghLine = fHoughAlgo.GetBestHoughLine(hitListForHough, fVertex);
-        std::cout<<"    Hough line results: "<<houghLine.NHits()<<" Score: "<<houghLine.Score()<<std::endl;
+        if(fTPCLinesPset.Verbose>=3)
+            std::cout<<"    Hough line results: "<<houghLine.NHits()<<" Score: "<<houghLine.Score()<<std::endl;
 
-        // Skip if not enough hits
+        // -- Skip if not enough hits
         if(houghLine.NHits() < fTPCLinesPset.MinTrackHits){
-            std::cout<<"   Hough lines has <"<<fTPCLinesPset.MinTrackHits<<", ending the search\n";
+            if(fTPCLinesPset.Verbose>=3)
+                std::cout<<"   Hough lines has <"<<fTPCLinesPset.MinTrackHits<<", ending the search\n";
             trkIter = fTPCLinesPset.MaxHoughTracks;
         }
+        // -- Call the track finfder otherwise
         else{
-            // Call the track/cluster algorithm 
             std::vector<SLinearCluster> linearClusterV = fTrackFinder.ReconstructTracksFromHoughDirection(hitListForHough, houghLine.GetLineEquation(), trkIter);
 
+            // -- check the found tracks has enough hits
             if(linearClusterV.size()!=0){
-                std::cout<<"   Found "<<linearClusterV.size()<<" new tracks!\n";
+                if(fTPCLinesPset.Verbose>=2)
+                    std::cout<<"   Found "<<linearClusterV.size()<<" new tracks!\n";
                 finalLinearClusterV.insert(finalLinearClusterV.begin(), linearClusterV.begin(), linearClusterV.end());
+                
+                // -- check there's enough hits for the next Hough iteration
+                if(hitListForHough.size() < fTPCLinesPset.MinTrackHits){
+                    if(fTPCLinesPset.Verbose>=3)
+                        std::cout<<"   Remaining hits are "<<hitListForHough.size()<<", ending the search\n";
+                    trkIter = fTPCLinesPset.MaxHoughTracks;
+                }
             }
+            // end Hough loop otherwise
             else{
-                std::cout<<"   Not found new tracks\n";
+                if(fTPCLinesPset.Verbose>=3)
+                    std::cout<<"   Not found new tracks\n";
                 trkIter = fTPCLinesPset.MaxHoughTracks;
             }
             
-            // Skip next iteration if not enough hits
-            if(hitListForHough.size() < fTPCLinesPset.MinTrackHits){
-                std::cout<<"   Remaining hits are "<<hitListForHough.size()<<", ending the search\n";
-                trkIter = fTPCLinesPset.MaxHoughTracks;
-            }
-
-            // Remove isolated hits
+            // -- Remove isolated hits
             if (fTPCLinesPset.RemoveIsolatedHits) {
-                std::cout<<"Removing isolated hits\n";
                 hitListForHough = RemoveIsolatedHits(hitListForHough, discardedHits, fTPCLinesPset.MaxNeighbourDistance, fTPCLinesPset.MinNeighboursHits);
             }
             
         }
 
-
         trkIter++;
-    }
+    } // -- end Hough loop
     
     // Slope track merger
     // sort by minX
@@ -299,7 +315,6 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
     finalLinearClusterV = MergeIsolatedHits(finalLinearClusterV, remainingHits, 10);
 
    
-
     std::cout<<"\n\n +-+-+-+-+-+-+- Characterizing tracks +-+-+-+-+-+-+-\n";
     for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
         //// !!!! WARNING
@@ -322,20 +337,4 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
     
 
     return vertexList.size();
-}
-
-
-//----------------------------------------------------------------------
-// Display function
-void TPCLinesAlgo::Display(){
-
-
-    fDisplay.Show(
-        "Final reco", 
-        fHitList,
-        LineEquation(0, 0),
-        fHitList
-        );
-
-    return;
 }

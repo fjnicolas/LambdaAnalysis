@@ -17,15 +17,28 @@
 
 void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, int sr=-1, std::string file_name="", const char *directory_path=".", const char *ext=".root")
 {
-    // View to use
-    std::string fView="C";
-    // Output paths for displays
-    std::string fAppDisplayPath = "plots/";
-    if(DebugMode==0) fAppDisplayPath = "plotsbg";
-    else if(DebugMode==1) fAppDisplayPath = "plotssignal";
-
 
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
+    // View to use
+    std::string fView="C";
+
+    // ---- Ana view parameters
+    double fMaxRadius = 250;
+    double fDriftConversion = 1.;
+    int fMaxHoughTracks = 15;
+    bool fRemoveIsolatedHits = true;
+    double fMaxNeighbourDistance = 2;
+    double fMinNeighboursHits = 2;
+    int fVerbose = Debug;
+    int fDebugMode = DebugMode;
+
+    // ---- Hough algorithm parameters
+    double fMaxRadiusLineHypothesis = 25; //in cm
+    double fThetaRes=25; //degrees
+    double fMaxDistanceTube = 10;
+    int fMinHoughHits = 3;
+    int fVerboseHough = Debug;
+
     // ---- Track finder parameters
     double fMaxDTube = 10;
     double fMaxDCluster = fMaxDTube/2;
@@ -37,6 +50,18 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
     bool fCaptureMissingHits = true;
     int fMinTrackHits = 3;
     int fVerboseTrack = Debug;
+
+    // ---- Vertex finder parameters
+    double fMaxDistToEdge = 3;
+    bool fRefineVertexIntersection = true;
+    bool fUseEdgesDiscard = true;
+    float fMaxTrackFractionInMain = 0.75;
+    bool fDecideMainTrack = true;
+    bool fAddCollinearLines = false;
+    int fVerboseVertexFinder = Debug;
+    // -------------------------------------------- 
+    
+    // ----------- Define parameter sets --------------------------------- 
     TrackFinderAlgorithmPsetType fPsetTrackFinder(fMaxDTube,
                                                   fMaxDCluster,
                                                   fSingleWireMode,
@@ -48,26 +73,13 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
                                                   fMinTrackHits,
                                                   fVerboseTrack);
 
-    // ---- Hough algorithm parameters
-    double fMaxRadiusLineHypothesis = 25; //in cm
-    double fThetaRes=25; //degrees
-    double fMaxDistanceTube = 10;
-    int fMinHoughHits = 3;
-    int fVerboseHough = Debug;
     HoughAlgorithmPsetType fPsetHough(fMaxRadiusLineHypothesis,
                                 fThetaRes,
                                 fMaxDistanceTube,
                                 fMinHoughHits,
                                 fVerboseHough);
 
-    // ---- Vertex finder parameters
-    double fMaxDistToEdge = 3;
-    bool fRefineVertexIntersection = true;
-    bool fUseEdgesDiscard = true;
-    float fMaxTrackFractionInMain = 0.75;
-    bool fDecideMainTrack = true;
-    bool fAddCollinearLines = false;
-    int fVerboseVertexFinder = Debug;
+
     VertexFinderAlgorithmPsetType fPsetVertexFinder(fMaxDistToEdge,
                                                     fRefineVertexIntersection,
                                                     fUseEdgesDiscard,
@@ -76,15 +88,6 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
                                                     fAddCollinearLines,
                                                     fVerboseVertexFinder);
                       
-    // ---- Ana view parameters
-    double fMaxRadius = 250;
-    double fDriftConversion = 1.;
-    int fMaxHoughTracks = 15;
-    bool fRemoveIsolatedHits = true;
-    double fMaxNeighbourDistance = 2;
-    double fMinNeighboursHits = 2;
-    int fVerbose = Debug;
-    int fDebugMode = DebugMode;
     TPCLinesAlgoPsetType fPsetAnaView(fMaxRadius,
                                       fDriftConversion,
                                       fMaxHoughTracks,
@@ -97,7 +100,6 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
                                       fPsetHough,
                                       fPsetTrackFinder,
                                       fPsetVertexFinder);
-
     // ------------------------------------------------------------------ 
 
 
@@ -127,24 +129,27 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
         }
     }
 
-    // PROGRAM CONTROL VARIABLES
+    // Define the program control variables
     int fNEv = n;
     int fEv = event;
     int fSubRun = sr;
     int fNEvSkip = nskip;
-    // SBND READOUT PARAMETERS
+    int nEvents;
+    // Output paths for displays
+    std::string fAppDisplayPath = "plots/";
+    if(DebugMode==0) fAppDisplayPath = "plotsbg";
+    else if(DebugMode==1) fAppDisplayPath = "plotssignal";
+    // SBND readout parameters
     int fStampTime = -200;
     double fSamplingFrequency = 500;
     double fSamplingTime = 0.5;
 
-    // TPC LINES ALGORITHM
+    // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);
+    // Effiency status
+    EfficiencyCalculator _EfficiencyCalculator;
 
     // TTree loop
-    int nEvents = 0;
-    int nProcessedEvents = 0;
-    int nEventsSkipped = 0;
-    int nEventsSelected = 0;
     std::vector<int> fNVertex;
     int nEntries = 0;
     for (const auto& filepath : fFilePaths) {
@@ -209,16 +214,21 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
 
 
         for (int entry = 0; entry < tree->GetEntries(); entry++) {
-            if (fNEv > 0 && nEvents >= fNEv) continue;
+            
+            // get the entry
             tree->GetEntry(entry);
+
+            // check program control variables
+            if (fNEv > 0 && nEvents >= fNEv) continue;
             if (eventID != fEv && fEv != -1) continue;
             if (subrunID != fSubRun && fSubRun != -1) continue;
             nEntries++;
-            std::cout << "Analyzing: " << runID << " " << subrunID << " " << eventID << std::endl;
             if (nEntries <= fNEvSkip) continue;
-            std::string eventLabel = "R="+std::to_string(runID)+" SR="+std::to_string(subrunID)+" E="+std::to_string(eventID);
+            
             nEvents++;
-
+            std::string eventLabel = "R="+std::to_string(runID)+" SR="+std::to_string(subrunID)+" E="+std::to_string(eventID);
+            std::cout << "Analyzing: " << eventLabel << std::endl;
+            
             // True vertex
             TPC = (nuvX > 0) ? 1 : 0;
             nuvDriftTime = nuvTimeTick * fSamplingTime + fStampTime;
@@ -232,23 +242,24 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
             std::vector<int> RecoVertexUVYT = {recnuvU, recnuvV, recnuvC, recnuvTimeTick};
             std::cout << "  - Reco vertex (X, Y, Z) " << RecoVertexXYZ[0] << " " << RecoVertexXYZ[1] << " " << RecoVertexXYZ[2] << " (U, V, C, TT): " << RecoVertexUVYT[0] << " " << RecoVertexUVYT[1] << " " << RecoVertexUVYT[2] << " "<< RecoVertexUVYT[3]  << std::endl;
 
+            // We need a minimum number of hits to run the track finder
             size_t nhits = hitsChannel->size();
             std::cout << "  - NHits: " << nhits << std::endl;
             if(nhits<=3){
                 std::cout<<"   SKIPPED NHits\n";
-                nEventsSkipped++;
+                _EfficiencyCalculator.UpdateSkipped();
                 continue;
             }
-            if(recnuvU==-1){
+            else if(recnuvU==-1){
                std::cout<<"    SKIPPED RECOVERTEX\n"; 
+               _EfficiencyCalculator.UpdateSkipped();
                continue;
-               nEventsSkipped++;
             }
 
+            // Assing the view and TPC
             std::string view = fView+std::to_string(TPC);
 
             // Set the hits
-            // note! we use hitRMS for the width
             _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, 
                                     hitsChannel,
                                     hitsPeakTime,
@@ -260,26 +271,19 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
 
             // Analyze
             int nOrigins = _TPCLinesAlgo.AnaView(eventLabel);
-            nProcessedEvents++;
-            if(nOrigins>0)
-                nEventsSelected+=1;
 
-            std::cout << " ********** Final status-" << std::endl;
-            std::cout << " ... NTotalEvents=" << nEvents << " NSkipped=" << nEventsSkipped << std::endl;
-            std::cout << " ... NProcessed=" << nProcessedEvents << " NSelected=" << nEventsSelected;
-            std::cout << " efficiency=" << static_cast<double>(nEventsSelected) / nProcessedEvents;
-            std::cout << " efficiency all=" << static_cast<double>(nEventsSelected) / nEvents << std::endl;
+            // Update the efficiency calculator
+            if(nOrigins>0)
+                _EfficiencyCalculator.UpdateSelected();
+            else
+                _EfficiencyCalculator.UpdateNotSelected();
+            std::cout<<_EfficiencyCalculator;
+
         }
     }
-
-
-    #include <iostream>
     
-    std::cout << " ********** Final status-" << std::endl;
-    std::cout << " ... NTotalEvents=" << nEvents << " NSkipped=" << nEventsSkipped << std::endl;
-    std::cout << " ... NProcessed=" << nProcessedEvents << " NSelected=" << nEventsSelected;
-    std::cout << " efficiency=" << static_cast<double>(nEventsSelected) / nProcessedEvents;
-    std::cout << " efficiency all=" << static_cast<double>(nEventsSelected) / nEvents << std::endl;
+    // Print final status
+    std::cout<<_EfficiencyCalculator;
 
 
     return 0;

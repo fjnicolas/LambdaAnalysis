@@ -19,6 +19,7 @@
 #include "SObjects/TPCLinesParameters.cpp"
 #include "SObjects/TPCSimpleHits.h"
 #include "SObjects/TPCSimpleLines.h"
+#include "TPCLinesDisplay.cpp"
 
 
 class TPCLinesHough {
@@ -35,6 +36,10 @@ class TPCLinesHough {
         double HoughWeightAverageDistance(LineEquation line, std::vector<SHit> hitList);
         double GetLinearR2(std::vector<double> hypoV, std::vector<double> dataV);
         double HoughWeightLinearR2(LineEquation line, std::vector<SHit> hitList);
+
+        // display app directory
+        TPCLinesDisplay fDisplay;
+        std::string fDisplayAppPath;
 
 
     public:

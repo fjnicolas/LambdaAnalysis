@@ -14,7 +14,8 @@
 
 // Constructor
 TPCLinesHough::TPCLinesHough(HoughAlgorithmPsetType tpcLinesHoughPset):
-    fTPCLinesHoughPset(tpcLinesHoughPset)
+    fTPCLinesHoughPset(tpcLinesHoughPset),
+    fDisplay(TPCLinesDisplay(tpcLinesHoughPset.Verbose>0))
 {}
 
 
@@ -130,6 +131,8 @@ HoughLine TPCLinesHough::GetBestHoughLine(std::vector<SHit> hitList, SVertex ver
                 bestHoughLine.SetLineEquation ( hypoLine );
                 bestHoughLine.SetScore( hypoLineWeight ); 
                 bestHoughLine.SetNHits( hitHoughList.size() );
+
+                if(fTPCLinesHoughPset.Verbose>=3) fDisplay.Show("New Hough direction", hitList, hypoLine, hitHoughList);
             }
         }
     }

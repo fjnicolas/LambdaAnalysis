@@ -148,4 +148,53 @@ struct TPCLinesAlgoPsetType{
 };
 
 
+class EfficiencyCalculator {
+public:
+    EfficiencyCalculator():
+        nEvents(0),
+        nEventsSkipped(0),
+        nProcessedEvents(0),
+        nEventsSelected(0)
+        {};
+
+    void UpdateSkipped(int nEvents, int nEventsSkipped, int nProcessedEvents, int nEventsSelected) {
+        this->nEvents = nEvents;
+        this->nEventsSkipped = nEventsSkipped;
+        this->nProcessedEvents = nProcessedEvents;
+        this->nEventsSelected = nEventsSelected;
+    };
+
+    void UpdateSkipped(){
+        nEvents++;
+        nEventsSkipped++;
+    }
+
+    void UpdateSelected(){
+        nEvents++;
+        nProcessedEvents++;
+        nEventsSelected++;
+    }
+
+    void UpdateNotSelected(){
+        nEvents++;
+        nProcessedEvents++;
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const EfficiencyCalculator& statusPrinter) {
+        os << " ********** Final status-" << std::endl;
+        os << " ... NTotalEvents=" << statusPrinter.nEvents << " NSkipped=" << statusPrinter.nEventsSkipped << std::endl;
+        os << " ... NProcessed=" << statusPrinter.nProcessedEvents << " NSelected=" << statusPrinter.nEventsSelected;
+        os << " efficiency=" << static_cast<double>(statusPrinter.nEventsSelected) / statusPrinter.nProcessedEvents;
+        os << " efficiency all=" << static_cast<double>(statusPrinter.nEventsSelected) / statusPrinter.nEvents << std::endl;
+        return os;
+    }
+
+private:
+    int nEvents;
+    int nEventsSkipped;
+    int nProcessedEvents;
+    int nEventsSelected;
+};
+
+
 #endif // TPC_LINES_PARAMETERS_H
