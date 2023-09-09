@@ -23,9 +23,9 @@
 
 namespace TPCLinesDirectionUtils{
 
-    std::vector<SLinearCluster> SlopeTrackMerger(std::vector<SLinearCluster> trackList, double distTh, double slopeTh){
-        std::cout << "\n\n+-+-+-+-+-+-+- Slope track merger +-+-+-+-+-+-+-\n";
-        std::cout << "NTracks: " << trackList.size() << '\n';
+    std::vector<SLinearCluster> SlopeTrackMerger(std::vector<SLinearCluster> trackList, double distTh, double slopeTh, int verbose=0){
+        if(verbose>=1) std::cout << "\n\n+-+-+-+-+-+-+- Slope track merger +-+-+-+-+-+-+-\n";
+        if(verbose>=1) std::cout << "NTracks: " << trackList.size() << '\n';
 
         std::vector<SLinearCluster> mergedTracks;
         bool foundNewMerge = false;
@@ -33,16 +33,16 @@ namespace TPCLinesDirectionUtils{
         for (size_t trkix = 0; trkix < trackList.size(); ++trkix) {
             bool merge_flag = false;
             SLinearCluster trk = trackList[trkix];
-            std::cout << trkix << " " << trk.GetMinX() << " " << trk.GetMaxX() << '\n';
+            if(verbose>=1) std::cout << trkix << " " << trk.GetMinX() << " " << trk.GetMaxX() << '\n';
 
             for (size_t mix = 0; mix < mergedTracks.size(); ++mix) {
                 SLinearCluster mergedTrk = mergedTracks[mix];
                 double minXDist = std::min(std::abs(mergedTrk.GetMinX() - trk.GetMaxX()), std::abs(mergedTrk.GetMaxX() - trk.GetMinX()));
-                std::cout << "  " << mergedTrk.GetMinX() << " " << mergedTrk.GetMaxX() << '\n';
+                if(verbose>=1) std::cout << "  " << mergedTrk.GetMinX() << " " << mergedTrk.GetMaxX() << '\n';
 
                 if (minXDist <= distTh) {
                     double dC1C2 = TPCLinesDistanceUtils::GetClusterMinDistance(trk.GetHitCluster(), mergedTrk.GetHitCluster());
-                    std::cout << "*** Merging  " << mergedTrk.GetMinX() << " " << mergedTrk.GetMaxX() << "  " << trk.GetMinX() << " " << trk.GetMaxX() << "   d=" << dC1C2 << "  MergedTrackComp " << mergedTrk.GetCompactness() << '\n';
+                    if(verbose>=1) std::cout << "*** Merging  " << mergedTrk.GetMinX() << " " << mergedTrk.GetMaxX() << "  " << trk.GetMinX() << " " << trk.GetMaxX() << "   d=" << dC1C2 << "  MergedTrackComp " << mergedTrk.GetCompactness() << '\n';
 
                     if (dC1C2 < distTh * mergedTrk.GetCompactness()) {
                         double m1 = 0.0;
@@ -60,10 +60,10 @@ namespace TPCLinesDirectionUtils{
                         double angle1 = std::atan(m1) * 180.0 / M_PI;
                         double angle2 = std::atan(m2) * 180.0 / M_PI;
                         double angle_between = std::abs(angle1 - angle2);
-                        std::cout << "            a1=" << angle1 << " a2=" << angle2 << " angle_diff=" << angle_between << '\n';
+                        if(verbose>=1) std::cout << "            a1=" << angle1 << " a2=" << angle2 << " angle_diff=" << angle_between << '\n';
 
                         if (angle_between < slopeTh) {
-                            std::cout << "                  Merged!\n";
+                            if(verbose>=1) std::cout << "                  Merged!\n";
 
                             std::vector<SHit> newTrackHits = trk.GetHits();
                             std::vector<SHit> hitsToMerge = mergedTrk.GetHits();
@@ -85,7 +85,7 @@ namespace TPCLinesDirectionUtils{
             }
         }
 
-        std::cout << "End loop continue " << foundNewMerge << '\n';
+        if(verbose>=1) std::cout << "End loop continue " << foundNewMerge << '\n';
 
         if (foundNewMerge) {
             return SlopeTrackMerger(mergedTracks, distTh, slopeTh);
@@ -95,7 +95,7 @@ namespace TPCLinesDirectionUtils{
     }
 
 
-    bool GetLineHypoDistance(SLinearCluster mergeTrack, SLinearCluster track, int tol=1) {
+    bool GetLineHypoDistance(SLinearCluster mergeTrack, SLinearCluster track, int tol=1, int verbose=0) {
         
         LineEquation trackEq;
         SHit trackEdgeHit;
@@ -118,10 +118,12 @@ namespace TPCLinesDirectionUtils{
         double yHypoEdgeTrack = mergeTrackEq.Slope() * trackEdgeHit.X() + mergeTrackEq.Intercept();
         double yHypoEdgeMergeTrack = trackEq.Slope() * mergeTrackEdgeHit.X() + trackEq.Intercept();
 
-        std::cout << "     FreeSeg hit " << trackEdgeHit;
-        std::cout << "     OverEdge hit " << mergeTrackEdgeHit;
-        std::cout << "      YEdge=" << trackEdgeHit.Y() << " YWidth=" << trackEdgeHit.Width() << " HypoY=" << yHypoEdgeTrack << std::endl;
-        std::cout << "      YEdgeMergeTrack=" << mergeTrackEdgeHit.Y() << " YWidth=" << mergeTrackEdgeHit.Width() << " HypoY=" << yHypoEdgeMergeTrack << std::endl;
+        if(verbose>=1){
+            std::cout << "     FreeSeg hit " << trackEdgeHit;
+            std::cout << "     OverEdge hit " << mergeTrackEdgeHit;
+            std::cout << "      YEdge=" << trackEdgeHit.Y() << " YWidth=" << trackEdgeHit.Width() << " HypoY=" << yHypoEdgeTrack << std::endl;
+            std::cout << "      YEdgeMergeTrack=" << mergeTrackEdgeHit.Y() << " YWidth=" << mergeTrackEdgeHit.Width() << " HypoY=" << yHypoEdgeMergeTrack << std::endl;
+        }
         
         return (std::abs(trackEdgeHit.Y() - yHypoEdgeTrack) < tol * trackEdgeHit.Width()) || (std::abs(mergeTrackEdgeHit.Y() - yHypoEdgeMergeTrack) < tol * mergeTrackEdgeHit.Width());
     }
@@ -209,9 +211,10 @@ namespace TPCLinesDirectionUtils{
         std::map<int, int> & connectionsMap,
         int maxHitsShortTrack,
         float dTol,
-        float connTolEps
+        float connTolEps,
+        int verbose=0
     ) {
-        std::cout << "\n+-+-+-+-+-+-+- Analyzing short tracks +-+-+-+-+-+-+-" << std::endl;
+        if(verbose>=1) std::cout << "\n+-+-+-+-+-+-+- Analyzing short tracks +-+-+-+-+-+-+-" << std::endl;
         
         // Get short tracks
         std::vector<SLinearCluster> shortTracks;
@@ -229,7 +232,7 @@ namespace TPCLinesDirectionUtils{
             std::vector<SLinearCluster> posteriorTracks;
             float sTrackMaxX = sTrack.GetMaxX();
             
-            std::cout << sTrack.GetId() << std::endl;
+            if(verbose>=1) std::cout << sTrack.GetId() << std::endl;
 
             for (SLinearCluster lTrack : trackList) {
                 if (lTrack.GetId() == sTrack.GetId()) {
@@ -240,7 +243,7 @@ namespace TPCLinesDirectionUtils{
                     float connTol = connTolEps * (sTrack.GetConnectedness() + lTrack.GetConnectedness()) / 2;
                     float conn = TPCLinesDistanceUtils::GetClusterConnectedness(sTrack.GetHitCluster(), lTrack.GetHitCluster());
 
-                    std::cout << "    cand long " << lTrack.GetId() << " " << lTrack.GetMinX() - sTrackMaxX << " Conn " << conn << " Tol " << connTol << std::endl;
+                    if(verbose>=1) std::cout << "    cand long " << lTrack.GetId() << " " << lTrack.GetMinX() - sTrackMaxX << " Conn " << conn << " Tol " << connTol << std::endl;
 
                     if (conn < connTol) {
                         posteriorTracks.push_back(lTrack);
@@ -269,8 +272,8 @@ namespace TPCLinesDirectionUtils{
             float maxY = std::max(lTrack1.GetMeanY(), lTrack2.GetMeanY());
             float sTrackSlope = sTrack.GetTrackEquation().Slope();
 
-            //std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << std::endl;
-            //std::cout << "minY " << minY << " maxY " << maxY << " shortSlope " << sTrack.GetMeanY() << std::endl;
+            //if(verbose>=1) std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << std::endl;
+            //if(verbose>=1) std::cout << "minY " << minY << " maxY " << maxY << " shortSlope " << sTrack.GetMeanY() << std::endl;
 
             if (minSlope < sTrackSlope && sTrackSlope < maxSlope && minY < sTrack.GetMeanY() && sTrack.GetMeanY() < maxY) {
                 finalShortTracks.push_back(sTrack);
@@ -286,9 +289,9 @@ namespace TPCLinesDirectionUtils{
 
 
     std::vector<std::vector<SLinearCluster>> GetParallelTracks(
-        std::vector<SLinearCluster>& trackList, double dist1DTh, double fAngleTh, double fMaxDWires) {
+        std::vector<SLinearCluster>& trackList, double dist1DTh, double fAngleTh, double fMaxDWires, int verbose=0) {
         
-        std::cout << "\n+-+-+-+-+-+-+- Parallel track finder +-+-+-+-+-+-+-\n";
+        if(verbose>=1) std::cout << "\n+-+-+-+-+-+-+- Parallel track finder +-+-+-+-+-+-+-\n";
 
         if(trackList.size()<=1){
             return {trackList};
@@ -313,12 +316,12 @@ namespace TPCLinesDirectionUtils{
 
         for (size_t trkix = 0; trkix < sortedTracks.size(); ++trkix) {
             SLinearCluster trk = sortedTracks[trkix];
-            std::cout << "\n *** Parallel junctions study... Track: " << trk.GetId()
+            if(verbose>=1) std::cout << "\n *** Parallel junctions study... Track: " << trk.GetId()
                     << " min/max X = " << trk.GetMinX() << "/" << trk.GetMaxX() << "\n";
                     
             for (size_t trkjx = trkix + 1; trkjx < sortedTracks.size(); ++trkjx) {
                 SLinearCluster trk2 = sortedTracks[trkjx];
-                std::cout << "    -- candidate track:" << trk2.GetId() 
+                if(verbose>=1) std::cout << "    -- candidate track:" << trk2.GetId() 
                         << " min/max X:" << trk2.GetMinX() << " " << trk2.GetMaxX() 
                         << " Xdiff:" << trk2.GetMinX() - trk.GetMaxX() << "\n";
 
@@ -329,9 +332,7 @@ namespace TPCLinesDirectionUtils{
                     if (std::abs(trk2.GetMinX() - trk.GetMaxX()) > fMaxDWires) {
                         continue;
                     }
-
-
-                    std::cout<<"JJ\n";
+     
                     
                     // Check the tracks match
                     bool hypoConnected = GetLineHypoDistance(trk, trk2);
@@ -339,14 +340,13 @@ namespace TPCLinesDirectionUtils{
                         continue;
                     }
 
-                    std::cout<<"JJ\n";
 
                     // Check if track is fully contained
                     bool fullContained = false;
                     if (std::abs(trk2.GetMinX() - trk.GetMaxX()) <= 10) {
                         bool fullContained1 = FullTrackContained(trk, trk2);
                         bool fullContained2 = FullTrackContained(trk2, trk);
-                        std::cout << "       Full contained " << fullContained1 << " " << fullContained2 << "\n";
+                        if(verbose>=1) std::cout << "       Full contained " << fullContained1 << " " << fullContained2 << "\n";
                         fullContained = fullContained1 || fullContained2;
                     }
 
@@ -368,9 +368,9 @@ namespace TPCLinesDirectionUtils{
                     double angleCoM = std::atan(slpCoM) * 180.0 / M_PI;
                     double angle_between = std::abs(angle1 - angle2);
                     bool slopesCompatible = angle_between < fAngleTh && std::abs(angleCoM - angle1) < fAngleTh && std::abs(angleCoM - angle2) < fAngleTh;
-                    std::cout << "        angle1: " << angle1 << " angle2: " << angle2 
+                    if(verbose>=1) std::cout << "        angle1: " << angle1 << " angle2: " << angle2 
                             << " angleCOM: " << angleCoM << " angle_diff= " << angle_between << "\n";
-                    std::cout << "        Slopes Compatible " << slopesCompatible << "\n";
+                    if(verbose>=1) std::cout << "        Slopes Compatible " << slopesCompatible << "\n";
 
                     if (fullContained) {
                         scorePairs[1.0 / angle_between] = {trk.GetId(), trk2.GetId()};
@@ -392,16 +392,16 @@ namespace TPCLinesDirectionUtils{
                     const std::pair<double, std::vector<int>>& rhs) {
                     return lhs.first > rhs.first;
                 });
-        std::cout << "SCORES\n";
+        if(verbose>=1) std::cout << "SCORES\n";
         for (const auto& pair : sortedScorePairs) {
-            std::cout << "Score " << pair.first << " Pair [" << pair.second[0] << ", " << pair.second[1] << "]\n";
+            if(verbose>=1) std::cout << "Score " << pair.first << " Pair [" << pair.second[0] << ", " << pair.second[1] << "]\n";
         }
 
         std::vector<std::vector<int>> finalTrackCluster;
         for (const auto& pair : sortedScorePairs){
             double score = pair.first;
             const std::vector<int>& ids = pair.second;
-            std::cout << "\n Score " << score << " Pair [" << ids[0] << ", " << ids[1] << "]\n";
+            if(verbose>=1) std::cout << "\n Score " << score << " Pair [" << ids[0] << ", " << ids[1] << "]\n";
             int id1 = ids[0];
             int id2 = ids[1];
 
@@ -458,7 +458,7 @@ namespace TPCLinesDirectionUtils{
                         int overlap_start, overlap_end;
                         bool overlap_exists = check_overlap_and_find_region(trackInCluster.GetMinX(), trackInCluster.GetMaxX(), mTrack.GetMinX(), mTrack.GetMaxX(), overlap_start, overlap_end);
 
-                        std::cout << "OOO " << overlap_start << " " << overlap_end << "\n";
+                        if(verbose>=1) std::cout << "OOO " << overlap_start << " " << overlap_end << "\n";
                         if (overlap_exists) {
                             overlaps = true;
                             break;
@@ -471,15 +471,15 @@ namespace TPCLinesDirectionUtils{
 
                 if (!overlaps) {
                     finalTrackCluster[mergingClusterIx].insert(finalTrackCluster[mergingClusterIx].end(), mergingTracksIx.begin(), mergingTracksIx.end());
-                    std::cout << "         Merging tracks ";
+                    if(verbose>=1) std::cout << "         Merging tracks ";
                     for (int trkIx : mergingTracksIx) {
-                        std::cout << trkIx << " ";
+                        if(verbose>=1) std::cout << trkIx << " ";
                     }
-                    std::cout << "in cluster ";
+                    if(verbose>=1) std::cout << "in cluster ";
                     for (int trackId : cluster) {
-                        std::cout << trackId << " ";
+                        if(verbose>=1) std::cout << trackId << " ";
                     }
-                    std::cout << "\n";
+                    if(verbose>=1) std::cout << "\n";
                 } else {
                     finalTrackCluster.push_back(mergingTracksIx);
                 }
@@ -589,7 +589,6 @@ namespace TPCLinesDirectionUtils{
                 }
 
                 double trackLength = std::sqrt(0.3 * 0.3 * std::pow(xStart - xEnd, 2) + 0.08 * 0.08 * std::pow(yStart - yEnd, 2));
-                std::cout << "  Xstart/End: " << xStart << " " << xEnd << "  Ystart/End: " << yStart << " " << yEnd << " L=" << trackLength << std::endl;
                 
                 if (trackLength > maxTrackLength) {
                     maxTrackLength = trackLength;

@@ -30,7 +30,7 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
     double xM = (fVertexB.X() + fVertexC.X()) / 2;
     double yM = (fVertexB.Y() + fVertexC.Y()) / 2;
     fMidPoint = SPoint(xM, yM);
-    std::cout << "MidPoint " << xM << " " << yM << std::endl;
+    //std::cout << "MidPoint " << xM << " " << yM << std::endl;
     fDirectorVector = SPoint( fMainVertex.X() - xM, fMainVertex.Y() - yM );
     double slope = (yM - fMainVertex.Y()) / (xM - fMainVertex.X());
     double intercept = fMainVertex.Y() - slope * fMainVertex.X();
@@ -44,8 +44,8 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
 
     double fConFactor = (1 / 0.0201293) * 23.6e-6;
 
-    std::cout << "Weights before conversion: " << weight_b << ", " << weight_c << std::endl;
-    std::cout << "Weights after conversion: " << weight_b * fConFactor << ", " << weight_c * fConFactor << std::endl;
+    //std::cout << "Weights before conversion: " << weight_b << ", " << weight_c << std::endl;
+    //std::cout << "Weights after conversion: " << weight_b * fConFactor << ", " << weight_c * fConFactor << std::endl;
 
     // Hypothesis 1
     double slope1 = (MProton * slopeB + MPion * slopeC) / (MProton + MPion);
@@ -63,7 +63,7 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
 
     double Pb = get_momentum(weight_b, MProton);
     double Pc = get_momentum(weight_c, MPion);
-    std::cout << "Momentum weights hypo 1: " << Pb << ", " << Pc << std::endl;
+    //std::cout << "Momentum weights hypo 1: " << Pb << ", " << Pc << std::endl;
 
     slope1 = (Pb * slopeB + Pc * slopeC) / (Pb + Pc);
     intercept1 = fMainVertex.Y() - slope1 * fMainVertex.X();
@@ -72,7 +72,7 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
 
     Pb = get_momentum(weight_b, MPion);
     Pc = get_momentum(weight_c, MProton);
-    std::cout << "Momentum weights hypo 2: " << Pb << ", " << Pc << std::endl;
+    //std::cout << "Momentum weights hypo 2: " << Pb << ", " << Pc << std::endl;
 
     slope2 = (Pb * slopeB + Pc * slopeC) / (Pb + Pc);
     intercept2 = fMainVertex.Y() - slope2 * fMainVertex.X(

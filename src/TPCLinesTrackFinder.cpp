@@ -41,7 +41,7 @@ double TPCLinesTrackFinder::GetHitLinearDensity(std::vector<SHit> data){
         if(h.X()>maxX) maxX = h.X();
     }
     
-    //std::cout<<"MinX "<<minX<<" MaxX "<<maxX<<" "<<data.size()<<" "<<(maxX+1-minX)<<std::endl;
+    //if(snderPset.Verbose>=2)  std::cout<<"MinX "<<minX<<" MaxX "<<maxX<<" "<<data.size()<<" "<<(maxX+1-minX)<<std::endl;
     return 1.*data.size()/(maxX+1-minX);
 }
     
@@ -81,7 +81,7 @@ void TPCLinesTrackFinder::GetHitsInTubeSingleWire(std::vector<SHit> & hitsIn, st
         double d = std::sqrt(std::pow(hit.X() - pProj.X(), 2) + std::pow(hit.Y() - pProj.Y(), 2));
         if (d < maxD) {
             int xIndex = static_cast<int>(hit.X());
-            //std::cout<<hit<<std::endl;
+            //if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<hit<<std::endl;
             if (hitIndexDict.count(xIndex) > 0) {
                 if (d < hitDistDict[xIndex]) {
                     int refHitIndex = hitIndexDict[static_cast<int>(hit.X())];
@@ -89,13 +89,13 @@ void TPCLinesTrackFinder::GetHitsInTubeSingleWire(std::vector<SHit> & hitsIn, st
                     hitsIn[refHitIndex] = hit;
                     hitDistDict[xIndex] = d;
                     discardedhitsDict[xIndex].push_back(oldHit);
-                    //std::cout<<" Found index, Replacing\n";
+                    //if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<" Found index, Replacing\n";
                 } else {
                     hitsOut.push_back(hit);
-                    //std::cout<<"Found index, Not replacing\n";
+                    //if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"Found index, Not replacing\n";
                 }
             } else {
-                //std::cout<<" Not found index, adding\n";
+                //if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<" Not found index, adding\n";
                 hitsIn.push_back(hit);
                 hitIndexDict[xIndex] = hitsIn.size() - 1;
                 hitDistDict[xIndex] = d;
@@ -186,12 +186,12 @@ std::pair<double, double> TPCLinesTrackFinder::ComputeConnectivityMode(std::vect
     dbscan.fit(data);
     std::vector<int>& clusterAssignment = dbscan.getClusterAssignment();
     for (int i = 0; i < data.size(); ++i) {
-        std::cout << data[i].X() << " " << data[i].X() << " Cluster=" << clusterAssignment[i] << std::endl;
+        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout << data[i].X() << " " << data[i].X() << " Cluster=" << clusterAssignment[i] << std::endl;
     }
 
     std::vector<std::pair<int, int>> clusterFrequencies = GetListFrequency(clusterAssignment);
     for(auto & x:clusterFrequencies){
-        std::cout<<" Cluster "<<x.first<<" with frequency "<<x.second<<std::endl;
+        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<" Cluster "<<x.first<<" with frequency "<<x.second<<std::endl;
     }
 
     // Get the connectivity for the cluster with the largest frequency
@@ -259,15 +259,15 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::Get2DClusters(std::vector<SHit>
     std::vector<int>& clusterAssignment = dbscan.getClusterAssignment();
     for (int i = 0; i < data.size(); ++i) {
         if (clusterAssignment[i] == -1) {
-            std::cout << "SPoint (" << data[i].X() << ", " << data[i].Y() << ") is noise" << std::endl;
+            if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout << "SPoint (" << data[i].X() << ", " << data[i].Y() << ") is noise" << std::endl;
         } else {
-            std::cout << "SPoint (" << data[i].X() << ", " << data[i].Y() << ") belongs to cluster " << clusterAssignment[i] << std::endl;
+            if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout << "SPoint (" << data[i].X() << ", " << data[i].Y() << ") belongs to cluster " << clusterAssignment[i] << std::endl;
         }
     }
 
     std::vector<std::pair<int, int>> clusterFrequencies = GetListFrequency(clusterAssignment);
     for(auto & x:clusterFrequencies){
-        std::cout<<" Cluster "<<x.first<<" with frequency "<<x.second<<std::endl;
+        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<" Cluster "<<x.first<<" with frequency "<<x.second<<std::endl;
     }
     
 
@@ -319,7 +319,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::CaptureMissingHits(std::vector<
             // If hypothesis is within the hit RMS, keep
             if (std::abs(hit.Y() - pEvalY)< hit.Width() ){
                 candidateHitList.push_back(hit);
-                std::cout<<"MERGING "<<hit.X()<<std::endl;
+                if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"MERGING "<<hit.X()<<std::endl;
             }else {
                 unmatchedHitList.push_back(hit);
             }
@@ -337,7 +337,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::CaptureMissingHits(std::vector<
             
 
             for (SHit& hit : candidateHitList) {
-                std::cout<<"   Check conn "<<hit.X()<<std::endl;
+                if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"   Check conn "<<hit.X()<<std::endl;
                 double epsilon = hitCluster.GetConnectedness() + 3 * hitCluster.GetConnectednessRMS();
                 double conn = hitCluster.GetMinDistanceToClusterW(hit);
 
@@ -397,7 +397,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::MakeTrack(std::vector<SLinearCl
         finalTrackClusterList.emplace_back(cluster);
     }
 
-    finalTrackClusterList = TPCLinesDirectionUtils::SlopeTrackMerger(finalTrackClusterList, 2, 5);
+    finalTrackClusterList = TPCLinesDirectionUtils::SlopeTrackMerger(finalTrackClusterList, 2, 5, fTPCLinesTrackFinderPset.Verbose);
 
 
     std::sort(finalTrackClusterList.begin(), finalTrackClusterList.end(), [](SLinearCluster& lCluster1, SLinearCluster& lCluster2) {
@@ -427,6 +427,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     
     // Compute hit density fo the Hough hits
     double hitDensity = GetHitLinearDensity(hitHoughTubeList);
+    if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"    Hit density:"<<hitDensity<<std::endl;
     
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
@@ -438,11 +439,11 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     TPCLinesPCA pcaAlgo;
     LineEquation pcaLine = pcaAlgo.PerformPCA2D(hitHoughTubeList);
     std::vector<SHit> hitPCATubeList, hitPCAOutTubeList;
-    if (!fTPCLinesTrackFinderPset.SingleWireMode && hitDensity > 2) {
+    if (!fTPCLinesTrackFinderPset.SingleWireMode && hitDensity >= fTPCLinesTrackFinderPset.HitDensityThreshold) {
         GetHitsInTube(hitPCATubeList, hitPCAOutTubeList, pcaLine, hitList,  fTPCLinesTrackFinderPset.MaxDCluster);
     }
     else {
-        std::cout<<"Single wire mode\n";
+        if(fTPCLinesTrackFinderPset.Verbose>=2) std::cout<<"Single wire mode\n";
         GetHitsInTubeSingleWire(hitPCATubeList, hitPCAOutTubeList, pcaLine, hitList,  fTPCLinesTrackFinderPset.MaxDCluster);
     }
 
@@ -459,15 +460,15 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
 
     //---------- Connectedness clusters block
-    std::cout<<"\n******** Making connectedness clusters\n";
-    std::cout<<pcaCluster<<std::endl;
+    if(fTPCLinesTrackFinderPset.Verbose>=2) std::cout<<"\n******** Making connectedness clusters\n";
+    if(fTPCLinesTrackFinderPset.Verbose>=2) std::cout<<pcaCluster<<std::endl;
 
     // Get the epsilon paramter for the 2D clustering
     std::vector<double> clusterConnV = pcaCluster.GetConnectednessV();
     double weightWidth = pcaCluster.GetAverageWidth();
     std::pair<double, double> connectivityResult = ComputeConnectivityMode(clusterConnV, fTPCLinesTrackFinderPset.MinTrackHits, weightWidth);
     double epsilon=connectivityResult.first+3*connectivityResult.second;
-    std::cout << "EpsilonMean: " << connectivityResult.first << ", EpsilonRMS: " << connectivityResult.second << " Epsilon: "<< epsilon << std::endl;
+    if(fTPCLinesTrackFinderPset.Verbose>=2)  if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout << "EpsilonMean: " << connectivityResult.first << ", EpsilonRMS: " << connectivityResult.second << " Epsilon: "<< epsilon << std::endl;
     
     
     // Perform PCA 2D clustering
@@ -484,7 +485,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
     // Capture missing hits by the original PCA direction
     if(fTPCLinesTrackFinderPset.CaptureMissingHits==true and hitPCAOutTubeList.size()>1){
-        std::cout<<"Trying to merge additional hits out of the main tube\n";
+        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"Trying to merge additional hits out of the main tube\n";
         std::vector<SHit> unmatchedHits = hitPCAOutTubeList;
         connectedLinearClustersV = CaptureMissingHits(connectedLinearClustersV, unmatchedHits);
     }
@@ -496,7 +497,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     }
     
     //---------- Compactness clusters block
-    std::cout<<"\n******** Making compactness clusters\n";
+    if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"\n******** Making compactness clusters\n";
 
     // Vector to store the compact clusters
     std::vector<SLinearCluster> compactLinearClustersV;
@@ -504,7 +505,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     for(SLinearCluster &lCluster:connectedLinearClustersV){
 
         double clusterCompactness = lCluster.GetCompactness();
-        std::cout<<"\n  Cluster compactness"<<clusterCompactness<<std::endl;
+        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"\n  Cluster compactness"<<clusterCompactness<<std::endl;
 
         std::vector<double> compactnessV = lCluster.GetCompactnessV();
         std::pair<double, double> compactnessResult = ComputeConnectivityMode(compactnessV, fTPCLinesTrackFinderPset.MinClusterHits, clusterCompactness);
@@ -515,7 +516,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
         epsilon=3*compactnessResult.first;
 
         
-        std::cout<<"   --- Compacness Eps="<<compactnessResult.first<< " pm "<<compactnessResult.second<<" Epsilon="<<epsilon<<std::endl;
+        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"   --- Compacness Eps="<<compactnessResult.first<< " pm "<<compactnessResult.second<<" Epsilon="<<epsilon<<std::endl;
         if(epsilon>0){
             std::vector<SHit> hits = lCluster.GetHits();
             std::vector<SLinearCluster> compactClusterList = Get2DClusters(hits, epsilon, fTPCLinesTrackFinderPset.MinClusterHits);
@@ -553,7 +554,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
         }
     }
 
-    std::cout<<" Remaining hits: "<<newFreeHits.size()<<std::endl;
+    if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<" Remaining hits: "<<newFreeHits.size()<<std::endl;
     hitList.clear();
     for (SHit& h : newFreeHits) {
         hitList.push_back(h);

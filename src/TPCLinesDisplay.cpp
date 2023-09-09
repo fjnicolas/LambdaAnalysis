@@ -71,7 +71,8 @@ class TPCLinesDisplay {
             std::vector<SLinearCluster> clustersV={},
             SLinearCluster mainDirection = SLinearCluster(std::vector<SHit> {}),
             std::vector<STriangle> origins = {}, 
-            SVertex recoVertex = SVertex());
+            SVertex recoVertex = SVertex(),
+            SVertex trueVertex = SVertex());
 };
 
 void TPCLinesDisplay::SetStyle(){
@@ -152,23 +153,24 @@ void TPCLinesDisplay::DrawLine(LineEquation line, double xmin, double xmax, TLeg
 
 void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend& leg, std::string label, int color, int style, double size, double errorAlpha){
 
+    if(hitsV.size()>0){
+        std::vector<double> x, y, err;
+        for(size_t ix=0; ix<hitsV.size(); ix++){
+            x.push_back(hitsV[ix].X());
+            y.push_back(hitsV[ix].Y());
+            err.push_back(hitsV[ix].Width());
+        }
 
-    std::vector<double> x, y, err;
-    for(size_t ix=0; ix<hitsV.size(); ix++){
-        x.push_back(hitsV[ix].X());
-        y.push_back(hitsV[ix].Y());
-        err.push_back(hitsV[ix].Width());
+        TGraphErrors *g = new TGraphErrors(x.size(),&x[0],&y[0], nullptr, &err[0]); 
+        g->SetMarkerColorAlpha(color, 0.5);
+        g->SetMarkerStyle(style);
+        g->SetMarkerSize(size);
+        g->SetLineColorAlpha(kGray, errorAlpha);
+        g->Draw("p");
+        
+        if(label!="")
+            leg.AddEntry(g, label.c_str(), "p");
     }
-
-    TGraphErrors *g = new TGraphErrors(x.size(),&x[0],&y[0], nullptr, &err[0]); 
-    g->SetMarkerColorAlpha(color, 0.5);
-    g->SetMarkerStyle(style);
-    g->SetMarkerSize(size);
-    g->SetLineColorAlpha(kGray, errorAlpha);
-    g->Draw("p");
-    
-    if(label!="")
-        leg.AddEntry(g, label.c_str(), "p");
 
     return;
 }
@@ -201,27 +203,29 @@ void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend& leg, std::string labe
 }
 
 void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend& leg, std::string label, int color, double size, int style){
+    if(cluster.NHits()>0){
+        std::vector<SHit> hits = cluster.GetHits();
+        std::vector<double> x, y;
+        for(size_t ix=0; ix<hits.size(); ix++){
+            x.push_back(hits[ix].X());
+            y.push_back(hits[ix].Y());
+        }
 
-    std::vector<SHit> hits = cluster.GetHits();
-    std::vector<double> x, y;
-    for(size_t ix=0; ix<hits.size(); ix++){
-        x.push_back(hits[ix].X());
-        y.push_back(hits[ix].Y());
+        TGraph *g = new TGraph(x.size(),&x[0],&y[0]); 
+        g->SetMarkerColorAlpha(color, 0.5);
+        g->SetMarkerStyle(style);;
+        g->SetMarkerSize(size);
+        g->SetLineWidth(20);
+        //g->SetLineColorAlpha(kGray, errorAlpha);
+        g->Draw("p");
+
+        DrawLine(cluster.GetTrackEquation(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kSolid);
+        DrawLine(cluster.GetTrackEquationStart(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
+        DrawLine(cluster.GetTrackEquationEnd(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
+
+        leg.AddEntry(g, ( "Cluster  "+std::to_string(cluster.GetId())).c_str(), "p");
     }
 
-    TGraph *g = new TGraph(x.size(),&x[0],&y[0]); 
-    g->SetMarkerColorAlpha(color, 0.5);
-    g->SetMarkerStyle(style);;
-    g->SetMarkerSize(size);
-    g->SetLineWidth(20);
-    //g->SetLineColorAlpha(kGray, errorAlpha);
-    g->Draw("p");
-
-    DrawLine(cluster.GetTrackEquation(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kSolid);
-    DrawLine(cluster.GetTrackEquationStart(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
-    DrawLine(cluster.GetTrackEquationEnd(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
-
-    leg.AddEntry(g, ( "Cluster  "+std::to_string(cluster.GetId())).c_str(), "p");
     
     return;
 }
@@ -236,7 +240,8 @@ void TPCLinesDisplay::Show(
     std::vector<SLinearCluster> clustersV,
     SLinearCluster mainDirection,
     std::vector<STriangle> origins,
-    SVertex recoVertex)
+    SVertex recoVertex,
+    SVertex trueVertex)
 {
     
     SetStyle();
@@ -297,6 +302,11 @@ void TPCLinesDisplay::Show(
     // draw PANDORA vertex
     if(recoVertex.Point().X()!=-1 && recoVertex.Point().Y()!=-1){
         DrawVertex(recoVertex, legend, "PANDORA vtx", kPink-9, 33, 1);
+    }
+
+    // draw PANDORA vertex
+    if(trueVertex.Point().X()!=-1 && trueVertex.Point().Y()!=-1){
+        DrawVertex(trueVertex, legend, "True vtx", kPink-12, 33, 1);
     }
     
     

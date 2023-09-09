@@ -97,7 +97,7 @@ HoughLine TPCLinesHough::GetBestHoughLine(std::vector<SHit> hitList, SVertex ver
     std::vector<SHit> hitPivotList = GetHitsInBall(hitList, vertex, fTPCLinesHoughPset.MaxRadiusLineHypothesis);
     HoughLine bestHoughLine;
 
-    std::cout<<"  Pivot hits: "<<hitPivotList.size()<<std::endl;
+    if(fTPCLinesHoughPset.Verbose>=1) std::cout<<"  Pivot hits: "<<hitPivotList.size()<<std::endl;
 
     // theta step (in radians)
     double thetaStep = M_PI*fTPCLinesHoughPset.ThetaRes/180;
@@ -130,7 +130,7 @@ HoughLine TPCLinesHough::GetBestHoughLine(std::vector<SHit> hitList, SVertex ver
             if (hypoLineWeight > bestHoughLine.Score()) {
                 bestHoughLine.SetLineEquation ( hypoLine );
                 bestHoughLine.SetScore( hypoLineWeight ); 
-                bestHoughLine.SetNHits( hitHoughList.size() );
+                bestHoughLine.SetNHits( hitHoughList.size()+1 ); //+1 to include the pivot hit
 
                 if(fTPCLinesHoughPset.Verbose>=3) fDisplay.Show("New Hough direction", hitList, hypoLine, hitHoughList);
             }

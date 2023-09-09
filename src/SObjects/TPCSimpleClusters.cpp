@@ -242,7 +242,7 @@ std::vector<int> detect_outliers_iqr(std::vector<float> data, float threshold = 
 
 void SLinearCluster::FillResidualHits() {
     fHasResidualHits = true;
-    std::cout << "\n\n +-+-+-+-+-+-+- Filling residual hits +-+-+-+-+-+-+-" << std::endl;
+    //std::cout << "\n\n +-+-+-+-+-+-+- Filling residual hits +-+-+-+-+-+-+-" << std::endl;
 
     if (NHits() > 0) {
         // Get average residual

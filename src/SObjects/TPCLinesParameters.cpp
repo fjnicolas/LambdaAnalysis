@@ -21,6 +21,7 @@ struct TrackFinderAlgorithmPsetType {
     double ClusterAngleCut;
     bool CaptureMissingHits;
     int MinTrackHits;
+    float HitDensityThreshold;
     int Verbose;
 
     // constructor
@@ -34,6 +35,7 @@ struct TrackFinderAlgorithmPsetType {
         double _clusterAngleCut,
         bool _captureMissingHits,
         int _minTrackHits,
+        float _hitDensityThreshold,
         int _verbose) : 
         MaxDTube(_maxDTube),
         MaxDCluster(_maxDCluster),
@@ -44,6 +46,7 @@ struct TrackFinderAlgorithmPsetType {
         ClusterAngleCut(_clusterAngleCut), 
         CaptureMissingHits(_captureMissingHits),
         MinTrackHits(_minTrackHits),
+        HitDensityThreshold(_hitDensityThreshold),
         Verbose(_verbose)
     {}
 };
@@ -148,39 +151,137 @@ struct TPCLinesAlgoPsetType{
 };
 
 
+class SEventId {
+    public:
+        SEventId(int r=0, int sr=0, int e=0):
+            fRun(r),
+            fSubRun(sr),
+            fEvent(e),
+            fEventLabel(std::to_string(r)+"_"+std::to_string(sr)+"_"+std::to_string(e))
+            {};
+
+
+        SEventId(const SEventId& other) : SEventId(other.fRun, other.fSubRun, other.fEvent) {}
+
+        std::string Label(){return fEventLabel;};
+        int Run(){return fRun;};
+        int SubRun(){return fSubRun;};
+        int Event(){return fEvent;};
+
+        friend std::ostream& operator<<(std::ostream& os, const SEventId& statusPrinter) {
+        os << " ***** R=" << statusPrinter.fRun << " SR=" << statusPrinter.fSubRun << " E=" << statusPrinter.fEvent << " *****" << std::endl;
+        return os;
+    }
+
+    private:
+        int fRun, fSubRun, fEvent;
+        std::string fEventLabel;
+};
+
+class SEventSelection {
+    public:
+        SEventSelection(SEventId ev):
+            fEvent(ev),
+            fNSlices(0),
+            fNSelected(0),
+            fNNotSelected(0),
+            fNSkipped(0)
+            {};
+
+        SEventSelection(){
+            fEvent = SEventId();
+            fNSlices=0;
+            fNSelected=0;
+            fNNotSelected=0;
+            fNSkipped=0;
+        }
+        
+        SEventSelection(const SEventSelection& other) : SEventSelection(other.fEvent) {}
+
+        SEventId EventId(){return fEvent;};
+
+        void AddSelected(){
+            fNSlices++;
+            fNSelected++;
+        };
+
+        void AddSkipped(){
+            fNSlices++;
+            fNSkipped++;
+        }
+
+        void AddNotSelected(){
+            fNSlices++;
+            fNNotSelected++;
+        }
+
+        int NSlices(){return fNSlices;};
+        int NSelected(){return fNSelected;};
+        int NNotSelected(){return fNNotSelected;};
+        int NSkipped(){return fNSkipped;};
+
+    private:
+        SEventId fEvent;
+        int fNSlices;
+        int fNSelected;
+        int fNNotSelected;
+        int fNSkipped;
+};
+
+
 class EfficiencyCalculator {
 public:
     EfficiencyCalculator():
+        fEventList({}),
         nEvents(0),
         nEventsSkipped(0),
         nProcessedEvents(0),
         nEventsSelected(0)
         {};
 
-    void UpdateSkipped(int nEvents, int nEventsSkipped, int nProcessedEvents, int nEventsSelected) {
-        this->nEvents = nEvents;
-        this->nEventsSkipped = nEventsSkipped;
-        this->nProcessedEvents = nProcessedEvents;
-        this->nEventsSelected = nEventsSelected;
-    };
-
-    void UpdateSkipped(){
-        nEvents++;
-        nEventsSkipped++;
+    void AddEvent(SEventId ev){
+        if(fEventList.find(ev.Label()) == fEventList.end()){
+            SEventSelection sEv(ev);
+            fEventList[ev.Label()] = SEventSelection(sEv);
+        }
     }
 
-    void UpdateSelected(){
-        nEvents++;
-        nProcessedEvents++;
-        nEventsSelected++;
+    void UpdateSkipped(SEventId ev){
+        AddEvent(ev);
+        fEventList[ev.Label()].AddSkipped();
     }
 
-    void UpdateNotSelected(){
-        nEvents++;
-        nProcessedEvents++;
+    void UpdateSelected(SEventId ev){
+        AddEvent(ev);
+        fEventList[ev.Label()].AddSelected();
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const EfficiencyCalculator& statusPrinter) {
+    void UpdateNotSelected(SEventId ev){
+        AddEvent(ev);
+        fEventList[ev.Label()].AddNotSelected();
+
+    }
+
+    void UpdateValues(){
+        nEvents = fEventList.size();
+        nEventsSkipped=0;
+        nProcessedEvents=0;
+        nEventsSelected=0;
+        for(auto &pair:fEventList){
+            if(pair.second.NSkipped()==pair.second.NSlices()){
+                nEventsSkipped++;
+            }
+            else{
+                nProcessedEvents++;
+                if(pair.second.NSelected()>0){
+                    nEventsSelected++;
+                }
+            }
+        }
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, EfficiencyCalculator& statusPrinter) {
+        statusPrinter.UpdateValues();
         os << " ********** Final status-" << std::endl;
         os << " ... NTotalEvents=" << statusPrinter.nEvents << " NSkipped=" << statusPrinter.nEventsSkipped << std::endl;
         os << " ... NProcessed=" << statusPrinter.nProcessedEvents << " NSelected=" << statusPrinter.nEventsSelected;
@@ -190,6 +291,7 @@ public:
     }
 
 private:
+    std::map<std::string, SEventSelection> fEventList;
     int nEvents;
     int nEventsSkipped;
     int nProcessedEvents;

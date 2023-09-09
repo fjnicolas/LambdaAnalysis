@@ -4,6 +4,7 @@
 #include "src/SObjects/TPCSimpleLines.cpp"
 #include "src/SObjects/TPCSimpleClusters.cpp"
 #include "src/SObjects/TPCSimpleTriangles.cpp"
+#include "src/SObjects/TPCSimpleEvents.cpp"
 
 // Algorithms
 #include "src/TPCLinesHough.cpp"
@@ -49,6 +50,7 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
     double fClusterAngleCut = 5;
     bool fCaptureMissingHits = true;
     int fMinTrackHits = 3;
+    float fHitDensityThreshold = 1.5;
     int fVerboseTrack = Debug;
 
     // ---- Vertex finder parameters
@@ -71,6 +73,7 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
                                                   fClusterAngleCut,
                                                   fCaptureMissingHits,
                                                   fMinTrackHits,
+                                                  fHitDensityThreshold,
                                                   fVerboseTrack);
 
     HoughAlgorithmPsetType fPsetHough(fMaxRadiusLineHypothesis,
@@ -214,11 +217,12 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
 
 
         for (int entry = 0; entry < tree->GetEntries(); entry++) {
-            
+            std::cout<<"Entry "<<entry<<std::endl;
             // get the entry
             tree->GetEntry(entry);
 
             // check program control variables
+            SEventId ev(runID, subrunID, eventID);
             if (fNEv > 0 && nEvents >= fNEv) continue;
             if (eventID != fEv && fEv != -1) continue;
             if (subrunID != fSubRun && fSubRun != -1) continue;
@@ -226,11 +230,9 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
             if (nEntries <= fNEvSkip) continue;
             
             nEvents++;
-            std::string eventLabel = "R="+std::to_string(runID)+" SR="+std::to_string(subrunID)+" E="+std::to_string(eventID);
-            std::cout << "Analyzing: " << eventLabel << std::endl;
+            std::cout << "\n\n ************** Analyzing: " << ev;
             
             // True vertex
-            TPC = (nuvX > 0) ? 1 : 0;
             nuvDriftTime = nuvTimeTick * fSamplingTime + fStampTime;
             std::vector<double> VertexXYZ = {nuvX, nuvY, nuvZ};
             std::vector<int> VertexUVYT = {nuvU, nuvV, nuvC, nuvTimeTick};
@@ -242,25 +244,23 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
             std::vector<int> RecoVertexUVYT = {recnuvU, recnuvV, recnuvC, recnuvTimeTick};
             std::cout << "  - Reco vertex (X, Y, Z) " << RecoVertexXYZ[0] << " " << RecoVertexXYZ[1] << " " << RecoVertexXYZ[2] << " (U, V, C, TT): " << RecoVertexUVYT[0] << " " << RecoVertexUVYT[1] << " " << RecoVertexUVYT[2] << " "<< RecoVertexUVYT[3]  << std::endl;
 
+            TPC = (nuvX > 0) ? 1 : 0;
+            TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
+            
             // We need a minimum number of hits to run the track finder
             size_t nhits = hitsChannel->size();
             std::cout << "  - NHits: " << nhits << std::endl;
-            if(nhits<=3){
-                std::cout<<"   SKIPPED NHits\n";
-                _EfficiencyCalculator.UpdateSkipped();
+            if(nhits<=3 || recnuvU==-1){
+                std::cout<<"   SKIPPED NHits or RecoVertex \n";
+                _EfficiencyCalculator.UpdateSkipped(ev);
                 continue;
-            }
-            else if(recnuvU==-1){
-               std::cout<<"    SKIPPED RECOVERTEX\n"; 
-               _EfficiencyCalculator.UpdateSkipped();
-               continue;
             }
 
             // Assing the view and TPC
             std::string view = fView+std::to_string(TPC);
 
             // Set the hits
-            _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, 
+            _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
                                     hitsChannel,
                                     hitsPeakTime,
                                     hitsIntegral, 
@@ -270,13 +270,14 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
                                     "");
 
             // Analyze
-            int nOrigins = _TPCLinesAlgo.AnaView(eventLabel);
+            SEvent recoEvent = _TPCLinesAlgo.AnaView(ev.Label());
 
+            int nOrigins = recoEvent.GetNOrigins();
             // Update the efficiency calculator
             if(nOrigins>0)
-                _EfficiencyCalculator.UpdateSelected();
+                _EfficiencyCalculator.UpdateSelected(ev);
             else
-                _EfficiencyCalculator.UpdateNotSelected();
+                _EfficiencyCalculator.UpdateNotSelected(ev);
             std::cout<<_EfficiencyCalculator;
 
         }

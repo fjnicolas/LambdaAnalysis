@@ -39,6 +39,7 @@ void TPCLinesAlgo::Display(){
 // Set the input hits
 void TPCLinesAlgo::SetHitList(std::string view,
                             std::vector<int>& vertex,
+                            std::vector<int>& vertexTrue,
                             std::vector<int> *_X,
                             std::vector<double> *_Y,
                             std::vector<double> *_Int,
@@ -58,7 +59,13 @@ void TPCLinesAlgo::SetHitList(std::string view,
     if (view == "U0" || view == "U1") vertexX = vertex[0];
     if (view == "V0" || view == "V1") vertexX = vertex[1];
     double vertexY = vertex[3] / fTPCLinesPset.DriftConversion;
-    std::cout << "  ** Vertex XY: " << vertexX << " " << vertexY << std::endl;
+    
+    // Define the true vertex
+    double vertexXTrue = vertexTrue[2];
+    if (view == "U0" || view == "U1") vertexXTrue = vertexTrue[0];
+    if (view == "V0" || view == "V1") vertexXTrue = vertexTrue[1];
+    double vertexYTrue = vertexTrue[3] / fTPCLinesPset.DriftConversion;
+    if(fTPCLinesPset.Verbose>=2) std::cout << "  ** Vertex XY: " << vertexX << " " << vertexY << std::endl;
     if (vertexX != -1){
 
         // Get hits in the selected plane
@@ -98,8 +105,11 @@ void TPCLinesAlgo::SetHitList(std::string view,
             // create vertex with common origin
             vertexX = vertexX - minX;
             vertexY = vertexY - minY;
+            vertexXTrue = vertexXTrue - minX;
+            vertexYTrue = vertexYTrue - minY;
 
             fVertex = SVertex(SPoint(vertexX, vertexY), view);
+            fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), view);
             std::cout << "  ** Origin vertex: " << fVertex;
             std::cout << "  ** NInputHits:"<<fNTotalHits<<std::endl;
 
@@ -116,7 +126,7 @@ void TPCLinesAlgo::SetHitList(std::string view,
 // Remove isolated hits
 std::vector<SHit> TPCLinesAlgo::RemoveIsolatedHits(std::vector<SHit> hitListForHough, std::vector<SHit>& discardedHits, double maxD, int minNeighbours) {
 
-    std::cout << "\n\n +-+-+-+-+-+-+- Removing isolated hits +-+-+-+-+-+-+-" << std::endl;
+    if(fTPCLinesPset.Verbose>=2) std::cout << "\n\n +-+-+-+-+-+-+- Removing isolated hits +-+-+-+-+-+-+-" << std::endl;
 
     std::vector<SHit> hitListForHoughWithoutIsolatedHits;
 
@@ -149,7 +159,7 @@ std::vector<SHit> TPCLinesAlgo::RemoveIsolatedHits(std::vector<SHit> hitListForH
 //----------------------------------------------------------------------
 // Merge isolated hits
 std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, double dCleaning1D, double dTh){
-    std::cout << "\n\n +-+-+-+-+-+-+- Isolated hit merger +-+-+-+-+-+-+-" << std::endl;
+    if(fTPCLinesPset.Verbose>=2) std::cout << "\n\n +-+-+-+-+-+-+- Isolated hit merger +-+-+-+-+-+-+-" << std::endl;
     std::vector<SLinearCluster> newRecoTrackList;
 
     // initializations
@@ -183,7 +193,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
         SLinearCluster track = recoTrackList[trkix];
         double trackComp = track.GetCompactness();
         double trackConn = track.GetConnectedness();
-        std::cout << "\n Merging track " << trkix << " COMP " << trackComp << " CONN " << trackConn << std::endl;
+        if(fTPCLinesPset.Verbose>=2) std::cout << "\n Merging track " << trkix << " COMP " << trackComp << " CONN " << trackConn << std::endl;
 
         std::vector<SHit> candidateHits;
         std::vector<int> candidateHitsIx;
@@ -220,14 +230,14 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
         std::vector<SHit> newHitList = track.GetHits();
         SCluster currentCluster = track.GetHitCluster();
 
-        std::cout << "  candidates hits: " << std::endl;
+        if(fTPCLinesPset.Verbose>=2) std::cout << "  candidates hits: " << std::endl;
         for (size_t ix = 0; ix < candidateHits.size(); ++ix) {
             SHit hit = candidateHits[sortedCandidateHits[ix]];
 
             double minD = currentCluster.GetMinDistanceToCluster(hit);
             double minDConn = currentCluster.GetMinDistanceToClusterOverlap(hit);
-            std::cout << hit.X() << " " << hit.Y() << " " << minD << " " << minDConn << std::endl;
-            std::cout << "       " << hit.Id() << " " << hit.X() << " " << hit.Y() << " d " << minD << " dConn " << minDConn << std::endl;
+            if(fTPCLinesPset.Verbose>=2) std::cout << hit.X() << " " << hit.Y() << " " << minD << " " << minDConn << std::endl;
+            if(fTPCLinesPset.Verbose>=2) std::cout << "       " << hit.Id() << " " << hit.X() << " " << hit.Y() << " d " << minD << " dConn " << minDConn << std::endl;
             if (minDConn < dTh * trackConn) {
                 newHitList.push_back(hit);
                 mergedHitsCounter[candidateHitsIx[sortedCandidateHits[ix]]] = true;
@@ -244,7 +254,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 
 //----------------------------------------------------------------------
 // Main function
-int TPCLinesAlgo::AnaView(std::string eventLabel)
+SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
 {
 
     // --- Objects for the Hough tracks
@@ -253,20 +263,22 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
     std::vector<SHit> discardedHits;
     std::vector<SLinearCluster> finalLinearClusterV;
 
+    trkIter = hitListForHough.size()>fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
+    std::cout<<trkIter<<" "<<fHitList.size()<<" "<<hitListForHough.size()<<std::endl;
     // --- Loop over the hough tracks
     while(trkIter<fTPCLinesPset.MaxHoughTracks){
 
-        std::cout<<" **** Track finder iteration: "<<trkIter<< " # hough hits:"<<hitListForHough.size()<<std::endl;
+        if(fTPCLinesPset.Verbose>=2) std::cout<<" **** Track finder iteration: "<<trkIter<< " # hough hits:"<<hitListForHough.size()<<std::endl;
 
         // -- Get the best Hough line       
         HoughLine houghLine = fHoughAlgo.GetBestHoughLine(hitListForHough, fVertex);
         if(fTPCLinesPset.Verbose>=3)
-            std::cout<<"    Hough line results: "<<houghLine.NHits()<<" Score: "<<houghLine.Score()<<std::endl;
+            if(fTPCLinesPset.Verbose>=2) std::cout<<"    Hough line results: "<<houghLine.NHits()<<" Score: "<<houghLine.Score()<<std::endl;
 
         // -- Skip if not enough hits
         if(houghLine.NHits() < fTPCLinesPset.MinTrackHits){
             if(fTPCLinesPset.Verbose>=3)
-                std::cout<<"   Hough lines has <"<<fTPCLinesPset.MinTrackHits<<", ending the search\n";
+                if(fTPCLinesPset.Verbose>=2) std::cout<<"   Hough lines has <"<<fTPCLinesPset.MinTrackHits<<", ending the search\n";
             trkIter = fTPCLinesPset.MaxHoughTracks;
         }
         // -- Call the track finfder otherwise
@@ -276,20 +288,20 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
             // -- check the found tracks has enough hits
             if(linearClusterV.size()!=0){
                 if(fTPCLinesPset.Verbose>=2)
-                    std::cout<<"   Found "<<linearClusterV.size()<<" new tracks!\n";
+                    if(fTPCLinesPset.Verbose>=2) std::cout<<"   Found "<<linearClusterV.size()<<" new tracks!\n";
                 finalLinearClusterV.insert(finalLinearClusterV.begin(), linearClusterV.begin(), linearClusterV.end());
                 
                 // -- check there's enough hits for the next Hough iteration
                 if(hitListForHough.size() < fTPCLinesPset.MinTrackHits){
                     if(fTPCLinesPset.Verbose>=3)
-                        std::cout<<"   Remaining hits are "<<hitListForHough.size()<<", ending the search\n";
+                        if(fTPCLinesPset.Verbose>=2) std::cout<<"   Remaining hits are "<<hitListForHough.size()<<", ending the search\n";
                     trkIter = fTPCLinesPset.MaxHoughTracks;
                 }
             }
             // end Hough loop otherwise
             else{
                 if(fTPCLinesPset.Verbose>=3)
-                    std::cout<<"   Not found new tracks\n";
+                    if(fTPCLinesPset.Verbose>=2) std::cout<<"   Not found new tracks\n";
                 trkIter = fTPCLinesPset.MaxHoughTracks;
             }
             
@@ -306,7 +318,7 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
     // Slope track merger
     // sort by minX
     std::sort(finalLinearClusterV.begin(), finalLinearClusterV.end(), [&](SLinearCluster& l1, SLinearCluster& l2) {return l1.GetMinX() < l2.GetMinX();} );    
-    finalLinearClusterV = TPCLinesDirectionUtils::SlopeTrackMerger(finalLinearClusterV, 2, 15); 
+    finalLinearClusterV = TPCLinesDirectionUtils::SlopeTrackMerger(finalLinearClusterV, 2, 15, fTPCLinesPset.Verbose); 
 
 
     // Isolated hit merger
@@ -314,27 +326,48 @@ int TPCLinesAlgo::AnaView(std::string eventLabel)
     remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());   
     finalLinearClusterV = MergeIsolatedHits(finalLinearClusterV, remainingHits, 10);
 
-   
-    std::cout<<"\n\n +-+-+-+-+-+-+- Characterizing tracks +-+-+-+-+-+-+-\n";
+    // Characterize the tracks
     for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
         //// !!!! WARNING
         finalLinearClusterV[ix].FillResidualHits();
         finalLinearClusterV[ix].AssignId(ix);
     }
         
-    
     //Find secondary vertexes
     std::vector<STriangle> vertexList;
-    std::vector<SPoint> originList;
+    std::vector<SPoint> intersectionList;
     SLinearCluster mainDirection;
-    
-    fVertexFinder.GetOrigins(finalLinearClusterV, vertexList, originList, mainDirection);
+    fVertexFinder.GetOrigins(finalLinearClusterV, vertexList, intersectionList, mainDirection);
+
+    std::vector<SOrigin> originList;
+    for(STriangle & tri: vertexList){
+        originList.push_back( SOrigin(tri.GetMainVertex(), true, 2) );
+    }
 
     bool accepted = vertexList.size()>0;
     std::string outNamePreffix = accepted? "Accepted Final Reco":"Rejected Final Reco";
-    
     fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList, fVertex);
-    
 
-    return vertexList.size();
+
+    // ------ Get the parallel tracks
+    std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
+    std::vector<SLinearCluster> NewTrackList;
+    for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
+        std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
+        for(size_t jx = 1; jx<parallelTracks[ix].size(); jx++){
+             std::vector<SHit> moreHits = parallelTracks[ix][jx].GetHits();
+             hitList.insert(hitList.end(), moreHits.begin(), moreHits.end());
+        }
+        SLinearCluster newTrack(hitList);
+        newTrack.FillResidualHits();
+        newTrack.AssignId(ix);
+        NewTrackList.push_back( newTrack );
+    }
+    std::vector<STriangle> intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());
+    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, intersectionsInBall, fVertex, fVertexTrue);
+
+
+    SEvent recoEvent(originList);
+
+    return recoEvent;
 }

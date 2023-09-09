@@ -20,6 +20,7 @@
 #include "SObjects/TPCSimpleHits.h"
 #include "SObjects/TPCSimpleClusters.h"
 #include "SObjects/TPCSimpleTriangles.h"
+#include "SObjects/TPCSimpleEvents.h"
 #include "TPCLinesHough.h"
 #include "TPCLinesTrackFinder.h"
 #include "TPCLinesVertexFinder.h"
@@ -45,6 +46,7 @@ class TPCLinesAlgo {
         size_t fNTotalHits;
         std::vector<SHit> fHitList;
         SVertex fVertex;
+        SVertex fVertexTrue;
 
         // Hough algorithm
         TPCLinesHough fHoughAlgo;
@@ -70,6 +72,7 @@ class TPCLinesAlgo {
         // Function to set the input variables
         void SetHitList(std::string view,
                         std::vector<int>& vertex,
+                        std::vector<int>& vertexTrue,
                         std::vector<int> *_X,
                         std::vector<double> *_Y,
                         std::vector<double> *_Int,
@@ -79,7 +82,7 @@ class TPCLinesAlgo {
                         std::string eventLabel="");
         
         // Function to analyze the view
-        int AnaView(std::string eventLabel);        
+        SEvent AnaView(std::string eventLabel);        
 
         // Display
         void Display();                            
