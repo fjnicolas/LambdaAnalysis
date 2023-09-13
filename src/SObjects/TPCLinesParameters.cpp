@@ -10,6 +10,29 @@
 #ifndef TPC_LINES_PARAMETERS_H
 #define TPC_LINES_PARAMETERS_H
 
+#include "TH1F.h"
+#include "TPCSimpleEvents.h"
+
+vector<TPad*> buildpadcanvas(int nx, int ny){
+    vector<TPad*> Tp;
+    double x=0, y=1, dx=1./nx, dy=1./ny;
+    TPad *pad = new TPad("","", 0, 0, 1, 1, -1, -1, -1);
+    Tp.push_back(pad);
+    for(int i=1; i<=nx; i++){
+      y=1;
+      for(int j=1; j<=ny; j++){
+        TPad *pad = new TPad("","", x, y-dy, x+dx, y, -1, -1, -1);
+        Tp.push_back(pad);
+        y-=dy;
+      }
+      x+=dx;
+    }
+    for(int i=0; i<=nx*ny; i++){
+      Tp.at(i)->Draw();
+      Tp.at(i)->SetBottomMargin(0.15);
+    }
+    return Tp;
+}
 
 struct TrackFinderAlgorithmPsetType {
     int MaxDTube;
@@ -237,7 +260,14 @@ public:
         nEventsSkipped(0),
         nProcessedEvents(0),
         nEventsSelected(0)
-        {};
+        {
+
+            hNOrigins = new TH1F("hNOrigins", "NOrigins;# origins; # entries", 10, 0, 10);
+            hNOriginsMult1 = new TH1F("hNOriginsMult1", "NOrigins mult=1;# origins; # entries", 10, 0, 10);
+            hNOriginsMult2 = new TH1F("hNOriginsMult2", "NOrigins mult=2;# origins; # entries", 10, 0, 10);
+            hNOriginsMultGt3 = new TH1F("hNOriginsMultGt3", "NOrigins mult>=3;# origins; # entries", 10, 0, 10);
+            hProf2DMatrix = new TH2F("hProf2DMatrix", "# origins; origin multiplicity; origin multiplicity", 10, 0, 10, 10, 0, 10);
+        };
 
     void AddEvent(SEventId ev){
         if(fEventList.find(ev.Label()) == fEventList.end()){
@@ -260,6 +290,23 @@ public:
         AddEvent(ev);
         fEventList[ev.Label()].AddNotSelected();
 
+    }
+
+    void UpdateHistograms(SEvent recoEv){
+        hNOrigins->Fill(recoEv.GetNOrigins());
+        hNOriginsMult1->Fill(recoEv.GetNOriginsMult(1));
+        hNOriginsMult2->Fill(recoEv.GetNOriginsMult(2));
+        hNOriginsMultGt3->Fill(recoEv.GetNOriginsMultGt(3));
+        
+        for(int m1=0; m1<=8; m1++){
+            for(int m2=0; m2<=8; m2++){
+                if(recoEv.GetNOriginsMult(m1)>0 && recoEv.GetNOriginsMult(m2)>0){
+                    hProf2DMatrix->Fill(m1, m2, 1);
+                }
+                
+            }
+        }
+        
     }
 
     void UpdateValues(){
@@ -290,12 +337,46 @@ public:
         return os;
     }
 
+    void DrawHistograms(){
+        gROOT->SetBatch(false);
+        gStyle->SetOptStat(1);
+        TCanvas c("cStats", "Final stats", 0, 0, 1400,900);
+        std::vector<TPad*> padV = buildpadcanvas(3, 2);
+  
+        padV[1]->cd();
+        hNOrigins->Draw();
+        
+        padV[2]->cd();
+        hNOriginsMult1->Draw();
+
+        padV[3]->cd();
+        hNOriginsMult2->Draw();
+
+        padV[4]->cd();
+        hNOriginsMultGt3->Draw();
+
+        padV[5]->cd();
+        hProf2DMatrix->Draw("colz");
+
+        c.Update();
+
+        c.cd();
+        c.WaitPrimitive();
+
+    }
+
 private:
     std::map<std::string, SEventSelection> fEventList;
     int nEvents;
     int nEventsSkipped;
     int nProcessedEvents;
     int nEventsSelected;
+
+    TH1F *hNOrigins;
+    TH1F *hNOriginsMult1;
+    TH1F *hNOriginsMult2;
+    TH1F *hNOriginsMultGt3;
+    TH2F *hProf2DMatrix;
 };
 
 

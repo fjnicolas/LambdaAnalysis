@@ -246,6 +246,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
         }
 
         newRecoTrackList.push_back(SLinearCluster(newHitList));
+    
     }
 
     return newRecoTrackList;
@@ -281,6 +282,7 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
                 if(fTPCLinesPset.Verbose>=2) std::cout<<"   Hough lines has <"<<fTPCLinesPset.MinTrackHits<<", ending the search\n";
             trkIter = fTPCLinesPset.MaxHoughTracks;
         }
+
         // -- Call the track finfder otherwise
         else{
             std::vector<SLinearCluster> linearClusterV = fTrackFinder.ReconstructTracksFromHoughDirection(hitListForHough, houghLine.GetLineEquation(), trkIter);
@@ -320,7 +322,6 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
     std::sort(finalLinearClusterV.begin(), finalLinearClusterV.end(), [&](SLinearCluster& l1, SLinearCluster& l2) {return l1.GetMinX() < l2.GetMinX();} );    
     finalLinearClusterV = TPCLinesDirectionUtils::SlopeTrackMerger(finalLinearClusterV, 2, 15, fTPCLinesPset.Verbose); 
 
-
     // Isolated hit merger
     std::vector<SHit> remainingHits = hitListForHough; 
     remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());   
@@ -341,13 +342,12 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
 
     std::vector<SOrigin> originList;
     for(STriangle & tri: vertexList){
-        originList.push_back( SOrigin(tri.GetMainVertex(), true, 2) );
+        originList.push_back( SOrigin(tri.GetMainVertex(), {}, true) );
     }
 
     bool accepted = vertexList.size()>0;
     std::string outNamePreffix = accepted? "Accepted Final Reco":"Rejected Final Reco";
     fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList, fVertex);
-
 
     // ------ Get the parallel tracks
     std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
@@ -363,11 +363,14 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
         newTrack.AssignId(ix);
         NewTrackList.push_back( newTrack );
     }
-    std::vector<STriangle> intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());
-    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, intersectionsInBall, fVertex, fVertexTrue);
+    std::vector<SOrigin> intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());
+    for(SOrigin & ori: intersectionsInBall){
+        std::cout<<ori;
+    }
+    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, {}, fVertex, fVertexTrue, intersectionsInBall);
 
-
-    SEvent recoEvent(originList);
+    //SEvent recoEvent(originList);
+    SEvent recoEvent(intersectionsInBall);
 
     return recoEvent;
 }

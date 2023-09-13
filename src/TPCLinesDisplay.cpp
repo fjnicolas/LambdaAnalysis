@@ -30,6 +30,7 @@
 #include "SObjects/TPCSimpleHits.h"
 #include "SObjects/TPCSimpleClusters.h"
 #include "SObjects/TPCSimpleTriangles.h"
+#include "SObjects/TPCSimpleEvents.h"
 
 
 class TPCLinesDisplay {
@@ -70,9 +71,10 @@ class TPCLinesDisplay {
             std::vector<SHit> selectedHitsV={},
             std::vector<SLinearCluster> clustersV={},
             SLinearCluster mainDirection = SLinearCluster(std::vector<SHit> {}),
-            std::vector<STriangle> origins = {}, 
+            std::vector<STriangle> originAngles = {}, 
             SVertex recoVertex = SVertex(),
-            SVertex trueVertex = SVertex());
+            SVertex trueVertex = SVertex(),
+            std::vector<SOrigin> origins = {} );
 };
 
 void TPCLinesDisplay::SetStyle(){
@@ -239,9 +241,10 @@ void TPCLinesDisplay::Show(
     std::vector<SHit> selectedHitsV,
     std::vector<SLinearCluster> clustersV,
     SLinearCluster mainDirection,
-    std::vector<STriangle> origins,
+    std::vector<STriangle> originAngles,
     SVertex recoVertex,
-    SVertex trueVertex)
+    SVertex trueVertex,
+    std::vector<SOrigin> origins)
 {
     
     SetStyle();
@@ -294,10 +297,18 @@ void TPCLinesDisplay::Show(
     }
 
     // triangles
+    for(size_t oIx=0; oIx<originAngles.size(); oIx++){
+        std::cout<<"Drawing origin angle "<<oIx<<std::endl;
+        DrawTriangle(originAngles[oIx], legend, "Origin "+std::to_string(oIx), fColorsOrigins[oIx], 90, 0.5);
+    }
+
+
+    // triangles
     for(size_t oIx=0; oIx<origins.size(); oIx++){
         std::cout<<"Drawing origin "<<oIx<<std::endl;
-        DrawTriangle(origins[oIx], legend, "Origin "+std::to_string(oIx), fColorsOrigins[oIx], 90, 0.5);
+        DrawVertex(origins[oIx].GetPoint(), legend, "Origin "+std::to_string(oIx), fColorsOrigins[oIx], 90, 0.5);
     }
+
 
     // draw PANDORA vertex
     if(recoVertex.Point().X()!=-1 && recoVertex.Point().Y()!=-1){

@@ -137,7 +137,7 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
     int fEv = event;
     int fSubRun = sr;
     int fNEvSkip = nskip;
-    int nEvents;
+    int nEvents=0;
     // Output paths for displays
     std::string fAppDisplayPath = "plots/";
     if(DebugMode==0) fAppDisplayPath = "plotsbg";
@@ -244,7 +244,8 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
             std::vector<int> RecoVertexUVYT = {recnuvU, recnuvV, recnuvC, recnuvTimeTick};
             std::cout << "  - Reco vertex (X, Y, Z) " << RecoVertexXYZ[0] << " " << RecoVertexXYZ[1] << " " << RecoVertexXYZ[2] << " (U, V, C, TT): " << RecoVertexUVYT[0] << " " << RecoVertexUVYT[1] << " " << RecoVertexUVYT[2] << " "<< RecoVertexUVYT[3]  << std::endl;
 
-            TPC = (nuvX > 0) ? 1 : 0;
+            // Set TPC using the drift coordinate of the reco vertex
+            //TPC = (nuvX > 0) ? 1 : 0;
             TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
             
             // We need a minimum number of hits to run the track finder
@@ -274,8 +275,10 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
 
             int nOrigins = recoEvent.GetNOrigins();
             // Update the efficiency calculator
-            if(nOrigins>0)
+            if(nOrigins>0){
                 _EfficiencyCalculator.UpdateSelected(ev);
+                _EfficiencyCalculator.UpdateHistograms(recoEvent);
+            }
             else
                 _EfficiencyCalculator.UpdateNotSelected(ev);
             std::cout<<_EfficiencyCalculator;
@@ -285,6 +288,7 @@ void RunAlgoTPCLines(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int
     
     // Print final status
     std::cout<<_EfficiencyCalculator;
+    _EfficiencyCalculator.DrawHistograms();
 
 
     return 0;

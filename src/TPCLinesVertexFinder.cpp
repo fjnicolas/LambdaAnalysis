@@ -810,10 +810,14 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
 }
 
 
-std::vector<STriangle> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLinearCluster> tracksList, SPoint ballVertex){
+std::vector<SOrigin> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLinearCluster> tracksList, SPoint ballVertex){
 
     std::vector<STriangle> triangleList;
-    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In vertex finder\n";    
+    std::vector<SOrigin> originList;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In vertex finder\n";
+
+    std::vector<bool> usedTrack(tracksList.size(), false);
+    std::vector<std::pair<int, int>> intersectingTracks;
 
     // ------- Look for possible intersections
     // ------ Loop 1
@@ -830,7 +834,7 @@ std::vector<STriangle> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<S
 
                 // ------ Check if the tracks are connected
                 // calculate connection based on the tracks connectedes
-                float connTol = 3 * std::max(track1.GetConnectedness(), track2.GetConnectedness());
+                float connTol = 20 * std::max(track1.GetConnectedness(), track2.GetConnectedness());
                 float conn = TPCLinesDistanceUtils::GetClusterConnectedness(track1.GetHitCluster(), track2.GetHitCluster());
                 bool connected = (conn < connTol); 
 
@@ -914,15 +918,67 @@ std::vector<STriangle> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<S
                 // check distance to the PANDORA vertex
                 float dIntPBallVertex = std::hypot( 0.3*(intP.X() - ballVertex.X()), 0.075*(intP.Y() - ballVertex.Y()) );
                 if( dIntPBallVertex < 20 ){
+                    // make the triangle
                     SPoint vertex1 = GetTrackssEuationOppositePoint( track1, {track1}, intP );
                     SPoint vertex2 = GetTrackssEuationOppositePoint( track2, {track2}, intP );
                     STriangle triangle = STriangle(intP, vertex1, vertex2, cloHit, track1.GetIntegral(), track2.GetIntegral());
-                    triangleList.push_back(triangle);
+                    triangleList.push_back( triangle );
+                    
+                    if(usedTrack[ix]==false && usedTrack[jx]==false){
+                        intersectingTracks.push_back(std::make_pair(ix, jx));
+                        originList.push_back( SOrigin(intP, {track1, track2}, true) );
+                        // mark as used tracks
+                        usedTrack[ix]=true;
+                        usedTrack[jx]=true;
+                    }
+                    else if(usedTrack[ix]==false || usedTrack[jx]==false){
+                        
+                        SLinearCluster newTrack = (usedTrack[ix]==false) ? track1 : track2;
+                        SLinearCluster previousTrack = (usedTrack[ix]==true) ? track1 : track2;
+
+                        bool merged=false;
+                        for(SOrigin & ori:originList){
+                            if(ori.HasTrackIndex(previousTrack.GetId())==true){
+                                float d = std::hypot(ori.GetPoint().X() - intP.X(), ori.GetPoint().Y() - intP.Y());
+                                if(d<10){
+                                    ori.AddTrack(newTrack, intP);
+                                    std::cout<<" Adding new track "<<ix<<" "<<jx<<std::endl;
+                                    usedTrack[ix]=true;
+                                    usedTrack[jx]=true;
+                                    merged=true;
+                                }
+                            }
+                        }
+
+                        if(merged==false){
+                            originList.push_back( SOrigin(intP, {track1, track2}, true) );
+                            usedTrack[ix]=true;
+                            usedTrack[jx]=true;
+                        }
+
+                    }
+                    
                 }
                 
             }
         }
     }
 
-    return triangleList;
+    // add origins of unmatched tracks with edge near PANDORA vertex
+    for(size_t k=0; k<tracksList.size(); k++){
+    
+        if(usedTrack[k]==true) continue;
+        SLinearCluster track = tracksList[k];
+        float d1 = std::hypot( 0.3*(track.GetStartPoint().X() - ballVertex.X()), 0.075*(track.GetStartPoint().Y() - ballVertex.Y()) );
+        float d2 = std::hypot( 0.3*(track.GetEndPoint().X() - ballVertex.X()), 0.075*(track.GetEndPoint().Y() - ballVertex.Y()) );
+        float d = std::min(d1, d2);
+        if( d < 20 && track.NHits()>=5 ){
+            SPoint edgePoint = (d1<d2)? track.GetStartPoint():track.GetEndPoint();
+            originList.push_back( SOrigin(edgePoint, {track}, true) );  
+        }
+
+    }
+
+
+    return originList;
 }

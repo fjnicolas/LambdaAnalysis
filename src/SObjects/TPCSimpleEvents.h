@@ -17,6 +17,7 @@
 
 #include "TPCSimpleLines.h"
 #include "TPCSimpleHits.h"
+#include "TPCSimpleClusters.h"
 #include "TPCSimpleTriangles.h"
 
 
@@ -24,14 +25,22 @@
 class SOrigin {
     private:
         SPoint fVertex;
-        bool fEdgeOrigin;
+        std::vector<SLinearCluster> fTrackList;
         int fMultiplicity;
-    
+        bool fEdgeOrigin;
+        
         
     public:
-        SOrigin(SPoint p, bool isEdge, int mult);
-    
+        SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge);
         
+        SPoint GetPoint(){ return fVertex;};
+        std::vector<SLinearCluster> GetTracks(){ return fTrackList; };
+        int Multiplicity(){return fMultiplicity;};
+        void AddTrack(SLinearCluster track, SPoint p); 
+        bool HasTrackIndex(int ix);
+
+        friend std::ostream& operator<<(std::ostream& out, SOrigin const& ori);
+
 };
 
 
@@ -46,8 +55,11 @@ class SEvent {
     public:
         SEvent(std::vector<SOrigin> origins);
 
+        std::vector<SOrigin> GetOrigins(){return fOriginList;};
         int GetNOrigins(){ return fOriginList.size();};
-    
+
+        int GetNOriginsMult(int mult);
+        int GetNOriginsMultGt(int mult);
         
 };
 
