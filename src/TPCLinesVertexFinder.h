@@ -36,7 +36,7 @@ class TPCLinesVertexFinder {
         bool TrackTriangleJunctionConatined(SLinearCluster track, STriangle tri);
         
         int GetNHitsBetweenJunction(SLinearCluster track, STriangle tri, std::vector<SLinearCluster> trackList, SPoint intP, std::vector<int> track1ListIx, 
-        std::vector<int> track2ListIx);
+        std::vector<int> track2ListIx, double tol);
         
         bool areVectorsEqual(const std::vector<int>& vec1, const std::vector<int>& vec2);
         

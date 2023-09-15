@@ -47,6 +47,7 @@ class TPCLinesAlgo {
         std::vector<SHit> fHitList;
         SVertex fVertex;
         SVertex fVertexTrue;
+        int fMaxX;
 
         // Hough algorithm
         TPCLinesHough fHoughAlgo;
@@ -82,7 +83,10 @@ class TPCLinesAlgo {
                         std::string eventLabel="");
         
         // Function to analyze the view
-        SEvent AnaView(std::string eventLabel);        
+        SEvent AnaView(std::string eventLabel);
+
+        // Function to get the average desnity of hits per wire
+        double GetAverageHitDensity();
 
         // Display
         void Display();                            

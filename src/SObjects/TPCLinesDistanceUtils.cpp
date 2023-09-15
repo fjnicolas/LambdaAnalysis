@@ -88,7 +88,7 @@ namespace TPCLinesDistanceUtils{
         return std::min(d0, (d1 + d2) / 2.);
     }
 
-    template <typename T1, typename T2>
+    /*template <typename T1, typename T2>
     double GetHitDistanceOverlap(const T1& hit1, const T2& hit2) {
         double y_range1_min = hit1.Y() - hit1.Width();
         double y_range1_max = hit1.Y() + hit1.Width();
@@ -99,6 +99,24 @@ namespace TPCLinesDistanceUtils{
         double dY = 1;
         if (!overlap) {
             dY = std::pow(hit1.Y() - hit2.Y(), 2);
+        }
+        return std::sqrt(dX + dY);
+    }*/
+
+
+    template <typename T1, typename T2>
+    double GetHitDistanceOverlap(const T1& hit1, const T2& hit2) {
+        double y_range1_min = hit1.Y() - hit1.Width();
+        double y_range1_max = hit1.Y() + hit1.Width();
+        double y_range2_min = hit2.Y() - hit2.Width();
+        double y_range2_max = hit2.Y() + hit2.Width();
+        bool overlap = (y_range1_min <= y_range2_max) && (y_range1_max >= y_range2_min);
+        double dX = ( std::abs(hit1.X() - hit2.X())<=1 )? 0:std::pow(hit1.X() - hit2.X(), 2);
+        double dY = 0;
+        if (!overlap) {
+            double d1 = std::abs(y_range1_min-y_range2_max);
+            double d2 = std::abs(y_range2_min-y_range1_max);
+            dY = std::min(d1, d2);
         }
         return std::sqrt(dX + dY);
     }
@@ -151,6 +169,7 @@ namespace TPCLinesDistanceUtils{
         }
         return minDistance;
     }
+    
 
 
     double GetpClusterDistanceW(SHit p1, SHit p2) {

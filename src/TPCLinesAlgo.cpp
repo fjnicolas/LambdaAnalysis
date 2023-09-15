@@ -94,6 +94,8 @@ void TPCLinesAlgo::SetHitList(std::string view,
             // Shift hits to have origin in (0,0)
             double minX = *std::min_element(filteredX.begin(), filteredX.end()) - 3;
             double minY = *std::min_element(filteredY.begin(), filteredY.end()) - 3;
+            double maxX = *std::max_element(filteredX.begin(), filteredX.end());
+        
 
             
             for (int i = 0; i < filteredX.size(); i++) {
@@ -110,6 +112,7 @@ void TPCLinesAlgo::SetHitList(std::string view,
 
             fVertex = SVertex(SPoint(vertexX, vertexY), view);
             fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), view);
+            fMaxX = maxX - minX;
             std::cout << "  ** Origin vertex: " << fVertex;
             std::cout << "  ** NInputHits:"<<fNTotalHits<<std::endl;
 
@@ -121,6 +124,32 @@ void TPCLinesAlgo::SetHitList(std::string view,
     }
 }
 
+
+//----------------------------------------------------------------------
+// Function to get the average hit density
+double TPCLinesAlgo::GetAverageHitDensity(){
+    // initialize hit map
+    std::map<int, int> fHitMap;
+    for(int i=0; i<=fMaxX; i++){
+        fHitMap[i]=0;
+    }
+
+    for(SHit & h:fHitList){
+        fHitMap[h.X()]+=1;
+    }
+
+    double sum=0;
+    int nwires=0;
+    for(int i=0; i<=fMaxX; i++){
+        if(fHitMap[i]>0 and 0.3*std::abs(i-fVertex.X())<40 ){
+            sum+=fHitMap[i];
+            nwires++;
+        }
+        
+    }
+
+    return sum/nwires;
+}
 
 //----------------------------------------------------------------------
 // Remove isolated hits
@@ -257,7 +286,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 // Main function
 SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
 {
-
+    int fAlgorithm = 0;
     // --- Objects for the Hough tracks
     int trkIter = 0;
     std::vector<SHit> hitListForHough = fHitList;
@@ -350,27 +379,37 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
     fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList, fVertex);
 
     // ------ Get the parallel tracks
-    std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
-    std::vector<SLinearCluster> NewTrackList;
-    for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
-        std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
-        for(size_t jx = 1; jx<parallelTracks[ix].size(); jx++){
-             std::vector<SHit> moreHits = parallelTracks[ix][jx].GetHits();
-             hitList.insert(hitList.end(), moreHits.begin(), moreHits.end());
+    std::vector<SOrigin> intersectionsInBall;
+    if(fAlgorithm==1){
+        std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
+        std::vector<SLinearCluster> NewTrackList;
+        for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
+            std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
+            for(size_t jx = 1; jx<parallelTracks[ix].size(); jx++){
+                std::vector<SHit> moreHits = parallelTracks[ix][jx].GetHits();
+                hitList.insert(hitList.end(), moreHits.begin(), moreHits.end());
+            }
+            SLinearCluster newTrack(hitList);
+            newTrack.FillResidualHits();
+            newTrack.AssignId(ix);
+            NewTrackList.push_back( newTrack );
         }
-        SLinearCluster newTrack(hitList);
-        newTrack.FillResidualHits();
-        newTrack.AssignId(ix);
-        NewTrackList.push_back( newTrack );
+        intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());
+        for(SOrigin & ori: intersectionsInBall){
+            std::cout<<ori;
+        }
+        fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, {}, fVertex, fVertexTrue, intersectionsInBall);
     }
-    std::vector<SOrigin> intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());
-    for(SOrigin & ori: intersectionsInBall){
-        std::cout<<ori;
-    }
-    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, {}, fVertex, fVertexTrue, intersectionsInBall);
 
-    //SEvent recoEvent(originList);
-    SEvent recoEvent(intersectionsInBall);
+    double hitDensity = GetAverageHitDensity();
+    std::cout<<"Hit density: "<<hitDensity<<std::endl;
 
-    return recoEvent;
+    SEvent recoEvent1(originList, hitDensity);    
+    SEvent recoEvent2(intersectionsInBall, hitDensity);
+
+    
+    if(fAlgorithm==0)
+        return recoEvent1;
+    else
+        return recoEvent2;
 }
