@@ -1,0 +1,11 @@
+#include "framsfilter_config.fcl"
+#include "run_frams_S.fcl"
+
+physics.frams: [@sequence::physics.frams, framsFilter]
+
+physics.filters.framsFilter: @local::FRAMSFilter
+
+outputs.out1.SelectEvents: [ "frams" ]
+
+physics.filters.framsFilter.CutGT: false
+physics.filters.framsFilter.UseGapCut: false

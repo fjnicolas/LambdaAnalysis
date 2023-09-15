@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+FRAMSFilter:
+{
+	module_type:	"FRAMSFilter"
+	FRAMSLabel: "framsTrue"
+	TMVAFilename: "FRAMSSelectionTMVA_BDT.weights.xml"
+	ScoreCut: 0.15
+	SelectionMode: false
+	UseGapCut: true
+	GapCut: 2.5
+}
+
+END_PROLOG

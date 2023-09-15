@@ -1,0 +1,3 @@
+#include "run_frams.fcl"
+
+services.TFileService.fileName: "FRAMSAnaOutput_S.root"

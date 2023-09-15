@@ -1,0 +1,50 @@
+#include "framsana_config.fcl"
+#include "simulationservices_sbnd.fcl"
+
+process_name: FRAMS
+
+source:
+{
+module_type: RootInput
+maxEvents: -1
+}
+
+outputs:
+{
+  out1:
+  {
+    module_type: RootOutput
+    fileName:    "frams-art.root"
+    dataTier:    "reconstructed"
+    compressionLevel: 1
+ }
+}
+
+services:
+{
+TFileService: { fileName: "FRAMSAnaOutput_R%r-%R_SR%s-%S.root"}
+@table::sbnd_services
+BackTrackerService: @local::standard_backtrackerservice
+
+ParticleInventoryService: @local::standard_particleinventoryservice
+#SpaceCharge:               @local::sbnd_spacecharge
+}
+
+physics:
+{
+	producers:
+	{
+		framsTrue: @local::FRAMSAna
+		framsReco: @local::FRAMSAna
+	}
+
+	frams: [framsTrue, framsReco]
+
+	trigger_paths: [frams]
+
+	stream1: [out1]
+	end_paths: [stream1]
+}
+
+
+physics.producers.framsReco.UseTrueVertex: false

@@ -1,0 +1,15 @@
+BEGIN_PROLOG
+VertexMult:
+{
+  module_type:  "VertexMult"
+
+  MCTruthLabel: "generator"
+  HitLabel: "gaushit"
+  RecoLabel: "pandora"
+  ApplyFiducialCut: true
+  TreeName: "VertexMultTreeS"
+
+
+
+}
+END_PROLOG

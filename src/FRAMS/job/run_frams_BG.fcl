@@ -1,0 +1,6 @@
+#include "run_frams.fcl"
+
+services.TFileService.fileName: "FRAMSAnaOutput_BG.root"
+
+physics.producers.framsTrue.TreeName: FRAMSTreeBG
+physics.producers.framsReco.TreeName: FRAMSTreeBG
