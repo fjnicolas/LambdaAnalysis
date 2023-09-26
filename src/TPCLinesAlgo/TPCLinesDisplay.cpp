@@ -295,10 +295,6 @@ void TPCLinesDisplay::Show(
     c.Update();
     c.WaitPrimitive(); 
 
-
-
-
-
     return;
 
 }

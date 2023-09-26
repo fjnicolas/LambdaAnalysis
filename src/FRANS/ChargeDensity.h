@@ -3,25 +3,37 @@
 ///
 /// Created by Fran Nicolas, November 2022
 ////////////////////////////////////////////////////////////////////////
+#ifndef SBND_CHARGEDENSITY_H
+#define SBND_CHARGEDENSITY_H
+
 #include <vector>
 #include <limits>
 #include <numeric>
 #include <map>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <math.h>
 
 #include "TGraphErrors.h"
 #include "TH1F.h"
 #include "TGraph.h"
 #include "TCanvas.h"
-
-#include "VertexView.hh"
-#include "ChargeDensityAlgConf.hh"
+#include "TLegend.h"
+#include <TROOT.h>
+#include <TStyle.h>
+#include "TSystem.h"
+#include <TROOT.h>
+#include "TFile.h"
 #include "TMVA/Reader.h"
 
-#define DefaultMaxZSize 2000
+#include "LeastSquares.h"
+#include "VertexView.h"
+#include "ChargeDensityPset.h"
 
-#ifndef SBND_CHARGEDENSITY_H
-#define SBND_CHARGEDENSITY_H
+#include "TPCSimpleHits.h"
+
+#define DefaultMaxZSize 2000
 
 class ChargeDensity{
 
@@ -31,12 +43,13 @@ class ChargeDensity{
     ChargeDensity & operator=(ChargeDensity const&) = delete;
     ChargeDensity & operator=(ChargeDensity &&) = delete;
 
-    ChargeDensity(ChargeDensityConf::FRAMSPsetType const& config, unsigned int view, unsigned int tpc);
+    ChargeDensity(FRAMSPsetType const& config);
 
-    void Fill(std::vector<art::Ptr<recob::Hit>> hitsVect, VertexView vertex);
-    void HelloWorld();
-    void Save2ROOT(art::TFileDirectory tfdir, std::string name);
+    //void Fill(std::vector<art::Ptr<recob::Hit>> hitsVect, VertexView vertex);
+    void Fill(std::vector<SHit> hitsVect, SVertex vertex);
+    void Display(std::string fOutputPath, std::string name);
 
+    // Access class members
     double Delta(){return fDelta;}
     double Eta(){return fEta;}
     double FitScore(){return fFitScore;}
@@ -49,28 +62,14 @@ class ChargeDensity{
   private:
 
     // configuration parameters
-    bool fApplyRawSmoothing;
-    bool fApplySmoothing;
-    bool fApplyCumulativeSmoothing;
-    unsigned int fNDriftPack;
-    unsigned int fNWirePack;
-    float fExpoAvSmoothPar;
-    int fUnAvNeighbours;
-    double fCumulativeCut;
-    int fSlidingWindowN;
-    int fMaxRadius;
-    int fNSamplesBeginSlope;
-    bool fDebugMode;
-    bool fCalculateScore;
-    std::string fTMVAFilename;
-    //ChargeDensityConf::ConfParameters_t fPset;
+    FRAMSPsetType const fFRANSPset;
 
     // view information
     unsigned int fView;
     unsigned int fTPC;
 
     // input vertex
-    VertexView fVertex;
+    SVertex fVertex;
 
     // vectors storing the charge profile
     std::vector<double> fZ;

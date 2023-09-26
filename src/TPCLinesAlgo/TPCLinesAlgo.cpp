@@ -65,6 +65,7 @@ void TPCLinesAlgo::SetHitList(std::string view,
     if (view == "V0" || view == "V1") vertexXTrue = vertexTrue[1];
     double vertexYTrue = vertexTrue[3] / fTPCLinesPset.DriftConversion;
     if(fTPCLinesPset.Verbose>=2) std::cout << "  ** Vertex XY: " << vertexX << " " << vertexY << std::endl;
+    
     if (vertexX != -1){
 
         // Get hits in the selected plane

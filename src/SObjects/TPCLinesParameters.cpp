@@ -22,24 +22,3 @@
 #include "TROOT.h"
 
 #include "TPCLinesParameters.h"
-
-std::vector<TPad*> buildpadcanvas(int nx, int ny){
-    std::vector<TPad*> Tp;
-    double x=0, y=1, dx=1./nx, dy=1./ny;
-    TPad *pad = new TPad("","", 0, 0, 1, 1, -1, -1, -1);
-    Tp.push_back(pad);
-    for(int i=1; i<=nx; i++){
-      y=1;
-      for(int j=1; j<=ny; j++){
-        TPad *pad = new TPad("","", x, y-dy, x+dx, y, -1, -1, -1);
-        Tp.push_back(pad);
-        y-=dy;
-      }
-      x+=dx;
-    }
-    for(int i=0; i<=nx*ny; i++){
-      Tp.at(i)->Draw();
-      Tp.at(i)->SetBottomMargin(0.15);
-    }
-    return Tp;
-}

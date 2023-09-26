@@ -1,31 +1,12 @@
-/*// Objects
-#include "src/SObjects/TPCLinesParameters.cpp"
-#include "src/SObjects/TPCSimpleHits.cpp"
-#include "src/SObjects/TPCSimpleLines.cpp"
-#include "src/SObjects/TPCSimpleClusters.cpp"
-#include "src/SObjects/TPCSimpleTriangles.cpp"
-#include "src/SObjects/TPCSimpleEvents.cpp"
-
-// Algorithms
-#include "src/TPCLinesHough.cpp"
-#include "src/TPCLinesTrackFinder.cpp"
-#include "src/TPCLinesVertexFinder.cpp"
-#include "src/TPCLinesAlgo.cpp"
-
-// Display
-#include "src/TPCLinesDisplay.cpp"*/
-
 #include <string>
 #include <iostream>
 
 #include "TString.h"
-#include "TTree.h"
-#include "TFile.h"
-#include "TSystemDirectory.h"
-#include "TString.h"
 #include <TApplication.h>
 
 #include "CommandLineParser.h"
+#include "SEventHandle.h"
+#include "STPCAnalyzerTreeReader.h"
 #include "TPCSimpleEvents.h"
 #include "TPCLinesParameters.h"
 #include "TPCLinesAlgo.h"
@@ -86,6 +67,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     bool fAddCollinearLines = false;
     int fVerboseVertexFinder = Debug;
     // -------------------------------------------- 
+
+    // Get input files
+    std::vector<TString> fFilePaths = GetInputFileList(file_name, ext);
     
     // ----------- Define parameter sets --------------------------------- 
     TrackFinderAlgorithmPsetType fPsetTrackFinder(fMaxDTube,
@@ -130,32 +114,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // ------------------------------------------------------------------ 
 
 
-    // Get the candidate Files
-    std::vector<TString> fFilePaths;
-    TSystemDirectory dir(".", ".");
-    TList *files = dir.GetListOfFiles();
-    TString targetFileName(file_name);
-    TString targetExtension(ext);
-    std::cout<<" Target file name "<<targetFileName<<std::endl;
-    gSystem->Exec("ls");
-    if (files){
-        TSystemFile *file;
-        TString fname;
-        TIter next(files);
-        while ((file=(TSystemFile*)next())) {
-            fname = file->GetName();
-            
-            if (!file->IsDirectory() && fname.EndsWith(targetExtension)){
-                if(fname.Contains(targetFileName)){
-                    fFilePaths.push_back(fname);
-                }
-                std::cout << fname << " Target:" << targetFileName <<std::endl;
-                std::cout<<" Contains: "<<fname.Contains(targetFileName)<<std::endl;
-                
-                
-            }
-        }
-    }
 
     // Define the program control variables
     int fNEv = n;
@@ -180,73 +138,18 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     for (const auto& filepath : fFilePaths) {
 
         std::cout<<" ANALYZING THE FILE: "<<filepath<<std::endl;
-
-        TFile* f= new TFile(filepath);
-	    TTree* tree = (TTree*)f->Get("ana/AnaTPCTree");
+        MyTPCTreeReader treeReader(filepath, "ana/AnaTPCTree");
         
-        // event ID
-        int eventID;
-        int subrunID;
-        int runID;
-        tree->SetBranchAddress("EventID",&eventID);
-        tree->SetBranchAddress("RunID",&runID);
-        tree->SetBranchAddress("SubRunID",&subrunID);
-        // true Vertex
-        double nuvE, nuvT, nuvX, nuvY, nuvZ;
-        int nuvU, nuvV, nuvC, nuvTimeTick;
-        int TPC;
-        tree->SetBranchAddress("TrueVEnergy",&nuvE);
-        tree->SetBranchAddress("TrueVt",&nuvT);
-        tree->SetBranchAddress("TrueVx",&nuvX);
-        tree->SetBranchAddress("TrueVy",&nuvY);
-        tree->SetBranchAddress("TrueVz",&nuvZ);
-        tree->SetBranchAddress("TrueVU",&nuvU);
-        tree->SetBranchAddress("TrueVV",&nuvV);
-        tree->SetBranchAddress("TrueVC",&nuvC);
-        tree->SetBranchAddress("TrueVTimeTick",&nuvTimeTick);
-        // reco Vertex
-        double recnuvX = -1, recnuvY = -1, recnuvZ = -1;
-        int recnuvU = -1, recnuvV = -1, recnuvC = -1, recnuvTimeTick = -1;
-        tree->SetBranchAddress("RecoVx",&recnuvX);
-        tree->SetBranchAddress("RecoVy",&recnuvY);
-        tree->SetBranchAddress("RecoVz",&recnuvZ);
-        tree->SetBranchAddress("RecoVU",&recnuvU);
-        tree->SetBranchAddress("RecoVV",&recnuvV);
-        tree->SetBranchAddress("RecoVC",&recnuvC);
-        tree->SetBranchAddress("RecoVTimeTick",&recnuvTimeTick);
-
-        std::vector<double> * hitsIntegral=new std::vector<double>;
-        std::vector<double> * hitsPeakTime=new std::vector<double>;
-        std::vector<int> * hitsChannel=new std::vector<int>;
-        std::vector<double> * hitsRMS=new std::vector<double>;
-        //std::vector<double> * hitsWidth=new std::vector<double>;
-        std::vector<double> * hitsStartT=new std::vector<double>;
-        std::vector<double> * hitsEndT=new std::vector<double>;
-        std::vector<double> * hitsChi2=new std::vector<double>;
-        std::vector<double> * hitsNDF=new std::vector<double>;
-        std::vector<int> * hitsClusterID=new std::vector<int>;        
-        tree->SetBranchAddress("HitsIntegral",&hitsIntegral);
-        tree->SetBranchAddress("HitsPeakTime",&hitsPeakTime);
-        tree->SetBranchAddress("HitsChannel",&hitsChannel);
-        tree->SetBranchAddress("HitsRMS",&hitsRMS);
-        //tree->SetBranchAddress("HitsWidth",&hitsWidth);
-        tree->SetBranchAddress("HitsStartT",&hitsStartT);
-        tree->SetBranchAddress("HitsEndT",&hitsEndT);
-        tree->SetBranchAddress("HitsChi2",&hitsChi2);
-        tree->SetBranchAddress("HitsNDF",&hitsNDF);
-        tree->SetBranchAddress("HitsClusterID",&hitsClusterID);
-
-
-        for (int entry = 0; entry < tree->GetEntries(); entry++) {
+        for (int entry = 0; entry < treeReader.NEntries(); entry++) {
             std::cout<<"Entry "<<entry<<std::endl;
             // get the entry
-            tree->GetEntry(entry);
+            treeReader.GetEntry(entry);
 
             // check program control variables
-            SEventId ev(runID, subrunID, eventID);
+            SEventId ev(treeReader.runID, treeReader.subrunID, treeReader.eventID);
             if (fNEv > 0 && nEvents >= fNEv) continue;
-            if (eventID != fEv && fEv != -1) continue;
-            if (subrunID != fSubRun && fSubRun != -1) continue;
+            if (treeReader.eventID != fEv && fEv != -1) continue;
+            if (treeReader.subrunID != fSubRun && fSubRun != -1) continue;
             nEntries++;
             if (nEntries <= fNEvSkip) continue;
             
@@ -254,23 +157,23 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             std::cout << "\n\n ************** Analyzing: " << ev;
             
             // True vertex
-            std::vector<double> VertexXYZ = {nuvX, nuvY, nuvZ};
-            std::vector<int> VertexUVYT = {nuvU, nuvV, nuvC, nuvTimeTick};
-            std::cout << "   - True vertex (X, Y, Z, T) " << VertexXYZ[0] << " " << VertexXYZ[1] << " " << VertexXYZ[2] << " " << nuvT << " (U, V, C, TT): " << VertexUVYT[0] << " " << VertexUVYT[1] << " " << VertexUVYT[2] << " " << VertexUVYT[3] << std::endl;
+            std::vector<double> VertexXYZ = {treeReader.nuvX, treeReader.nuvY, treeReader.nuvZ};
+            std::vector<int> VertexUVYT = {treeReader.nuvU, treeReader.nuvV, treeReader.nuvC, treeReader.nuvTimeTick};
+            std::cout << "   - True vertex (X, Y, Z, T) " << VertexXYZ[0] << " " << VertexXYZ[1] << " " << VertexXYZ[2] << " " << treeReader.nuvT << " (U, V, C, TT): " << VertexUVYT[0] << " " << VertexUVYT[1] << " " << VertexUVYT[2] << " " << VertexUVYT[3] << std::endl;
 
             // Reco vertex
-            std::vector<double> RecoVertexXYZ = {recnuvX, recnuvY, recnuvZ};
-            std::vector<int> RecoVertexUVYT = {recnuvU, recnuvV, recnuvC, recnuvTimeTick};
+            std::vector<double> RecoVertexXYZ = {treeReader.recnuvX, treeReader.recnuvY, treeReader.recnuvZ};
+            std::vector<int> RecoVertexUVYT = {treeReader.recnuvU, treeReader.recnuvV, treeReader.recnuvC, treeReader.recnuvTimeTick};
             std::cout << "  - Reco vertex (X, Y, Z) " << RecoVertexXYZ[0] << " " << RecoVertexXYZ[1] << " " << RecoVertexXYZ[2] << " (U, V, C, TT): " << RecoVertexUVYT[0] << " " << RecoVertexUVYT[1] << " " << RecoVertexUVYT[2] << " "<< RecoVertexUVYT[3]  << std::endl;
 
             // Set TPC using the drift coordinate of the reco vertex
             //TPC = (nuvX > 0) ? 1 : 0;
-            TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
+            int TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
             
             // We need a minimum number of hits to run the track finder
-            size_t nhits = hitsChannel->size();
+            size_t nhits = treeReader.hitsChannel->size();
             std::cout << "  - NHits: " << nhits << std::endl;
-            if(nhits<=3 || recnuvU==-1){
+            if(nhits<=3 || treeReader.recnuvU==-1){
                 std::cout<<"   SKIPPED NHits or RecoVertex \n";
                 _EfficiencyCalculator.UpdateSkipped(ev);
                 continue;
@@ -281,13 +184,14 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
             // Set the hits
             _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
-                                    hitsChannel,
-                                    hitsPeakTime,
-                                    hitsIntegral, 
-                                    hitsRMS,
-                                    hitsStartT, 
-                                    hitsEndT,
+                                    treeReader.hitsChannel,
+                                    treeReader.hitsPeakTime,
+                                    treeReader.hitsIntegral, 
+                                    treeReader.hitsRMS,
+                                    treeReader.hitsStartT, 
+                                    treeReader.hitsEndT,
                                     "");
+            
 
             // Analyze
             SEvent recoEvent = _TPCLinesAlgo.AnaView(ev.Label());

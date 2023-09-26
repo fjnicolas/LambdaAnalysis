@@ -22,5 +22,5 @@ add_library(tpclines_library
 
 # Link math_library to string_library
 target_link_libraries(tpclines_library PRIVATE ROOT::Hist ROOT::Graf ROOT::Gpad)
-target_link_libraries(tpclines_library PRIVATE sobjects_library sevents_library)
+target_link_libraries(tpclines_library PRIVATE sobjects_library)
 
