@@ -8,20 +8,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#include <numeric>
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <algorithm>
-#include <unordered_map>
-
-
 #include "TPCLinesTrackFinder.h"
-#include "SObjects/TPCLinesDistanceUtils.cpp"
-#include "TPCLinesDirectionRecoUtils.cpp"
-#include "TPCLinesDBSCAN.cpp"
-#include "SObjects/TPCLinesPCA.cpp"
-
 
 //----------------------------------------------------------------------
 // Constructor

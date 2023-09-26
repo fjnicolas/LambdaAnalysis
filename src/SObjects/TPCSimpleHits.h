@@ -7,12 +7,17 @@
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
+
+
 #ifndef TPC_SIMPLE_HITS_H
 #define TPC_SIMPLE_HITS_H
+
 
 #include <iostream>
 #include <string>
 #include <iosfwd>
+#include <vector>
+#include <cmath>
 
 class SPoint {
     private:
@@ -88,5 +93,6 @@ class SHit {
         // Overload cout
         friend std::ostream& operator<<(std::ostream& out, SHit const& h);
 };
+
 
 #endif // TPC_SIMPLE_HITS_H

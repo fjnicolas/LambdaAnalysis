@@ -7,25 +7,8 @@
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
-#ifndef TPCLINES_PCA_H
-#define TPCLINES_PCA_H
 
-#include <iostream>
-#include <vector>
-#include <cmath>
-
-#include "TPCSimpleHits.h"
-#include "TPCSimpleLines.h"
-
-class TPCLinesPCA {
-    public:
-        TPCLinesPCA() {}
-
-        LineEquation PerformPCA2D(std::vector<SHit>& data);
-
-        LineEquation PerformPCA2DThreshold(std::vector<SHit> &hitList, float th, bool reverse = false);
-
-};
+#include "TPCLinesPCA.h"
 
 LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
 
@@ -90,5 +73,3 @@ LineEquation TPCLinesPCA::PerformPCA2DThreshold(std::vector<SHit> &hitList, floa
 
     return PerformPCA2D(points);
 }
-
-#endif // TPCLINES_PCA_H

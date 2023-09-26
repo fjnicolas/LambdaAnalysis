@@ -14,12 +14,17 @@
 #include <vector>
 #include <cmath>
 #include <map>
+#include <numeric>
 
 
-#include "SObjects/TPCLinesParameters.cpp"
+/*#include "SObjects/TPCLinesParameters.cpp"
 #include "SObjects/TPCSimpleHits.h"
-#include "SObjects/TPCSimpleLines.h"
-#include "TPCLinesDisplay.cpp"
+#include "SObjects/TPCSimpleLines.h"*/
+
+#include "TPCLinesParameters.h"
+#include "TPCSimpleHits.h"
+#include "TPCSimpleLines.h"
+#include "TPCLinesDisplay.h"
 
 
 class TPCLinesHough {

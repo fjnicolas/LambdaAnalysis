@@ -8,13 +8,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <algorithm>
-#include <numeric>
-#include <cmath>
-
 #include "TPCLinesVertexFinder.h"
 
 
@@ -154,7 +147,7 @@ bool TPCLinesVertexFinder::areVectorsEqual(const std::vector<int>& vec1, const s
 }
 
 
-SPoint TPCLinesVertexFinder::GetTracksIntersection(SLinearCluster track1, SLinearCluster track2, double dMax, bool useEdgeSlopes = true, bool useFit = false){
+SPoint TPCLinesVertexFinder::GetTracksIntersection(SLinearCluster track1, SLinearCluster track2, double dMax, bool useEdgeSlopes, bool useFit){
     SPoint intP(-1, -1);
 
     if (useFit) {
@@ -201,7 +194,7 @@ SPoint TPCLinesVertexFinder::GetTracksIntersection(SLinearCluster track1, SLinea
 }
 
 
-int TPCLinesVertexFinder::GetHitsContainedInLineEquation(LineEquation trackEq, std::vector<SHit> hitList, float tol = 1.0) {
+int TPCLinesVertexFinder::GetHitsContainedInLineEquation(LineEquation trackEq, std::vector<SHit> hitList, float tol) {
     
     int nhits = 0;
 
@@ -220,7 +213,7 @@ int TPCLinesVertexFinder::GetHitsContainedInLineEquation(LineEquation trackEq, s
 // GetHitsContainedInHypo
 // Input two tracks, get the NHits closer to a vertex
 // Check how many hits of each track are contained in the line equation of the other track
-std::vector<SHit> TPCLinesVertexFinder::GetMutualHitsContainedInHypo(SLinearCluster track1, SLinearCluster track2,  SPoint intP, int nHits, float tol = 1.0) {
+std::vector<SHit> TPCLinesVertexFinder::GetMutualHitsContainedInHypo(SLinearCluster track1, SLinearCluster track2,  SPoint intP, int nHits, float tol) {
     
     // Get hits closest to the itneraction point
     int maxHits = std::min(nHits, track1.NHits());

@@ -38,15 +38,7 @@ bool SOrigin::HasTrackIndex(int ix){
     return hasIx;
 }
 
-std::ostream& operator<<(std::ostream& out, SOrigin & ori)
-{
-    out << " SOrigin -- Vertex=(" << ori.GetPoint().X() << ", " <<ori.GetPoint().Y() << ")"<< " Mult="<<ori.Multiplicity()<< " Tracks= ";
-    for(auto & trk: ori.GetTracks()){
-        out<<trk.GetId()<<" ";
-    }
-    out<<"  NHits"<<ori.NHits()<<std::endl;
-    return out;
-}
+
 
 
 

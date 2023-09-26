@@ -42,7 +42,17 @@ class SOrigin {
         bool HasTrackIndex(int ix);
         int NHits(){return fNHits;};
 
-        friend std::ostream& operator<<(std::ostream& out, SOrigin const& ori);
+        //friend std::ostream& operator<<(std::ostream& out, SOrigin const& ori);
+
+        friend std::ostream& operator<<(std::ostream& out, SOrigin & ori)
+        {
+            out << " SOrigin -- Vertex=(" << ori.GetPoint().X() << ", " <<ori.GetPoint().Y() << ")"<< " Mult="<<ori.Multiplicity()<< " Tracks= ";
+            for(auto & trk: ori.GetTracks()){
+                out<<trk.GetId()<<" ";
+            }
+            out<<"  NHits"<<ori.NHits()<<std::endl;
+            return out;
+        }
 };
 
 

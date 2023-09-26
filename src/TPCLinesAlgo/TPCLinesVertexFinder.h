@@ -16,14 +16,14 @@
 #include <cmath>
 #include <map>
 
-#include "SObjects/TPCSimpleHits.h"
-#include "SObjects/TPCSimpleLines.h"
-#include "SObjects/TPCSimpleTriangles.h"
-#include "SObjects/TPCLinesParameters.cpp"
-#include "SObjects/TPCLinesDistanceUtils.cpp"
-#include "SObjects/TPCSimpleEvents.h"
-#include "TPCLinesDirectionRecoUtils.cpp"
-
+#include "TPCSimpleHits.h"
+#include "TPCSimpleClusters.h"
+#include "TPCSimpleLines.h"
+#include "TPCSimpleTriangles.h"
+#include "TPCLinesParameters.h"
+#include "TPCLinesDistanceUtils.h"
+#include "TPCSimpleEvents.h"
+#include "TPCLinesDirectionRecoUtils.h"
 
 
 class TPCLinesVertexFinder {

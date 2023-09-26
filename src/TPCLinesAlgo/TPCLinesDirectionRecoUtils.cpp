@@ -7,23 +7,12 @@
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
-#ifndef DIRECTIONRECO_UTILS_H
-#define DIRECTIONRECO_UTILS_H
 
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <algorithm>
-#include <numeric>
-
-#include "SObjects/TPCSimpleHits.h"
-#include "SObjects/TPCSimpleClusters.h"
-#include "SObjects/TPCSimpleLines.h"
-
+#include "TPCLinesDirectionRecoUtils.h"
 
 namespace TPCLinesDirectionUtils{
 
-    std::vector<SLinearCluster> SlopeTrackMerger(std::vector<SLinearCluster> trackList, double distTh, double slopeTh, int verbose=0){
+    std::vector<SLinearCluster> SlopeTrackMerger(std::vector<SLinearCluster> trackList, double distTh, double slopeTh, int verbose){
         if(verbose>=1) std::cout << "\n\n+-+-+-+-+-+-+- Slope track merger +-+-+-+-+-+-+-\n";
         if(verbose>=1) std::cout << "NTracks: " << trackList.size() << '\n';
 
@@ -95,7 +84,7 @@ namespace TPCLinesDirectionUtils{
     }
 
 
-    bool GetLineHypoDistance(SLinearCluster mergeTrack, SLinearCluster track, int tol=1, int verbose=0) {
+    bool GetLineHypoDistance(SLinearCluster mergeTrack, SLinearCluster track, int tol, int verbose) {
         
         LineEquation trackEq;
         SHit trackEdgeHit;
@@ -129,7 +118,7 @@ namespace TPCLinesDirectionUtils{
     }
 
 
-    bool FullTrackContained(SLinearCluster mergeTrack, SLinearCluster track, double tol = 1.0) {
+    bool FullTrackContained(SLinearCluster mergeTrack, SLinearCluster track, double tol) {
 
         LineEquation mergeTrackEq = (mergeTrack.GetMeanX() > track.GetMeanX()) ?
                                             mergeTrack.GetTrackEquationStart() :
@@ -147,7 +136,7 @@ namespace TPCLinesDirectionUtils{
     }
 
 
-    std::pair<bool, int> GetNHitsInHypo(SLinearCluster track1, SLinearCluster track2, int fNHits=6, double fWidthTol=1.0) {
+    std::pair<bool, int> GetNHitsInHypo(SLinearCluster track1, SLinearCluster track2, int fNHits, double fWidthTol) {
         int nhits1 = std::min(fNHits, track1.NHits());
         std::vector<SHit> trk1Hits = std::vector<SHit>(track1.GetHits().end() - nhits1, track1.GetHits().end());
         SLinearCluster trk1(trk1Hits);
@@ -212,7 +201,7 @@ namespace TPCLinesDirectionUtils{
         int maxHitsShortTrack,
         float dTol,
         float connTolEps,
-        int verbose=0
+        int verbose
     ) {
         if(verbose>=1) std::cout << "\n+-+-+-+-+-+-+- Analyzing short tracks +-+-+-+-+-+-+-" << std::endl;
         
@@ -289,7 +278,7 @@ namespace TPCLinesDirectionUtils{
 
 
     std::vector<std::vector<SLinearCluster>> GetParallelTracks(
-        std::vector<SLinearCluster>& trackList, double dist1DTh, double fAngleTh, double fMaxDWires, int verbose=0) {
+        std::vector<SLinearCluster>& trackList, double dist1DTh, double fAngleTh, double fMaxDWires, int verbose) {
         
         if(verbose>=1) std::cout << "\n+-+-+-+-+-+-+- Parallel track finder +-+-+-+-+-+-+-\n";
 
@@ -556,7 +545,7 @@ namespace TPCLinesDirectionUtils{
     }
 
 
-    SLinearCluster GetMainDirectionLongest(std::vector<std::vector<SLinearCluster>> trackClusterList, std::vector<SLinearCluster> & selectedTracksList, std::vector<SLinearCluster> & freeTracksList, int minHits=6) {
+    SLinearCluster GetMainDirectionLongest(std::vector<std::vector<SLinearCluster>> trackClusterList, std::vector<SLinearCluster> & selectedTracksList, std::vector<SLinearCluster> & freeTracksList, int minHits) {
         
         int maxIndex = 0;
         double maxTrackLength = 0.0;
@@ -625,7 +614,7 @@ namespace TPCLinesDirectionUtils{
     }
 
 
-    SLinearCluster GetMainDirectionDownstream(std::vector<std::vector<SLinearCluster>> trackClusterList, std::vector<SLinearCluster> & selectedTracksList, std::vector<SLinearCluster> & freeTracksList, int minHits=6) {
+    SLinearCluster GetMainDirectionDownstream(std::vector<std::vector<SLinearCluster>> trackClusterList, std::vector<SLinearCluster> & selectedTracksList, std::vector<SLinearCluster> & freeTracksList, int minHits) {
         
         int maxIndex = 0;
         double minXStart = 1e6;
@@ -679,10 +668,4 @@ namespace TPCLinesDirectionUtils{
     }
 
 }
-
-
-
-
-
-#endif // TPC_SIMPLE_CLUSTERS_H
 

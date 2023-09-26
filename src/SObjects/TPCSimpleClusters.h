@@ -14,15 +14,19 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <numeric>
+#include <iosfwd>
+#include <limits>
 
 #include "TPCSimpleHits.h"
 #include "TPCSimpleLines.h"
+#include "TPCLinesPCA.h"
+#include "TPCLinesHitDistanceUtils.h"
+
 
 class SCluster {
     private:
-        int fNHits = 0;
+        int fNHits;
 
         std::vector<SHit> fHitList;
         std::vector<double> fConnectednessV;
@@ -70,32 +74,6 @@ class SCluster {
 
 
 
-// Function to detect outliers using IQR method
-std::vector<int> detect_outliers_iqr(std::vector<double> data, double threshold = 1.5) {
-    // Calculate the first and third quartiles (25th and 75th percentiles)
-    std::sort(data.begin(), data.end());
-    double q1 = data[data.size() / 4];
-    double q3 = data[data.size() * 3 / 4];
-
-    // Calculate the IQR
-    double iqr = q3 - q1;
-
-    // Calculate the lower and upper bounds for outliers
-    double lower_bound = q1 - threshold * iqr;
-    double upper_bound = q3 + threshold * iqr;
-
-    // Find the outliers in the data
-    std::vector<int> outlier_indices;
-    for (int i = 0; i < data.size(); i++) {
-        if (data[i] < lower_bound || data[i] > upper_bound) {
-            outlier_indices.push_back(i);
-        }
-    }
-
-    return outlier_indices;
-}
-
-
 
 // Class to represent a linear cluster
 class SLinearCluster {
@@ -105,14 +83,14 @@ class SLinearCluster {
 
         static constexpr double DefaultMax = std::numeric_limits<double>::max();
    
-        float fMinX = DefaultMax;
-        float fMinY = DefaultMax;
-        float fMaxX = 0;
-        float fMaxY = 0;
-        float fYAtMaxX = 0;
-        float fYAtMinX = 0;
-        float fMeanX = 0;
-        float fMeanY = 0;
+        float fMinX;
+        float fMinY;
+        float fMaxX;
+        float fMaxY;
+        float fYAtMaxX;
+        float fYAtMinX;
+        float fMeanX;
+        float fMeanY;
 
         LineEquation fTrackEquation;
         LineEquation fTrackEquationStart;
@@ -167,10 +145,12 @@ class SLinearCluster {
         void AssignId(int id) {fId = id;}
         void AddHit(SHit hit) {fHitCluster.AddHit(hit);}
 
+        std::vector<int> detect_outliers_iqr(std::vector<float> data, float threshold);
+        std::vector<int> detect_outliers_iqr2(std::vector<double> data, double threshold = 1.5);
+
         void FillResidualHits();
 
 };
-
 
 
 #endif // TPC_SIMPLE_CLUSTERS_H

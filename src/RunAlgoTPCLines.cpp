@@ -1,4 +1,4 @@
-// Objects
+/*// Objects
 #include "src/SObjects/TPCLinesParameters.cpp"
 #include "src/SObjects/TPCSimpleHits.cpp"
 #include "src/SObjects/TPCSimpleLines.cpp"
@@ -13,12 +13,35 @@
 #include "src/TPCLinesAlgo.cpp"
 
 // Display
-#include "src/TPCLinesDisplay.cpp"
+#include "src/TPCLinesDisplay.cpp"*/
 
+#include <string>
+#include <iostream>
 
-//void RunAlgoTPCLines
-int main(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, int sr=-1, std::string file_name="", const char *directory_path=".", const char *ext=".root")
+#include "TString.h"
+#include "TTree.h"
+#include "TFile.h"
+#include "TSystemDirectory.h"
+#include "TString.h"
+#include <TApplication.h>
+
+#include "CommandLineParser.h"
+#include "TPCSimpleEvents.h"
+#include "TPCLinesParameters.h"
+#include "TPCLinesAlgo.h"
+
+void RunAlgoTPCLines(const CommandLineParser& parser)
 {
+
+    int Debug = parser.getDebug();
+    int DebugMode = parser.getDebugMode();
+    int n = parser.getN();
+    int nskip = parser.getNskip();
+    int event = parser.getEvent();
+    int sr = parser.getSr();
+    std::string file_name = parser.getFileName();
+    std::string directory_path = parser.getDirectoryPath();
+    std::string ext = parser.getExtension();
 
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
     // View to use
@@ -112,6 +135,7 @@ int main(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, i
     TSystemDirectory dir(".", ".");
     TList *files = dir.GetListOfFiles();
     TString targetFileName(file_name);
+    TString targetExtension(ext);
     std::cout<<" Target file name "<<targetFileName<<std::endl;
     gSystem->Exec("ls");
     if (files){
@@ -121,7 +145,7 @@ int main(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, i
         while ((file=(TSystemFile*)next())) {
             fname = file->GetName();
             
-            if (!file->IsDirectory() && fname.EndsWith(ext)){
+            if (!file->IsDirectory() && fname.EndsWith(targetExtension)){
                 if(fname.Contains(targetFileName)){
                     fFilePaths.push_back(fname);
                 }
@@ -293,8 +317,35 @@ int main(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, i
     _EfficiencyCalculator.DrawHistograms();
 
 
-    return 0;
+    return;
 
+}
+
+int main(int argc, char* argv[]){
+
+    CommandLineParser parser(argc, argv);
+
+    std::cout << "Debug: " << parser.getDebug() << std::endl;
+    std::cout << "DebugMode: " << parser.getDebugMode() << std::endl;
+    std::cout << "n: " << parser.getN() << std::endl;
+    std::cout << "nskip: " << parser.getNskip() << std::endl;
+    std::cout << "event: " << parser.getEvent() << std::endl;
+    std::cout << "sr: " << parser.getSr() << std::endl;
+    std::cout << "file_name: " << parser.getFileName() << std::endl;
+    std::cout << "directory_path: " << parser.getDirectoryPath() << std::endl;
+    std::cout << "ext: " << parser.getExtension() << std::endl;
+
+    // Create a ROOT application object
+    TApplication *myApp = new TApplication("myApp", &argc, argv);
+
+
+    RunAlgoTPCLines(parser);
+
+
+    // Run the ROOT event loop
+    myApp->Run();    
+
+    return 0;
 }
 
 

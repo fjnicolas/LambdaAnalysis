@@ -7,38 +7,22 @@
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
-#ifndef TPC_LINES_DBSCAN_H
-#define TPC_LINES_DBSCAN_H
 
-#include <iostream>
-#include <vector>
-#include <cmath>
+#include "TPCLinesDBSCAN.h"
 
-#include "SObjects/TPCSimpleHits.h"
+DBSCAN::DBSCAN(double epsilon, int minPts) 
+    :epsilon(epsilon),
+    minPts(minPts)
+{};
 
-class DBSCAN {
-public:
-    DBSCAN(double epsilon, int minPts) : epsilon(epsilon), minPts(minPts) {}
+void DBSCAN::setDistanceFunction(double (*distFunc)( SHit&,  SHit&)) {
+    distanceFunction = distFunc;
+}
 
-    void setDistanceFunction(double (*distFunc)( SHit&,  SHit&)) {
-        distanceFunction = distFunc;
-    }
 
-    void fit( std::vector<SHit>& points);
-
-     std::vector<int>& getClusterAssignment()  {
-        return clusterAssignment;
-    }
-
-private:
-    double epsilon;
-    int minPts;
-    double (*distanceFunction)( SHit&,  SHit&);
-    std::vector<int> clusterAssignment;
-
-    std::vector<int> regionQuery( std::vector<SHit>& points,  SHit& p);
-    void expandCluster( std::vector<SHit>& points, int pointIdx, int clusterIdx);
-};
+std::vector<int>& DBSCAN::getClusterAssignment()  {
+    return clusterAssignment;
+}
 
 void DBSCAN::fit( std::vector<SHit>& points) {
     clusterAssignment.assign(points.size(), 0);  // 0 indicates unassigned
@@ -126,5 +110,3 @@ double DBSCANHitOverlapDistance( SHit& p1, SHit& p2) {
     }
     return std::sqrt(std::pow(dX, 2) + std::pow(dY, 2));
 }
-
-#endif

@@ -97,4 +97,3 @@ std::ostream& operator<<(std::ostream& out, SHit const& h)
     out << " SHit -- x=" << h.X() << " y=" << h.Y() << std::endl;
     return out;
 }
-

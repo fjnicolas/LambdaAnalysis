@@ -1,13 +1,9 @@
-# CMakeLists.txt
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.12)
+project(LambdaAnalysis)
 
-# project name
-project(TPCLines)
+# Set the C++ standard to C++11
+set(CMAKE_CXX_STANDARD 11)
 
-# Set the output directory for build artifacts
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
+# Add subdirectories for libraries
 add_subdirectory(src)
 

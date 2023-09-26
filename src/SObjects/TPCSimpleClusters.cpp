@@ -9,10 +9,9 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "TPCSimpleClusters.h"
-#include "TPCLinesDistanceUtils.cpp"
-#include "TPCLinesPCA.cpp"
 
 SCluster::SCluster(std::vector<SHit> hitList){
+
     fNHits = hitList.size();
 
     // sort hits by X coordinate
@@ -150,9 +149,18 @@ std::pair<SHit, double> SCluster::GetClosestHitToPoint(const T& h) {
 //------------------------------  SLinearCluster
 
 SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
-    
+
     fId = -1;
     fHitCluster = SCluster(hitList);
+
+    fMinX = DefaultMax;
+    fMinY = DefaultMax;
+    fMaxX = 0;
+    fMaxY = 0;
+    fYAtMaxX = 0;
+    fYAtMinX = 0;
+    fMeanX = 0;
+    fMeanY = 0;
 
     for (
         auto &hit : hitList) {
@@ -209,7 +217,7 @@ double SLinearCluster::GetIntegral(){
 }
 
 
-std::vector<int> detect_outliers_iqr(std::vector<float> data, float threshold = 1.5) {
+std::vector<int> SLinearCluster::detect_outliers_iqr(std::vector<float> data, float threshold) {
     std::vector<int> outlier_indices;
 
     // Calculate the first and third quartiles (25th and 75th percentiles)
@@ -239,6 +247,31 @@ std::vector<int> detect_outliers_iqr(std::vector<float> data, float threshold = 
     return outlier_indices;
 }
 
+
+// Function to detect outliers using IQR method
+std::vector<int> SLinearCluster::detect_outliers_iqr2(std::vector<double> data, double threshold) {
+    // Calculate the first and third quartiles (25th and 75th percentiles)
+    std::sort(data.begin(), data.end());
+    double q1 = data[data.size() / 4];
+    double q3 = data[data.size() * 3 / 4];
+
+    // Calculate the IQR
+    double iqr = q3 - q1;
+
+    // Calculate the lower and upper bounds for outliers
+    double lower_bound = q1 - threshold * iqr;
+    double upper_bound = q3 + threshold * iqr;
+
+    // Find the outliers in the data
+    std::vector<int> outlier_indices;
+    for (int i = 0; i < data.size(); i++) {
+        if (data[i] < lower_bound || data[i] > upper_bound) {
+            outlier_indices.push_back(i);
+        }
+    }
+
+    return outlier_indices;
+}
 
 void SLinearCluster::FillResidualHits() {
     fHasResidualHits = true;
@@ -280,3 +313,13 @@ void SLinearCluster::FillResidualHits() {
         }
     }
 }
+
+// instances
+template double SCluster::GetMinDistanceToCluster(const SHit& h);
+template double SCluster::GetMinDistanceToCluster(const SPoint& h);
+template double SCluster::GetMinDistanceToClusterW(const SHit& h);
+template double SCluster::GetMinDistanceToClusterOverlap(const SHit& h);
+template double SCluster::GetMinDistanceToCluster1D(const SHit& h);
+template double SCluster::GetMinDistanceToCluster1D(const SPoint& h);
+template std::pair<SHit, double>  SCluster::GetClosestHitToPoint(const SHit& h);
+template std::pair<SHit, double>  SCluster::GetClosestHitToPoint(const SPoint& h);

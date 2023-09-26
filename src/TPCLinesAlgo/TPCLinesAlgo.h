@@ -16,15 +16,22 @@
 #include <map>
 
 
-#include "SObjects/TPCLinesParameters.cpp"
+/*#include "SObjects/TPCLinesParameters.cpp"
 #include "SObjects/TPCSimpleHits.h"
 #include "SObjects/TPCSimpleClusters.h"
 #include "SObjects/TPCSimpleTriangles.h"
-#include "SObjects/TPCSimpleEvents.h"
+#include "SObjects/TPCSimpleEvents.h"*/
+#include "TPCLinesParameters.h"
+#include "TPCSimpleHits.h"
+#include "TPCSimpleClusters.h"
+#include "TPCSimpleTriangles.h"
+#include "TPCSimpleEvents.h"
+
 #include "TPCLinesHough.h"
 #include "TPCLinesTrackFinder.h"
 #include "TPCLinesVertexFinder.h"
-#include "TPCLinesDisplay.cpp"
+#include "TPCLinesDisplay.h"
+#include "TPCLinesDirectionRecoUtils.h"
 
 
 class TPCLinesAlgo {

@@ -7,75 +7,25 @@
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
-#ifndef TPC_LINES_DISPLAY_H
-#define TPC_LINES_DISPLAY_H
 
-#include <vector>
-
-// ROOT includes
-#include "TGraphErrors.h"
-#include "TH2F.h"
-#include "TGraph.h"
-#include "TCanvas.h"
-#include "TLine.h"
-#include "TPolyLine.h"
-#include "TLegend.h"
-#include "TFile.h"
-#include "TSystem.h"
-#include "TStyle.h"
-#include "THistPainter.h"
-#include <TROOT.h>
+#include "TPCLinesDisplay.h"
 
 
-#include "SObjects/TPCSimpleHits.h"
-#include "SObjects/TPCSimpleClusters.h"
-#include "SObjects/TPCSimpleTriangles.h"
-#include "SObjects/TPCSimpleEvents.h"
-
-
-class TPCLinesDisplay {
-    private:
-        void DrawHitScatter(std::vector<SHit> hitV, TLegend& leg, std::string label, int color, int style, double size, double errorAlpha);
-        void DrawLinearCluster(SLinearCluster cluster, TLegend& leg, std::string label, int color, double size=1.1, int style=4);
-        void DrawLine(LineEquation line, double xmin, double xmax, TLegend& leg, std::string label, int color, int style);
-        TH2F GetFrame(std::vector<SHit> hitsV, std::string label);
-        void DrawTriangle(STriangle tri, TLegend& leg, std::string label, int colorP, int color, double alpha);
-        void DrawVertex(SVertex vertex, TLegend& leg, std::string label, int color, int marker, double alpha);
-        void SetStyle();
-
-        std::vector<int> fColors;
-        std::vector<int> fColorsOrigins;
-        double fLegendFontSize=0.12;
-        std::string fOutputPath;
-    public:
-        TPCLinesDisplay(bool show, std::string outputPath="Plots/"):
+TPCLinesDisplay::TPCLinesDisplay(bool show, std::string outputPath):
             fOutputPath(outputPath)
-        {
-           fColors = {kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5};
+{
+    fColors = {kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5};
 
-           fColorsOrigins = {40, 42, 46, 30, 35, 40, 42, 46, 30, 35};
+    fColorsOrigins = {40, 42, 46, 30, 35, 40, 42, 46, 30, 35};
 
-           if(show==false){
-                gROOT->SetBatch(true);
-           }
+    if(show==false){
+        gROOT->SetBatch(true);
+    }
 
-           // clean the directory
-            gSystem->Exec(("rm -rf "+fOutputPath).c_str());
-           
-        }
-
-        void Show(
-            std::string eventLabel,
-            std::vector<SHit> allHitsV,
-            LineEquation houghLine,
-            std::vector<SHit> selectedHitsV={},
-            std::vector<SLinearCluster> clustersV={},
-            SLinearCluster mainDirection = SLinearCluster(std::vector<SHit> {}),
-            std::vector<STriangle> originAngles = {}, 
-            SVertex recoVertex = SVertex(),
-            SVertex trueVertex = SVertex(),
-            std::vector<SOrigin> origins = {} );
-};
+    // clean the directory
+    gSystem->Exec(("rm -rf "+fOutputPath).c_str());
+    
+}
 
 void TPCLinesDisplay::SetStyle(){
     //TITLES SIZE AND FONT
@@ -352,5 +302,3 @@ void TPCLinesDisplay::Show(
     return;
 
 }
-
-#endif // TPC_SIMPLE_LINES_H

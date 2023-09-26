@@ -11,11 +11,30 @@
 #define TPC_LINES_TRACKFINDER_H
 
 
-#include "SObjects/TPCLinesParameters.cpp"
+/*#include "SObjects/TPCLinesParameters.cpp"
 #include "SObjects/TPCSimpleHits.h"
 #include "SObjects/TPCSimpleLines.h"
-#include "SObjects/TPCSimpleClusters.h"
-#include "TPCLinesDisplay.cpp"
+#include "SObjects/TPCSimpleClusters.h"*/
+
+
+#include <numeric>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <algorithm>
+#include <unordered_map>
+
+
+#include "TPCLinesParameters.h"
+#include "TPCSimpleHits.h"
+#include "TPCSimpleLines.h"
+#include "TPCSimpleClusters.h"
+#include "TPCLinesDistanceUtils.h"
+#include "TPCLinesPCA.h"
+#include "TPCLinesDBSCAN.h"
+#include "TPCLinesDisplay.h"
+#include "TPCLinesDirectionRecoUtils.h"
+
 
 
 class TPCLinesTrackFinder {
