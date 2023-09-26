@@ -167,10 +167,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string fAppDisplayPath = "plots/";
     if(DebugMode==0) fAppDisplayPath = "plotsbg";
     else if(DebugMode==1) fAppDisplayPath = "plotssignal";
-    // SBND readout parameters
-    int fStampTime = -200;
-    double fSamplingFrequency = 500;
-    double fSamplingTime = 0.5;
+
 
     // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);
@@ -198,7 +195,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
         double nuvE, nuvT, nuvX, nuvY, nuvZ;
         int nuvU, nuvV, nuvC, nuvTimeTick;
         int TPC;
-        double nuvDriftTime;
         tree->SetBranchAddress("TrueVEnergy",&nuvE);
         tree->SetBranchAddress("TrueVt",&nuvT);
         tree->SetBranchAddress("TrueVx",&nuvX);
@@ -258,13 +254,11 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             std::cout << "\n\n ************** Analyzing: " << ev;
             
             // True vertex
-            nuvDriftTime = nuvTimeTick * fSamplingTime + fStampTime;
             std::vector<double> VertexXYZ = {nuvX, nuvY, nuvZ};
             std::vector<int> VertexUVYT = {nuvU, nuvV, nuvC, nuvTimeTick};
             std::cout << "   - True vertex (X, Y, Z, T) " << VertexXYZ[0] << " " << VertexXYZ[1] << " " << VertexXYZ[2] << " " << nuvT << " (U, V, C, TT): " << VertexUVYT[0] << " " << VertexUVYT[1] << " " << VertexUVYT[2] << " " << VertexUVYT[3] << std::endl;
 
             // Reco vertex
-            double recnuvDriftTime = recnuvTimeTick * fSamplingTime + fStampTime;
             std::vector<double> RecoVertexXYZ = {recnuvX, recnuvY, recnuvZ};
             std::vector<int> RecoVertexUVYT = {recnuvU, recnuvV, recnuvC, recnuvTimeTick};
             std::cout << "  - Reco vertex (X, Y, Z) " << RecoVertexXYZ[0] << " " << RecoVertexXYZ[1] << " " << RecoVertexXYZ[2] << " (U, V, C, TT): " << RecoVertexUVYT[0] << " " << RecoVertexUVYT[1] << " " << RecoVertexUVYT[2] << " "<< RecoVertexUVYT[3]  << std::endl;

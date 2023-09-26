@@ -353,7 +353,7 @@ public:
         gStyle->SetOptStat(1);
         TCanvas c("cStats", "Final stats", 0, 0, 1400,900);
         std::vector<TPad*> padV = buildpadcanvas(3, 2);
-  
+
         padV[1]->cd();
         hNOrigins->Draw();
         
@@ -409,6 +409,7 @@ public:
         c.WaitPrimitive();
 
     }
+
 
 private:
     std::map<std::string, SEventSelection> fEventList;

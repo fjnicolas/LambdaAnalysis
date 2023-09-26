@@ -14,6 +14,7 @@ add_library(sobjects_library
     TPCLinesPCA.cpp
     TPCLinesPCA.h
     TPCLinesParameters.cpp
+    TPCLinesParameters.h
     TPCLinesDistanceUtils.cpp
     TPCLinesDistanceUtils.h
 )

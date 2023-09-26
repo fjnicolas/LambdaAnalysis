@@ -12,4 +12,4 @@ add_executable(RunAlgoTPCLines RunAlgoTPCLines.cpp)
 
 # Link the libraries to the main executable
 target_include_directories(RunAlgoTPCLines PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/TPCLinesAlgo)
-target_link_libraries(RunAlgoTPCLines PUBLIC tpclines_library sevents_library commandlineparser_library ROOT::Tree)
+target_link_libraries(RunAlgoTPCLines PUBLIC sobjects_library tpclines_library sevents_library commandlineparser_library ROOT::Tree)

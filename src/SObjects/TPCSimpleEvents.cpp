@@ -20,7 +20,7 @@ SOrigin::SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge) :
     for(SLinearCluster & trk:tracks){
         fNHits+=trk.NHits();
     }
-};
+}
 
 void SOrigin::AddTrack(SLinearCluster track, SPoint p){
     fTrackList.push_back(track);
@@ -45,7 +45,7 @@ bool SOrigin::HasTrackIndex(int ix){
 SEvent::SEvent(std::vector<SOrigin> origins, double hitDensity):
     fOriginList(origins),
     fHitDensity(hitDensity)
-{};
+{}
 
 
 int SEvent::GetNOriginsMult(int mult){

@@ -7,9 +7,6 @@
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
-#ifndef TPC_LINES_PARAMETERS_H
-#define TPC_LINES_PARAMETERS_H
-
 #include <vector>
 
 // ROOT includes
@@ -24,7 +21,7 @@
 #include "TStyle.h"
 #include "TROOT.h"
 
-#include "TPCSimpleEvents.h"
+#include "TPCLinesParameters.h"
 
 std::vector<TPad*> buildpadcanvas(int nx, int ny){
     std::vector<TPad*> Tp;
@@ -46,6 +43,3 @@ std::vector<TPad*> buildpadcanvas(int nx, int ny){
     }
     return Tp;
 }
-
-
-#endif // TPC_LINES_PARAMETERS_H
