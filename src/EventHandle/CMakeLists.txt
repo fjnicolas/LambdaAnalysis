@@ -1,7 +1,7 @@
 message(status "Building " ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(seventhandle_library
-    SeventHandle.cpp
+    SEventHandle.cpp
     SEventHandle.h
     STPCAnalyzerTreeReader.cpp
     STPCAnalyzerTreeReader.h

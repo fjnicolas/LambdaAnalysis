@@ -118,7 +118,6 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     EfficiencyCalculator _EfficiencyCalculator;
 
     // TTree loop
-    int TPC;
     int nEntries = 0;
     for (const auto& filepath : fFilePaths) {
 
