@@ -7,3 +7,5 @@ TPCLINES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export TPCLINES_DIR="$TPCLINES_DIR"
 
 alias runtpclines='sh $TPCLINES_DIR/runtpclines.sh'
+
+alias runFRANS='sh $TPCLINES_DIR/runFRANS.sh'

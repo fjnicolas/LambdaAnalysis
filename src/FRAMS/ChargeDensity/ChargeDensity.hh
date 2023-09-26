@@ -14,16 +14,8 @@
 #include "TGraph.h"
 #include "TCanvas.h"
 
-#include "fhiclcpp/types/Atom.h"
-#include "fhiclcpp/types/Table.h"
-#include "canvas/Persistency/Common/Ptr.h"
-#include "canvas/Persistency/Common/PtrVector.h"
-#include "art_root_io/TFileDirectory.h"
-
-#include "lardataobj/RecoBase/Hit.h"
-
-#include "sbndcode/FRAMS/ChargeDensity/VertexView.hh"
-#include "sbndcode/FRAMS/ChargeDensity/ChargeDensityAlgConf.hh"
+#include "VertexView.hh"
+#include "ChargeDensityAlgConf.hh"
 #include "TMVA/Reader.h"
 
 #define DefaultMaxZSize 2000
@@ -39,7 +31,7 @@ class ChargeDensity{
     ChargeDensity & operator=(ChargeDensity const&) = delete;
     ChargeDensity & operator=(ChargeDensity &&) = delete;
 
-    ChargeDensity(ChargeDensityConf::Config const& config, unsigned int view, unsigned int tpc);
+    ChargeDensity(ChargeDensityConf::FRAMSPsetType const& config, unsigned int view, unsigned int tpc);
 
     void Fill(std::vector<art::Ptr<recob::Hit>> hitsVect, VertexView vertex);
     void HelloWorld();

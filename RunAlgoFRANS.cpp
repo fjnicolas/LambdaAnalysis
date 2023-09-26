@@ -1,109 +1,33 @@
 // Objects
-#include "src/SObjects/TPCLinesParameters.cpp"
-#include "src/SObjects/TPCSimpleHits.cpp"
-#include "src/SObjects/TPCSimpleLines.cpp"
-#include "src/SObjects/TPCSimpleClusters.cpp"
-#include "src/SObjects/TPCSimpleTriangles.cpp"
-#include "src/SObjects/TPCSimpleEvents.cpp"
-
-// Algorithms
-#include "src/TPCLinesHough.cpp"
-#include "src/TPCLinesTrackFinder.cpp"
-#include "src/TPCLinesVertexFinder.cpp"
-#include "src/TPCLinesAlgo.cpp"
-
-// Display
-#include "src/TPCLinesDisplay.cpp"
+#include "src/FRAMS/ChargeDensity/ChargeDensity.cc"
 
 
-//void RunAlgoTPCLines
-int main(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, int sr=-1, std::string file_name="", const char *directory_path=".", const char *ext=".root")
+void RunAlgoFRANS(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, int sr=-1, std::string file_name="", const char *directory_path=".", const char *ext=".root")
 {
 
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
     // View to use
     std::string fView="C";
 
-    // ---- Ana view parameters
-    double fMaxRadius = 250;
-    double fDriftConversion = 1.;
-    int fMaxHoughTracks = 15;
-    bool fRemoveIsolatedHits = true;
-    double fMaxNeighbourDistance = 2;
-    double fMinNeighboursHits = 2;
-    int fVerbose = Debug;
-    int fDebugMode = DebugMode;
+    // ---- FRAMS parameters ----------------------------------------
 
-    // ---- Hough algorithm parameters
-    double fMaxRadiusLineHypothesis = 25; //in cm
-    double fThetaRes=25; //degrees
-    double fMaxDistanceTube = 10;
-    int fMinHoughHits = 3;
-    int fVerboseHough = Debug;
-
-    // ---- Track finder parameters
-    double fMaxDTube = 10;
-    double fMaxDCluster = fMaxDTube/2;
-    bool fSingleWireMode = false;
-    int fMinClusterHits = 3;
-    double fDCleaning=2.;
-    double fClusterCompletenessCut=0.8;
-    double fClusterAngleCut = 5;
-    bool fCaptureMissingHits = true;
-    int fMinTrackHits = 3;
-    float fHitDensityThreshold = 1.5;
-    int fVerboseTrack = Debug;
-
-    // ---- Vertex finder parameters
-    double fMaxDistToEdge = 3;
-    bool fRefineVertexIntersection = true;
-    bool fUseEdgesDiscard = true;
-    float fMaxTrackFractionInMain = 0.75;
-    bool fDecideMainTrack = true;
-    bool fAddCollinearLines = false;
-    int fVerboseVertexFinder = Debug;
-    // -------------------------------------------- 
+    FRAMSPsetType fPsetFRAMS(
+        true,                          // ApplyRawSmoothing
+        false,                         // ApplySmoothing
+        false,                         // ApplyCumulativeSmoothing
+        4,                             // NDriftPack
+        1,                             // NWirePack
+        0.3f,                          // ExpoAvSmoothPar
+        1,                             // UnAvNeighbours
+        0.8,                           // CumulativeCut
+        3,                             // SlidingWindowN
+        3,                             // NSamplesBeginSlope
+        70,                            // MaxRadius
+        false,                         // DebugMode
+        true,                          // CalculateScore
+        "FRAMSSelectionTMVA_BDT.weights.xml"  // TMVAFilename
+    );
     
-    // ----------- Define parameter sets --------------------------------- 
-    TrackFinderAlgorithmPsetType fPsetTrackFinder(fMaxDTube,
-                                                  fMaxDCluster,
-                                                  fSingleWireMode,
-                                                  fMinClusterHits,
-                                                  fDCleaning,
-                                                  fClusterCompletenessCut,
-                                                  fClusterAngleCut,
-                                                  fCaptureMissingHits,
-                                                  fMinTrackHits,
-                                                  fHitDensityThreshold,
-                                                  fVerboseTrack);
-
-    HoughAlgorithmPsetType fPsetHough(fMaxRadiusLineHypothesis,
-                                fThetaRes,
-                                fMaxDistanceTube,
-                                fMinHoughHits,
-                                fVerboseHough);
-
-
-    VertexFinderAlgorithmPsetType fPsetVertexFinder(fMaxDistToEdge,
-                                                    fRefineVertexIntersection,
-                                                    fUseEdgesDiscard,
-                                                    fMaxTrackFractionInMain,
-                                                    fDecideMainTrack,
-                                                    fAddCollinearLines,
-                                                    fVerboseVertexFinder);
-                      
-    TPCLinesAlgoPsetType fPsetAnaView(fMaxRadius,
-                                      fDriftConversion,
-                                      fMaxHoughTracks,
-                                      fMinTrackHits,
-                                      fRemoveIsolatedHits,
-                                      fMaxNeighbourDistance,
-                                      fMinNeighboursHits,
-                                      fVerbose,
-                                      fDebugMode,
-                                      fPsetHough,
-                                      fPsetTrackFinder,
-                                      fPsetVertexFinder);
     // ------------------------------------------------------------------ 
 
 
@@ -149,7 +73,7 @@ int main(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, i
     double fSamplingTime = 0.5;
 
     // Define TPC LINES ALGORITHM
-    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);
+    FRAMSAlgo _FRAMSAlgo(fPsetAnaView);
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
 
@@ -262,29 +186,7 @@ int main(int Debug=0, int DebugMode=-1, int n=1e6, int nskip=-1, int event=-1, i
             std::string view = fView+std::to_string(TPC);
 
             // Set the hits
-            _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
-                                    hitsChannel,
-                                    hitsPeakTime,
-                                    hitsIntegral, 
-                                    hitsRMS,
-                                    hitsStartT, 
-                                    hitsEndT,
-                                    "");
-
-            // Analyze
-            SEvent recoEvent = _TPCLinesAlgo.AnaView(ev.Label());
-
-            
-            int nOrigins = recoEvent.GetNOrigins();
-            // Update the efficiency calculator
-            if(nOrigins>0){
-                _EfficiencyCalculator.UpdateSelected(ev);
-                _EfficiencyCalculator.UpdateHistograms(recoEvent);
-            }
-            else
-                _EfficiencyCalculator.UpdateNotSelected(ev);
-            std::cout<<_EfficiencyCalculator;
-
+            //_FRAMSAlgo.Fill(view)
         }
     }
     

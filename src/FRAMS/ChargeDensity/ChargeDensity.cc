@@ -16,7 +16,7 @@ double ChargeDensity::GetDistance(int x, double y, int x0, double y0){
   return std::sqrt( std::pow( ((double)(x-x0))/fNWirePack, 2) + std::pow( (y-y0)/fNDriftPack, 2) );
 }
 
-ChargeDensity::ChargeDensity(ChargeDensityConf::Config const& config, unsigned int view, unsigned int tpc)
+ChargeDensity::ChargeDensity(ChargeDensityConf::FRAMSPsetType const& config, unsigned int view, unsigned int tpc)
   : //fPset(config),
   fApplyRawSmoothing( config.applyRawSmoothing() ),
   fApplySmoothing( config.applySmoothing() ),

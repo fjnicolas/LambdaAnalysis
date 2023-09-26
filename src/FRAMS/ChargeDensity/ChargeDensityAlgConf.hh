@@ -91,6 +91,45 @@ namespace ChargeDensityConf{
 
   };    //struct Config
 
+
+  struct FRAMSPsetType {
+    bool applyRawSmoothing;
+    bool applySmoothing;
+    bool applyCumulativeSmoothing;
+    unsigned int nDriftPack;
+    unsigned int nWirePack;
+    float expoAvSmoothPar;
+    int unAvNeighbours;
+    double cumulativeCut;
+    int slidingWindowN;
+    int maxRadius;
+    int nSamplesBeginSlope;
+    bool debugMode;
+    bool calculateScore;
+    std::string tMVAFilename;
+
+    // Constructor to initialize the members
+    FRAMSPsetType(bool rawSmoothing, bool smoothing, bool cumulativeSmoothing,
+           unsigned int driftPack, unsigned int wirePack, float smoothParam,
+           int unweightedNeighbors, double cut, int windowN, int radius,
+           int samplesSlope, bool debug, bool calculate, const std::string& filename)
+        : applyRawSmoothing(rawSmoothing),
+          applySmoothing(smoothing),
+          applyCumulativeSmoothing(cumulativeSmoothing),
+          nDriftPack(driftPack),
+          nWirePack(wirePack),
+          expoAvSmoothPar(smoothParam),
+          unAvNeighbours(unweightedNeighbors),
+          cumulativeCut(cut),
+          slidingWindowN(windowN),
+          maxRadius(radius),
+          nSamplesBeginSlope(samplesSlope),
+          debugMode(debug),
+          calculateScore(calculate),
+          tMVAFilename(filename) {
+    }
+};
+
 }
 
 #endif
