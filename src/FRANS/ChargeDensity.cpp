@@ -36,6 +36,7 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
     std::cout<<" BDT weights file name: "<<file_name<<std::endl;*/
 
     fTMVAReader.BookMVA( "FRAMS BDT",  fFRANSPset.TMVAFilename.c_str()  );
+
   }
 }
 
@@ -128,15 +129,14 @@ void ChargeDensity::FillCumulative(){
 
 void ChargeDensity::UpdateMetrics(){
 
-  if(fFRANSPset.Verbose>0) std::cout<<"Updating metrics...size is: "<<fZ.size()<<std::endl;
-
-  if(fFRANSPset.Verbose>0) { std::cout<<"Debug 0: "; for(size_t l=0; l<10; l++) {std::cout<<fZ[l]<<" ";} }
-
-  //for(size_t k=0; k<fZ.size(); k++){std::cout<<k<<" "<<fZ[k]<<std::endl;}
-
+  // --- absolute normalization
   fZetaNorm = *std::max_element(fZ.begin(), fZ.end());
 
-  if(fFRANSPset.Verbose>0) std::cout<<"ZetaNorm: "<<fZetaNorm<<std::endl;
+  if(fFRANSPset.Verbose>0) std::cout<<"Updating metrics...size is: "<<fZ.size()<<std::endl;
+  if(fFRANSPset.Verbose>0) { std::cout<<"Debug 0 (pre raw smoothing): "; for(size_t l=0; l<10; l++) {std::cout<<fZ[l]<<" ";} }  
+  if(fFRANSPset.Verbose>0) std::cout<<"\nZetaNorm: "<<fZetaNorm<<std::endl;
+
+  // --- apply raw smoothing
   if(fFRANSPset.ApplyRawSmoothing) {
     // keep first point without smoothing
     std::vector<double> Zsmoothed(std::next(fZ.cbegin(), 1), fZ.cend());
@@ -147,44 +147,41 @@ void ChargeDensity::UpdateMetrics(){
   }
 
   double ZetaNormI = 1./( *std::max_element(fZ.begin(), fZ.end()) );
-  if(fFRANSPset.Verbose>0) std::cout<<"Finished raw smooth \n";
   Rescale(fZ, ZetaNormI);
+  
+  if(fFRANSPset.Verbose>0){
+    std::cout<<"\nDebug 1 (after raw smoothing): ";
+    for(size_t l=0; l<10; l++) {std::cout<<fZ[l]<<" ";}
+  }
 
-  if(fFRANSPset.Verbose>0) {std::cout<<"\n\nDebug 1: "; for(size_t l=0; l<10; l++) {std::cout<<fZ[l]<<" ";} }
-
-  if(fFRANSPset.Verbose>0) std::cout<<"Finished norm \n";
-  //fill cumulative and resize vector keeping only ROI
+  // --- fill cumulative and resize vector keeping only ROI
   FillCumulative();
 
-  if(fFRANSPset.Verbose>0) { std::cout<<"\n\nDebug Cum 2: "; for(size_t l=0; l<10; l++) {std::cout<<fZCum[l]<<" ";} }
-
+  // --- apply the sliding window algorithm
   if((int)fZ.size()>fFRANSPset.SlidingWindowN){
     SlidingWindow(fZCum);
-
-    if(fFRANSPset.Verbose>0) std::cout<<"Finished SW \n";
 
     if(fFRANSPset.ApplySmoothing){
       ApplyExpoAvSmoothing(fZCumDer);
       ApplyUnAvSmoothing(fZCumDer);
-      if(fFRANSPset.Verbose>0) std::cout<<"Finished SW smooth \n";
     }
 
     Rescale(fZCum, 1./fMaxCumulative);
+    if(fFRANSPset.Verbose>0) { std::cout<<"\n\nDebug 2 (cumulative): "; for(size_t l=0; l<10; l++) {std::cout<<fZCum[l]<<" ";} }
 
-    fRho.clear(); fRho.reserve(fZ.size());
+    fRho.clear();
+    fRho.reserve(fZ.size());
     for(size_t k=0; k<fZ.size(); k++){
       fRho.push_back(k);
     }
-
-
 
     //--- Now we start with the parameter estimation
     // first get ROIs
     int L = std::min(fFRANSPset.MaxRadius, (int)fZCumDer.size());
     std::vector<double> Slopes(fZCumDer.cbegin(), std::next(fZCumDer.cbegin(), L));
     std::vector<double> SlopesErr(fZCumDerErr.cbegin(), std::next(fZCumDerErr.cbegin(), L));
-
-    if(fFRANSPset.Verbose>0) { std::cout<<"\n\nDebug Slopes 3: "; for(size_t l=0; l<10; l++) {std::cout<<Slopes[l]<<" ";} }
+    std::cout<<"L "<<L<<" "<<fFRANSPset.MaxRadius<<std::endl;
+    if(fFRANSPset.Verbose>0) { std::cout<<"\n\nDebug 3 (slopes): "; for(size_t l=0; l<10; l++) {std::cout<<Slopes[l]<<" ";} }
 
     // get first big jump in the slope and maximum slope indexes
     int ix_firstJump=-1;
@@ -201,9 +198,9 @@ void ChargeDensity::UpdateMetrics(){
       }
     }
 
-    if(fFRANSPset.Verbose>0) std::cout<<"\nFirtJump @ "<<ix_firstJump<<" MaxSlope @ "<<ix_maxSlope<<std::endl;
+    if(fFRANSPset.Verbose>0) std::cout<<"\n\nFirtJump @ "<<ix_firstJump<<" MaxSlope @ "<<ix_maxSlope<<std::endl;
     double startSlope = 1.;
-    if(fFRANSPset.Verbose>0) std::cout<<" Start Slope: ";
+    if(fFRANSPset.Verbose>0) std::cout<<"\nStart Slope: ";
     if(ix_firstJump>0){
       startSlope = std::accumulate(Slopes.cbegin(), std::next(Slopes.cbegin(), ix_firstJump), 0.)/(ix_firstJump);
       for(int k=0; k<ix_firstJump+1; k++) std::cout<<k<<":"<<Slopes[k]<<"  ";
@@ -213,17 +210,17 @@ void ChargeDensity::UpdateMetrics(){
       for(int k=0; k<fFRANSPset.NSamplesBeginSlope; k++) std::cout<<k<<":"<<Slopes[k]<<"  ";
     }
 
-    if(fFRANSPset.Verbose>0) std::cout<<" Max Slope Index "<<ix_maxSlope<<" "<<maxSlope<<" "<<ix_firstJump<<" "<<startSlope<<std::endl;
+    if(fFRANSPset.Verbose>0) std::cout<<"\nMax Slope Index "<<ix_maxSlope<<" "<<maxSlope<<" "<<ix_firstJump<<" "<<startSlope<<std::endl;
 
     if(startSlope!=0) fEta = maxSlope/startSlope;
     if(fEta>100) fEta=100;
     fOmega = startSlope;
     fAlpha = fOmega * fZetaNorm;
 
-    if(fFRANSPset.Verbose>0) std::cout<<" StartSlope: "<<startSlope<<"  MaxSlope"<<maxSlope<<"  ZetaNorm:"<<fZetaNorm<<std::endl;
+    if(fFRANSPset.Verbose>0) std::cout<<"\nStartSlope: "<<startSlope<<"  MaxSlope"<<maxSlope<<"  ZetaNorm:"<<fZetaNorm<<std::endl;
 
     fTau = ix_maxSlope;
-    if(fFRANSPset.Verbose>0) std::cout<<" Ix max slope: "<<ix_maxSlope<<std::endl;
+    if(fFRANSPset.Verbose>0) std::cout<<"\nIx max slope: "<<ix_maxSlope<<std::endl;
     if(ix_maxSlope>5){
       std::vector<double> CumStart(fZCum.cbegin(), std::next(fZCum.cbegin(), ix_maxSlope+1));
       if(fFRANSPset.Verbose>0) std::cout<< "   l = "<<CumStart.size()<<std::endl;
@@ -266,6 +263,7 @@ void ChargeDensity::UpdateMetrics(){
 }
 
 
+// --- Fill function
 void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex){
 
   fVertex = vertex;

@@ -65,6 +65,8 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     std::string directory_path = parser.getDirectoryPath();
     std::string ext = parser.getExtension();
 
+    std::string fTreeName = "ana/AnaTPCTree"; 
+
     // Set batch mode
     if(Debug==0) gROOT->SetBatch(true);
     
@@ -84,7 +86,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
         false,                         // ApplyCumulativeSmoothing
         4,                             // NDriftPack
         1,                             // NWirePack
-        0.3f,                          // ExpoAvSmoothPar
+        0.3,                          // ExpoAvSmoothPar
         1,                             // UnAvNeighbours
         0.8,                           // CumulativeCut
         3,                             // SlidingWindowN
@@ -121,7 +123,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     for (const auto& filepath : fFilePaths) {
 
         std::cout<<" ANALYZING THE FILE: "<<filepath<<std::endl;
-        MyTPCTreeReader treeReader(filepath, "ana/AnaTPCTree");
+        MyTPCTreeReader treeReader(filepath, fTreeName);
         
 
         for (int entry = 0; entry < treeReader.NEntries(); entry++) {
