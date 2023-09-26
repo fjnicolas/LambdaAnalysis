@@ -19,7 +19,7 @@ TPCLinesHough::TPCLinesHough(HoughAlgorithmPsetType tpcLinesHoughPset):
 
 std::vector<SHit> TPCLinesHough::GetHitsInBall(std::vector<SHit> hitList, SVertex vertex, double d) {
     std::vector<SHit> hitsInBall;
-    for (int ix = 0; ix < hitList.size(); ix++) {
+    for (size_t ix = 0; ix < hitList.size(); ix++) {
         // distance: accounts different units for X and Y directions 
         if (std::sqrt((0.3 * 0.3) * std::pow(hitList[ix].X() - vertex.X(), 2) + (0.08 * 0.08) * std::pow(hitList[ix].Y() - vertex.Y(), 2)) < d) {
             hitsInBall.push_back(hitList[ix]);
@@ -65,7 +65,7 @@ double TPCLinesHough::GetLinearR2(std::vector<double> hypoV, std::vector<double>
         double SSres = 0.0;
         double SStot = 0.0;
         double meanData = std::accumulate(dataV.begin(), dataV.end(), 0)/dataV.size();
-        for (int k = 0; k < dataV.size(); k++) {
+        for (size_t k = 0; k < dataV.size(); k++) {
             SSres += std::pow(hypoV[k] - dataV[k], 2);
             SStot += std::pow(dataV[k] - meanData, 2);
         }

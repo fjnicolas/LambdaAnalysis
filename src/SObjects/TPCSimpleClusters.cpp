@@ -264,7 +264,7 @@ std::vector<int> SLinearCluster::detect_outliers_iqr2(std::vector<double> data, 
 
     // Find the outliers in the data
     std::vector<int> outlier_indices;
-    for (int i = 0; i < data.size(); i++) {
+    for (size_t i = 0; i < data.size(); i++) {
         if (data[i] < lower_bound || data[i] > upper_bound) {
             outlier_indices.push_back(i);
         }
@@ -290,7 +290,7 @@ void SLinearCluster::FillResidualHits() {
 
         std::vector<SHit> resHitList;
         std::vector<SHit> mainHitList;
-        for (size_t ix = 0; ix < NHits(); ++ix) {
+        for (int ix = 0; ix < NHits(); ++ix) {
             if (std::find(outliersIx.begin(), outliersIx.end(), ix) != outliersIx.end()) {
                 resHitList.push_back(fHitCluster.GetHits()[ix]);
             } else {

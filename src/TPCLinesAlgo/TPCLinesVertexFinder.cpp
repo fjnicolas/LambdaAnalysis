@@ -14,7 +14,7 @@
 // ------- constructor
 TPCLinesVertexFinder::TPCLinesVertexFinder(VertexFinderAlgorithmPsetType tpcLinesVertexFinderPset):
     fTPCLinesVertexFinderPset(tpcLinesVertexFinderPset)
-{};
+{}
 
 double TPCLinesVertexFinder::GetAngle360(double x, double y) {
     double a = std::atan(std::abs(y / x)) * 180.0 / M_PI;
@@ -399,7 +399,7 @@ std::vector<SLinearCluster> TPCLinesVertexFinder::GetCollinearTracks(SLinearClus
 
         double avIntStart=0;
         double avIntEnd=0;
-        for(size_t k=0; k<nHits; k++){
+        for(int k=0; k<nHits; k++){
             if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"S:"<<hitsStart[k].Integral()<<hitsStart[k]<<" E:"<<hitsEnd[k].Integral()<<hitsEnd[k]<<std::endl;
             avIntStart+=hitsStart[k].Integral();
         }
@@ -635,7 +635,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                 SHit cloHit2 = cloHit2Pair.first;
                 double dHit2 = cloHit2Pair.second;
                 SHit cloHit = (dHit1 < dHit2) ? cloHit1 : cloHit2;
-                double dHit = (dHit1 < dHit2) ? dHit1 : dHit2;
+                //double dHit = (dHit1 < dHit2) ? dHit1 : dHit2;
 
                 // Study the edges of the tracks
                 std::vector<SHit> vertexHits = GetMutualHitsContainedInHypo(track1, track2, intP, 5);
@@ -857,7 +857,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLi
                 double dHit2 = cloHit2Pair.second;
                 // Choose the closest hit of the two candidates
                 SHit cloHit = (dHit1 < dHit2) ? cloHit1 : cloHit2;
-                double dHit = (dHit1 < dHit2) ? dHit1 : dHit2;
+                //double dHit = (dHit1 < dHit2) ? dHit1 : dHit2;
 
                 // Study the edges of the tracks
                 std::vector<SHit> vertexHits = GetMutualHitsContainedInHypo(track1, track2, intP, 5);
@@ -918,7 +918,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLi
 
                 //  put intersection point in the closest hit
                 intP = SPoint(vertexHit.X(), vertexHit.Y());
-                bool thereIsIntersectionVertex = (intP.X()!=-1 && intP.Y()!=-1);
 
                 if(fTPCLinesVertexFinderPset.Verbose>=1){
                     std::cout << "      Vertex set to: " << intP;

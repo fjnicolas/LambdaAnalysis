@@ -62,7 +62,7 @@ void TPCLinesTrackFinder::GetHitsInTubeSingleWire(std::vector<SHit> & hitsIn, st
     std::unordered_map<int, double> hitDistDict;
     std::unordered_map<int, std::vector<SHit>> discardedhitsDict;
 
-    for (int hitix = 0; hitix < hitList.size(); hitix++) {
+    for (size_t hitix = 0; hitix < hitList.size(); hitix++) {
         SHit hit = hitList[hitix];
         SPoint pProj = line.GetLineClosestPoint( SPoint(hit.X(), hit.Y()) );
         double d = std::sqrt(std::pow(hit.X() - pProj.X(), 2) + std::pow(hit.Y() - pProj.Y(), 2));
@@ -172,7 +172,7 @@ std::pair<double, double> TPCLinesTrackFinder::ComputeConnectivityMode(std::vect
     // Fit the points
     dbscan.fit(data);
     std::vector<int>& clusterAssignment = dbscan.getClusterAssignment();
-    for (int i = 0; i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i) {
         if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout << data[i].X() << " " << data[i].X() << " Cluster=" << clusterAssignment[i] << std::endl;
     }
 
@@ -244,7 +244,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::Get2DClusters(std::vector<SHit>
     
     // Print results
     std::vector<int>& clusterAssignment = dbscan.getClusterAssignment();
-    for (int i = 0; i < data.size(); ++i) {
+    for (size_t i = 0; i < data.size(); ++i) {
         if (clusterAssignment[i] == -1) {
             if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout << "SPoint (" << data[i].X() << ", " << data[i].Y() << ") is noise" << std::endl;
         } else {
@@ -261,7 +261,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::Get2DClusters(std::vector<SHit>
     // create the line cluster
     std::vector<SLinearCluster> linearClusterV;
     for(size_t cIx=0; cIx<clusterFrequencies.size(); cIx++){
-        size_t cID = clusterFrequencies[cIx].first;
+        int cID = (int)clusterFrequencies[cIx].first;
         int nhitscluster = clusterFrequencies[cIx].second;
         if(nhitscluster>=minPts){
 

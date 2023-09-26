@@ -35,12 +35,12 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     covXY /= data.size();
 
     double eigenvalue1 = (covXX + covYY + std::sqrt((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY)) / 2.0;
-    double eigenvalue2 = (covXX + covYY - std::sqrt((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY)) / 2.0;
-
     double eigenvectorX1 = eigenvalue1 - covYY;
     double eigenvectorY1 = covXY;
+
+    /* double eigenvalue2 = (covXX + covYY - std::sqrt((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY)) / 2.0;
     double eigenvectorX2 = eigenvalue2 - covYY;
-    double eigenvectorY2 = covXY;
+    double eigenvectorY2 = covXY;*/
 
 
     // Calculate slopes (m) and intercepts (b) for lines

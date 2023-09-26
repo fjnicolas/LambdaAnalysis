@@ -504,9 +504,9 @@ namespace TPCLinesDirectionUtils{
 
 
     SLinearCluster GetMainDirectionMaxHits(std::vector<std::vector<SLinearCluster>> trackClusterList, std::vector<SLinearCluster> & selectedTracksList, std::vector<SLinearCluster> & freeTracksList ) {
-        int maxIndex = 0;
+        size_t maxIndex = 0;
         int maxNHits = 0;
-        for (int k = 0; k < trackClusterList.size(); ++k) {
+        for (size_t k = 0; k < trackClusterList.size(); ++k) {
             int nhits = 0;
             for (SLinearCluster track : trackClusterList[k]) {
                 nhits += track.NHits();
@@ -532,7 +532,7 @@ namespace TPCLinesDirectionUtils{
         }
 
         std::vector<SLinearCluster> freeTrackList;
-        for (int k = 0; k < trackClusterList.size(); ++k) {
+        for (size_t k = 0; k < trackClusterList.size(); ++k) {
             if (k == maxIndex) continue;
             for (SLinearCluster& track : trackClusterList[k]) {
                 freeTracksList.push_back(track);
@@ -547,10 +547,10 @@ namespace TPCLinesDirectionUtils{
 
     SLinearCluster GetMainDirectionLongest(std::vector<std::vector<SLinearCluster>> trackClusterList, std::vector<SLinearCluster> & selectedTracksList, std::vector<SLinearCluster> & freeTracksList, int minHits) {
         
-        int maxIndex = 0;
+        size_t maxIndex = 0;
         double maxTrackLength = 0.0;
 
-        for (int k = 0; k < trackClusterList.size(); ++k) {
+        for (size_t k = 0; k < trackClusterList.size(); ++k) {
             int nhits = 0;
             for(SLinearCluster track : trackClusterList[k]) {
                 nhits += track.NHits();
@@ -601,7 +601,7 @@ namespace TPCLinesDirectionUtils{
         }
 
         std::vector<SLinearCluster> freeTrackList;
-        for (int k = 0; k < trackClusterList.size(); ++k) {
+        for (size_t k = 0; k < trackClusterList.size(); ++k) {
             if (k == maxIndex) continue;
             for (SLinearCluster& track : trackClusterList[k]) {
                 freeTracksList.push_back(track);
@@ -616,10 +616,10 @@ namespace TPCLinesDirectionUtils{
 
     SLinearCluster GetMainDirectionDownstream(std::vector<std::vector<SLinearCluster>> trackClusterList, std::vector<SLinearCluster> & selectedTracksList, std::vector<SLinearCluster> & freeTracksList, int minHits) {
         
-        int maxIndex = 0;
+        size_t maxIndex = 0;
         double minXStart = 1e6;
 
-        for (int k = 0; k < trackClusterList.size(); ++k) {
+        for (size_t k = 0; k < trackClusterList.size(); ++k) {
             int nhits = 0;
             for (SLinearCluster track : trackClusterList[k]) {
                 nhits += track.NHits();
@@ -655,7 +655,7 @@ namespace TPCLinesDirectionUtils{
         }
 
         std::vector<SLinearCluster> freeTrackList;
-        for (int k = 0; k < trackClusterList.size(); ++k) {
+        for (size_t k = 0; k < trackClusterList.size(); ++k) {
             if (k == maxIndex) continue;
             for (SLinearCluster& track : trackClusterList[k]) {
                 freeTracksList.push_back(track);

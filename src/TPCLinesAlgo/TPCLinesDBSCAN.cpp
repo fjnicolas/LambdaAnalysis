@@ -13,7 +13,7 @@
 DBSCAN::DBSCAN(double epsilon, int minPts) 
     :epsilon(epsilon),
     minPts(minPts)
-{};
+{}
 
 void DBSCAN::setDistanceFunction(double (*distFunc)( SHit&,  SHit&)) {
     distanceFunction = distFunc;
@@ -28,10 +28,10 @@ void DBSCAN::fit( std::vector<SHit>& points) {
     clusterAssignment.assign(points.size(), 0);  // 0 indicates unassigned
     
     int clusterIdx = 0;
-    for (int i = 0; i < points.size(); ++i) {
+    for (size_t i = 0; i < points.size(); ++i) {
         if (clusterAssignment[i] == 0) {  // Not assigned to any cluster
             std::vector<int> neighbors = regionQuery(points, points[i]);
-            if (neighbors.size() < minPts) {
+            if ((int)neighbors.size() < minPts) {
                 clusterAssignment[i] = -1;  // Mark as noise
             }
             else {
@@ -44,7 +44,7 @@ void DBSCAN::fit( std::vector<SHit>& points) {
 
 std::vector<int> DBSCAN::regionQuery( std::vector<SHit>& points,  SHit& p) {
     std::vector<int> neighbors;
-    for (int i = 0; i < points.size(); ++i) {
+    for (size_t i = 0; i < points.size(); ++i) {
         if (distanceFunction(p, points[i]) <= epsilon) {
             neighbors.push_back(i);
         }
@@ -63,12 +63,12 @@ void DBSCAN::expandCluster( std::vector<SHit>& points, int pointIdx, int cluster
     }*/
     clusterAssignment[pointIdx] = clusterIdx;
     
-    for (int i = 0; i < seeds.size(); ++i) {
+    for (size_t i = 0; i < seeds.size(); ++i) {
         int currentIdx = seeds[i];
         if (clusterAssignment[currentIdx] == 0) {  // Not assigned to any cluster
             clusterAssignment[currentIdx] = clusterIdx;
             std::vector<int> currentSHitNeighbors = regionQuery(points, points[currentIdx]);
-            if (currentSHitNeighbors.size() >= minPts) {
+            if ((int)currentSHitNeighbors.size() >= minPts) {
                 //seeds.insert(seeds.end(), currentSHitNeighbors.begin(), currentSHitNeighbors.end());
                 expandCluster(points, currentIdx, clusterIdx);
             }

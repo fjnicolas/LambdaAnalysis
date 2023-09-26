@@ -51,7 +51,7 @@ void TPCLinesAlgo::SetHitList(std::string view,
     fHitList.clear();
     fNTotalHits=0;
 
-    size_t nTotalHits = _X->size();
+    int nTotalHits = _X->size();
 
     // Define the vertex
     double vertexX = vertex[2];
@@ -97,7 +97,7 @@ void TPCLinesAlgo::SetHitList(std::string view,
         
 
             
-            for (int i = 0; i < filteredX.size(); i++) {
+            for (size_t i = 0; i < filteredX.size(); i++) {
                 SHit hit(i, filteredX[i] - minX, filteredY[i] - minY, filteredWi[i], filteredInt[i], filteredST[i] - minY, filteredET[i] - minY);
                 fHitList.push_back(hit);
             }
@@ -208,7 +208,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
             double hitTrackDist = track.GetHitCluster().GetMinDistanceToCluster1D(hit);
             if (hitTrackDist < dCleaning1D) {
                 double d = track.GetTrackEquation().GetDistance(SPoint(hit.X(), hit.Y()));
-                double hypoY = track.GetTrackEquation().Slope() * hit.X() + track.GetTrackEquation().Intercept();
+                //double hypoY = track.GetTrackEquation().Slope() * hit.X() + track.GetTrackEquation().Intercept();
                 if (d < dTh * trackComp && d < minD) {
                     minD = d;
                     hitToTrackDict[hitix].push_back(trkix);
@@ -292,7 +292,7 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
     std::vector<SHit> discardedHits;
     std::vector<SLinearCluster> finalLinearClusterV;
 
-    trkIter = hitListForHough.size()>fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
+    trkIter = (int)hitListForHough.size()>fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
     std::cout<<trkIter<<" "<<fHitList.size()<<" "<<hitListForHough.size()<<std::endl;
     // --- Loop over the hough tracks
     while(trkIter<fTPCLinesPset.MaxHoughTracks){
@@ -322,7 +322,7 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
                 finalLinearClusterV.insert(finalLinearClusterV.begin(), linearClusterV.begin(), linearClusterV.end());
                 
                 // -- check there's enough hits for the next Hough iteration
-                if(hitListForHough.size() < fTPCLinesPset.MinTrackHits){
+                if((int)hitListForHough.size() < fTPCLinesPset.MinTrackHits){
                     if(fTPCLinesPset.Verbose>=3)
                         if(fTPCLinesPset.Verbose>=2) std::cout<<"   Remaining hits are "<<hitListForHough.size()<<", ending the search\n";
                     trkIter = fTPCLinesPset.MaxHoughTracks;
