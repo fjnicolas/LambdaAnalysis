@@ -22,22 +22,24 @@ struct FRAMSPsetType {
   int Verbose;
   bool CalculateScore;
   std::string TMVAFilename;
+  std::string OutputPath;
 
   // Constructor to initialize the members
-  FRAMSPsetType(bool rawSmoothing,
-                bool smoothing,
-                bool cumulativeSmoothing,
-                unsigned int driftPack,
-                unsigned int wirePack,
-                float smoothParam,
-                int unweightedNeighbors,
-                double cut,
-                int windowN,
-                int samplesSlope,
-                int radius,
-                int verbose,
-                bool calculate,
-                const std::string& filename)
+  FRAMSPsetType(bool rawSmoothing=false,
+                bool smoothing=false,
+                bool cumulativeSmoothing=false,
+                unsigned int driftPack=4,
+                unsigned int wirePack=1,
+                float smoothParam=0.3,
+                int unweightedNeighbors=1,
+                double cut=0.8,
+                int windowN=3,
+                int samplesSlope=3,
+                int radius=70,
+                int verbose=0,
+                bool calculate=false,
+                const std::string& filename="",
+                const std::string& outputpath="" )
                   : ApplyRawSmoothing(rawSmoothing),
                     ApplySmoothing(smoothing),
                     ApplyCumulativeSmoothing(cumulativeSmoothing),
@@ -51,7 +53,8 @@ struct FRAMSPsetType {
                     MaxRadius(radius),
                     Verbose(verbose),
                     CalculateScore(calculate),
-                    TMVAFilename(filename)
+                    TMVAFilename(filename),
+                    OutputPath(outputpath)
   {}
 };
 

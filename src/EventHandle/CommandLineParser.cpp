@@ -4,6 +4,7 @@
 CommandLineParser::CommandLineParser(int argc, char* argv[]) {
     // Initialize default values
     Debug = 0;
+    ConfPsetPath = "";
     DebugMode = -1;
     n = 1e6;
     nskip = -1;
@@ -12,7 +13,8 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
     file_name = "";
     directory_path = ".";
     ext = ".root";
-
+    useRecoVertex = false;
+    
     // Loop through command-line arguments
     for (int i = 1; i < argc; ++i) {
         std::string argument = argv[i];
@@ -22,6 +24,11 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
             if (i + 1 < argc) {
                 Debug = std::stoi(argv[i + 1]);
                 i++; // Skip the next argument since it has been processed
+            }
+        } else if (argument == "-c") {
+            if (i + 1 < argc) {
+                ConfPsetPath = argv[i + 1];
+                i++;
             }
         } else if (argument == "-m") {
             if (i + 1 < argc) {
@@ -53,7 +60,7 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
                 file_name = argv[i + 1];
                 i++;
             }
-        } else if (argument == "-d") {
+        } else if (argument == "-dir") {
             if (i + 1 < argc) {
                 directory_path = argv[i + 1];
                 i++;
@@ -61,6 +68,11 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
         } else if (argument == "-ext") {
             if (i + 1 < argc) {
                 ext = argv[i + 1];
+                i++;
+            }
+        } else if (argument == "-recoVx") {
+            if (i + 1 < argc) {
+                useRecoVertex = std::stoi(argv[i + 1]);
                 i++;
             }
         }

@@ -6,6 +6,7 @@
 
 #include "CommandLineParser.h"
 #include "SEventHandle.h"
+#include "SParserConfig.h"
 #include "STPCAnalyzerTreeReader.h"
 #include "TPCSimpleEvents.h"
 #include "TPCLinesParameters.h"
@@ -15,6 +16,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 {
 
     int Debug = parser.getDebug();
+    std::string ConfPsetPath = parser.getPsetPath();
     int DebugMode = parser.getDebugMode();
     int n = parser.getN();
     int nskip = parser.getNskip();
@@ -24,97 +26,30 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string directory_path = parser.getDirectoryPath();
     std::string ext = parser.getExtension();
 
-    // ----------- ALGORITHM PARAMETERS --------------------------------- 
-    // View to use
-    std::string fView="C";
-
-    // ---- Ana view parameters
-    double fMaxRadius = 250;
-    double fDriftConversion = 1.;
-    int fMaxHoughTracks = 15;
-    bool fRemoveIsolatedHits = true;
-    double fMaxNeighbourDistance = 2;
-    double fMinNeighboursHits = 2;
-    int fVerbose = Debug;
-    int fDebugMode = DebugMode;
-
-    // ---- Hough algorithm parameters
-    double fMaxRadiusLineHypothesis = 25; //in cm
-    double fThetaRes=25; //degrees
-    double fMaxDistanceTube = 10;
-    int fMinHoughHits = 3;
-    int fVerboseHough = Debug;
-
-    // ---- Track finder parameters
-    double fMaxDTube = 10;
-    double fMaxDCluster = fMaxDTube/2;
-    bool fSingleWireMode = false;
-    int fMinClusterHits = 3;
-    double fDCleaning=2.;
-    double fClusterCompletenessCut=0.8;
-    double fClusterAngleCut = 5;
-    bool fCaptureMissingHits = true;
-    int fMinTrackHits = 3;
-    float fHitDensityThreshold = 1.5;
-    int fVerboseTrack = Debug;
-
-    // ---- Vertex finder parameters
-    double fMaxDistToEdge = 3;
-    bool fRefineVertexIntersection = true;
-    bool fUseEdgesDiscard = true;
-    float fMaxTrackFractionInMain = 0.75;
-    bool fDecideMainTrack = true;
-    bool fAddCollinearLines = false;
-    int fVerboseVertexFinder = Debug;
-    // -------------------------------------------- 
 
     // Get input files
     std::vector<TString> fFilePaths = GetInputFileList(file_name, ext);
-    
-    // ----------- Define parameter sets --------------------------------- 
-    TrackFinderAlgorithmPsetType fPsetTrackFinder(fMaxDTube,
-                                                  fMaxDCluster,
-                                                  fSingleWireMode,
-                                                  fMinClusterHits,
-                                                  fDCleaning,
-                                                  fClusterCompletenessCut,
-                                                  fClusterAngleCut,
-                                                  fCaptureMissingHits,
-                                                  fMinTrackHits,
-                                                  fHitDensityThreshold,
-                                                  fVerboseTrack);
 
-    HoughAlgorithmPsetType fPsetHough(fMaxRadiusLineHypothesis,
-                                fThetaRes,
-                                fMaxDistanceTube,
-                                fMinHoughHits,
-                                fVerboseHough);
+    // View to use
+    std::string fView="C";
 
+    // Parameter sets
+    TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset(ConfPsetPath);
+    fPsetTrackFinder.Verbose = Debug;
+    HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset(ConfPsetPath);
+    fPsetHough.Verbose = Debug;
+    VertexFinderAlgorithmPsetType fPsetVertexFinder = ReadVertexFinderAlgorithmPset(ConfPsetPath);
+    fPsetVertexFinder.Verbose = Debug;
+    TPCLinesAlgoPsetType fPsetAnaView = ReadTPCLinesAlgoPset(ConfPsetPath);
+    fPsetAnaView.Verbose = Debug;
+    fPsetAnaView.DebugMode = DebugMode;
+    fPsetAnaView.HoughAlgorithmPset = fPsetHough;
+    fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
+    fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
 
-    VertexFinderAlgorithmPsetType fPsetVertexFinder(fMaxDistToEdge,
-                                                    fRefineVertexIntersection,
-                                                    fUseEdgesDiscard,
-                                                    fMaxTrackFractionInMain,
-                                                    fDecideMainTrack,
-                                                    fAddCollinearLines,
-                                                    fVerboseVertexFinder);
-                      
-    TPCLinesAlgoPsetType fPsetAnaView(fMaxRadius,
-                                      fDriftConversion,
-                                      fMaxHoughTracks,
-                                      fMinTrackHits,
-                                      fRemoveIsolatedHits,
-                                      fMaxNeighbourDistance,
-                                      fMinNeighboursHits,
-                                      fVerbose,
-                                      fDebugMode,
-                                      fPsetHough,
-                                      fPsetTrackFinder,
-                                      fPsetVertexFinder);
+    fPsetAnaView.Print();
+
     // ------------------------------------------------------------------ 
-
-
-
     // Define the program control variables
     int fNEv = n;
     int fEv = event;

@@ -37,16 +37,19 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
 
     fTMVAReader.BookMVA( "FRAMS BDT",  fFRANSPset.TMVAFilename.c_str()  );
 
+    // reset the output path
+    gSystem->Exec(("rm -rf "+fFRANSPset.OutputPath).c_str());
+    gSystem->Exec(("mkdir "+fFRANSPset.OutputPath).c_str());
+    gSystem->Exec(("mkdir "+fFRANSPset.OutputPath+"/rootfiles").c_str());
+
   }
 }
+
 
 double ChargeDensity::GetDistance(int x, double y, int x0, double y0){
   //std::cout<<x-x0<<" "<<y-y0<<std::endl;
   return std::sqrt( std::pow( ((double)(x-x0))/fFRANSPset.NWirePack, 2) + std::pow( (y-y0)/fFRANSPset.NDriftPack, 2) );
 }
-
-
-
 
 
 void ChargeDensity::Rescale(std::vector<double>& wf, double kappa){
@@ -314,7 +317,7 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex){
 
 
 //void ChargeDensity::Save2ROOT(art::TFileDirectory tfdir, std::string name){
-void ChargeDensity::Display(std::string fOutputPath, std::string name){
+void ChargeDensity::Display(std::string name){
 
   gStyle->SetPalette(112,0);
   gStyle->SetTitleFont(132, "TXYZ");
@@ -397,7 +400,6 @@ void ChargeDensity::Display(std::string fOutputPath, std::string name){
   leg2->AddEntry(grCum, legLabel2.str().c_str(), "");
   leg2->Draw("same");
 
-
   pad1->cd();
   TGraph *grDer = new TGraphErrors(fZCumDer.size(), &fRho[0], &fZCumDer[0], 0, &fZCumDerErr[0]);
   grDer->SetTitle("");
@@ -419,16 +421,10 @@ void ChargeDensity::Display(std::string fOutputPath, std::string name){
   leg3->Draw("same");
 
 
-  // Check if the directory exists, create it if not
-  gSystem->Exec(("pwd "+fOutputPath).c_str());
-  if (!gSystem->OpenDirectory(fOutputPath.c_str())) {
-      gSystem->Exec(("mkdir "+fOutputPath).c_str());
-      gSystem->Exec(("mkdir "+fOutputPath+"/rootfiles").c_str());
-  }  
-  TFile* rootFile = new TFile((fOutputPath + "/rootfiles/"+name).c_str(), "RECREATE");
+  TFile* rootFile = new TFile((fFRANSPset.OutputPath + "/rootfiles/"+name).c_str(), "RECREATE");
   c.Write();
   rootFile->Close();
-  c.SaveAs((fOutputPath + "/" + name +".pdf").c_str());
+  c.SaveAs((fFRANSPset.OutputPath  + "/" + name +".pdf").c_str());
 
   c.cd();
   c.Update();

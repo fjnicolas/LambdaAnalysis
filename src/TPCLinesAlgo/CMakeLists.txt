@@ -15,6 +15,8 @@ add_library(tpclines_library
     TPCLinesDBSCAN.h
     TPCLinesDirectionRecoUtils.cpp
     TPCLinesDirectionRecoUtils.h
+    TPCLinesParameters.cpp
+    TPCLinesParameters.h
 )
 
 # Include directories for header files

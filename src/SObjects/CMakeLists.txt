@@ -11,14 +11,12 @@ add_library(sobjects_library
     TPCSimpleLines.h
     TPCSimpleTriangles.cpp
     TPCSimpleTriangles.h
-    TPCLinesPCA.cpp
-    TPCLinesPCA.h
-    TPCLinesParameters.cpp
-    TPCLinesParameters.h
     TPCLinesDistanceUtils.cpp
     TPCLinesDistanceUtils.h
     TPCSimpleEvents.cpp
     TPCSimpleEvents.h
+    TPCLinesPCA.cpp
+    TPCLinesPCA.h
 )
 
 

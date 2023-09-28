@@ -5,9 +5,14 @@
 #include <TApplication.h>
 
 // Objects
+
 #include "CommandLineParser.h"
-#include "STPCAnalyzerTreeReader.h"
 #include "SEventHandle.h"
+#include "SParserConfig.h"
+#include "STPCAnalyzerTreeReader.h"
+#include "TPCSimpleEvents.h"
+#include "TPCLinesParameters.h"
+#include "TPCLinesAlgo.h"
 #include "ChargeDensity.h"
 #include "ChargeDensityPset.h"
 
@@ -56,6 +61,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
 {
 
     int Debug = parser.getDebug();
+    std::string ConfPsetPath = parser.getPsetPath();
     int DebugMode = parser.getDebugMode();
     int n = parser.getN();
     int nskip = parser.getNskip();
@@ -64,6 +70,11 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     std::string file_name = parser.getFileName();
     std::string directory_path = parser.getDirectoryPath();
     std::string ext = parser.getExtension();
+    bool useRecoVertex = parser.getUseRecoVx();
+
+    double fFRANSScoreCut = 0.1;
+
+    std::cout<<"Use RECO VERTEX "<<useRecoVertex<<std::endl;
 
     std::string fTreeName = "ana/AnaTPCTree"; 
 
@@ -77,43 +88,32 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
     // View to use
     std::string fView="C";
-
     // ---- FRAMS parameters ----------------------------------------
-
-    FRAMSPsetType fPsetFRAMS(
-        true,                          // ApplyRawSmoothing
-        false,                         // ApplySmoothing
-        false,                         // ApplyCumulativeSmoothing
-        4,                             // NDriftPack
-        1,                             // NWirePack
-        0.3,                          // ExpoAvSmoothPar
-        1,                             // UnAvNeighbours
-        0.8,                           // CumulativeCut
-        3,                             // SlidingWindowN
-        3,                             // NSamplesBeginSlope
-        70,                            // MaxRadius
-        Debug,                         // DebugMode
-        true,                          // CalculateScore
-        "FRAMSSelectionTMVA_BDT.weights.xml"  // TMVAFilename
-    );
+    FRAMSPsetType fPsetFRANS = ReadFRANSPset(ConfPsetPath);
+    // ---- TPCLines parameter ----------------------------------------
+    // Parameter sets
+    TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset(ConfPsetPath);
+    fPsetTrackFinder.Verbose = Debug;
+    HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset(ConfPsetPath);
+    fPsetHough.Verbose = Debug;
+    VertexFinderAlgorithmPsetType fPsetVertexFinder = ReadVertexFinderAlgorithmPset(ConfPsetPath);
+    fPsetVertexFinder.Verbose = Debug;
+    TPCLinesAlgoPsetType fPsetAnaView = ReadTPCLinesAlgoPset(ConfPsetPath);
+    fPsetAnaView.Verbose = Debug;
+    fPsetAnaView.DebugMode = DebugMode;
+    fPsetAnaView.HoughAlgorithmPset = fPsetHough;
+    fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
+    fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
     
-    // ------------------------------------------------------------------ 
-
-
     // Define the program control variables
     int fNEv = n;
     int fEv = event;
     int fSubRun = sr;
     int fNEvSkip = nskip;
     int nEvents=0;
-    
-    // Output paths for displays
-    std::string fAppDisplayPath = "plots/";
-    if(DebugMode==0) fAppDisplayPath = "plotsbg";
-    else if(DebugMode==1) fAppDisplayPath = "plotssignal";
 
     // Define TPC LINES ALGORITHM
-    ChargeDensity _FRAMSAlgo(fPsetFRAMS);
+    ChargeDensity _FRAMSAlgo(fPsetFRANS);
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
 
@@ -176,30 +176,40 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                                                         treeReader.hitsStartT, 
                                                         treeReader.hitsEndT);
             // Set the vertex
+            // true
             double vertexXTrue = VertexUVYT[2];
             if (view == "U0" || view == "U1") vertexXTrue = VertexUVYT[0];
             if (view == "V0" || view == "V1") vertexXTrue = VertexUVYT[1];
             double vertexYTrue = VertexUVYT[3];
             SVertex fVertexTrue(SPoint(vertexXTrue, vertexYTrue), view);
             
+            // reco
+            double vertexXReco = RecoVertexUVYT[2];
+            if (view == "U0" || view == "U1") vertexXReco = RecoVertexUVYT[0];
+            if (view == "V0" || view == "V1") vertexXReco = RecoVertexUVYT[1];
+            double vertexYReco = RecoVertexUVYT[3];
+            SVertex fVertexReco(SPoint(vertexXReco, vertexYReco), view);
 
-            double vertexX = RecoVertexUVYT[2];
-            if (view == "U0" || view == "U1") vertexX = RecoVertexUVYT[0];
-            if (view == "V0" || view == "V1") vertexX = RecoVertexUVYT[1];
-            double vertexY = RecoVertexUVYT[3];
-            SVertex fVertex(SPoint(vertexX, vertexY), view);
-           
+            // set it
+            SVertex fVertex = useRecoVertex? fVertexReco:fVertexTrue;
 
+            _FRAMSAlgo.Fill(hitList, fVertex);
+            std::string outputLabel="";
+            if(_FRAMSAlgo.Score()>fFRANSScoreCut){
+                _EfficiencyCalculator.UpdateSelected(ev);
+                outputLabel="Selected_";   
+            }
+            else{
+                _EfficiencyCalculator.UpdateNotSelected(ev);
+                outputLabel="NotSelected_";
+            }
 
-            _FRAMSAlgo.Fill(hitList, fVertexTrue);
-            _FRAMSAlgo.Display("plotsFRANS", ev.Label());
+            _FRAMSAlgo.Display(outputLabel+ev.Label());
         }
     }
     
     // Print final status
     std::cout<<_EfficiencyCalculator;
-    _EfficiencyCalculator.DrawHistograms();
-
 
     return;
 }
@@ -216,7 +226,7 @@ int main(int argc, char* argv[]){
     RunAlgoFRANS(parser);
 
     // Run the ROOT event loop
-    myApp->Run();    
+    myApp->Run();
 
     return 0;
 }

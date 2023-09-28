@@ -42,6 +42,8 @@ struct TrackFinderAlgorithmPsetType {
     int Verbose;
 
     // constructor
+    TrackFinderAlgorithmPsetType(){};
+
     TrackFinderAlgorithmPsetType(
         int _maxDTube,
         double _maxDCluster,
@@ -66,6 +68,20 @@ struct TrackFinderAlgorithmPsetType {
         HitDensityThreshold(_hitDensityThreshold),
         Verbose(_verbose)
     {}
+
+    void Print() const {
+        std::cout << "MaxDTube: " << MaxDTube << std::endl;
+        std::cout << "MaxDCluster: " << MaxDCluster << std::endl;
+        std::cout << "SingleWireMode: " << (SingleWireMode ? "true" : "false") << std::endl;
+        std::cout << "MinClusterHits: " << MinClusterHits << std::endl;
+        std::cout << "DCleaning: " << DCleaning << std::endl;
+        std::cout << "ClusterCompletenessCut: " << ClusterCompletenessCut << std::endl;
+        std::cout << "ClusterAngleCut: " << ClusterAngleCut << std::endl;
+        std::cout << "CaptureMissingHits: " << (CaptureMissingHits ? "true" : "false") << std::endl;
+        std::cout << "MinTrackHits: " << MinTrackHits << std::endl;
+        std::cout << "HitDensityThreshold: " << HitDensityThreshold << std::endl;
+        std::cout << "Verbose: " << Verbose << std::endl;
+    }
 };
 
 
@@ -80,6 +96,8 @@ struct VertexFinderAlgorithmPsetType {
     int Verbose;
 
     // constructor
+    VertexFinderAlgorithmPsetType(){};
+    
     VertexFinderAlgorithmPsetType(
         double _maxDistToEdge,
         bool _refineVertexIntersection,
@@ -96,6 +114,16 @@ struct VertexFinderAlgorithmPsetType {
         AddCollinearLines(_addCollinearLines),
         Verbose(_verbose)
     {}
+
+    void Print() const {
+        std::cout << "MaxDistToEdge: " << MaxDistToEdge << std::endl;
+        std::cout << "RefineVertexIntersection: " << (RefineVertexIntersection ? "true" : "false") << std::endl;
+        std::cout << "UseEdgesDiscard: " << (UseEdgesDiscard ? "true" : "false") << std::endl;
+        std::cout << "MaxTrackFractionInMain: " << MaxTrackFractionInMain << std::endl;
+        std::cout << "DecideMainTrack: " << (DecideMainTrack ? "true" : "false") << std::endl;
+        std::cout << "AddCollinearLines: " << (AddCollinearLines ? "true" : "false") << std::endl;
+        std::cout << "Verbose: " << Verbose << std::endl;
+    }
 };
 
 
@@ -108,6 +136,8 @@ struct HoughAlgorithmPsetType {
     int Verbose;
 
     // constructor
+    HoughAlgorithmPsetType(){};
+
     HoughAlgorithmPsetType(
         double _maxRadiusLineHypothesis,
         double _thetaRes,
@@ -120,6 +150,14 @@ struct HoughAlgorithmPsetType {
         MinHoughHits(_minHoughHits),
         Verbose(_verbose)
     {}
+
+    void Print() const {
+        std::cout << "MaxRadiusLineHypothesis: " << MaxRadiusLineHypothesis << std::endl;
+        std::cout << "ThetaRes: " << ThetaRes << std::endl;
+        std::cout << "MaxDistanceTube: " << MaxDistanceTube << std::endl;
+        std::cout << "MinHoughHits: " << MinHoughHits << std::endl;
+        std::cout << "Verbose: " << Verbose << std::endl;
+    }
 };
 
 
@@ -139,6 +177,8 @@ struct TPCLinesAlgoPsetType{
     VertexFinderAlgorithmPsetType VertexFinderAlgorithmPset;
     
     // constructor
+    TPCLinesAlgoPsetType(){};
+
     TPCLinesAlgoPsetType(
         double _maxRadius,
         double _driftConversion,
@@ -165,7 +205,28 @@ struct TPCLinesAlgoPsetType{
         TrackFinderAlgorithmPset(_trackFinderPset),
         VertexFinderAlgorithmPset(_vertexFinderPset)
     {}
+
+
+    void Print() {
+        std::cout << "MaxRadius: " <<  MaxRadius << std::endl;
+        std::cout << "DriftConversion: " <<  DriftConversion << std::endl;
+        std::cout << "MaxHoughTracks: " <<  MaxHoughTracks << std::endl;
+        std::cout << "MinTrackHits: " <<  MinTrackHits << std::endl;
+        std::cout << "RemoveIsolatedHits: " <<  RemoveIsolatedHits << std::endl;
+        std::cout << "MaxNeighbourDistance: " <<  MaxNeighbourDistance << std::endl;
+        std::cout << "MinNeighboursHits: " <<  MinNeighboursHits << std::endl;
+        std::cout << "Verbose: " <<  Verbose << std::endl;
+        std::cout << "DebugMode: " <<  DebugMode << std::endl;
+
+        HoughAlgorithmPset.Print();
+        TrackFinderAlgorithmPset.Print();
+        VertexFinderAlgorithmPset.Print();
+    }
 };
 
+
+
+// Function to print the struct's values
+void printStruct(const TPCLinesAlgoPsetType&  );
 
 #endif // TPC_LINES_PARAMETERS_H
