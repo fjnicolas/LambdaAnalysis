@@ -5,12 +5,12 @@
 #include <TApplication.h>
 
 // Objects
-
 #include "CommandLineParser.h"
 #include "SEventHandle.h"
 #include "SParserConfig.h"
 #include "STPCAnalyzerTreeReader.h"
 #include "TPCSimpleEvents.h"
+#include "TPCSimpleHits.h"
 #include "TPCLinesParameters.h"
 #include "TPCLinesAlgo.h"
 #include "ChargeDensity.h"
@@ -111,9 +111,15 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     int fSubRun = sr;
     int fNEvSkip = nskip;
     int nEvents=0;
+    // Output paths for displays
+    std::string fAppDisplayPath = "plots/";
+    if(DebugMode==0) fAppDisplayPath = "plotsbg";
+    else if(DebugMode==1) fAppDisplayPath = "plotssignal";
 
-    // Define TPC LINES ALGORITHM
+    // Define FRANS LINES ALGORITHM
     ChargeDensity _FRAMSAlgo(fPsetFRANS);
+    // Define TPC LINES ALGORITHM
+    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
 
@@ -175,6 +181,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                                                         treeReader.hitsRMS,
                                                         treeReader.hitsStartT, 
                                                         treeReader.hitsEndT);
+                                        
             // Set the vertex
             // true
             double vertexXTrue = VertexUVYT[2];
@@ -193,7 +200,41 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             // set it
             SVertex fVertex = useRecoVertex? fVertexReco:fVertexTrue;
 
-            _FRAMSAlgo.Fill(hitList, fVertex);
+            // Set the hits
+            _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
+                                    treeReader.hitsChannel,
+                                    treeReader.hitsPeakTime,
+                                    treeReader.hitsIntegral, 
+                                    treeReader.hitsRMS,
+                                    treeReader.hitsStartT, 
+                                    treeReader.hitsEndT,
+                                    "");
+
+            // Analyze
+            _TPCLinesAlgo.AnaView(ev.Label());
+            SEvent recoEvent = _TPCLinesAlgo.GetRecoEvent();
+            SVertex fVertexMine = SVertex( SPoint((double)_TPCLinesAlgo.GetMainVertex().X()+_TPCLinesAlgo.ShiftX(),
+                                          (double) _TPCLinesAlgo.GetMainVertex().Y()+_TPCLinesAlgo.ShiftY())
+                                    , "");
+
+
+            _FRAMSAlgo.Fill(hitList, fVertexReco);
+            double scoreReco = _FRAMSAlgo.Score();
+            _FRAMSAlgo.Fill(hitList, fVertexTrue);
+            double scoreTrue = _FRAMSAlgo.Score();
+            _FRAMSAlgo.Fill(hitList, fVertexMine);
+            double scoreMine = _FRAMSAlgo.Score();
+
+
+            std::cout<<"JUJU "<<_TPCLinesAlgo.GetMainVertex().X()<<" "<<_TPCLinesAlgo.ShiftX()<<std::endl;
+            std::cout<<" FRANS Reco vertex (PANDORA) Score="<<scoreReco<<" Vertex="<<fVertexReco;
+            
+            std::cout<<" FRANS True vertex (PANDORA) "<<scoreTrue<<" Vertex="<<fVertexTrue;
+            
+            std::cout<<" FRANS Using my fabolous vertex "<<scoreMine<<" Vertex="<<fVertexMine;
+            
+  
+            
             std::string outputLabel="";
             if(_FRAMSAlgo.Score()>fFRANSScoreCut){
                 _EfficiencyCalculator.UpdateSelected(ev);
@@ -230,4 +271,3 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
-

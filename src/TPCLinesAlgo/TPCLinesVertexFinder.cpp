@@ -779,9 +779,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                         if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"FOUND ORIGIN!\n";
                         vertexList.push_back(triangle);
                         originList.push_back(intP);
-                        mainDirection = MainDirection;
                     }
-
                 }
 
             }
@@ -802,6 +800,8 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
         }
     }
     
+    // set the main direction
+    mainDirection = MainDirection;
 
     return;
 }

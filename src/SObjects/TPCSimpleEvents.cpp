@@ -39,9 +39,6 @@ bool SOrigin::HasTrackIndex(int ix){
 }
 
 
-
-
-
 SEvent::SEvent(std::vector<SOrigin> origins, double hitDensity):
     fOriginList(origins),
     fHitDensity(hitDensity)

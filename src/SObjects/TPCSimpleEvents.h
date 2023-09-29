@@ -67,7 +67,7 @@ class SEvent {
     
         
     public:
-        SEvent(std::vector<SOrigin> origins, double hitDensity);
+        SEvent(std::vector<SOrigin> origins={}, double hitDensity=0);
 
         std::vector<SOrigin> GetOrigins(){return fOriginList;};
         int GetNOrigins(){ return fOriginList.size();};

@@ -129,7 +129,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             
 
             // Analyze
-            SEvent recoEvent = _TPCLinesAlgo.AnaView(ev.Label());
+            _TPCLinesAlgo.AnaView(ev.Label());
+            SEvent recoEvent = _TPCLinesAlgo.GetRecoEvent();
 
             
             int nOrigins = recoEvent.GetNOrigins();
@@ -180,5 +181,3 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
-
-

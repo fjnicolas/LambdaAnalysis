@@ -24,6 +24,7 @@ TPCLines:MaxHoughTracks 15
 TPCLines:RemoveIsolatedHits true 
 TPCLines:MaxNeighbourDistance 2 
 TPCLines:MinNeighboursHits 2 
+TPCLines:VertexAlgorithm 1 
 TPCLines:Verbose 0
 TPCLines:DebugMode -1 
 

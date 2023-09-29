@@ -170,6 +170,7 @@ struct TPCLinesAlgoPsetType{
     bool RemoveIsolatedHits;
     double MaxNeighbourDistance;
     int MinNeighboursHits;
+    int VertexAlgorithm;
     int Verbose;
     int DebugMode;
     HoughAlgorithmPsetType HoughAlgorithmPset;
@@ -187,6 +188,7 @@ struct TPCLinesAlgoPsetType{
         bool _removeIsolatedHits,
         double _maxNeighbourDistance,
         int _minNeighboursHits,
+        int _vertexAlgorithm,
         int _verbose,
         int _debugMode,
         HoughAlgorithmPsetType _houghAlgorithmPset,
@@ -199,6 +201,7 @@ struct TPCLinesAlgoPsetType{
         RemoveIsolatedHits(_removeIsolatedHits),
         MaxNeighbourDistance(_maxNeighbourDistance), 
         MinNeighboursHits(_minNeighboursHits),
+        VertexAlgorithm(_vertexAlgorithm),
         Verbose(_verbose),
         DebugMode(_debugMode),
         HoughAlgorithmPset(_houghAlgorithmPset),

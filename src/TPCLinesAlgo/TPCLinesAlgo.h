@@ -54,6 +54,8 @@ class TPCLinesAlgo {
         std::vector<SHit> fHitList;
         SVertex fVertex;
         SVertex fVertexTrue;
+        int fMinX;
+        double fMinY;
         int fMaxX;
 
         // Hough algorithm
@@ -73,6 +75,9 @@ class TPCLinesAlgo {
 
         std::vector<SLinearCluster> MergeIsolatedHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, double dCleaning1D, double dTh = 3);
 
+        SEvent fRecoEvent;
+        SPoint fMainVertex;
+
     public:
         // constructor
         TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string displayPath="");
@@ -90,11 +95,16 @@ class TPCLinesAlgo {
                         std::string eventLabel="");
         
         // Function to analyze the view
-        SEvent AnaView(std::string eventLabel);
+        void AnaView(std::string eventLabel);
 
         // Function to get the average desnity of hits per wire
         double GetAverageHitDensity();
 
+        int ShiftX(){ return fMinX; };
+        double ShiftY(){ return fMinY; };
+
+        SEvent GetRecoEvent() { return fRecoEvent; };
+        SPoint GetMainVertex() { return fMainVertex; };
         // Display
         void Display();                            
 };

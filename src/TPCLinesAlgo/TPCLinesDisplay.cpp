@@ -267,7 +267,7 @@ void TPCLinesDisplay::Show(
 
     // draw PANDORA vertex
     if(trueVertex.Point().X()!=-1 && trueVertex.Point().Y()!=-1){
-        DrawVertex(trueVertex, legend, "True vtx", kPink-12, 33, 1);
+        DrawVertex(trueVertex, legend, "True vtx", kPink-12, 110, 1);
     }
     
     

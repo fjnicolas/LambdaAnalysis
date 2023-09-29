@@ -113,6 +113,8 @@ void TPCLinesAlgo::SetHitList(std::string view,
             fVertex = SVertex(SPoint(vertexX, vertexY), view);
             fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), view);
             fMaxX = maxX - minX;
+            fMinX = minX;
+            fMinY = minY;
             std::cout << "  ** Origin vertex: " << fVertex;
             std::cout << "  ** NInputHits:"<<fNTotalHits<<std::endl;
 
@@ -284,9 +286,8 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 
 //----------------------------------------------------------------------
 // Main function
-SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
+void TPCLinesAlgo::AnaView(std::string eventLabel)
 {
-    int fAlgorithm = 0;
     // --- Objects for the Hough tracks
     int trkIter = 0;
     std::vector<SHit> hitListForHough = fHitList;
@@ -376,11 +377,19 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
 
     bool accepted = vertexList.size()>0;
     std::string outNamePreffix = accepted? "Accepted Final Reco":"Rejected Final Reco";
-    fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList, fVertex);
+    if(fTPCLinesPset.VertexAlgorithm==1){
+        fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList, fVertex);
+    }
+
+    fMainVertex = mainDirection.GetStartPoint();
+
+    float d1 = std::hypot( 0.3*(mainDirection.GetStartPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetStartPoint().Y() - fVertex.Point().Y()) );
+    float d2 = std::hypot( 0.3*(mainDirection.GetEndPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetEndPoint().Y() - fVertex.Point().Y()) );
+    fMainVertex = (d1<d2)? mainDirection.GetStartPoint() : mainDirection.GetEndPoint();
 
     // ------ Get the parallel tracks
     std::vector<SOrigin> intersectionsInBall;
-    if(fAlgorithm==1){
+    if(fTPCLinesPset.VertexAlgorithm==2){
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
         std::vector<SLinearCluster> NewTrackList;
         for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
@@ -398,6 +407,11 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
         for(SOrigin & ori: intersectionsInBall){
             std::cout<<ori;
         }
+        
+        if(intersectionsInBall.size()>0){
+            fMainVertex = intersectionsInBall[0].GetPoint();
+        }
+
         fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, {}, fVertex, fVertexTrue, intersectionsInBall);
     }
 
@@ -408,8 +422,8 @@ SEvent TPCLinesAlgo::AnaView(std::string eventLabel)
     SEvent recoEvent2(intersectionsInBall, hitDensity);
 
     
-    if(fAlgorithm==0)
-        return recoEvent1;
+    if(fTPCLinesPset.VertexAlgorithm==1)
+        fRecoEvent = recoEvent1;
     else
-        return recoEvent2;
+        fRecoEvent = recoEvent2;
 }

@@ -108,7 +108,6 @@ VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename
         vertexFinderPset.UseEdgesDiscard = pt.get<bool>(prolog + "UseEdgesDiscard");
         vertexFinderPset.MaxTrackFractionInMain = pt.get<float>(prolog + "MaxTrackFractionInMain");
         vertexFinderPset.DecideMainTrack = pt.get<bool>(prolog + "DecideMainTrack");
-        std::cout<<" JJJJJ "<< vertexFinderPset.DecideMainTrack<<std::endl;
         vertexFinderPset.AddCollinearLines = pt.get<bool>(prolog + "AddCollinearLines");
         vertexFinderPset.Verbose = pt.get<int>(prolog + "Verbose");
 
@@ -170,6 +169,7 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename) {
         tpcLinesAlgoPset.RemoveIsolatedHits = pt.get<bool>(prolog + "RemoveIsolatedHits");
         tpcLinesAlgoPset.MaxNeighbourDistance = pt.get<double>(prolog + "MaxNeighbourDistance");
         tpcLinesAlgoPset.MinNeighboursHits = pt.get<int>(prolog + "MinNeighboursHits");
+        tpcLinesAlgoPset.VertexAlgorithm = pt.get<int>(prolog + "VertexAlgorithm");
         tpcLinesAlgoPset.Verbose = pt.get<int>(prolog + "Verbose");
         tpcLinesAlgoPset.DebugMode = pt.get<int>(prolog + "DebugMode");
 
