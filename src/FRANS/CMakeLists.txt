@@ -5,6 +5,7 @@ add_library(frans_library
   ChargeDensity.cpp
   ChargeDensity.h
   ChargeDensityPset.h
+  FRANSTTreeHandle.h
   VertexView.h
 )
 

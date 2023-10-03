@@ -36,7 +36,7 @@ void TPCLinesAlgo::Display(){
 
 //----------------------------------------------------------------------
 // Set the input hits
-void TPCLinesAlgo::SetHitList(std::string view,
+bool TPCLinesAlgo::SetHitList(std::string view,
                             std::vector<int>& vertex,
                             std::vector<int>& vertexTrue,
                             std::vector<int> *_X,
@@ -118,9 +118,11 @@ void TPCLinesAlgo::SetHitList(std::string view,
             std::cout << "  ** Origin vertex: " << fVertex;
             std::cout << "  ** NInputHits:"<<fNTotalHits<<std::endl;
 
+            return true;
         }
         else {
             std::cout << "   SKIPPED NHits selected near the vertex " << filteredX.size() << std::endl;
+            return false;
         }
 
     }

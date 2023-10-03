@@ -51,6 +51,9 @@ MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
     tree->SetBranchAddress("RecoVC", &recnuvC);
     tree->SetBranchAddress("RecoVTimeTick", &recnuvTimeTick);
 
+    // True PDGs
+    tree->SetBranchAddress("TruePrimariesPDG", &truePrimeriesPDG);
+    
     // Set branch addresses for hits information
     tree->SetBranchAddress("HitsIntegral", &hitsIntegral);
     tree->SetBranchAddress("HitsPeakTime", &hitsPeakTime);
@@ -64,10 +67,10 @@ MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
 }
 
 
- bool MyTPCTreeReader::GetEntry(int entry) {
+bool MyTPCTreeReader::GetEntry(int entry) {
     if (entry < 0 || entry >= tree->GetEntries())
         return false;
-
+    
     tree->GetEntry(entry);
     return true;
 }

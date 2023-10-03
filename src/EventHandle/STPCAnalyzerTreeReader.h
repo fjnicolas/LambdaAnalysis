@@ -44,6 +44,9 @@ public:
     int recnuvC;
     int recnuvTimeTick;
 
+    // MC PDGs
+    std::vector<int> *truePrimeriesPDG = new std::vector<int>;
+
     // Hits information
     std::vector<double> *hitsIntegral = new std::vector<double>;
     std::vector<double> *hitsPeakTime = new std::vector<double>;

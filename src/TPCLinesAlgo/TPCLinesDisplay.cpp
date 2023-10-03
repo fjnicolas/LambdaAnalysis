@@ -284,9 +284,11 @@ void TPCLinesDisplay::Show(
         gSystem->Exec(("mkdir "+fOutputPath).c_str());
         gSystem->Exec(("mkdir "+fOutputPath+"/rootfiles").c_str());
     }  
-    TFile* rootFile = new TFile((fOutputPath + "/rootfiles/"+eventLabel).c_str(), "RECREATE");
+    TFile* rootFile = new TFile((fOutputPath + "/rootfiles/"+eventLabel).c_str(), "CREATE");
     c.Write();
     rootFile->Close();
+    rootFile->Delete();
+    delete rootFile;
     c.SaveAs((fOutputPath + "/" + eventLabel+".pdf").c_str());
 
     c.cd();

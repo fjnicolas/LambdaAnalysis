@@ -17,6 +17,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
     int Debug = parser.getDebug();
     std::string ConfPsetPath = parser.getPsetPath();
+    if(ConfPsetPath==""){
+        ConfPsetPath="config.txt";
+    }
     int DebugMode = parser.getDebugMode();
     int n = parser.getN();
     int nskip = parser.getNskip();
@@ -60,7 +63,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string fAppDisplayPath = "plots/";
     if(DebugMode==0) fAppDisplayPath = "plotsbg";
     else if(DebugMode==1) fAppDisplayPath = "plotssignal";
-
 
     // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);
@@ -118,7 +120,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             std::string view = fView+std::to_string(TPC);
 
             // Set the hits
-            _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
+            bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
                                     treeReader.hitsChannel,
                                     treeReader.hitsPeakTime,
                                     treeReader.hitsIntegral, 
@@ -127,11 +129,12 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                                     treeReader.hitsEndT,
                                     "");
             
-
             // Analyze
-            _TPCLinesAlgo.AnaView(ev.Label());
-            SEvent recoEvent = _TPCLinesAlgo.GetRecoEvent();
-
+            SEvent recoEvent;
+            if(filled){
+                _TPCLinesAlgo.AnaView(ev.Label());
+                recoEvent = _TPCLinesAlgo.GetRecoEvent();
+            }
             
             int nOrigins = recoEvent.GetNOrigins();
             // Update the efficiency calculator

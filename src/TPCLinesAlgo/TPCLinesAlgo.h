@@ -83,7 +83,7 @@ class TPCLinesAlgo {
         TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string displayPath="");
         
         // Function to set the input variables
-        void SetHitList(std::string view,
+        bool SetHitList(std::string view,
                         std::vector<int>& vertex,
                         std::vector<int>& vertexTrue,
                         std::vector<int> *_X,

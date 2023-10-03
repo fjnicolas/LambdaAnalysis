@@ -15,6 +15,7 @@
 #include "TPCLinesAlgo.h"
 #include "ChargeDensity.h"
 #include "ChargeDensityPset.h"
+#include "FRANSTTreeHandle.h"
 
 
 std::vector<SHit> GetFRANSHitsView(
@@ -57,11 +58,15 @@ std::vector<SHit> GetFRANSHitsView(
 
 }
 
+
 void RunAlgoFRANS(const CommandLineParser& parser)
 {
 
     int Debug = parser.getDebug();
     std::string ConfPsetPath = parser.getPsetPath();
+    if(ConfPsetPath==""){
+        ConfPsetPath="config.txt";
+    }
     int DebugMode = parser.getDebugMode();
     int n = parser.getN();
     int nskip = parser.getNskip();
@@ -70,13 +75,20 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     std::string file_name = parser.getFileName();
     std::string directory_path = parser.getDirectoryPath();
     std::string ext = parser.getExtension();
-    bool useRecoVertex = parser.getUseRecoVx();
+    int vertexOption = parser.getVertexOption();
 
     double fFRANSScoreCut = 0.1;
 
-    std::cout<<"Use RECO VERTEX "<<useRecoVertex<<std::endl;
-
     std::string fTreeName = "ana/AnaTPCTree"; 
+
+    // Output tree
+    std::string tree_dirname = "framsReco/";
+    if(vertexOption==1) tree_dirname = "framsTrue/";
+    if(vertexOption==2) tree_dirname = "framsMine/";
+    tree_dirname="";
+    std::string tree_name = "FRAMSTree";
+    TTree* fTree = new TTree((tree_dirname+tree_name).c_str(), "FRAMS Output Tree");
+    FRANSTTree myTree(fTree);
 
     // Set batch mode
     if(Debug==0) gROOT->SetBatch(true);
@@ -90,6 +102,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     std::string fView="C";
     // ---- FRAMS parameters ----------------------------------------
     FRAMSPsetType fPsetFRANS = ReadFRANSPset(ConfPsetPath);
+    fPsetFRANS.Verbose = Debug;
     // ---- TPCLines parameter ----------------------------------------
     // Parameter sets
     TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset(ConfPsetPath);
@@ -144,6 +157,13 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             nEntries++;
             if (nEntries <= fNEvSkip) continue;
             
+            // Check if it's signal
+            bool isSignal=false;
+            std::cout<<"Perl\n";
+            for(size_t k=0; k<treeReader.truePrimeriesPDG->size();k++){
+                if(treeReader.truePrimeriesPDG->at(k)==3122) isSignal=true;
+            }
+
             nEvents++;
             std::cout << "\n\n ************** Analyzing: " << ev;
             
@@ -167,8 +187,18 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             // We need a minimum number of hits to run the track finder
             size_t nhits = treeReader.hitsChannel->size();
             std::cout << "  - NHits: " << nhits << std::endl;
-            if(nhits<=3 || treeReader.recnuvU==-1){
-                std::cout<<"   SKIPPED NHits or RecoVertex \n";
+            if(nhits<=3){
+                std::cout<<"   SKIPPED NHits \n";
+                _EfficiencyCalculator.UpdateSkipped(ev);
+                continue;
+            }
+            if( (vertexOption==0 || vertexOption==2) and treeReader.recnuvC==-1){
+                std::cout<<"   SKIPPED RecoVertex \n";
+                _EfficiencyCalculator.UpdateSkipped(ev);
+                continue;
+            }
+            if(vertexOption==1 and treeReader.nuvC==-1){
+                std::cout<<"   SKIPPED TrueVertex \n";
                 _EfficiencyCalculator.UpdateSkipped(ev);
                 continue;
             }
@@ -197,44 +227,60 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             double vertexYReco = RecoVertexUVYT[3];
             SVertex fVertexReco(SPoint(vertexXReco, vertexYReco), view);
 
+            SVertex fVertexMine;
+            
+            if(vertexOption==2){
+                // Set the hits
+                bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
+                                        treeReader.hitsChannel,
+                                        treeReader.hitsPeakTime,
+                                        treeReader.hitsIntegral, 
+                                        treeReader.hitsRMS,
+                                        treeReader.hitsStartT, 
+                                        treeReader.hitsEndT,
+                                        "");
+
+                if(filled){
+                    std::cout<<" Analyzing TPCLines\n";
+                    // Analyze
+                    _TPCLinesAlgo.AnaView(ev.Label());
+                    SEvent recoEvent = _TPCLinesAlgo.GetRecoEvent();
+                    fVertexMine = SVertex( SPoint((double)_TPCLinesAlgo.GetMainVertex().X()+_TPCLinesAlgo.ShiftX(),
+                                                (double) _TPCLinesAlgo.GetMainVertex().Y()+_TPCLinesAlgo.ShiftY())
+                                            , "");
+                }
+                else{
+                    fVertexMine = fVertexReco;
+                }
+            }
+
+            std::cout<<" PEPE "<<fVertexMine;
+
+
             // set it
-            SVertex fVertex = useRecoVertex? fVertexReco:fVertexTrue;
-
-            // Set the hits
-            _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
-                                    treeReader.hitsChannel,
-                                    treeReader.hitsPeakTime,
-                                    treeReader.hitsIntegral, 
-                                    treeReader.hitsRMS,
-                                    treeReader.hitsStartT, 
-                                    treeReader.hitsEndT,
-                                    "");
-
-            // Analyze
-            _TPCLinesAlgo.AnaView(ev.Label());
-            SEvent recoEvent = _TPCLinesAlgo.GetRecoEvent();
-            SVertex fVertexMine = SVertex( SPoint((double)_TPCLinesAlgo.GetMainVertex().X()+_TPCLinesAlgo.ShiftX(),
-                                          (double) _TPCLinesAlgo.GetMainVertex().Y()+_TPCLinesAlgo.ShiftY())
-                                    , "");
+            SVertex fVertex = fVertexReco;
+            if(vertexOption==1) fVertex = fVertexTrue;
+            else if(vertexOption==2) fVertex = fVertexMine;
 
 
-            _FRAMSAlgo.Fill(hitList, fVertexReco);
+            /*_FRAMSAlgo.Fill(hitList, fVertexReco);
             double scoreReco = _FRAMSAlgo.Score();
             _FRAMSAlgo.Fill(hitList, fVertexTrue);
             double scoreTrue = _FRAMSAlgo.Score();
             _FRAMSAlgo.Fill(hitList, fVertexMine);
             double scoreMine = _FRAMSAlgo.Score();
-
-
             std::cout<<"JUJU "<<_TPCLinesAlgo.GetMainVertex().X()<<" "<<_TPCLinesAlgo.ShiftX()<<std::endl;
-            std::cout<<" FRANS Reco vertex (PANDORA) Score="<<scoreReco<<" Vertex="<<fVertexReco;
-            
+            std::cout<<" FRANS Reco vertex (PANDORA) Score="<<scoreReco<<" Vertex="<<fVertexReco;            
             std::cout<<" FRANS True vertex (PANDORA) "<<scoreTrue<<" Vertex="<<fVertexTrue;
+            std::cout<<" FRANS Using my fabolous vertex "<<scoreMine<<" Vertex="<<fVertexMine;*/
             
-            std::cout<<" FRANS Using my fabolous vertex "<<scoreMine<<" Vertex="<<fVertexMine;
-            
+            _FRAMSAlgo.Fill(hitList, fVertex);
+
+                myTree.FillData(2, treeReader.runID, treeReader.subrunID, treeReader.eventID, isSignal,
+                                _FRAMSAlgo.Delta(), _FRAMSAlgo.Eta(), _FRAMSAlgo.FitScore(), _FRAMSAlgo.Alpha(),
+                                 _FRAMSAlgo.Omega(), _FRAMSAlgo.Tau(), _FRAMSAlgo.Iota());
+                myTree.FillTree();
   
-            
             std::string outputLabel="";
             if(_FRAMSAlgo.Score()>fFRANSScoreCut){
                 _EfficiencyCalculator.UpdateSelected(ev);
@@ -252,8 +298,14 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // Print final status
     std::cout<<_EfficiencyCalculator;
 
+    TFile outputFile("FRAMSTree.root", "RECREATE");
+    fTree->Write();
+    delete fTree;
+    outputFile.Close();
+
     return;
 }
+
 
 
 
