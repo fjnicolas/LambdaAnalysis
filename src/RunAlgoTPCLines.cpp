@@ -31,10 +31,10 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
 
     // Get input files
-    std::vector<TString> fFilePaths = GetInputFileList(file_name, ext);
+    std::vector<TString> fFilePaths = GetInputFileList(file_name, ext, directory_path);
 
-    // View to use
-    std::string fView="C";
+    // Set batch mode
+    if(Debug==0) gROOT->SetBatch(true);
 
     // Parameter sets
     TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset(ConfPsetPath);
@@ -52,6 +52,17 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
     fPsetAnaView.Print();
 
+    // Check if the directory exists, create it if not
+    gSystem->Exec(("rm -rf "+fPsetAnaView.OutputPath).c_str());
+    if (!gSystem->OpenDirectory(fPsetAnaView.OutputPath.c_str())) {    
+        gSystem->Exec( ("mkdir "+fPsetAnaView.OutputPath).c_str());
+        gSystem->Exec( ("mkdir "+fPsetAnaView.OutputPath+"/rootfiles").c_str());
+    }  
+
+    // View to use
+    std::string fView = fPsetAnaView.View;
+
+
     // ------------------------------------------------------------------ 
     // Define the program control variables
     int fNEv = n;
@@ -59,15 +70,12 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     int fSubRun = sr;
     int fNEvSkip = nskip;
     int nEvents=0;
-    // Output paths for displays
-    std::string fAppDisplayPath = "plots/";
-    if(DebugMode==0) fAppDisplayPath = "plotsbg";
-    else if(DebugMode==1) fAppDisplayPath = "plotssignal";
+
 
     // Define TPC LINES ALGORITHM
-    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);
+    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
     // Effiency status
-    EfficiencyCalculator _EfficiencyCalculator;
+    EfficiencyCalculator _EfficiencyCalculator("anaResults");
 
     // TTree loop
     std::vector<int> fNVertex;
@@ -116,9 +124,18 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 continue;
             }
 
-            // Assing the view and TPC
-            std::string view = fView+std::to_string(TPC);
 
+            // Assing the view and TPC
+            std::string view;
+            if(fView=="Best"){
+                std::string bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
+                std::cout<<"  Using best view: "<<bestView+std::to_string(TPC)<<std::endl;
+                view = bestView+std::to_string(TPC);
+            }    
+            else{
+                view = fView+std::to_string(TPC);
+            }
+            
             // Set the hits
             bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
                                     treeReader.hitsChannel,
@@ -127,6 +144,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                                     treeReader.hitsRMS,
                                     treeReader.hitsStartT, 
                                     treeReader.hitsEndT,
+                                    treeReader.hitsChi2,
                                     "");
             
             // Analyze
@@ -136,14 +154,39 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 recoEvent = _TPCLinesAlgo.GetRecoEvent();
             }
             
-            int nOrigins = recoEvent.GetNOrigins();
+            int nAngles = recoEvent.GetNAngles();
             // Update the efficiency calculator
-            if(nOrigins>0){
+            if(nAngles>0){
                 _EfficiencyCalculator.UpdateSelected(ev);
-                _EfficiencyCalculator.UpdateHistograms(recoEvent);
+
+                if(Debug==-12){
+                    gROOT->SetBatch(false);
+                    _TPCLinesAlgo.Display(ev.Label(), "Misselected");
+                    gROOT->SetBatch(true);
+                }
+
             }
             else
                 _EfficiencyCalculator.UpdateNotSelected(ev);
+
+            if(recoEvent.GetNOrigins()>0){
+                _EfficiencyCalculator.UpdateHistograms(recoEvent);
+
+                if(Debug==-13){
+
+                    std::vector<SOrigin> origins = recoEvent.GetOrigins();
+
+                    if(origins.size()==2){
+                        int maxMult = std::max(origins[0].Multiplicity(), origins[1].Multiplicity());
+                        int minMult = std::min(origins[0].Multiplicity(), origins[1].Multiplicity());
+                        if(maxMult==2 && minMult==1){
+                            gROOT->SetBatch(false);
+                            _TPCLinesAlgo.Display(ev.Label(), "Misselected");
+                            gROOT->SetBatch(true);
+                        }
+                    }
+                }
+            }
             std::cout<<_EfficiencyCalculator;
 
         }
@@ -152,7 +195,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // Print final status
     std::cout<<_EfficiencyCalculator;
     _EfficiencyCalculator.DrawHistograms();
-
 
     return;
 

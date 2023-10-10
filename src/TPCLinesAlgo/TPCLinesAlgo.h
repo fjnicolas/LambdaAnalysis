@@ -58,6 +58,11 @@ class TPCLinesAlgo {
         double fMinY;
         int fMaxX;
 
+        std::vector<SLinearCluster> fFinalTrackList;
+        SLinearCluster fMainDirection;
+        std::vector<STriangle> fAngleList;
+        std::vector<SOrigin> fOrigins;
+
         // Hough algorithm
         TPCLinesHough fHoughAlgo;
 
@@ -80,7 +85,7 @@ class TPCLinesAlgo {
 
     public:
         // constructor
-        TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string displayPath="");
+        TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset);
         
         // Function to set the input variables
         bool SetHitList(std::string view,
@@ -92,6 +97,7 @@ class TPCLinesAlgo {
                         std::vector<double> *_Wi,
                         std::vector<double> *_ST,
                         std::vector<double> *_ET,
+                        std::vector<double> *_Chi2,
                         std::string eventLabel="");
         
         // Function to analyze the view
@@ -100,13 +106,16 @@ class TPCLinesAlgo {
         // Function to get the average desnity of hits per wire
         double GetAverageHitDensity();
 
+        // Function to get the best view
+        std::string GetBestView(std::vector<int> *_Ch, std::vector<double> *_Chi2);
+
         int ShiftX(){ return fMinX; };
         double ShiftY(){ return fMinY; };
 
         SEvent GetRecoEvent() { return fRecoEvent; };
         SPoint GetMainVertex() { return fMainVertex; };
         // Display
-        void Display();                            
+        void Display(std::string labelEv, std::string label);
 };
 
 #endif // TPC_SIMPLE_LINES_H

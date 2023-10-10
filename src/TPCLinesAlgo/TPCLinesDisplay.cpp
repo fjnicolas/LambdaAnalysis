@@ -21,9 +21,6 @@ TPCLinesDisplay::TPCLinesDisplay(bool show, std::string outputPath):
     if(show==false){
         gROOT->SetBatch(true);
     }
-
-    // clean the directory
-    gSystem->Exec(("rm -rf "+fOutputPath).c_str());
     
 }
 
@@ -50,7 +47,6 @@ void TPCLinesDisplay::SetStyle(){
     gStyle->SetTitleXSize (0.05);
     gStyle->SetTitleYOffset (1.);
     gStyle->SetTitleYSize (0.05);*/
-
 
 }
 
@@ -277,13 +273,6 @@ void TPCLinesDisplay::Show(
     legend.SetTextSize(fLegendFontSize); 
     legend.Draw();
 
-
-    // Check if the directory exists, create it if not
-    gSystem->Exec(("pwd "+fOutputPath).c_str());
-    if (!gSystem->OpenDirectory(fOutputPath.c_str())) {
-        gSystem->Exec(("mkdir "+fOutputPath).c_str());
-        gSystem->Exec(("mkdir "+fOutputPath+"/rootfiles").c_str());
-    }  
     TFile* rootFile = new TFile((fOutputPath + "/rootfiles/"+eventLabel).c_str(), "CREATE");
     c.Write();
     rootFile->Close();

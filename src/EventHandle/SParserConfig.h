@@ -170,6 +170,8 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename) {
         tpcLinesAlgoPset.MaxNeighbourDistance = pt.get<double>(prolog + "MaxNeighbourDistance");
         tpcLinesAlgoPset.MinNeighboursHits = pt.get<int>(prolog + "MinNeighboursHits");
         tpcLinesAlgoPset.VertexAlgorithm = pt.get<int>(prolog + "VertexAlgorithm");
+        tpcLinesAlgoPset.View = pt.get<std::string>(prolog + "View");
+        tpcLinesAlgoPset.OutputPath = pt.get<std::string>(prolog + "OutputPath");
         tpcLinesAlgoPset.Verbose = pt.get<int>(prolog + "Verbose");
         tpcLinesAlgoPset.DebugMode = pt.get<int>(prolog + "DebugMode");
 

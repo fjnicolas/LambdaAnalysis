@@ -55,6 +55,7 @@ MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
     tree->SetBranchAddress("TruePrimariesPDG", &truePrimeriesPDG);
     
     // Set branch addresses for hits information
+    tree->SetBranchAddress("HitsView", &hitsView);
     tree->SetBranchAddress("HitsIntegral", &hitsIntegral);
     tree->SetBranchAddress("HitsPeakTime", &hitsPeakTime);
     tree->SetBranchAddress("HitsChannel", &hitsChannel);

@@ -23,7 +23,6 @@
 #include "TFile.h"
 #include "TSystem.h"
 #include "TStyle.h"
-//#include "THistPainter.h"
 #include <TROOT.h>
 
 #include "TPCSimpleHits.h"
@@ -47,7 +46,7 @@ class TPCLinesDisplay {
         double fLegendFontSize=0.12;
         std::string fOutputPath;
     public:
-        TPCLinesDisplay(bool show, std::string outputPath="Plots/");
+        TPCLinesDisplay(bool show, std::string outputPath="plots/");
 
         void Show(
             std::string eventLabel,

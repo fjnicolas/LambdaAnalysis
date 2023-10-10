@@ -48,6 +48,7 @@ public:
     std::vector<int> *truePrimeriesPDG = new std::vector<int>;
 
     // Hits information
+    std::vector<int> *hitsView = new std::vector<int>;
     std::vector<double> *hitsIntegral = new std::vector<double>;
     std::vector<double> *hitsPeakTime = new std::vector<double>;
     std::vector<int> *hitsChannel = new std::vector<int>;

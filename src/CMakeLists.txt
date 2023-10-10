@@ -2,6 +2,8 @@
 find_package(ROOT REQUIRED COMPONENTS RIO Net)
 find_package(Boost REQUIRED COMPONENTS system filesystem)
 
+add_definitions(-DLAMBDAANA_LARSOFT=0)
+
 # Add subdirectories for libraries
 add_subdirectory(EventHandle)
 add_subdirectory(SObjects)

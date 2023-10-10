@@ -25,6 +25,8 @@ TPCLines:RemoveIsolatedHits true
 TPCLines:MaxNeighbourDistance 2 
 TPCLines:MinNeighboursHits 2 
 TPCLines:VertexAlgorithm 1 
+TPCLines:View C 
+TPCLines:OutputPath plots/ 
 TPCLines:Verbose 0
 TPCLines:DebugMode -1 
 

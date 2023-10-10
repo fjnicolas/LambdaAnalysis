@@ -171,6 +171,8 @@ struct TPCLinesAlgoPsetType{
     double MaxNeighbourDistance;
     int MinNeighboursHits;
     int VertexAlgorithm;
+    std::string View;
+    std::string OutputPath;
     int Verbose;
     int DebugMode;
     HoughAlgorithmPsetType HoughAlgorithmPset;
@@ -189,6 +191,8 @@ struct TPCLinesAlgoPsetType{
         double _maxNeighbourDistance,
         int _minNeighboursHits,
         int _vertexAlgorithm,
+        std::string _view,
+        std::string _outputPath,
         int _verbose,
         int _debugMode,
         HoughAlgorithmPsetType _houghAlgorithmPset,
@@ -202,6 +206,8 @@ struct TPCLinesAlgoPsetType{
         MaxNeighbourDistance(_maxNeighbourDistance), 
         MinNeighboursHits(_minNeighboursHits),
         VertexAlgorithm(_vertexAlgorithm),
+        View(_view),
+        OutputPath(_outputPath),
         Verbose(_verbose),
         DebugMode(_debugMode),
         HoughAlgorithmPset(_houghAlgorithmPset),

@@ -32,7 +32,11 @@
 #include "VertexView.h"
 #include "ChargeDensityPset.h"
 
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#else
 #include "TPCSimpleHits.h"
+#endif
 
 #define DefaultMaxZSize 2000
 

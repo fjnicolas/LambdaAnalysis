@@ -3,6 +3,7 @@
 
 #include "TString.h"
 #include <TApplication.h>
+#include "TSystem.h"
 
 // Objects
 #include "CommandLineParser.h"
@@ -77,29 +78,19 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     std::string ext = parser.getExtension();
     int vertexOption = parser.getVertexOption();
 
-    double fFRANSScoreCut = 0.1;
+    double fFRANSScoreCut = 0.15;
 
+    // Input tree
     std::string fTreeName = "ana/AnaTPCTree"; 
-
-    // Output tree
-    std::string tree_dirname = "framsReco/";
-    if(vertexOption==1) tree_dirname = "framsTrue/";
-    if(vertexOption==2) tree_dirname = "framsMine/";
-    tree_dirname="";
-    std::string tree_name = "FRAMSTree";
-    TTree* fTree = new TTree((tree_dirname+tree_name).c_str(), "FRAMS Output Tree");
-    FRANSTTree myTree(fTree);
 
     // Set batch mode
     if(Debug==0) gROOT->SetBatch(true);
     
     // Get input files
-    std::vector<TString> fFilePaths = GetInputFileList(file_name, ext);
-
+    std::vector<TString> fFilePaths = GetInputFileList(file_name, ext, directory_path);
 
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
-    // View to use
-    std::string fView="C";
+
     // ---- FRAMS parameters ----------------------------------------
     FRAMSPsetType fPsetFRANS = ReadFRANSPset(ConfPsetPath);
     fPsetFRANS.Verbose = Debug;
@@ -117,6 +108,10 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     fPsetAnaView.HoughAlgorithmPset = fPsetHough;
     fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
     fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
+
+    // View to use
+    std::string fView = fPsetAnaView.View;
+
     
     // Define the program control variables
     int fNEv = n;
@@ -124,17 +119,33 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     int fSubRun = sr;
     int fNEvSkip = nskip;
     int nEvents=0;
-    // Output paths for displays
-    std::string fAppDisplayPath = "plots/";
-    if(DebugMode==0) fAppDisplayPath = "plotsbg";
-    else if(DebugMode==1) fAppDisplayPath = "plotssignal";
+
+
+    // Output directory for display
+    gSystem->Exec(("rm -rf "+fPsetFRANS.OutputPath).c_str());
+    gSystem->Exec( ("mkdir "+fPsetFRANS.OutputPath).c_str());
+    gSystem->Exec( ("mkdir "+fPsetFRANS.OutputPath+"/rootfiles").c_str());
+    
+
+    // Output directory for analysis results
+    std::string fAnaReultsPath = "anaResults";
+    gSystem->Exec(("rm -rf "+fAnaReultsPath).c_str());
+    gSystem->Exec(("mkdir "+fAnaReultsPath).c_str());
+    std::string tree_dirname = "framsReco/";
+    if(vertexOption==1) tree_dirname = "framsTrue/";
+    if(vertexOption==2) tree_dirname = "framsMine/";
+    std::string tree_name = "FRAMSTree";
+    TTree* fTree = new TTree((tree_name).c_str(), "FRAMS Output Tree");
+    FRANSTTree myTree(fTree);
+
 
     // Define FRANS LINES ALGORITHM
     ChargeDensity _FRAMSAlgo(fPsetFRANS);
+    ChargeDensity _FRAMSAlgoPANDORA(fPsetFRANS);
     // Define TPC LINES ALGORITHM
-    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fAppDisplayPath);
+    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
     // Effiency status
-    EfficiencyCalculator _EfficiencyCalculator;
+    EfficiencyCalculator _EfficiencyCalculator(fAnaReultsPath);
 
     // TTree loop
     int nEntries = 0;
@@ -180,9 +191,6 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             // Set TPC using the drift coordinate of the reco vertex
             //TPC = (nuvX > 0) ? 1 : 0;
             int TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
-
-            // Assing the view and TPC
-            std::string view = fView+std::to_string(TPC);
             
             // We need a minimum number of hits to run the track finder
             size_t nhits = treeReader.hitsChannel->size();
@@ -201,6 +209,17 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                 std::cout<<"   SKIPPED TrueVertex \n";
                 _EfficiencyCalculator.UpdateSkipped(ev);
                 continue;
+            }
+
+            // Assing the view and TPC
+            std::string view;
+            if(fView=="Best"){
+                std::string bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
+                std::cout<<"  Using best view: "<<bestView+std::to_string(TPC)<<std::endl;
+                view = bestView+std::to_string(TPC);
+            }    
+            else{
+                view = fView+std::to_string(TPC);
             }
             
             // Set the hits
@@ -229,6 +248,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
 
             SVertex fVertexMine;
             
+            SEvent recoEvent;
             if(vertexOption==2){
                 // Set the hits
                 bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
@@ -238,13 +258,14 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                                         treeReader.hitsRMS,
                                         treeReader.hitsStartT, 
                                         treeReader.hitsEndT,
+                                        treeReader.hitsChi2,
                                         "");
 
                 if(filled){
                     std::cout<<" Analyzing TPCLines\n";
                     // Analyze
                     _TPCLinesAlgo.AnaView(ev.Label());
-                    SEvent recoEvent = _TPCLinesAlgo.GetRecoEvent();
+                    recoEvent = _TPCLinesAlgo.GetRecoEvent();
                     fVertexMine = SVertex( SPoint((double)_TPCLinesAlgo.GetMainVertex().X()+_TPCLinesAlgo.ShiftX(),
                                                 (double) _TPCLinesAlgo.GetMainVertex().Y()+_TPCLinesAlgo.ShiftY())
                                             , "");
@@ -254,51 +275,43 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                 }
             }
 
-            std::cout<<" PEPE "<<fVertexMine;
-
-
             // set it
             SVertex fVertex = fVertexReco;
             if(vertexOption==1) fVertex = fVertexTrue;
             else if(vertexOption==2) fVertex = fVertexMine;
 
-
-            /*_FRAMSAlgo.Fill(hitList, fVertexReco);
-            double scoreReco = _FRAMSAlgo.Score();
-            _FRAMSAlgo.Fill(hitList, fVertexTrue);
-            double scoreTrue = _FRAMSAlgo.Score();
-            _FRAMSAlgo.Fill(hitList, fVertexMine);
-            double scoreMine = _FRAMSAlgo.Score();
-            std::cout<<"JUJU "<<_TPCLinesAlgo.GetMainVertex().X()<<" "<<_TPCLinesAlgo.ShiftX()<<std::endl;
-            std::cout<<" FRANS Reco vertex (PANDORA) Score="<<scoreReco<<" Vertex="<<fVertexReco;            
-            std::cout<<" FRANS True vertex (PANDORA) "<<scoreTrue<<" Vertex="<<fVertexTrue;
-            std::cout<<" FRANS Using my fabolous vertex "<<scoreMine<<" Vertex="<<fVertexMine;*/
             
+            _FRAMSAlgoPANDORA.Fill(hitList, fVertexReco);
             _FRAMSAlgo.Fill(hitList, fVertex);
 
-                myTree.FillData(2, treeReader.runID, treeReader.subrunID, treeReader.eventID, isSignal,
-                                _FRAMSAlgo.Delta(), _FRAMSAlgo.Eta(), _FRAMSAlgo.FitScore(), _FRAMSAlgo.Alpha(),
-                                 _FRAMSAlgo.Omega(), _FRAMSAlgo.Tau(), _FRAMSAlgo.Iota());
-                myTree.FillTree();
+            myTree.FillData(2, treeReader.runID, treeReader.subrunID, treeReader.eventID, isSignal,
+                            _FRAMSAlgo.Delta(), _FRAMSAlgo.Eta(), _FRAMSAlgo.FitScore(), _FRAMSAlgo.Alpha(),
+                            _FRAMSAlgo.Omega(), _FRAMSAlgo.Tau(), _FRAMSAlgo.Iota(),
+                            recoEvent.GetNOrigins(), recoEvent.GetNOriginsMult(1), recoEvent.GetNOriginsMult(2), recoEvent.GetNOriginsMultGt(3), recoEvent.HitDensity() );
+            myTree.FillTree();
   
             std::string outputLabel="";
-            if(_FRAMSAlgo.Score()>fFRANSScoreCut){
+            if(_FRAMSAlgo.Score()>=fFRANSScoreCut){
                 _EfficiencyCalculator.UpdateSelected(ev);
-                outputLabel="Selected_";   
+                outputLabel="Accepted";   
             }
             else{
                 _EfficiencyCalculator.UpdateNotSelected(ev);
-                outputLabel="NotSelected_";
+                outputLabel="Rejected";
             }
-
-            _FRAMSAlgo.Display(outputLabel+ev.Label());
+            std::string outputLabel2 = (_FRAMSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
+            _FRAMSAlgo.Display(ev.Label()+"_FRANS_"+outputLabel);
+            _FRAMSAlgoPANDORA.Display(ev.Label()+"_FRANSPANDORAVx_"+outputLabel2);
         }
+
     }
     
     // Print final status
     std::cout<<_EfficiencyCalculator;
+    _EfficiencyCalculator.DrawHistograms();
+        
 
-    TFile outputFile("FRAMSTree.root", "RECREATE");
+    TFile outputFile((fAnaReultsPath+"/FRAMSTree.root").c_str(), "RECREATE");
     fTree->Write();
     delete fTree;
     outputFile.Close();
@@ -323,3 +336,16 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
+
+
+
+/*_FRAMSAlgo.Fill(hitList, fVertexReco);
+double scoreReco = _FRAMSAlgo.Score();
+_FRAMSAlgo.Fill(hitList, fVertexTrue);
+double scoreTrue = _FRAMSAlgo.Score();
+_FRAMSAlgo.Fill(hitList, fVertexMine);
+double scoreMine = _FRAMSAlgo.Score();
+std::cout<<"JUJU "<<_TPCLinesAlgo.GetMainVertex().X()<<" "<<_TPCLinesAlgo.ShiftX()<<std::endl;
+std::cout<<" FRANS Reco vertex (PANDORA) Score="<<scoreReco<<" Vertex="<<fVertexReco;            
+std::cout<<" FRANS True vertex (PANDORA) "<<scoreTrue<<" Vertex="<<fVertexTrue;
+std::cout<<" FRANS Using my fabolous vertex "<<scoreMine<<" Vertex="<<fVertexMine;*/

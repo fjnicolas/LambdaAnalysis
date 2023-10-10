@@ -12,7 +12,7 @@
 
 //----------------------------------------------------------------------
 // Constructor
-TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string displayPath):
+TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
     fTPCLinesPset(tpcLinesAlgoPset),
     fNTotalHits(0),
     fHitList({}),
@@ -20,17 +20,62 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, std::string di
     fHoughAlgo(tpcLinesAlgoPset.HoughAlgorithmPset),
     fTrackFinder(tpcLinesAlgoPset.TrackFinderAlgorithmPset),
     fVertexFinder(tpcLinesAlgoPset.VertexFinderAlgorithmPset),
-    fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, displayPath))
-{}
+    fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, tpcLinesAlgoPset.OutputPath))
+{
+}
 
 
 //----------------------------------------------------------------------
 // Display function
-void TPCLinesAlgo::Display(){
+void TPCLinesAlgo::Display(std::string labelEv, std::string label){
 
-    fDisplay.Show("Final reco", fHitList,LineEquation(0, 0),fHitList);
+    fDisplay.Show(labelEv+"_FinalRecoTPCLines_"+label, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins);
 
     return;
+}
+
+std::string TPCLinesAlgo::GetBestView(std::vector<int> *_View, std::vector<double> *_Chi2){
+
+        std::map<int, double> meanChi2Map;
+
+        std::map<int, double> sumChi2Map;
+        std::map<int, int> countMap;
+
+        for (size_t i = 0; i < _View->size(); ++i) {
+            int viewValue = (*_View)[i];
+            double chi2Value = (*_Chi2)[i];
+
+            sumChi2Map[viewValue] += chi2Value;
+            countMap[viewValue]++;
+        }
+
+        int minChi2View = -1;
+        double minChi2=1e4;
+        for (const auto& entry : sumChi2Map) {
+            int viewValue = entry.first;
+            double sumChi2 = entry.second;
+            int count = countMap[viewValue];
+
+            
+            if (count != 0) {
+                double meanChi2 = sumChi2/count; 
+                if(meanChi2<minChi2){
+                    minChi2=meanChi2;
+                    minChi2View=viewValue;
+                }
+                std::cout<<" View: "<<viewValue<<" MeanChi2: "<<meanChi2<<std::endl;
+
+            }
+
+        }
+
+        std::cout<<" MinChi2View: "<<minChi2View<<std::endl;
+        if(minChi2View==0)
+            return "U";
+        else if(minChi2View==1)
+            return "V";
+        else
+            return "C";
 }
 
 
@@ -45,6 +90,7 @@ bool TPCLinesAlgo::SetHitList(std::string view,
                             std::vector<double> *_Wi,
                             std::vector<double> *_ST,
                             std::vector<double> *_ET,
+                            std::vector<double> *_Chi2,
                             std::string eventLabel)
 {   
     // reset variables
@@ -126,6 +172,8 @@ bool TPCLinesAlgo::SetHitList(std::string view,
         }
 
     }
+
+    return false;
 }
 
 
@@ -370,18 +418,9 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     std::vector<STriangle> vertexList;
     std::vector<SPoint> intersectionList;
     SLinearCluster mainDirection;
-    fVertexFinder.GetOrigins(finalLinearClusterV, vertexList, intersectionList, mainDirection);
+    if(finalLinearClusterV.size()>0)
+        fVertexFinder.GetOrigins(finalLinearClusterV, vertexList, intersectionList, mainDirection);
 
-    std::vector<SOrigin> originList;
-    for(STriangle & tri: vertexList){
-        originList.push_back( SOrigin(tri.GetMainVertex(), {}, true) );
-    }
-
-    bool accepted = vertexList.size()>0;
-    std::string outNamePreffix = accepted? "Accepted Final Reco":"Rejected Final Reco";
-    if(fTPCLinesPset.VertexAlgorithm==1){
-        fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, finalLinearClusterV, mainDirection, vertexList, fVertex);
-    }
 
     fMainVertex = mainDirection.GetStartPoint();
 
@@ -391,9 +430,13 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
 
     // ------ Get the parallel tracks
     std::vector<SOrigin> intersectionsInBall;
-    if(fTPCLinesPset.VertexAlgorithm==2){
+    intersectionsInBall.clear();
+    std::vector<SLinearCluster> NewTrackList;
+    NewTrackList.clear();
+    //if(fTPCLinesPset.VertexAlgorithm==2 && finalLinearClusterV.size()>0){
+    if(finalLinearClusterV.size()>0){
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
-        std::vector<SLinearCluster> NewTrackList;
+        
         for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
             std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
             for(size_t jx = 1; jx<parallelTracks[ix].size(); jx++){
@@ -405,27 +448,32 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             newTrack.AssignId(ix);
             NewTrackList.push_back( newTrack );
         }
+        
         intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());
         for(SOrigin & ori: intersectionsInBall){
             std::cout<<ori;
         }
-        
-        if(intersectionsInBall.size()>0){
-            fMainVertex = intersectionsInBall[0].GetPoint();
-        }
 
-        fDisplay.Show(outNamePreffix+eventLabel, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, {}, fVertex, fVertexTrue, intersectionsInBall);
+        bool accepted = vertexList.size()>0;
+        std::string outNamePreffix = accepted? "Accepted":"Rejected";
+
+        fFinalTrackList = NewTrackList;
+        fMainDirection = mainDirection;
+        fAngleList = vertexList;
+        fOrigins = intersectionsInBall;
+
+        //fDisplay.Show(eventLabel+"_FinalRecoTPCLines_"+outNamePreffix, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, vertexList, fVertex, fVertexTrue, intersectionsInBall);
+        fDisplay.Show(eventLabel+"_FinalRecoTPCLines_"+outNamePreffix, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins);
     }
 
+
+    
+    
     double hitDensity = GetAverageHitDensity();
     std::cout<<"Hit density: "<<hitDensity<<std::endl;
 
-    SEvent recoEvent1(originList, hitDensity);    
-    SEvent recoEvent2(intersectionsInBall, hitDensity);
+    SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, hitDensity);
+    fRecoEvent = recoEvent;
 
-    
-    if(fTPCLinesPset.VertexAlgorithm==1)
-        fRecoEvent = recoEvent1;
-    else
-        fRecoEvent = recoEvent2;
+    return;
 }

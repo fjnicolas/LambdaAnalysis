@@ -33,8 +33,10 @@ int MacroFRAMSTraining(std::string fInputFileName="")
 
   bool fUseBestView=false; //fUseBestView=true;
 
+  bool fUseMultiplicityVars = false; // fUseMultiplicityVars = true;
+
   // Number of events for training
-  int nTrain = 350;
+  int nTrain = 360;
 
   //Background label name
   std::string fBGLabel = "Inclusive";
@@ -45,6 +47,7 @@ int MacroFRAMSTraining(std::string fInputFileName="")
   std::string tree_dirname = "";
   tree_dirname = "framsTrue/";
   if(fUseReco) tree_dirname = "framsReco/";
+  tree_dirname = "framsMine/";
   tree_dirname = "";
   std::string tree_name = "FRAMSTree";
 
@@ -87,7 +90,7 @@ int MacroFRAMSTraining(std::string fInputFileName="")
   // 1-dimensional likelihood ("naive Bayes estimator")
   Use["Likelihood"]      = 0;
   // Linear Discriminant Analysis
-  Use["Fisher"]          = 1;
+  Use["Fisher"]          = 0;
   // Boosted Decision Trees
   Use["BDT"]             = 1;
   // Neural Networks (all are feed-forward Multilayer Perceptrons)
@@ -114,6 +117,14 @@ int MacroFRAMSTraining(std::string fInputFileName="")
     dataloader->AddVariable( "Delta_C", "#Delta_{C}", "", 'D' );
     dataloader->AddVariable( "FitScore_C", "r_{C}", "", 'D' );
   }
+
+  if(fUseMultiplicityVars){
+    dataloader->AddVariable( "NOrigins_C", "N_{C}", "", 'I' );
+    dataloader->AddVariable( "NOriginsM1_C", "N^{1}_{C}", "", 'I' );
+    dataloader->AddVariable( "NOriginsM2_C", "N^{2}_{C}", "", 'I' );
+    //dataloader->AddVariable( "NOriginsM3_C", "N^{>3}_C", "", 'I' );
+    dataloader->AddVariable( "HitDensity_C", "d", "", 'D' );
+  }
   
 
   //Add spectator variables
@@ -123,7 +134,7 @@ int MacroFRAMSTraining(std::string fInputFileName="")
 
   // You can add an arbitrary number of signal or background trees
   Double_t signalWeight     = 1.0;
-  Double_t backgroundWeight = 1.0;
+  Double_t backgroundWeight = 1000;
   /*dataloader->AddSignalTree    ( signalTree,     signalWeight );
   dataloader->AddBackgroundTree( background, backgroundWeight );*/
   dataloader->AddSignalTree    ( fTree,     signalWeight );

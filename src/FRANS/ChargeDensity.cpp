@@ -37,11 +37,6 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
 
     fTMVAReader.BookMVA( "FRAMS BDT",  fFRANSPset.TMVAFilename.c_str()  );
 
-    // reset the output path
-    gSystem->Exec(("rm -rf "+fFRANSPset.OutputPath).c_str());
-    gSystem->Exec(("mkdir "+fFRANSPset.OutputPath).c_str());
-    gSystem->Exec(("mkdir "+fFRANSPset.OutputPath+"/rootfiles").c_str());
-
   }
 }
 
@@ -333,7 +328,8 @@ void ChargeDensity::Display(std::string name){
   gStyle->SetLabelSize(0.05, "XYZ");
   gStyle->SetTitleYOffset (1.4);
   
-  TCanvas c( ("c_"+name+"_vw"+std::to_string(fView)).c_str(), name.c_str(), 600, 0, 600, 1200);
+
+  TCanvas c( ("c_"+name+"_vw"+std::to_string(fView)).c_str(), name.c_str(), 600, 0, 800, 1200);
 
   TPad *pad1 = new TPad("pad1", "Graph Pad", 0., 0., 1., 0.33);
   TPad *pad2 = new TPad("pad2", "Legend Pad", 0., .33, 1., .66);
@@ -396,7 +392,7 @@ void ChargeDensity::Display(std::string name){
   legLabel2 << "#Delta=" << fDelta;
   leg2->AddEntry(grCum, legLabel2.str().c_str(), "");
   legLabel2.str("");
-  legLabel2 << "FitScore="<<fFitScore;
+  legLabel2 << "FitSc="<<fFitScore;
   leg2->AddEntry(grCum, legLabel2.str().c_str(), "");
   leg2->Draw("same");
 
@@ -429,8 +425,6 @@ void ChargeDensity::Display(std::string name){
   c.cd();
   c.Update();
   c.WaitPrimitive();
-
-  
 
   return;
 }

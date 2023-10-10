@@ -7,19 +7,6 @@
 // \author fjnicolas@ugr.es
 //
 ////////////////////////////////////////////////////////////////////////////
-#include <vector>
-
-// ROOT includes
-#include "TH2F.h"
-#include "TCanvas.h"
-#include "TLine.h"
-#include "TLegend.h"
-#include "TPaveText.h"
-#include "TFile.h"
-#include "TString.h"
-#include "TSystem.h"
-#include "TStyle.h"
-#include "TROOT.h"
 
 #include "SEventHandle.h"
 
@@ -45,10 +32,11 @@ std::vector<TPad*> buildpadcanvas(int nx, int ny){
 }
 
 
-std::vector<TString> GetInputFileList(std::string file_name,  std::string ext){
+std::vector<TString> GetInputFileList(std::string file_name,  std::string ext, std::string dirPath){
   // Get the candidate Files
   std::vector<TString> fFilePaths;
-  TSystemDirectory dir(".", ".");
+  std::cout<<" Looking in directory: "<<dirPath<<std::endl;
+  TSystemDirectory dir(dirPath.c_str(), dirPath.c_str());
   TList *files = dir.GetListOfFiles();
   TString targetFileName(file_name);
   TString targetExtension(ext);
@@ -63,6 +51,9 @@ std::vector<TString> GetInputFileList(std::string file_name,  std::string ext){
           
           if (!file->IsDirectory() && fname.EndsWith(targetExtension)){
               if(fname.Contains(targetFileName)){
+                if(dirPath!=".")
+                  fFilePaths.push_back(dirPath+fname);
+                else
                   fFilePaths.push_back(fname);
               }
               std::cout << fname << " Target:" << targetFileName <<std::endl;

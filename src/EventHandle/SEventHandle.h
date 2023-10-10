@@ -15,20 +15,20 @@
 // ROOT includes
 #include "TH2F.h"
 #include "TCanvas.h"
-#include "TLine.h"
 #include "TLegend.h"
 #include "TPaveText.h"
 #include "TFile.h"
 #include "TString.h"
-#include "TSystem.h"
 #include "TStyle.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TSystemDirectory.h"
 
 #include "TPCSimpleEvents.h"
 
 std::vector<TPad*> buildpadcanvas(int nx, int ny);
-std::vector<TString> GetInputFileList(std::string file_name,  std::string ext);
+
+std::vector<TString> GetInputFileList(std::string file_name,  std::string ext, std::string dirPath=".");
 
 class SEventId {
     public:
@@ -110,13 +110,18 @@ class SEventSelection {
 
 class EfficiencyCalculator {
 public:
-    EfficiencyCalculator():
+    EfficiencyCalculator(std::string outputPath=""):
         fEventList({}),
         nEvents(0),
         nEventsSkipped(0),
         nProcessedEvents(0),
-        nEventsSelected(0)
+        nEventsSelected(0),
+        fOutputPath(outputPath)
         {
+            //LABELS SIZE AND FONT
+            gStyle->SetLabelFont(132, "XYZ");
+            gStyle->SetTitleSize(0.06, "TXYZ");
+            gStyle->SetLabelSize(0.06, "XYZ");
 
             hNOrigins = new TH1F("hNOrigins", "NOrigins;# origins; # entries", 10, 0, 10);
             hNOriginsMult1 = new TH1F("hNOriginsMult1", "NOrigins mult=1;# origins; # entries", 10, 0, 10);
@@ -211,28 +216,38 @@ public:
     }
 
     void DrawHistograms(){
-        gROOT->SetBatch(false);
+        
         gStyle->SetOptStat(1);
-        TCanvas c("cStats", "Final stats", 0, 0, 1400,900);
-        std::vector<TPad*> padV = buildpadcanvas(3, 2);
 
+        TCanvas *c = new TCanvas("cStats", "Final stats", 0, 0, 1400,900);
+        
+        
+        std::vector<TPad*> padV = buildpadcanvas(3, 2);
+        double fLeftMargin=0.15;
         padV[1]->cd();
+        padV[1]->SetLeftMargin(fLeftMargin);
         hNOrigins->Draw();
         
         padV[2]->cd();
+        padV[2]->SetLeftMargin(fLeftMargin);
         hNOriginsMult1->Draw();
 
         padV[3]->cd();
+        padV[3]->SetLeftMargin(fLeftMargin);
         hNOriginsMult2->Draw();
 
         padV[4]->cd();
+        padV[4]->SetLeftMargin(fLeftMargin);
         hNOriginsMultGt3->Draw();
 
         padV[5]->cd();
+        padV[5]->SetLeftMargin(fLeftMargin);
         hHitDensity->Draw();
 
         padV[6]->cd();
+        padV[6]->SetLeftMargin(fLeftMargin);
         hProf2DMatrix->SetStats(0);
+
         padV[6]->SetRightMargin(0.12);
         // Normalize the histogram to the number of entries
         if (hProf2DMatrix->GetEntries() > 0) {
@@ -263,12 +278,19 @@ public:
         hProf2DMatrix->GetXaxis()->SetNdivisions(4);
         hProf2DMatrix->GetYaxis()->SetNdivisions(4);
 
+        c->Update();
+        c->cd();
+
+        TFile* rootFile = new TFile((fOutputPath + "/Multiplicities.root").c_str(), "CREATE");
+        c->Write();
+        rootFile->Close();
+        rootFile->Delete();
+        delete rootFile;
+
+        c->SaveAs((fOutputPath + "/Multiplicities.pdf").c_str());
+
+        c->WaitPrimitive();
         
-
-        c.Update();
-
-        c.cd();
-        c.WaitPrimitive();
 
     }
 
@@ -279,6 +301,8 @@ private:
     int nEventsSkipped;
     int nProcessedEvents;
     int nEventsSelected;
+
+    std::string fOutputPath;
 
     TH1F *hNOrigins;
     TH1F *hNOriginsMult1;

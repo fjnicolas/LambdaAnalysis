@@ -59,21 +59,21 @@ class SOrigin {
 
 class SEvent {
     private:
-        std::vector<STriangle> fAngleList;
         std::vector<SLinearCluster> fTrackList;
         std::vector<SOrigin> fOriginList;
-
+        std::vector<STriangle> fAngleList;
         double fHitDensity;
     
         
     public:
-        SEvent(std::vector<SOrigin> origins={}, double hitDensity=0);
+        SEvent(std::vector<SLinearCluster> tracks={}, std::vector<SOrigin> origins={}, std::vector<STriangle> angles = {}, double hitDensity=0);
 
         std::vector<SOrigin> GetOrigins(){return fOriginList;};
         int GetNOrigins(){ return fOriginList.size();};
-
         int GetNOriginsMult(int mult);
         int GetNOriginsMultGt(int mult);
+
+        int GetNAngles(){ return fAngleList.size();};
 
         double HitDensity(){return fHitDensity;};
         

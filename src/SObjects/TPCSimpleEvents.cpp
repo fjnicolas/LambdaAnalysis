@@ -39,8 +39,10 @@ bool SOrigin::HasTrackIndex(int ix){
 }
 
 
-SEvent::SEvent(std::vector<SOrigin> origins, double hitDensity):
+SEvent::SEvent(std::vector<SLinearCluster> tracks, std::vector<SOrigin> origins, std::vector<STriangle> angles, double hitDensity):
+    fTrackList(tracks),
     fOriginList(origins),
+    fAngleList(angles),
     fHitDensity(hitDensity)
 {}
 
