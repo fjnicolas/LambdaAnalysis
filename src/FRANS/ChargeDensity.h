@@ -6,6 +6,10 @@
 #ifndef SBND_CHARGEDENSITY_H
 #define SBND_CHARGEDENSITY_H
 
+#ifndef LAMBDAANA_LARSOFT
+#define LAMBDAANA_LARSOFT 1
+#endif
+
 #include <vector>
 #include <limits>
 #include <filesystem>
