@@ -18,6 +18,8 @@
 #include "ChargeDensityPset.h"
 #include "FRANSTTreeHandle.h"
 
+#include "TImage.h"
+
 
 std::vector<SHit> GetFRANSHitsView(
     std::string view,
@@ -120,17 +122,10 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     int fNEvSkip = nskip;
     int nEvents=0;
 
-
-    // Output directory for display
-    gSystem->Exec(("rm -rf "+fPsetFRANS.OutputPath).c_str());
-    gSystem->Exec( ("mkdir "+fPsetFRANS.OutputPath).c_str());
-    gSystem->Exec( ("mkdir "+fPsetFRANS.OutputPath+"/rootfiles").c_str());
-    
+    // output ROOT files with analysis results
+    TFile* anaOutputFile = new TFile("LambdaAnaOutput.root", "RECREATE");    
 
     // Output directory for analysis results
-    std::string fAnaReultsPath = "anaResults";
-    gSystem->Exec(("rm -rf "+fAnaReultsPath).c_str());
-    gSystem->Exec(("mkdir "+fAnaReultsPath).c_str());
     std::string tree_dirname = "framsReco/";
     if(vertexOption==1) tree_dirname = "framsTrue/";
     if(vertexOption==2) tree_dirname = "framsMine/";
@@ -145,7 +140,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
     // Effiency status
-    EfficiencyCalculator _EfficiencyCalculator(fAnaReultsPath);
+    EfficiencyCalculator _EfficiencyCalculator;
 
     // TTree loop
     int nEntries = 0;
@@ -290,31 +285,44 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                             recoEvent.GetNOrigins(), recoEvent.GetNOriginsMult(1), recoEvent.GetNOriginsMult(2), recoEvent.GetNOriginsMultGt(3), recoEvent.HitDensity() );
             myTree.FillTree();
   
-            std::string outputLabel="";
-            if(_FRAMSAlgo.Score()>=fFRANSScoreCut){
-                _EfficiencyCalculator.UpdateSelected(ev);
-                outputLabel="Accepted";   
-            }
-            else{
-                _EfficiencyCalculator.UpdateNotSelected(ev);
-                outputLabel="Rejected";
-            }
+
+
+            _FRAMSAlgo.Score()>=fFRANSScoreCut ? _EfficiencyCalculator.UpdateSelected(ev):_EfficiencyCalculator.UpdateNotSelected(ev);
+            std::string outputLabel = (_FRAMSAlgo.Score()>=fFRANSScoreCut)? "plot_Accepted":"plot_Rejected";
             std::string outputLabel2 = (_FRAMSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
-            _FRAMSAlgo.Display(ev.Label()+"_FRANS_"+outputLabel);
-            _FRAMSAlgoPANDORA.Display(ev.Label()+"_FRANSPANDORAVx_"+outputLabel2);
+
+            
+            TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+view).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
+            _FRAMSAlgo.Display(cDisplay);
+            
+            // Save TCanvas and pdf
+            anaOutputFile->cd();
+            TImage *img = TImage::Create();
+            img->FromPad(cDisplay);
+            img->Write( ("image/"+outputLabel+"_"+ev.Label()+"_vw"+view+".pdf").c_str() );
+            cDisplay->Write();
+
+            delete cDisplay;
+            delete img;
         }
 
     }
     
-    // Print final status
+    // Origins Ana Results
     std::cout<<_EfficiencyCalculator;
-    _EfficiencyCalculator.DrawHistograms();
+    TDirectory *originsAnaDirectory = anaOutputFile->mkdir("originsAnaDirectory");
+    TCanvas *cOriginsAna = new TCanvas("cOriginsAna", "cOriginsAna", 0, 0, 1400,900);
+    originsAnaDirectory->cd();
+    _EfficiencyCalculator.DrawHistograms(cOriginsAna);
+    cOriginsAna->Write();
         
-
-    TFile outputFile((fAnaReultsPath+"/FRAMSTree.root").c_str(), "RECREATE");
+    // Write the FRANS TTree
+    anaOutputFile->cd();
     fTree->Write();
     delete fTree;
-    outputFile.Close();
+
+    anaOutputFile->Write();
+    anaOutputFile->Close();
 
     return;
 }

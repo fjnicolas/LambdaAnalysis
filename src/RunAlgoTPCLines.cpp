@@ -59,6 +59,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
         gSystem->Exec( ("mkdir "+fPsetAnaView.OutputPath+"/rootfiles").c_str());
     }  
 
+    // output ROOT files with analysis results
+    TFile* anaOutputFile = new TFile("LambdaAnaOutput.root", "RECREATE");
+
     // View to use
     std::string fView = fPsetAnaView.View;
 
@@ -75,7 +78,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
     // Effiency status
-    EfficiencyCalculator _EfficiencyCalculator("anaResults");
+    EfficiencyCalculator _EfficiencyCalculator;
 
     // TTree loop
     std::vector<int> fNVertex;
@@ -191,10 +194,18 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
         }
     }
-    
-    // Print final status
+
+    // Origins Ana Results
     std::cout<<_EfficiencyCalculator;
-    _EfficiencyCalculator.DrawHistograms();
+    TDirectory *originsAnaDirectory = anaOutputFile->mkdir("originsAnaDirectory");
+    TCanvas *cOriginsAna = new TCanvas("cOriginsAna", "cOriginsAna", 0, 0, 1400,900);
+    originsAnaDirectory->cd();
+    _EfficiencyCalculator.DrawHistograms(cOriginsAna);
+    cOriginsAna->Write();
+
+
+    anaOutputFile->Write();
+    anaOutputFile->Close();
 
     return;
 

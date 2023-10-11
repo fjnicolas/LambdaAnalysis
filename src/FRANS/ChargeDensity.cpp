@@ -327,7 +327,7 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex){
 
 
 //void ChargeDensity::Save2ROOT(art::TFileDirectory tfdir, std::string name){
-void ChargeDensity::Display(std::string name){
+void ChargeDensity::Display(TCanvas *c){
 
   gStyle->SetPalette(112,0);
   gStyle->SetTitleFont(132, "TXYZ");
@@ -343,12 +343,14 @@ void ChargeDensity::Display(std::string name){
   gStyle->SetLabelSize(0.05, "XYZ");
   gStyle->SetTitleYOffset (1.4);
   
+  c->cd();
 
-  TCanvas c( ("c_"+name+"_vw"+std::to_string(fView)).c_str(), name.c_str(), 600, 0, 800, 1200);
-
-  TPad *pad1 = new TPad("pad1", "Graph Pad", 0., 0., 1., 0.33);
-  TPad *pad2 = new TPad("pad2", "Legend Pad", 0., .33, 1., .66);
-  TPad *pad3 = new TPad("pad2", "Legend Pad", 0., .66, 1., 1.0);
+  TPad *pad1 = new TPad("pad1", "pad1", 0., 0., 1., 0.33);
+  pad1->Draw();
+  TPad *pad2 = new TPad("pad2", "pad2", 0., .33, 1., .66);
+  pad2->Draw();
+  TPad *pad3 = new TPad("pad3", "pad3", 0., .66, 1., 1.0);
+  pad3->Draw();
 
   pad1->SetBottomMargin(0.1);
   pad2->SetBottomMargin(0.1);
@@ -356,10 +358,6 @@ void ChargeDensity::Display(std::string name){
   pad1->SetLeftMargin(0.12);
   pad2->SetLeftMargin(0.12);
   pad3->SetLeftMargin(0.12);
-
-  pad1->Draw();
-  pad2->Draw();
-  pad3->Draw();
 
 
   gStyle->SetTitleFont(52, "TXYZ");
@@ -372,6 +370,7 @@ void ChargeDensity::Display(std::string name){
   gStyle->SetTitleXSize (0.08);
   gStyle->SetTitleYOffset (0.65);
   gStyle->SetTitleYSize (0.08);
+
 
   pad3->cd();
   TGraph *gr = new TGraph(fRho.size(), &fRho[0], &fZ[0]);
@@ -411,6 +410,7 @@ void ChargeDensity::Display(std::string name){
   leg2->AddEntry(grCum, legLabel2.str().c_str(), "");
   leg2->Draw("same");
 
+
   pad1->cd();
   TGraph *grDer = new TGraphErrors(fZCumDer.size(), &fRho[0], &fZCumDer[0], 0, &fZCumDerErr[0]);
   grDer->SetTitle("");
@@ -432,14 +432,9 @@ void ChargeDensity::Display(std::string name){
   leg3->Draw("same");
 
 
-  TFile* rootFile = new TFile((fFRANSPset.OutputPath + "/rootfiles/"+name).c_str(), "RECREATE");
-  c.Write();
-  rootFile->Close();
-  c.SaveAs((fFRANSPset.OutputPath  + "/" + name +".pdf").c_str());
-
-  c.cd();
-  c.Update();
-  c.WaitPrimitive();
+  c->cd();
+  c->Update();
+  c->WaitPrimitive();
 
   return;
 }

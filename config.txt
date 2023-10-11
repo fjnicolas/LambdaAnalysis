@@ -13,7 +13,7 @@ FRANS:MaxRadius 70
 FRANS:DebugMode false
 FRANS:CalculateScore true
 FRANS:TMVAFilename "FRAMSSelectionTMVA_BDT.weights.xml"
-FRANS:OutputPath "plotsFRANS"
+FRANS:OutputPath OutputLambdaAna
 FRANS:Verbose 0
 
 // ---- TPC lines parameters
@@ -24,9 +24,9 @@ TPCLines:MaxHoughTracks 15
 TPCLines:RemoveIsolatedHits true 
 TPCLines:MaxNeighbourDistance 2 
 TPCLines:MinNeighboursHits 2 
-TPCLines:VertexAlgorithm 1 
+TPCLines:VertexAlgorithm 1
 TPCLines:View C 
-TPCLines:OutputPath plots/ 
+TPCLines:OutputPath OutputLambdaAna
 TPCLines:Verbose 0
 TPCLines:DebugMode -1 
 

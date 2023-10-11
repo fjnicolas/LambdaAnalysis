@@ -56,7 +56,7 @@ class ChargeDensity{
 
     //void Fill(std::vector<art::Ptr<recob::Hit>> hitsVect, VertexView vertex);
     void Fill(std::vector<SHit> hitsVect, SVertex vertex);
-    void Display(std::string name);
+    void Display(TCanvas *c);
 
     // Access class members
     double Delta(){return fDelta;}
