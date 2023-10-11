@@ -94,7 +94,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
 
     // ---- FRAMS parameters ----------------------------------------
-    FRAMSPsetType fPsetFRANS = ReadFRANSPset(ConfPsetPath);
+    FRAMSPsetType fPsetFRANS = ReadFRANSPset(ConfPsetPath, "ChargeDensity:");
     fPsetFRANS.Verbose = Debug;
     // ---- TPCLines parameter ----------------------------------------
     // Parameter sets
@@ -292,11 +292,10 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             std::string outputLabel = (_FRAMSAlgo.Score()>=fFRANSScoreCut)? "plot_Accepted":"plot_Rejected";
             std::string outputLabel2 = (_FRAMSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
 
-            
-            
+                        
             TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+view).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
             _FRAMSAlgo.Display(cDisplay);
-    
+
             // Save TCanvas and pdf
             TImage *img = TImage::Create();
             img->FromPad(cDisplay);

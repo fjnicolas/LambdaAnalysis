@@ -1,20 +1,44 @@
+BEGIN_PROLOG
+
+ChargeDensity:
+{
+    ApplyRawSmoothing: true
+    ApplySmoothing: false
+    ApplyCumulativeSmoothing: false
+    NDriftPack: 4
+    NWirePack: 1
+    ExpoAvSmoothPar: 0.3
+    UnAvNeighbours: 1
+    CumulativeCut: 0.8
+    SlidingWindowN: 3
+    NSamplesBeginSlope: 3
+    MaxRadius: 70
+    DebugMode: false
+    CalculateScore: true
+    TMVAFilename: FRAMSSelectionTMVA_BDT.weights.xml
+    OutputPath: OutputLambdaAna
+    Verbose: 0
+}
+
+END_PROLOG
+
 // ---- FRANS parameters
-FRANS:ApplyRawSmoothing true
-FRANS:ApplySmoothing false
-FRANS:ApplyCumulativeSmoothing false
-FRANS:NDriftPack 4
-FRANS:NWirePack 1
-FRANS:ExpoAvSmoothPar 0.3
-FRANS:UnAvNeighbours 1
-FRANS:CumulativeCut 0.8
-FRANS:SlidingWindowN 3
-FRANS:NSamplesBeginSlope 3
-FRANS:MaxRadius 70
-FRANS:DebugMode false
-FRANS:CalculateScore true
-FRANS:TMVAFilename "FRAMSSelectionTMVA_BDT.weights.xml"
-FRANS:OutputPath OutputLambdaAna
-FRANS:Verbose 0
+FRANS_ApplyRawSmoothing: true
+FRANS_ApplySmoothing false
+FRANS_ApplyCumulativeSmoothing false
+FRANS_NDriftPack 4
+FRANS_NWirePack 1
+FRANS_ExpoAvSmoothPar 0.3
+FRANS_UnAvNeighbours 1
+FRANS_CumulativeCut 0.8
+FRANS_SlidingWindowN 3
+FRANS_NSamplesBeginSlope 3
+FRANS_MaxRadius 70
+FRANS_DebugMode false
+FRANS_CalculateScore true
+FRANS_TMVAFilename "FRAMSSelectionTMVA_BDT.weights.xml"
+FRANS_OutputPath OutputLambdaAna
+FRANS_Verbose 0
 
 // ---- TPC lines parameters
 TPCLines:MinTrackHits 3

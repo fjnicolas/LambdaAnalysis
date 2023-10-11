@@ -15,23 +15,125 @@
 
 #include <boost/property_tree/info_parser.hpp>
 #include <fstream>
+#include <map>
 
-FRAMSPsetType ReadFRANSPset(std::string filename){
+
+boost::property_tree::ptree GetPropertyTreeFromFileName(std::string filename, std::string blockName){
+    
+    // Define the section names
+    const std::string begin_prolog = "BEGIN_PROLOG";
+    const std::string end_prolog = "END_PROLOG";
+
+    // Create a property tree
+    boost::property_tree::ptree pt;
+
+    // Open the configuration file
+    std::ifstream config_file(filename);
+    if (config_file.is_open()) {
+
+        std::string line;
+        bool inside_prolog = false;
+        bool inside_block = false;
+
+        while (std::getline(config_file, line)) {
+            if (line == begin_prolog){
+                inside_prolog = true;
+            }
+            else if (line == end_prolog) {
+                inside_prolog = false;
+            }
+            else if (line ==  blockName) {
+                inside_block = true;
+            }
+            else if (inside_prolog && inside_block) {
+                std::cout<<"INSIDE PROLOG\n";
+                
+                if (!line.empty() && line[0] != '#') {  // Ignore empty lines and comments
+                    size_t separator_pos = line.find(":");
+                    if (separator_pos != std::string::npos) {
+                        std::string key = line.substr(0, separator_pos);
+                        std::string value = line.substr(separator_pos + 1);
+                        
+                        // Remove spaces
+                        key.erase(std::remove_if(key.begin(), key.end(), ::isspace), key.end());
+                        value.erase(std::remove_if(value.begin(), value.end(), ::isspace), value.end());
+
+                        std::cout<<key<<" "<<value<<std::endl;
+
+                        // Add the key-value pair to the property tree
+                        pt.put(key, value);
+                    }
+                }
+                
+            }
+        }
+
+        config_file.close();
+
+    }
+
+
+
+    return pt;
+}
+
+FRAMSPsetType ReadFRANSPset(std::string filename, std::string blockName){
+
+    // Create and fill the parameter set
+    FRAMSPsetType fPsetFRANS;
+    
+    
+    boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
+
+
+    fPsetFRANS.ApplyRawSmoothing = pt.get<bool>("ApplyRawSmoothing");
+    fPsetFRANS.ApplySmoothing = pt.get<bool>("ApplySmoothing");
+    fPsetFRANS.ApplyCumulativeSmoothing = pt.get<bool>("ApplyCumulativeSmoothing");
+    fPsetFRANS.NDriftPack = pt.get<unsigned int>("NDriftPack");
+    fPsetFRANS.NWirePack = pt.get<unsigned int>("NWirePack");
+    fPsetFRANS.ExpoAvSmoothPar = pt.get<double>("ExpoAvSmoothPar");
+    fPsetFRANS.UnAvNeighbours = pt.get<int>("UnAvNeighbours");
+    fPsetFRANS.CumulativeCut = pt.get<double>("CumulativeCut");
+    fPsetFRANS.SlidingWindowN = pt.get<int>("SlidingWindowN");
+    fPsetFRANS.NSamplesBeginSlope = pt.get<int>("NSamplesBeginSlope");
+    fPsetFRANS.MaxRadius = pt.get<int>("MaxRadius");
+    fPsetFRANS.Verbose = pt.get<int>("Verbose");
+    fPsetFRANS.CalculateScore = pt.get<bool>("CalculateScore");
+    fPsetFRANS.TMVAFilename = pt.get<std::string>("TMVAFilename");
+    fPsetFRANS.OutputPath = pt.get<std::string>("OutputPath");
+
+    std::cout << "Key1: " << pt.get<bool>("ApplyRawSmoothing") << std::endl;
+
+    std::cout << "Key2: " << pt.get<std::string>("TMVAFilename") << std::endl;
+    
+    return fPsetFRANS;
+
+}
+
+
+
+FRAMSPsetType ReadFRANSPset2(std::string filename){
    
     // Create a property tree to hold the parsed data
     boost::property_tree::ptree pt;
 
     // Create an instance of the struct and populate its fields
     FRAMSPsetType fPsetFRANS;
-    std::string fFRAMSPsetProlog = "FRANS:";
+    std::string fFRAMSPsetProlog = "FRANS_";
 
     // Parse the FHiCL file
     try {
         // Open and read the configuration file
         std::ifstream config_file(filename);
+        const char custom_separator = ':';
         boost::property_tree::read_info(config_file, pt);
 
+        //boost::property_tree::ptree frans_block = pt.get_child(fFRAMSPsetProlog);
+
+        std::cout<<"IIIIIIIN\n";
+
         fPsetFRANS.ApplyRawSmoothing = pt.get<bool>(fFRAMSPsetProlog+"ApplyRawSmoothing");
+        std::cout<<"Apply "<< fPsetFRANS.ApplyRawSmoothing<<std::endl;;
         fPsetFRANS.ApplySmoothing = pt.get<bool>(fFRAMSPsetProlog+"ApplySmoothing");
         fPsetFRANS.ApplyCumulativeSmoothing = pt.get<bool>(fFRAMSPsetProlog+"ApplyCumulativeSmoothing");
         fPsetFRANS.NDriftPack = pt.get<unsigned int>(fFRAMSPsetProlog+"NDriftPack");
