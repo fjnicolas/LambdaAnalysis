@@ -16,6 +16,9 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
   fTau = 0.;
   fScore = -1e4;
 
+  fNHits = 0;
+  fAverageHitChi2 = 0;
+
   // Right now we only use the collection view
   if(fFRANSPset.CalculateScore){
     fTMVAReader.AddVariable( "Alpha_C", &fAlpha );
@@ -292,16 +295,28 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex){
 
   std::cout<<" Refactored vertex: "<<vCh<<" "<<vTimeTick<<std::endl;
 
+  // reset vectors
   fZ.clear();
   fZ.resize(DefaultMaxZSize, 0);
+  fRho.clear();
+  fZCum.clear();
+  fZCumStart.clear();
+  fZCumDer.clear();
+  fZCumDerErr.clear();
+  fNHits=0;
+  fAverageHitChi2=0;
+
   int dMax=0;
   for(auto &hit: Hits){
     double d = GetDistance(hit.X(), hit.Y(), vCh, vTimeTick);
     if(d<DefaultMaxZSize){
       fZ[(int)d]+=hit.Integral();
+      fNHits++;
+      fAverageHitChi2 += hit.Chi2();
       if(d>dMax) dMax = (int) d;
     }
   }
+  fAverageHitChi2 = fAverageHitChi2/fNHits;
 
   fZ.resize(dMax);
 

@@ -1,3 +1,29 @@
+if(DEFINED ENV{LARSOFT_VERSION})
+    message(status " LARSOFT DEFINED SOBJECTS" )
+
+    art_make_library(
+        LIBRARY_NAME   sbndcode_SObjects
+        
+        SOURCE
+            TPCSimpleHits.cpp
+            TPCLinesHitDistanceUtils.cpp
+            TPCSimpleClusters.cpp
+            TPCSimpleLines.cpp
+            TPCSimpleTriangles.cpp
+            TPCLinesDistanceUtils.cpp
+            TPCSimpleEvents.cpp
+            TPCLinesPCA.cpp
+
+        LIBRARIES
+            ROOT::Tree
+            ROOT::Core
+            ROOT::TMVA
+      )
+
+      install_headers()
+      install_source()
+endif()
+
 message(status "Building " ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(sobjects_library

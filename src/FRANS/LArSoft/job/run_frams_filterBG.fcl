@@ -1,9 +1,0 @@
-#include "run_frams_filterS.fcl"
-
-services.TFileService.fileName: "FRAMSAnaOutput_BG.root"
-
-physics.producers.framsTrue.TreeName: FRAMSTreeBG
-physics.producers.framsReco.TreeName: FRAMSTreeBG
-
-physics.filters.framsFilter.CutGT: true
-physics.filters.framsFilter.UseGapCut: false

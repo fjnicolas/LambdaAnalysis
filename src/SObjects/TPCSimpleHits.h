@@ -63,6 +63,7 @@ class SHit {
         float fStartT;
         float fEndT;
         float fIntegral;
+        float fChi2;
         float fXProj;
         float fYProj;
         float fCompactness;
@@ -71,7 +72,7 @@ class SHit {
 
     public:
         // Constructor
-        SHit(int id=-1, float x=0, float y=0, float w=0, float integral=0, float st=0, float et=0);
+        SHit(int id=-1, float x=0, float y=0, float w=0, float integral=0, float st=0, float et=0, float chi2=0);
         SHit(float x, float y);
 
         int Id(){return fId;}
@@ -81,6 +82,7 @@ class SHit {
         float StartT() const {return fStartT;}
         float EndT() const {return fEndT;}
         float Integral() const {return fIntegral;}
+        float Chi2() const {return fChi2;}
         float XProj() const {return fXProj;}
         float YProj() const {return fYProj;}
         float Compactness() const {return fCompactness;}

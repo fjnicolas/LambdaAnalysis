@@ -54,13 +54,14 @@ std::ostream& operator<<(std::ostream& out, SVertex const& v)
 }
 
 // SHit class functions
-SHit::SHit(int id, float x, float y, float w, float integral, float st, float et)
+SHit::SHit(int id, float x, float y, float w, float integral, float st, float et, float chi2)
     : fId(id),
     fP( SPoint(x, y) ),
     fWidth(w),
     fStartT(st),
     fEndT(et),
     fIntegral(integral),
+    fChi2(chi2),
     fXProj(-1000),
     fYProj(-1000),
     fCompactness(-1000),
@@ -75,8 +76,8 @@ SHit::SHit(float x, float y)
     fWidth(-1),
     fStartT(-1),
     fEndT(-1),
-    fIntegral(-1
-    ),
+    fIntegral(-1),
+    fChi2(-1),
     fXProj(-1000),
     fYProj(-1000),
     fCompactness(-1000),

@@ -1,3 +1,6 @@
+#ifndef SBND_FRANSVERTEXVIEW_H
+#define SBND_FRANSVERTEXVIEW_H
+
 struct VertexView{
   bool reco;
   bool status;
@@ -10,3 +13,5 @@ struct VertexView{
   int C;
   int TT;
 };
+
+#endif

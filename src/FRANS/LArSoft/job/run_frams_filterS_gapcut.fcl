@@ -1,3 +1,0 @@
-#include "run_frams_filterS.fcl"
-
-physics.filters.framsFilter.UseGapCut: true
