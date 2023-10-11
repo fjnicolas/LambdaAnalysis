@@ -85,7 +85,7 @@ EfficiencyCalculator::EfficiencyCalculator():
           hProf2DMatrix = new TH2F("hProf2DMatrix", "# origins; origin 1 multiplicity; origin 2 multiplicity", 10, 0, 10, 10, 0, 10);
 
           hHitDensity = new TH1F("hHitDensity", ";HitDensity [#hits/wire]; # entries", 30, 0, 10);
-      };
+      }
 
 
 void EfficiencyCalculator::UpdateHistograms(SEvent recoEv){

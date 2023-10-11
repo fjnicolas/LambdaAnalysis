@@ -6,4 +6,5 @@ set(CMAKE_CXX_STANDARD 11)
 
 # Add subdirectories for libraries
 add_subdirectory(src)
+add_subdirectory(scripts)
 
