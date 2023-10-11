@@ -67,6 +67,8 @@ class ChargeDensity{
     double Tau(){return fTau;}
     double Iota(){return fIota;}
     double Score(){return fScore;}
+    double AverageHitChi2(){return fAverageHitChi2;}
+    double NHits(){return fNHits;}
 
   private:
 
@@ -101,6 +103,9 @@ class ChargeDensity{
     float fTau;
     float fIota;
     float fScore;
+
+    int fNHits = 0;
+    float fAverageHitChi2 = 0;
 
     float fGap;
     float fProtonKE;
