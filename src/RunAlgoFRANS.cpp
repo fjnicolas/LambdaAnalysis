@@ -124,6 +124,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
 
     // output ROOT files with analysis results
     TFile* anaOutputFile = new TFile("LambdaAnaOutput.root", "RECREATE");    
+    TDirectory *fransPlotsDirectory = anaOutputFile->mkdir("FRANSPlots");
 
     // Output directory for analysis results
     std::string tree_dirname = "framsReco/";
@@ -292,13 +293,14 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             std::string outputLabel2 = (_FRAMSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
 
             
+            
             TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+view).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
             _FRAMSAlgo.Display(cDisplay);
-            
+    
             // Save TCanvas and pdf
-            anaOutputFile->cd();
             TImage *img = TImage::Create();
             img->FromPad(cDisplay);
+            fransPlotsDirectory->cd();
             img->Write( ("image/"+outputLabel+"_"+ev.Label()+"_vw"+view+".pdf").c_str() );
             cDisplay->Write();
 

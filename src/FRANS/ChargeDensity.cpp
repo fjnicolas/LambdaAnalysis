@@ -345,11 +345,11 @@ void ChargeDensity::Display(TCanvas *c){
   
   c->cd();
 
-  TPad *pad1 = new TPad("pad1", "pad1", 0., 0., 1., 0.33);
+  TPad *pad1 = new TPad("pad1", "pad1", 0., 0., .98, 0.33);
   pad1->Draw();
-  TPad *pad2 = new TPad("pad2", "pad2", 0., .33, 1., .66);
+  TPad *pad2 = new TPad("pad2", "pad2", 0., .33, .98, .66);
   pad2->Draw();
-  TPad *pad3 = new TPad("pad3", "pad3", 0., .66, 1., 1.0);
+  TPad *pad3 = new TPad("pad3", "pad3", 0., .66, .98, 1.0);
   pad3->Draw();
 
   pad1->SetBottomMargin(0.1);
