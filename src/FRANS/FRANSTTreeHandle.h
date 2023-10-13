@@ -76,6 +76,20 @@ public:
             fNOriginsM3_C = nOriginsM3;
             fHitDensity_C = hitDensity;
         }
+        else if(view==-1){
+            fDelta = delta;
+            fEta = eta;
+            fFitScore = fitScore;
+            fAlpha = alpha;
+            fOmega = omega;
+            fTau = tau;
+            fIota = iota;
+            fNOrigins = nOrigins;
+            fNOriginsM1 = nOriginsM1;
+            fNOriginsM2 = nOriginsM2;
+            fNOriginsM3 = nOriginsM3;
+            fHitDensity = hitDensity;
+        }
         
     }
 
@@ -136,6 +150,19 @@ private:
         fTree->Branch("NOriginsM2_C", &fNOriginsM2_C, "NOriginsM2_C/I");
         fTree->Branch("NOriginsM3_C", &fNOriginsM3_C, "NOriginsM3_C/I");
         fTree->Branch("HitDensity_C", &fHitDensity_C, "HitDensity_C/D");
+
+        fTree->Branch("Delta", &fDelta, "Delta/D");
+        fTree->Branch("Eta", &fEta, "Eta/D");
+        fTree->Branch("FitScore", &fFitScore, "FitScore/D");
+        fTree->Branch("Alpha", &fAlpha, "Alpha/D");
+        fTree->Branch("Omega", &fOmega, "Omega/D");
+        fTree->Branch("Tau", &fTau, "Tau/D");
+        fTree->Branch("Iota", &fIota, "Iota/D");
+        fTree->Branch("NOrigins", &fNOrigins, "NOrigins/I");
+        fTree->Branch("NOriginsM1", &fNOriginsM1, "NOriginsM1/I");
+        fTree->Branch("NOriginsM2", &fNOriginsM2, "NOriginsM2/I");
+        fTree->Branch("NOriginsM3", &fNOriginsM3, "NOriginsM3/I");
+        fTree->Branch("HitDensity", &fHitDensity, "HitDensity/D");
     }
 
 private:
@@ -156,21 +183,22 @@ private:
     double fPionKE;
     int fIsSignal;
 
-    double fDelta_U, fDelta_V, fDelta_C;
-    double fEta_U, fEta_V, fEta_C;
-    double fFitScore_U, fFitScore_V, fFitScore_C;
-    double fAlpha_U, fAlpha_V, fAlpha_C;
-    double fOmega_U, fOmega_V, fOmega_C;
-    double fTau_U, fTau_V, fTau_C;
-    double fIota_U, fIota_V, fIota_C;
-    double fScore_U, fScore_V, fScore_C;
+    double fDelta_U, fDelta_V, fDelta_C, fDelta;  // Add fDelta
+    double fEta_U, fEta_V, fEta_C, fEta;  // Add fEta
+    double fFitScore_U, fFitScore_V, fFitScore_C, fFitScore;  // Add fFitScore
+    double fAlpha_U, fAlpha_V, fAlpha_C, fAlpha;  // Add fAlpha
+    double fOmega_U, fOmega_V, fOmega_C, fOmega;  // Add fOmega
+    double fTau_U, fTau_V, fTau_C, fTau;  // Add fTau
+    double fIota_U, fIota_V, fIota_C, fIota;  // Add fIota
+    double fScore_U, fScore_V, fScore_C, fScore;  // Add fScore
 
+    double fHitDensity_U, fHitDensity_V, fHitDensity_C, fHitDensity;
     int fNOrigins_U, fNOriginsM1_U, fNOriginsM2_U, fNOriginsM3_U;
-    double fHitDensity_U;
     int fNOrigins_V, fNOriginsM1_V, fNOriginsM2_V, fNOriginsM3_V;
-    double fHitDensity_V;
     int fNOrigins_C, fNOriginsM1_C, fNOriginsM2_C, fNOriginsM3_C;
-    double fHitDensity_C;
+    int fNOrigins, fNOriginsM1, fNOriginsM2, fNOriginsM3;
+
+
 };
 
 
