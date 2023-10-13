@@ -18,7 +18,7 @@
 #include <fstream>
 #include <map>
 
-namespace fs = std::__fs::filesystem;
+namespace fs = std::filesystem;
 
 std::string FindFile(const std::string& fileName, const char* envVarName="LAMBDAANA_SEARCHPATH") {
     
