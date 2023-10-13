@@ -56,30 +56,28 @@ void DBSCAN::expandCluster( std::vector<SHit>& points, int pointIdx, int cluster
    
     
     std::vector<int> seeds = regionQuery(points, points[pointIdx]);
-        /*
-    if (seeds.size() < minPts) {
-        clusterAssignment[pointIdx] = -1;  // Mark as noise
-        return;
-    }*/
+
     clusterAssignment[pointIdx] = clusterIdx;
     
     for (size_t i = 0; i < seeds.size(); ++i) {
         int currentIdx = seeds[i];
-        if (clusterAssignment[currentIdx] == 0) {  // Not assigned to any cluster
+        // not assigned to any cluster
+        if (clusterAssignment[currentIdx] == 0) {
             clusterAssignment[currentIdx] = clusterIdx;
             std::vector<int> currentSHitNeighbors = regionQuery(points, points[currentIdx]);
             if ((int)currentSHitNeighbors.size() >= minPts) {
-                //seeds.insert(seeds.end(), currentSHitNeighbors.begin(), currentSHitNeighbors.end());
                 expandCluster(points, currentIdx, clusterIdx);
             }
         }
-        if (clusterAssignment[currentIdx] == -1) {  // Noise point
+        // noise point
+        if (clusterAssignment[currentIdx] == -1) {
             clusterAssignment[currentIdx] = clusterIdx;
         }
     }
 }
 
-// Distance functions for DBSCAN
+// --------------- Distance functions definitions for DBSCAN
+
 double DBSCANHitEuclidianDistance( SHit& p1,  SHit& p2) {
     //std::cout<<" In euclidian distance\n";
     return std::sqrt((p1.X() - p2.X()) * (p1.X() - p2.X()) + (p1.Y() - p2.Y()) * (p1.Y() - p2.Y()));

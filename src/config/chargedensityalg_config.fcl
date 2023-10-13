@@ -15,8 +15,8 @@ ChargeDensityAlg:
     MaxRadius: 70
     DebugMode: false
     CalculateScore: true
-    TMVAFilename: FRAMSSelectionTMVA_BDT.weights.xml
-    OutputPath: OutputLambdaAna
+    TMVAFilename: "FRAMSSelectionTMVA_BDT.weights.xml"
+    OutputPath: "OutputLambdaAna"
     Verbose: 0
 }
 

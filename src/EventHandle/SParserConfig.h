@@ -132,6 +132,7 @@ FRAMSPsetType ReadFRANSPset(std::string filename, std::string blockName){
     fPset.Verbose = pt.get<int>("Verbose");
     fPset.CalculateScore = pt.get<bool>("CalculateScore");
     fPset.TMVAFilename = pt.get<std::string>("TMVAFilename");
+    fPset.TMVAFilename = fPset.TMVAFilename.substr(1, fPset.TMVAFilename.size()-2);
     fPset.OutputPath = pt.get<std::string>("OutputPath");
     
     return fPset;

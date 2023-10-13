@@ -96,7 +96,9 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // ---- FRAMS parameters ----------------------------------------
     FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
-    fPsetFRANS.TMVAFilename = FindFile("FRAMSSelectionTMVA_BDT.weights.xml");
+    std::cout<<"  njvisfnvioanvownvr "<<fPsetFRANS.TMVAFilename<<" "<<fPsetFRANS.OutputPath<<std::endl;
+    fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
+    
     // ---- TPCLines parameters ----------------------------------------
     TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset( FindFile("trackfinderalg_config.fcl"), "TrackFinderAlg:");
     fPsetTrackFinder.Verbose = Debug;
