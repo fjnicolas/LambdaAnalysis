@@ -19,6 +19,7 @@ add_subdirectory(EventHandle)
 add_subdirectory(SObjects)
 add_subdirectory(TPCLinesAlgo)
 add_subdirectory(FRANS)
+add_subdirectory(config)
 
 
 # Add main executable

@@ -1,0 +1,14 @@
+BEGIN_PROLOG
+
+VertexFinderAlg:
+{
+    MaxDistToEdge: 3 
+    RefineVertexIntersection: true 
+    UseEdgesDiscard: true 
+    MaxTrackFractionInMain: 0.75 
+    DecideMainTrack: true 
+    AddCollinearLines: false 
+    Verbose: 0
+}
+
+END_PROLOG

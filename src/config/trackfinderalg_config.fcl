@@ -1,0 +1,18 @@
+BEGIN_PROLOG
+
+TrackFinderAlg:
+{
+    MaxDTube: 10 
+    MaxDCluster: 5
+    SingleWireMode: false 
+    MinClusterHits: 3 
+    DCleaning: 2. 
+    ClusterCompletenessCut: 0.8 
+    ClusterAngleCut: 5 
+    CaptureMissingHits: true 
+    MinTrackHits: 3 
+    HitDensityThreshold: 1.5 
+    Verbose: 0
+}
+
+END_PROLOG

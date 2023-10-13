@@ -14,8 +14,42 @@
 #include "TPCLinesParameters.h"
 
 #include <boost/property_tree/info_parser.hpp>
+#include <filesystem>
 #include <fstream>
 #include <map>
+
+namespace fs = std::__fs::filesystem;
+
+std::string FindFile(const std::string& fileName, const char* envVarName="LAMBDAANA_SEARCHPATH") {
+    
+    const char* envVarValue = std::getenv(envVarName);
+
+    std::string fullPath="";
+
+    if (envVarValue!=nullptr) {
+        
+        std::istringstream paths(envVarValue);
+        std::string path;
+        while (std::getline(paths, path, ':')) { 
+            fs::path directoryPath(path);
+
+            if (fs::is_directory(directoryPath)) {
+                for (const auto& entry : fs::directory_iterator(directoryPath)) {
+                    
+                    if (fs::is_regular_file(entry) && entry.path().filename() == fileName) {
+                        fullPath = entry.path().string(); // Return the full path of the file.
+                    }
+                }
+            }
+        }
+    }
+    else{
+        std::cerr << "PATH environmental variable not found." << std::endl;
+        return "";
+    }
+
+    return fullPath;
+}
 
 
 boost::property_tree::ptree GetPropertyTreeFromFileName(std::string filename, std::string blockName){
@@ -46,7 +80,6 @@ boost::property_tree::ptree GetPropertyTreeFromFileName(std::string filename, st
                 inside_block = true;
             }
             else if (inside_prolog && inside_block) {
-                std::cout<<"INSIDE PROLOG\n";
                 
                 if (!line.empty() && line[0] != '#') {  // Ignore empty lines and comments
                     size_t separator_pos = line.find(":");
@@ -57,8 +90,6 @@ boost::property_tree::ptree GetPropertyTreeFromFileName(std::string filename, st
                         // Remove spaces
                         key.erase(std::remove_if(key.begin(), key.end(), ::isspace), key.end());
                         value.erase(std::remove_if(value.begin(), value.end(), ::isspace), value.end());
-
-                        std::cout<<key<<" "<<value<<std::endl;
 
                         // Add the key-value pair to the property tree
                         pt.put(key, value);
@@ -77,212 +108,126 @@ boost::property_tree::ptree GetPropertyTreeFromFileName(std::string filename, st
     return pt;
 }
 
+
 FRAMSPsetType ReadFRANSPset(std::string filename, std::string blockName){
 
-    // Create and fill the parameter set
-    FRAMSPsetType fPsetFRANS;
+    // Create the parameter set
+    FRAMSPsetType fPset;
     
-    
+    // Create the boost property and read all the parameter in the given file
     boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
-
-    fPsetFRANS.ApplyRawSmoothing = pt.get<bool>("ApplyRawSmoothing");
-    fPsetFRANS.ApplySmoothing = pt.get<bool>("ApplySmoothing");
-    fPsetFRANS.ApplyCumulativeSmoothing = pt.get<bool>("ApplyCumulativeSmoothing");
-    fPsetFRANS.NDriftPack = pt.get<unsigned int>("NDriftPack");
-    fPsetFRANS.NWirePack = pt.get<unsigned int>("NWirePack");
-    fPsetFRANS.ExpoAvSmoothPar = pt.get<double>("ExpoAvSmoothPar");
-    fPsetFRANS.UnAvNeighbours = pt.get<int>("UnAvNeighbours");
-    fPsetFRANS.CumulativeCut = pt.get<double>("CumulativeCut");
-    fPsetFRANS.SlidingWindowN = pt.get<int>("SlidingWindowN");
-    fPsetFRANS.NSamplesBeginSlope = pt.get<int>("NSamplesBeginSlope");
-    fPsetFRANS.MaxRadius = pt.get<int>("MaxRadius");
-    fPsetFRANS.Verbose = pt.get<int>("Verbose");
-    fPsetFRANS.CalculateScore = pt.get<bool>("CalculateScore");
-    fPsetFRANS.TMVAFilename = pt.get<std::string>("TMVAFilename");
-    fPsetFRANS.OutputPath = pt.get<std::string>("OutputPath");
-
-    std::cout << "Key1: " << pt.get<bool>("ApplyRawSmoothing") << std::endl;
-
-    std::cout << "Key2: " << pt.get<std::string>("TMVAFilename") << std::endl;
+    // Fill the parameter set
+    fPset.ApplyRawSmoothing = pt.get<bool>("ApplyRawSmoothing");
+    fPset.ApplySmoothing = pt.get<bool>("ApplySmoothing");
+    fPset.ApplyCumulativeSmoothing = pt.get<bool>("ApplyCumulativeSmoothing");
+    fPset.NDriftPack = pt.get<unsigned int>("NDriftPack");
+    fPset.NWirePack = pt.get<unsigned int>("NWirePack");
+    fPset.ExpoAvSmoothPar = pt.get<double>("ExpoAvSmoothPar");
+    fPset.UnAvNeighbours = pt.get<int>("UnAvNeighbours");
+    fPset.CumulativeCut = pt.get<double>("CumulativeCut");
+    fPset.SlidingWindowN = pt.get<int>("SlidingWindowN");
+    fPset.NSamplesBeginSlope = pt.get<int>("NSamplesBeginSlope");
+    fPset.MaxRadius = pt.get<int>("MaxRadius");
+    fPset.Verbose = pt.get<int>("Verbose");
+    fPset.CalculateScore = pt.get<bool>("CalculateScore");
+    fPset.TMVAFilename = pt.get<std::string>("TMVAFilename");
+    fPset.OutputPath = pt.get<std::string>("OutputPath");
     
-    return fPsetFRANS;
-
+    return fPset;
 }
 
 
+TrackFinderAlgorithmPsetType ReadTrackFinderAlgorithmPset(std::string filename, std::string blockName){
 
-FRAMSPsetType ReadFRANSPset2(std::string filename){
-   
-    // Create a property tree to hold the parsed data
-    boost::property_tree::ptree pt;
+    // Create the parameter set
+    TrackFinderAlgorithmPsetType fPset;
+    
+    // Create the boost property and read all the parameter in the given file
+    boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
-    // Create an instance of the struct and populate its fields
-    FRAMSPsetType fPsetFRANS;
-    std::string fFRAMSPsetProlog = "FRANS_";
-
-    // Parse the FHiCL file
-    try {
-        // Open and read the configuration file
-        std::ifstream config_file(filename);
-        const char custom_separator = ':';
-        boost::property_tree::read_info(config_file, pt);
-
-        //boost::property_tree::ptree frans_block = pt.get_child(fFRAMSPsetProlog);
-
-        std::cout<<"IIIIIIIN\n";
-
-        fPsetFRANS.ApplyRawSmoothing = pt.get<bool>(fFRAMSPsetProlog+"ApplyRawSmoothing");
-        std::cout<<"Apply "<< fPsetFRANS.ApplyRawSmoothing<<std::endl;;
-        fPsetFRANS.ApplySmoothing = pt.get<bool>(fFRAMSPsetProlog+"ApplySmoothing");
-        fPsetFRANS.ApplyCumulativeSmoothing = pt.get<bool>(fFRAMSPsetProlog+"ApplyCumulativeSmoothing");
-        fPsetFRANS.NDriftPack = pt.get<unsigned int>(fFRAMSPsetProlog+"NDriftPack");
-        fPsetFRANS.NWirePack = pt.get<unsigned int>(fFRAMSPsetProlog+"NWirePack");
-        fPsetFRANS.ExpoAvSmoothPar = pt.get<double>(fFRAMSPsetProlog+"ExpoAvSmoothPar");
-        fPsetFRANS.UnAvNeighbours = pt.get<int>(fFRAMSPsetProlog+"UnAvNeighbours");
-        fPsetFRANS.CumulativeCut = pt.get<double>(fFRAMSPsetProlog+"CumulativeCut");
-        fPsetFRANS.SlidingWindowN = pt.get<int>(fFRAMSPsetProlog+"SlidingWindowN");
-        fPsetFRANS.NSamplesBeginSlope = pt.get<int>(fFRAMSPsetProlog+"NSamplesBeginSlope");
-        fPsetFRANS.MaxRadius = pt.get<int>(fFRAMSPsetProlog+"MaxRadius");
-        fPsetFRANS.Verbose = pt.get<int>(fFRAMSPsetProlog+"Verbose");
-        fPsetFRANS.CalculateScore = pt.get<bool>(fFRAMSPsetProlog+"CalculateScore");
-        fPsetFRANS.TMVAFilename = pt.get<std::string>(fFRAMSPsetProlog+"TMVAFilename");
-        fPsetFRANS.OutputPath = pt.get<std::string>(fFRAMSPsetProlog+"OutputPath");
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-
-    return fPsetFRANS;
+    // Fill the parameter set
+    fPset.MaxDTube = pt.get<int>("MaxDTube");
+    fPset.MaxDCluster = pt.get<double>("MaxDCluster");
+    fPset.SingleWireMode = pt.get<bool>("SingleWireMode");
+    fPset.MinClusterHits = pt.get<int>("MinClusterHits");
+    fPset.DCleaning = pt.get<double>("DCleaning");
+    fPset.ClusterCompletenessCut = pt.get<double>("ClusterCompletenessCut");
+    fPset.ClusterAngleCut = pt.get<double>("ClusterAngleCut");
+    fPset.CaptureMissingHits = pt.get<bool>("CaptureMissingHits");
+    fPset.MinTrackHits = pt.get<int>("MinTrackHits");
+    fPset.HitDensityThreshold = pt.get<float>("HitDensityThreshold");
+    fPset.Verbose = pt.get<int>("Verbose");
+    
+    
+    return fPset;
 }
 
 
-TrackFinderAlgorithmPsetType ReadTrackFinderAlgorithmPset(std::string filename) {
-    // Create a property tree to hold the parsed data
-    boost::property_tree::ptree pt;
+VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename, std::string blockName){
 
-    // Create an instance of the struct and populate its fields
-    TrackFinderAlgorithmPsetType trackFinderPset;
-    std::string prolog = "TrackFinder:"; // Adjust this as needed
+    // Create the parameter set
+    VertexFinderAlgorithmPsetType fPset;
+    
+    // Create the boost property and read all the parameter in the given file
+    boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
-    // Parse the configuration file
-    try {
-        // Open and read the configuration file
-        std::ifstream config_file(filename);
-        boost::property_tree::read_info(config_file, pt);
-
-        trackFinderPset.MaxDTube = pt.get<int>(prolog + "MaxDTube");
-        trackFinderPset.MaxDCluster = pt.get<double>(prolog + "MaxDCluster");
-        trackFinderPset.SingleWireMode = pt.get<bool>(prolog + "SingleWireMode");
-        trackFinderPset.MinClusterHits = pt.get<int>(prolog + "MinClusterHits");
-        trackFinderPset.DCleaning = pt.get<double>(prolog + "DCleaning");
-        trackFinderPset.ClusterCompletenessCut = pt.get<double>(prolog + "ClusterCompletenessCut");
-        trackFinderPset.ClusterAngleCut = pt.get<double>(prolog + "ClusterAngleCut");
-        trackFinderPset.CaptureMissingHits = pt.get<bool>(prolog + "CaptureMissingHits");
-        trackFinderPset.MinTrackHits = pt.get<int>(prolog + "MinTrackHits");
-        trackFinderPset.HitDensityThreshold = pt.get<float>(prolog + "HitDensityThreshold");
-        trackFinderPset.Verbose = pt.get<int>(prolog + "Verbose");
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-
-    return trackFinderPset;
+    // Fill the parameter set
+    fPset.MaxDistToEdge = pt.get<double>("MaxDistToEdge");
+    fPset.RefineVertexIntersection = pt.get<bool>("RefineVertexIntersection");
+    fPset.UseEdgesDiscard = pt.get<bool>("UseEdgesDiscard");
+    fPset.MaxTrackFractionInMain = pt.get<float>("MaxTrackFractionInMain");
+    fPset.DecideMainTrack = pt.get<bool>("DecideMainTrack");
+    fPset.AddCollinearLines = pt.get<bool>("AddCollinearLines");
+    fPset.Verbose = pt.get<int>("Verbose");
+    
+    
+    return fPset;
 }
 
+HoughAlgorithmPsetType ReadHoughAlgorithmPset(std::string filename, std::string blockName){
 
-VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename) {
-    // Create a property tree to hold the parsed data
-    boost::property_tree::ptree pt;
+    // Create the parameter set
+    HoughAlgorithmPsetType fPset;
+    
+    // Create the boost property and read all the parameter in the given file
+    boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
-    // Create an instance of the struct and populate its fields
-    VertexFinderAlgorithmPsetType vertexFinderPset;
-    std::string prolog = "VertexFinder:"; // Adjust this as needed
-
-    // Parse the configuration file
-    try {
-        // Open and read the configuration file
-        std::ifstream config_file(filename);
-        boost::property_tree::read_info(config_file, pt);
-
-        vertexFinderPset.MaxDistToEdge = pt.get<double>(prolog + "MaxDistToEdge");
-        vertexFinderPset.RefineVertexIntersection = pt.get<bool>(prolog + "RefineVertexIntersection");
-        vertexFinderPset.UseEdgesDiscard = pt.get<bool>(prolog + "UseEdgesDiscard");
-        vertexFinderPset.MaxTrackFractionInMain = pt.get<float>(prolog + "MaxTrackFractionInMain");
-        vertexFinderPset.DecideMainTrack = pt.get<bool>(prolog + "DecideMainTrack");
-        vertexFinderPset.AddCollinearLines = pt.get<bool>(prolog + "AddCollinearLines");
-        vertexFinderPset.Verbose = pt.get<int>(prolog + "Verbose");
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-
-    return vertexFinderPset;
+    // Fill the parameter set
+    fPset.MaxRadiusLineHypothesis = pt.get<double>("MaxRadiusLineHypothesis");
+    fPset.ThetaRes = pt.get<double>("ThetaRes");
+    fPset.MaxDistanceTube = pt.get<double>("MaxDistanceTube");
+    fPset.MinHoughHits = pt.get<int>("MinHoughHits");
+    fPset.Verbose = pt.get<int>("Verbose");
+    
+    
+    return fPset;
 }
 
+TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string blockName){
 
+    // Create the parameter set
+    TPCLinesAlgoPsetType fPset;
+    
+    // Create the boost property and read all the parameter in the given file
+    boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
-HoughAlgorithmPsetType ReadHoughAlgorithmPset(std::string filename) {
-    // Create a property tree to hold the parsed data
-    boost::property_tree::ptree pt;
-
-    // Create an instance of the struct and populate its fields
-    HoughAlgorithmPsetType houghAlgorithmPset;
-    std::string prolog = "Hough:"; // Adjust this as needed
-
-    // Parse the configuration file
-    try {
-        // Open and read the configuration file
-        std::ifstream config_file(filename);
-        boost::property_tree::read_info(config_file, pt);
-
-        houghAlgorithmPset.MaxRadiusLineHypothesis = pt.get<double>(prolog + "MaxRadiusLineHypothesis");
-        houghAlgorithmPset.ThetaRes = pt.get<double>(prolog + "ThetaRes");
-        houghAlgorithmPset.MaxDistanceTube = pt.get<double>(prolog + "MaxDistanceTube");
-        houghAlgorithmPset.MinHoughHits = pt.get<int>(prolog + "MinHoughHits");
-        houghAlgorithmPset.Verbose = pt.get<int>(prolog + "Verbose");
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-
-    return houghAlgorithmPset;
+    // Fill the parameter set
+    fPset.MaxRadius = pt.get<double>("MaxRadius");
+    fPset.DriftConversion = pt.get<double>("DriftConversion");
+    fPset.MaxHoughTracks = pt.get<int>("MaxHoughTracks");
+    fPset.MinTrackHits = pt.get<int>("MinTrackHits");
+    fPset.RemoveIsolatedHits = pt.get<bool>("RemoveIsolatedHits");
+    fPset.MaxNeighbourDistance = pt.get<double>("MaxNeighbourDistance");
+    fPset.MinNeighboursHits = pt.get<int>("MinNeighboursHits");
+    fPset.VertexAlgorithm = pt.get<int>("VertexAlgorithm");
+    fPset.View = pt.get<std::string>("View");
+    fPset.OutputPath = pt.get<std::string>("OutputPath");
+    fPset.Verbose = pt.get<int>("Verbose");
+    fPset.DebugMode = pt.get<int>("DebugMode");
+    
+    
+    return fPset;
 }
-
-
-TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename) {
-    // Create a property tree to hold the parsed data
-    boost::property_tree::ptree pt;
-
-    // Create an instance of the struct and populate its fields
-    TPCLinesAlgoPsetType tpcLinesAlgoPset;
-    std::string prolog = "TPCLines:"; // Adjust this as needed
-
-    // Parse the configuration file
-    try {
-        // Open and read the configuration file
-        std::ifstream config_file(filename);
-        boost::property_tree::read_info(config_file, pt);
-
-        tpcLinesAlgoPset.MaxRadius = pt.get<double>(prolog + "MaxRadius");
-        tpcLinesAlgoPset.DriftConversion = pt.get<double>(prolog + "DriftConversion");
-        tpcLinesAlgoPset.MaxHoughTracks = pt.get<int>(prolog + "MaxHoughTracks");
-        tpcLinesAlgoPset.MinTrackHits = pt.get<int>(prolog + "MinTrackHits");
-        tpcLinesAlgoPset.RemoveIsolatedHits = pt.get<bool>(prolog + "RemoveIsolatedHits");
-        tpcLinesAlgoPset.MaxNeighbourDistance = pt.get<double>(prolog + "MaxNeighbourDistance");
-        tpcLinesAlgoPset.MinNeighboursHits = pt.get<int>(prolog + "MinNeighboursHits");
-        tpcLinesAlgoPset.VertexAlgorithm = pt.get<int>(prolog + "VertexAlgorithm");
-        tpcLinesAlgoPset.View = pt.get<std::string>(prolog + "View");
-        tpcLinesAlgoPset.OutputPath = pt.get<std::string>(prolog + "OutputPath");
-        tpcLinesAlgoPset.Verbose = pt.get<int>(prolog + "Verbose");
-        tpcLinesAlgoPset.DebugMode = pt.get<int>(prolog + "DebugMode");
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-    }
-
-    return tpcLinesAlgoPset;
-}
-
 
 #endif // TPC_LINES_PARAMETERS_H

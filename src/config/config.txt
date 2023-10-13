@@ -1,27 +1,3 @@
-BEGIN_PROLOG
-
-ChargeDensity:
-{
-    ApplyRawSmoothing: true
-    ApplySmoothing: false
-    ApplyCumulativeSmoothing: false
-    NDriftPack: 4
-    NWirePack: 1
-    ExpoAvSmoothPar: 0.3
-    UnAvNeighbours: 1
-    CumulativeCut: 0.8
-    SlidingWindowN: 3
-    NSamplesBeginSlope: 3
-    MaxRadius: 70
-    DebugMode: false
-    CalculateScore: true
-    TMVAFilename: FRAMSSelectionTMVA_BDT.weights.xml
-    OutputPath: OutputLambdaAna
-    Verbose: 0
-}
-
-END_PROLOG
-
 // ---- FRANS parameters
 FRANS_ApplyRawSmoothing: true
 FRANS_ApplySmoothing false

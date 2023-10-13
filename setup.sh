@@ -20,3 +20,6 @@ alias runtpclines='$LAMBDAANA_BUILD/src/RunAlgoTPCLines'
 alias runfrans='$LAMBDAANA_BUILD/src/RunAlgoFRANS'
 #alias runLAMBDAANA='sh $LAMBDAANA_DIR/runLAMBDAANA.sh'
 #alias runFRANS='sh $LAMBDAANA_DIR/runFRANS.sh'
+
+#Search Paths
+export LAMBDAANA_SEARCHPATH=$LAMBDAANA_DIR/scripts:.:$LAMBDAANA_DIR/src/config/

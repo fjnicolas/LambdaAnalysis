@@ -94,17 +94,17 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
 
     // ---- FRAMS parameters ----------------------------------------
-    FRAMSPsetType fPsetFRANS = ReadFRANSPset(ConfPsetPath, "ChargeDensity:");
+    FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
-    // ---- TPCLines parameter ----------------------------------------
-    // Parameter sets
-    TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset(ConfPsetPath);
+    fPsetFRANS.TMVAFilename = FindFile("FRAMSSelectionTMVA_BDT.weights.xml");
+    // ---- TPCLines parameters ----------------------------------------
+    TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset( FindFile("trackfinderalg_config.fcl"), "TrackFinderAlg:");
     fPsetTrackFinder.Verbose = Debug;
-    HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset(ConfPsetPath);
+    HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset( FindFile("houghalg_config.fcl"), "HoughAlg:");
     fPsetHough.Verbose = Debug;
-    VertexFinderAlgorithmPsetType fPsetVertexFinder = ReadVertexFinderAlgorithmPset(ConfPsetPath);
+    VertexFinderAlgorithmPsetType fPsetVertexFinder = ReadVertexFinderAlgorithmPset( FindFile("vertexfinderalg_config.fcl"), "VertexFinderAlg:");
     fPsetVertexFinder.Verbose = Debug;
-    TPCLinesAlgoPsetType fPsetAnaView = ReadTPCLinesAlgoPset(ConfPsetPath);
+    TPCLinesAlgoPsetType fPsetAnaView = ReadTPCLinesAlgoPset( FindFile("tpclinesalg_config.fcl"), "TPCLinesAlg:");
     fPsetAnaView.Verbose = Debug;
     fPsetAnaView.DebugMode = DebugMode;
     fPsetAnaView.HoughAlgorithmPset = fPsetHough;
@@ -114,13 +114,13 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // View to use
     std::string fView = fPsetAnaView.View;
 
-    
     // Define the program control variables
     int fNEv = n;
     int fEv = event;
     int fSubRun = sr;
     int fNEvSkip = nskip;
     int nEvents=0;
+
 
     // output ROOT files with analysis results
     TFile* anaOutputFile = new TFile("LambdaAnaOutput.root", "RECREATE");    

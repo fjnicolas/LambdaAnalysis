@@ -36,14 +36,14 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // Set batch mode
     if(Debug==0) gROOT->SetBatch(true);
 
-    // Parameter sets
-    TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset(ConfPsetPath);
+    // ---- TPCLines parameters ----------------------------------------
+    TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset( FindFile("trackfinderalg_config.fcl"), "TrackFinderAlg:");
     fPsetTrackFinder.Verbose = Debug;
-    HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset(ConfPsetPath);
+    HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset( FindFile("houghalg_config.fcl"), "HoughAlg:");
     fPsetHough.Verbose = Debug;
-    VertexFinderAlgorithmPsetType fPsetVertexFinder = ReadVertexFinderAlgorithmPset(ConfPsetPath);
+    VertexFinderAlgorithmPsetType fPsetVertexFinder = ReadVertexFinderAlgorithmPset( FindFile("vertexfinderalg_config.fcl"), "VertexFinderAlg:");
     fPsetVertexFinder.Verbose = Debug;
-    TPCLinesAlgoPsetType fPsetAnaView = ReadTPCLinesAlgoPset(ConfPsetPath);
+    TPCLinesAlgoPsetType fPsetAnaView = ReadTPCLinesAlgoPset( FindFile("tpclinesalg_config.fcl"), "TPCLinesAlg:");
     fPsetAnaView.Verbose = Debug;
     fPsetAnaView.DebugMode = DebugMode;
     fPsetAnaView.HoughAlgorithmPset = fPsetHough;
