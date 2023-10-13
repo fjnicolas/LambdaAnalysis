@@ -10,11 +10,27 @@
 
 class FRANSTTree {
 public:
+    FRANSTTree()
+        : fTree(nullptr)
+    {
+    }
+
+
     FRANSTTree(TTree* tree)
         : fTree(tree)
     {
         InitializeTree();
     }
+
+    void SetTree(TTree* tree)
+    {
+        fTree = tree;
+        InitializeTree();
+    }
+
+
+
+
 
     void FillData(int view, int runID, int subRunID, int eventID, int isSignal,
                   double delta, double eta, double fitScore,

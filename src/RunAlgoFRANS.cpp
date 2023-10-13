@@ -89,7 +89,9 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     if(vertexOption==2) tree_dirname = "framsMine/";
     std::string tree_name = "FRAMSTree";
     TTree* fTree = new TTree((tree_name).c_str(), "FRAMS Output Tree");
+    //FRANSTTree myTree(fTree);
     FRANSTTree myTree(fTree);
+
 
 
     // Define FRANS LINES ALGORITHM
