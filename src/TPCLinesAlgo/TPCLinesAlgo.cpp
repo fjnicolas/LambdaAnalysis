@@ -34,7 +34,7 @@ void TPCLinesAlgo::Display(std::string labelEv, std::string label){
     return;
 }
 
-std::string TPCLinesAlgo::GetBestView(std::vector<int> *_View, std::vector<double> *_Chi2){
+int TPCLinesAlgo::GetBestView(std::vector<int> *_View, std::vector<double> *_Chi2){
 
         std::map<int, double> meanChi2Map;
 
@@ -63,25 +63,17 @@ std::string TPCLinesAlgo::GetBestView(std::vector<int> *_View, std::vector<doubl
                     minChi2=meanChi2;
                     minChi2View=viewValue;
                 }
-                std::cout<<" View: "<<viewValue<<" MeanChi2: "<<meanChi2<<std::endl;
-
             }
 
         }
 
-        std::cout<<" MinChi2View: "<<minChi2View<<std::endl;
-        if(minChi2View==0)
-            return "U";
-        else if(minChi2View==1)
-            return "V";
-        else
-            return "C";
+        return minChi2View;
 }
 
 
 //----------------------------------------------------------------------
 // Set the input hits
-bool TPCLinesAlgo::SetHitList(std::string view,
+bool TPCLinesAlgo::SetHitList(int view,
                             std::vector<int>& vertex,
                             std::vector<int>& vertexTrue,
                             std::vector<int> *_X,
@@ -90,6 +82,7 @@ bool TPCLinesAlgo::SetHitList(std::string view,
                             std::vector<double> *_Wi,
                             std::vector<double> *_ST,
                             std::vector<double> *_ET,
+                            std::vector<int> *_View,
                             std::vector<double> *_Chi2,
                             std::string eventLabel)
 {   
@@ -101,26 +94,26 @@ bool TPCLinesAlgo::SetHitList(std::string view,
 
     // Define the vertex
     double vertexX = vertex[2];
-    if (view == "U0" || view == "U1") vertexX = vertex[0];
-    if (view == "V0" || view == "V1") vertexX = vertex[1];
+    if (view == 0) vertexX = vertex[0];
+    if (view == 1) vertexX = vertex[1];
     double vertexY = vertex[3] / fTPCLinesPset.DriftConversion;
     
     // Define the true vertex
     double vertexXTrue = vertexTrue[2];
-    if (view == "U0" || view == "U1") vertexXTrue = vertexTrue[0];
-    if (view == "V0" || view == "V1") vertexXTrue = vertexTrue[1];
+    if (view == 0) vertexXTrue = vertexTrue[0];
+    if (view == 1) vertexXTrue = vertexTrue[1];
     double vertexYTrue = vertexTrue[3] / fTPCLinesPset.DriftConversion;
     if(fTPCLinesPset.Verbose>=2) std::cout << "  ** Vertex XY: " << vertexX << " " << vertexY << std::endl;
     
     if (vertexX != -1){
 
         // Get hits in the selected plane
-        std::vector<double> filteredX, filteredY, filteredInt, filteredST, filteredET, filteredWi;
+        std::vector<double> filteredX, filteredY, filteredInt, filteredST, filteredET, filteredWi, filteredChi2;
         for (int i = 0; i < nTotalHits; i++) {
             int x = _X->at(i);
             
             // filter channels for the view
-            if ( x > fChB[view][0] && x <= fChB[view][1]) {
+            if(_View->at(i)==view){
                 double y = _Y->at(i)/fTPCLinesPset.DriftConversion;
                 
                 // filter distance to vertex
@@ -132,6 +125,7 @@ bool TPCLinesAlgo::SetHitList(std::string view,
                     filteredWi.push_back( _Wi->at(i) / fTPCLinesPset.DriftConversion );
                     filteredST.push_back( _ST->at(i) / fTPCLinesPset.DriftConversion );
                     filteredET.push_back( _ET->at(i) / fTPCLinesPset.DriftConversion );
+                    filteredChi2.push_back( _Chi2->at(i) );
                 }
             }
         }
@@ -145,7 +139,7 @@ bool TPCLinesAlgo::SetHitList(std::string view,
 
             
             for (size_t i = 0; i < filteredX.size(); i++) {
-                SHit hit(i, filteredX[i] - minX, filteredY[i] - minY, filteredWi[i], filteredInt[i], filteredST[i] - minY, filteredET[i] - minY);
+                SHit hit(i, filteredX[i] - minX, filteredY[i] - minY, filteredWi[i], filteredInt[i], filteredST[i] - minY, filteredET[i] - minY, filteredChi2[i]);
                 fHitList.push_back(hit);
             }
             fNTotalHits = fHitList.size();
@@ -156,8 +150,8 @@ bool TPCLinesAlgo::SetHitList(std::string view,
             vertexXTrue = vertexXTrue - minX;
             vertexYTrue = vertexYTrue - minY;
 
-            fVertex = SVertex(SPoint(vertexX, vertexY), view);
-            fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), view);
+            fVertex = SVertex(SPoint(vertexX, vertexY), std::to_string(view));
+            fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), std::to_string(view));
             fMaxX = maxX - minX;
             fMinX = minX;
             fMinY = minY;

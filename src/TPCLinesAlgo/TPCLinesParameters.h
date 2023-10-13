@@ -171,7 +171,7 @@ struct TPCLinesAlgoPsetType{
     double MaxNeighbourDistance;
     int MinNeighboursHits;
     int VertexAlgorithm;
-    std::string View;
+    int View;
     std::string OutputPath;
     int Verbose;
     int DebugMode;
@@ -191,7 +191,7 @@ struct TPCLinesAlgoPsetType{
         double _maxNeighbourDistance,
         int _minNeighboursHits,
         int _vertexAlgorithm,
-        std::string _view,
+        int _view,
         std::string _outputPath,
         int _verbose,
         int _debugMode,

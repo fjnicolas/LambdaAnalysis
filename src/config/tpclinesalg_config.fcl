@@ -10,7 +10,7 @@ TPCLinesAlg:
     MaxNeighbourDistance: 2 
     MinNeighboursHits: 2 
     VertexAlgorithm: 1
-    View: C 
+    View: 2
     OutputPath: OutputLambdaAna
     Verbose: 0
     DebugMode: -1 

@@ -62,9 +62,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // output ROOT files with analysis results
     TFile* anaOutputFile = new TFile("LambdaAnaOutput.root", "RECREATE");
 
-    // View to use
-    std::string fView = fPsetAnaView.View;
-
 
     // ------------------------------------------------------------------ 
     // Define the program control variables
@@ -128,15 +125,11 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
 
 
-            // Assing the view and TPC
-            std::string view;
-            if(fView=="Best"){
-                std::string bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
-                std::cout<<"  Using best view: "<<bestView+std::to_string(TPC)<<std::endl;
-                view = bestView+std::to_string(TPC);
-            }    
-            else{
-                view = fView+std::to_string(TPC);
+            int view = fPsetAnaView.View;
+            if(fPsetAnaView.View==-1){ // use best view
+                int bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
+                std::cout<<"  Using best view: "<<bestView<<" TPC="<<std::to_string(TPC)<<std::endl;
+                view = bestView;
             }
             
             // Set the hits
@@ -147,6 +140,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                                     treeReader.hitsRMS,
                                     treeReader.hitsStartT, 
                                     treeReader.hitsEndT,
+                                    treeReader.hitsView,
                                     treeReader.hitsChi2,
                                     "");
             

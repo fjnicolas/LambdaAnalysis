@@ -22,13 +22,16 @@
 
 
 std::vector<SHit> GetFRANSHitsView(
-    std::string view,
+    int view,
+    int tpc,
     std::vector<int> *_X,
     std::vector<double> *_Y,
     std::vector<double> *_Int,
     std::vector<double> *_Wi,
     std::vector<double> *_ST,
-    std::vector<double> *_ET)
+    std::vector<double> *_ET,
+    std::vector<int> *_View,
+    std::vector<double> *_Chi2)
 {
 
     // Channel boundaries
@@ -41,18 +44,16 @@ std::vector<SHit> GetFRANSHitsView(
         {"C1", {9600, 11263}}
     };
 
-    // reset variables
+    // set variables
     std::vector<SHit> hitList;
-
     int nTotalHits = _X->size();
 
+    // loop over the hits
     for (int i = 0; i < nTotalHits; i++) {
 
-        // filter channels for the view
-        int x = _X->at(i);        
-        
-        if ( x > fChB[view][0] && x <= fChB[view][1]) {
-            SHit hit(-1, _X->at(i), _Y->at(i), _Wi->at(i), _Int->at(i), _ST->at(i), _ET->at(i));
+        // filter channels for the view        
+        if ( _View->at(i)==view ) {
+            SHit hit(-1, _X->at(i), _Y->at(i), _Wi->at(i), _Int->at(i), _ST->at(i), _ET->at(i), _Chi2->at(i));
             hitList.push_back(hit);
         }
     }
@@ -112,9 +113,6 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     fPsetAnaView.HoughAlgorithmPset = fPsetHough;
     fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
     fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
-
-    // View to use
-    std::string fView = fPsetAnaView.View;
 
     // Define the program control variables
     int fNEv = n;
@@ -210,39 +208,39 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             }
 
             // Assing the view and TPC
-            std::string view;
-            if(fView=="Best"){
-                std::string bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
-                std::cout<<"  Using best view: "<<bestView+std::to_string(TPC)<<std::endl;
-                view = bestView+std::to_string(TPC);
-            }    
-            else{
-                view = fView+std::to_string(TPC);
+            int view = fPsetAnaView.View;
+            if(fPsetAnaView.View==-1){ // use best view
+                int bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
+                std::cout<<"  Using best view: "<<bestView<<" TPC="<<std::to_string(TPC)<<std::endl;
+                view = bestView;
             }
             
             // Set the hits
             std::vector<SHit> hitList = GetFRANSHitsView(view,
+                                                        TPC,
                                                         treeReader.hitsChannel,
                                                         treeReader.hitsPeakTime,
                                                         treeReader.hitsIntegral, 
                                                         treeReader.hitsRMS,
                                                         treeReader.hitsStartT, 
-                                                        treeReader.hitsEndT);
+                                                        treeReader.hitsEndT,
+                                                        treeReader.hitsView,
+                                                        treeReader.hitsChi2);
                                         
             // Set the vertex
             // true
             double vertexXTrue = VertexUVYT[2];
-            if (view == "U0" || view == "U1") vertexXTrue = VertexUVYT[0];
-            if (view == "V0" || view == "V1") vertexXTrue = VertexUVYT[1];
+            if ( view == 0 ) vertexXTrue = VertexUVYT[0];
+            if ( view == 1 ) vertexXTrue = VertexUVYT[1];
             double vertexYTrue = VertexUVYT[3];
-            SVertex fVertexTrue(SPoint(vertexXTrue, vertexYTrue), view);
+            SVertex fVertexTrue(SPoint(vertexXTrue, vertexYTrue), std::to_string(view));
             
             // reco
             double vertexXReco = RecoVertexUVYT[2];
-            if (view == "U0" || view == "U1") vertexXReco = RecoVertexUVYT[0];
-            if (view == "V0" || view == "V1") vertexXReco = RecoVertexUVYT[1];
+            if ( view == 0 ) vertexXReco = RecoVertexUVYT[0];
+            if ( view == 1 ) vertexXReco = RecoVertexUVYT[1];
             double vertexYReco = RecoVertexUVYT[3];
-            SVertex fVertexReco(SPoint(vertexXReco, vertexYReco), view);
+            SVertex fVertexReco(SPoint(vertexXReco, vertexYReco), std::to_string(view));
 
             SVertex fVertexMine;
             
@@ -256,6 +254,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                                         treeReader.hitsRMS,
                                         treeReader.hitsStartT, 
                                         treeReader.hitsEndT,
+                                        treeReader.hitsView,
                                         treeReader.hitsChi2,
                                         "");
 
@@ -295,14 +294,14 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             std::string outputLabel2 = (_FRAMSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
 
                         
-            TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+view).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
+            TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
             _FRAMSAlgo.Display(cDisplay);
 
             // Save TCanvas and pdf
             TImage *img = TImage::Create();
             img->FromPad(cDisplay);
             fransPlotsDirectory->cd();
-            img->Write( ("image/"+outputLabel+"_"+ev.Label()+"_vw"+view+".pdf").c_str() );
+            img->Write( ("image/"+outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)+".pdf").c_str() );
             cDisplay->Write();
 
             delete cDisplay;
@@ -347,16 +346,3 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
-
-
-
-/*_FRAMSAlgo.Fill(hitList, fVertexReco);
-double scoreReco = _FRAMSAlgo.Score();
-_FRAMSAlgo.Fill(hitList, fVertexTrue);
-double scoreTrue = _FRAMSAlgo.Score();
-_FRAMSAlgo.Fill(hitList, fVertexMine);
-double scoreMine = _FRAMSAlgo.Score();
-std::cout<<"JUJU "<<_TPCLinesAlgo.GetMainVertex().X()<<" "<<_TPCLinesAlgo.ShiftX()<<std::endl;
-std::cout<<" FRANS Reco vertex (PANDORA) Score="<<scoreReco<<" Vertex="<<fVertexReco;            
-std::cout<<" FRANS True vertex (PANDORA) "<<scoreTrue<<" Vertex="<<fVertexTrue;
-std::cout<<" FRANS Using my fabolous vertex "<<scoreMine<<" Vertex="<<fVertexMine;*/

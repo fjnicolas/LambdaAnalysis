@@ -39,16 +39,6 @@ class TPCLinesAlgo {
         // Algorithm parameters
         TPCLinesAlgoPsetType fTPCLinesPset;
 
-        // Channel boundaries
-        std::map<std::string, std::vector<int>> fChB =  {
-            {"U0", {0, 1983}},
-            {"V0", {1984, 3967}},
-            {"C0", {3968, 5631}},
-            {"U1", {5632, 7631}},
-            {"V1", {7632, 9599}},
-            {"C1", {9600, 11263}}
-        };
-
         // Input variables
         size_t fNTotalHits;
         std::vector<SHit> fHitList;
@@ -88,7 +78,7 @@ class TPCLinesAlgo {
         TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset);
         
         // Function to set the input variables
-        bool SetHitList(std::string view,
+        bool SetHitList(int view,
                         std::vector<int>& vertex,
                         std::vector<int>& vertexTrue,
                         std::vector<int> *_X,
@@ -97,6 +87,7 @@ class TPCLinesAlgo {
                         std::vector<double> *_Wi,
                         std::vector<double> *_ST,
                         std::vector<double> *_ET,
+                        std::vector<int> *_View,
                         std::vector<double> *_Chi2,
                         std::string eventLabel="");
         
@@ -107,7 +98,7 @@ class TPCLinesAlgo {
         double GetAverageHitDensity();
 
         // Function to get the best view
-        std::string GetBestView(std::vector<int> *_Ch, std::vector<double> *_Chi2);
+        int GetBestView(std::vector<int> *_Ch, std::vector<double> *_Chi2);
 
         int ShiftX(){ return fMinX; };
         double ShiftY(){ return fMinY; };

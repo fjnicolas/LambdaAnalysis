@@ -222,7 +222,7 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string bloc
     fPset.MaxNeighbourDistance = pt.get<double>("MaxNeighbourDistance");
     fPset.MinNeighboursHits = pt.get<int>("MinNeighboursHits");
     fPset.VertexAlgorithm = pt.get<int>("VertexAlgorithm");
-    fPset.View = pt.get<std::string>("View");
+    fPset.View = pt.get<int>("View");
     fPset.OutputPath = pt.get<std::string>("OutputPath");
     fPset.Verbose = pt.get<int>("Verbose");
     fPset.DebugMode = pt.get<int>("DebugMode");
