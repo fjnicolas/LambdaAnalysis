@@ -110,7 +110,7 @@ bool TPCLinesAlgo::SetHitList(int view,
 
         // Get hits in the ROI circle around the vertex
         // Hits are already filtered by plane type
-        for (int i = 0; i < hits.size(); i++) { 
+        for (size_t i = 0; i < hits.size(); i++) { 
             
             double x = hits[i].X();
             double y = hits[i].Y();
@@ -122,7 +122,7 @@ bool TPCLinesAlgo::SetHitList(int view,
             }
         }
 
-        if (fHitList.size() > fTPCLinesPset.MinTrackHits) {
+        if ( (int)fHitList.size() > fTPCLinesPset.MinTrackHits) {
             
             // Shift hits to have origin in (0,0), leave 3 ticks under/overflow
             double minX = std::min_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.X()<h2.X();})->X() - 3;
