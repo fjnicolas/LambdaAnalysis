@@ -230,7 +230,8 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             _FRAMSAlgoPANDORA.Fill(hitList, fVertexReco);
             _FRAMSAlgo.Fill(hitList, fVertex);
 
-            myTree.FillData(2, treeReader.runID, treeReader.subrunID, treeReader.eventID, isSignal,
+            myTree.FillDataMC(treeReader.runID, treeReader.subrunID, treeReader.eventID, 0, 0, 0, 0, isSignal, 0, 0, 0);
+            myTree.FillData(2,
                             _FRAMSAlgo.Delta(), _FRAMSAlgo.Eta(), _FRAMSAlgo.FitScore(), _FRAMSAlgo.Alpha(),
                             _FRAMSAlgo.Omega(), _FRAMSAlgo.Tau(), _FRAMSAlgo.Iota(),
                             recoEvent.GetNOrigins(), recoEvent.GetNOriginsMult(1), recoEvent.GetNOriginsMult(2), recoEvent.GetNOriginsMultGt(3), recoEvent.HitDensity() );

@@ -30,26 +30,26 @@ public:
 
 
 
-
-
-    void FillData(int view, int runID, int subRunID, int eventID, int isSignal,
-                  double delta, double eta, double fitScore,
-                  double alpha, double omega, double tau, double iota,
-                  int nOrigins=0, int nOriginsM1=0, int nOriginsM2=0, int nOriginsM3=0, double hitDensity=0)
-    {
+    void FillDataMC(int runID, int subRunID, int eventID, int nnuints, int inttype,  int intmode, double gap, int issignal, double keproton, double kepion, double kelambda){
         fRunID = runID;
         fSubRunID = subRunID;
         fEventID = eventID;
 
-        fNNuInts = 0;
-        fIntType = -1;
-        fIntMode = -1;
-        fGap = -1.;
-        fIsSignal = isSignal;
-        fProtonKE=0;
-        fPionKE=0;
-        fLambdaKE=0;
-        
+        fNNuInts = nnuints;
+        fIntType = inttype;
+        fIntMode = intmode;
+        fGap = gap;
+        fIsSignal = issignal;
+        fProtonKE=keproton;
+        fPionKE=kepion;
+        fLambdaKE=kelambda;
+    }
+
+    void FillData(int view,
+                  double delta, double eta, double fitScore,
+                  double alpha, double omega, double tau, double iota,
+                  int nOrigins=0, int nOriginsM1=0, int nOriginsM2=0, int nOriginsM3=0, double hitDensity=0)
+    { 
         if(view==0){
             fDelta_U = delta;
             fEta_U = eta;
