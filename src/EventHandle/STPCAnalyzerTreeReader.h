@@ -16,8 +16,24 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TPCSimpleHits.h"
 
 
+// Class to get the hits in a specific view
+std::vector<SHit> GetHitsInView(
+                    int view,
+                    std::vector<int> *_X,
+                    std::vector<double> *_Y,
+                    std::vector<double> *_Int,
+                    std::vector<double> *_Wi,
+                    std::vector<double> *_ST,
+                    std::vector<double> *_ET,
+                    std::vector<int> *_View,
+                    std::vector<double> *_Chi2);
+
+
+
+// Class to read the TPCAnalyzer TTree
 class MyTPCTreeReader {
 private:
     TFile *file;    // Pointer to the ROOT file containing the TTree

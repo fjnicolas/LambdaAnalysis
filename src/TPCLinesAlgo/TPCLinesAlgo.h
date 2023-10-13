@@ -79,17 +79,9 @@ class TPCLinesAlgo {
         
         // Function to set the input variables
         bool SetHitList(int view,
-                        std::vector<int>& vertex,
-                        std::vector<int>& vertexTrue,
-                        std::vector<int> *_X,
-                        std::vector<double> *_Y,
-                        std::vector<double> *_Int,
-                        std::vector<double> *_Wi,
-                        std::vector<double> *_ST,
-                        std::vector<double> *_ET,
-                        std::vector<int> *_View,
-                        std::vector<double> *_Chi2,
-                        std::string eventLabel="");
+                            std::vector<int>& vertex,
+                            std::vector<int>& vertexTrue,
+                            std::vector<SHit> hits);
         
         // Function to analyze the view
         void AnaView(std::string eventLabel);

@@ -4,6 +4,7 @@
 #include "TString.h"
 #include <TApplication.h>
 #include "TSystem.h"
+#include "TImage.h"
 
 // Objects
 #include "CommandLineParser.h"
@@ -17,40 +18,6 @@
 #include "ChargeDensity.h"
 #include "ChargeDensityPset.h"
 #include "FRANSTTreeHandle.h"
-
-#include "TImage.h"
-
-
-std::vector<SHit> GetFRANSHitsView(
-    int view,
-    int tpc,
-    std::vector<int> *_X,
-    std::vector<double> *_Y,
-    std::vector<double> *_Int,
-    std::vector<double> *_Wi,
-    std::vector<double> *_ST,
-    std::vector<double> *_ET,
-    std::vector<int> *_View,
-    std::vector<double> *_Chi2)
-{
-
-    // set variables
-    std::vector<SHit> hitList;
-    int nTotalHits = _X->size();
-
-    // loop over the hits
-    for (int i = 0; i < nTotalHits; i++) {
-
-        // filter channels for the view        
-        if ( _View->at(i)==view ) {
-            SHit hit(-1, _X->at(i), _Y->at(i), _Wi->at(i), _Int->at(i), _ST->at(i), _ET->at(i), _Chi2->at(i));
-            hitList.push_back(hit);
-        }
-    }
-
-    return hitList;
-
-}
 
 
 void RunAlgoFRANS(const CommandLineParser& parser)
@@ -206,16 +173,15 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             }
             
             // Set the hits
-            std::vector<SHit> hitList = GetFRANSHitsView(view,
-                                                        TPC,
-                                                        treeReader.hitsChannel,
-                                                        treeReader.hitsPeakTime,
-                                                        treeReader.hitsIntegral, 
-                                                        treeReader.hitsRMS,
-                                                        treeReader.hitsStartT, 
-                                                        treeReader.hitsEndT,
-                                                        treeReader.hitsView,
-                                                        treeReader.hitsChi2);
+            std::vector<SHit> hitList = GetHitsInView(view,
+                                                    treeReader.hitsChannel,
+                                                    treeReader.hitsPeakTime,
+                                                    treeReader.hitsIntegral, 
+                                                    treeReader.hitsRMS,
+                                                    treeReader.hitsStartT, 
+                                                    treeReader.hitsEndT,
+                                                    treeReader.hitsView,
+                                                    treeReader.hitsChi2);
                                         
             // Set the vertex
             // true
@@ -237,16 +203,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             SEvent recoEvent;
             if(vertexOption==2){
                 // Set the hits
-                bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
-                                        treeReader.hitsChannel,
-                                        treeReader.hitsPeakTime,
-                                        treeReader.hitsIntegral, 
-                                        treeReader.hitsRMS,
-                                        treeReader.hitsStartT, 
-                                        treeReader.hitsEndT,
-                                        treeReader.hitsView,
-                                        treeReader.hitsChi2,
-                                        "");
+                bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, hitList);
 
                 if(filled){
                     std::cout<<" Analyzing TPCLines\n";

@@ -280,7 +280,6 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex){
 
   // Get growing start point (closest hit to the vertex channel and TT)
   for(auto &hit: hitsVect){
-    //if(hit->WireID().TPC!=fTPC or hit->WireID().Plane==fView) continue
     Hits.push_back(hit);
     double d = GetDistance(hit.X(), hit.Y(), vCh, vTimeTick);
     if(d<d_vertexhit){

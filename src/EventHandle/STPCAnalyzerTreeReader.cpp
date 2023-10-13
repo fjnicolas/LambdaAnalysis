@@ -10,6 +10,41 @@
 
 #include "STPCAnalyzerTreeReader.h"
 
+
+// Class to get the hits in a specific view
+std::vector<SHit> GetHitsInView(
+    int view,
+    std::vector<int> *_X,
+    std::vector<double> *_Y,
+    std::vector<double> *_Int,
+    std::vector<double> *_Wi,
+    std::vector<double> *_ST,
+    std::vector<double> *_ET,
+    std::vector<int> *_View,
+    std::vector<double> *_Chi2)
+{
+
+    // set variables
+    std::vector<SHit> hitList;
+    int nTotalHits = _X->size();
+
+    // loop over the hits
+    for (int i = 0; i < nTotalHits; i++) {
+
+        // filter channels for the view        
+        if ( _View->at(i)==view ) {
+            SHit hit(-1, _X->at(i), _Y->at(i), _Wi->at(i), _Int->at(i), _ST->at(i), _ET->at(i), _Chi2->at(i));
+            hitList.push_back(hit);
+        }
+    }
+
+    return hitList;
+
+}
+
+
+
+// Class to read the TPCAnalyzer TTree
 MyTPCTreeReader::~MyTPCTreeReader(){
     // Clean up when the class is destroyed
     delete file;
@@ -75,3 +110,6 @@ bool MyTPCTreeReader::GetEntry(int entry) {
     tree->GetEntry(entry);
     return true;
 }
+
+
+

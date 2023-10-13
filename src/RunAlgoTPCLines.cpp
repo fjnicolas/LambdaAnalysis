@@ -132,17 +132,19 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 view = bestView;
             }
             
+            // Get the hits in the view
+            std::vector<SHit> hitList = GetHitsInView(view,
+                                                        treeReader.hitsChannel,
+                                                        treeReader.hitsPeakTime,
+                                                        treeReader.hitsIntegral, 
+                                                        treeReader.hitsRMS,
+                                                        treeReader.hitsStartT, 
+                                                        treeReader.hitsEndT,
+                                                        treeReader.hitsView,
+                                                        treeReader.hitsChi2);
+
             // Set the hits
-            bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, 
-                                    treeReader.hitsChannel,
-                                    treeReader.hitsPeakTime,
-                                    treeReader.hitsIntegral, 
-                                    treeReader.hitsRMS,
-                                    treeReader.hitsStartT, 
-                                    treeReader.hitsEndT,
-                                    treeReader.hitsView,
-                                    treeReader.hitsChi2,
-                                    "");
+            bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, hitList);
             
             // Analyze
             SEvent recoEvent;

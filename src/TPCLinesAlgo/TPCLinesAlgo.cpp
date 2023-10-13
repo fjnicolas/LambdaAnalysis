@@ -34,6 +34,9 @@ void TPCLinesAlgo::Display(std::string labelEv, std::string label){
     return;
 }
 
+
+//----------------------------------------------------------------------
+// Get the view with the less Chi2
 int TPCLinesAlgo::GetBestView(std::vector<int> *_View, std::vector<double> *_Chi2){
 
         std::map<int, double> meanChi2Map;
@@ -76,23 +79,21 @@ int TPCLinesAlgo::GetBestView(std::vector<int> *_View, std::vector<double> *_Chi
 bool TPCLinesAlgo::SetHitList(int view,
                             std::vector<int>& vertex,
                             std::vector<int>& vertexTrue,
-                            std::vector<int> *_X,
+                            std::vector<SHit> hits)
+                            /*std::vector<int> *_X,
                             std::vector<double> *_Y,
                             std::vector<double> *_Int,
                             std::vector<double> *_Wi,
                             std::vector<double> *_ST,
                             std::vector<double> *_ET,
                             std::vector<int> *_View,
-                            std::vector<double> *_Chi2,
-                            std::string eventLabel)
+                            std::vector<double> *_Chi2)*/
 {   
-    // reset variables
+    // reset the class variables
     fHitList.clear();
     fNTotalHits=0;
 
-    int nTotalHits = _X->size();
-
-    // Define the vertex
+    // Define the reco vertex
     double vertexX = vertex[2];
     if (view == 0) vertexX = vertex[0];
     if (view == 1) vertexX = vertex[1];
@@ -107,40 +108,39 @@ bool TPCLinesAlgo::SetHitList(int view,
     
     if (vertexX != -1){
 
-        // Get hits in the selected plane
-        std::vector<double> filteredX, filteredY, filteredInt, filteredST, filteredET, filteredWi, filteredChi2;
-        for (int i = 0; i < nTotalHits; i++) {
-            int x = _X->at(i);
+        // Get hits in the ROI circle around the vertex
+        // Hits are already filtered by plane type
+        for (int i = 0; i < hits.size(); i++) { 
             
-            // filter channels for the view
-            if(_View->at(i)==view){
-                double y = _Y->at(i)/fTPCLinesPset.DriftConversion;
-                
-                // filter distance to vertex
-                double d = std::sqrt(std::pow(x - vertexX, 2) + std::pow(y - vertexY, 2));
-                if (d < fTPCLinesPset.MaxRadius) {
-                    filteredX.push_back( x );
-                    filteredY.push_back( y );
-                    filteredInt.push_back( _Int->at(i) );
-                    filteredWi.push_back( _Wi->at(i) / fTPCLinesPset.DriftConversion );
-                    filteredST.push_back( _ST->at(i) / fTPCLinesPset.DriftConversion );
-                    filteredET.push_back( _ET->at(i) / fTPCLinesPset.DriftConversion );
-                    filteredChi2.push_back( _Chi2->at(i) );
-                }
+            double x = hits[i].X();
+            double y = hits[i].Y();
+            
+            double d = std::sqrt(std::pow(x - vertexX, 2) + std::pow(y - vertexY, 2));
+            
+            if (d < fTPCLinesPset.MaxRadius) {
+                fHitList.push_back(hits[i]);
             }
         }
 
-        if (filteredX.size() > 3) {
-            // Shift hits to have origin in (0,0)
-            double minX = *std::min_element(filteredX.begin(), filteredX.end()) - 3;
-            double minY = *std::min_element(filteredY.begin(), filteredY.end()) - 3;
-            double maxX = *std::max_element(filteredX.begin(), filteredX.end());
-        
-
+        if (fHitList.size() > fTPCLinesPset.MinTrackHits) {
             
-            for (size_t i = 0; i < filteredX.size(); i++) {
-                SHit hit(i, filteredX[i] - minX, filteredY[i] - minY, filteredWi[i], filteredInt[i], filteredST[i] - minY, filteredET[i] - minY, filteredChi2[i]);
-                fHitList.push_back(hit);
+            // Shift hits to have origin in (0,0), leave 3 ticks under/overflow
+            double minX = std::min_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.X()<h2.X();})->X() - 3;
+            double minY = std::min_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.Y()<h2.Y();})->Y() - 3;
+            double maxX = std::max_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.X()>h2.X();})->X() - 3;        
+
+            for (size_t i = 0; i < fHitList.size(); i++) {
+                fHitList[i] = SHit(
+                                i,
+                                fHitList[i].X() - minX,
+                                fHitList[i].Y() - minY,
+                                fHitList[i].Width(),
+                                fHitList[i].Integral(),
+                                fHitList[i].StartT() - minY,
+                                fHitList[i].EndT() - minY,
+                                fHitList[i].Chi2()
+                                );
+
             }
             fNTotalHits = fHitList.size();
 
@@ -149,9 +149,10 @@ bool TPCLinesAlgo::SetHitList(int view,
             vertexY = vertexY - minY;
             vertexXTrue = vertexXTrue - minX;
             vertexYTrue = vertexYTrue - minY;
-
             fVertex = SVertex(SPoint(vertexX, vertexY), std::to_string(view));
             fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), std::to_string(view));
+
+            // set edge variables
             fMaxX = maxX - minX;
             fMinX = minX;
             fMinY = minY;
@@ -161,7 +162,7 @@ bool TPCLinesAlgo::SetHitList(int view,
             return true;
         }
         else {
-            std::cout << "   SKIPPED NHits selected near the vertex " << filteredX.size() << std::endl;
+            std::cout << "   SKIPPED NHits selected near the vertex " << fHitList.size() << std::endl;
             return false;
         }
 
