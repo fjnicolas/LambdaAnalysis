@@ -34,16 +34,6 @@ std::vector<SHit> GetFRANSHitsView(
     std::vector<double> *_Chi2)
 {
 
-    // Channel boundaries
-    std::map<std::string, std::vector<int>> fChB =  {
-        {"U0", {0, 1983}},
-        {"V0", {1984, 3967}},
-        {"C0", {3968, 5631}},
-        {"U1", {5632, 7631}},
-        {"V1", {7632, 9599}},
-        {"C1", {9600, 11263}}
-    };
-
     // set variables
     std::vector<SHit> hitList;
     int nTotalHits = _X->size();
