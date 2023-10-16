@@ -104,8 +104,8 @@ class ChargeDensity{
     float fIota;
     float fScore;
 
-    int fNHits = 0;
-    float fAverageHitChi2 = 0;
+    int fNHits;
+    float fAverageHitChi2;
 
     float fGap;
     float fProtonKE;

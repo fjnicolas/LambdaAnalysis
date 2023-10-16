@@ -311,7 +311,7 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex){
     if(d<DefaultMaxZSize){
       fZ[(int)d]+=hit.Integral();
       fNHits++;
-      fAverageHitChi2 += hit.Chi2();
+      fAverageHitChi2 = fAverageHitChi2 + hit.Chi2();
       if(d>dMax) dMax = (int) d;
     }
   }
