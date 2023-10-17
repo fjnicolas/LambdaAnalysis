@@ -10,6 +10,40 @@
 
 #include "TPCLinesPCA.h"
 
+double mean(const std::vector<SHit>& data, double (SHit::*attribute)() const) {
+    double sum = 0.0;
+    for (const SHit& s : data) {
+        sum += (s.*attribute)();
+    }
+    return sum / data.size();
+}
+
+double pearsonCorrelation(const std::vector<SHit>& data) {
+    double meanX = 0.0;
+    double meanY = 0.0;
+    double sumXY = 0.0;
+    double sumX2 = 0.0;
+    double sumY2 = 0.0;
+
+    for (const SHit& s : data) {
+        meanX+=s.X();
+        meanY+=s.Y();
+    }
+    meanX/=data.size();
+    meanY/=data.size();
+
+    for (const SHit& s : data) {
+        double x = s.X();
+        double y = s.Y();
+        sumXY += (x - meanX) * (y - meanY);
+        sumX2 += std::pow(x - meanX, 2);
+        sumY2 += std::pow(y - meanY, 2);
+    }
+
+    return sumXY / (std::sqrt(sumX2) * std::sqrt(sumY2));
+}
+
+
 LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
 
     // first center the data
@@ -34,9 +68,16 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     covYY /= data.size();
     covXY /= data.size();
 
+    // Total variance (sum of covariances)
+    double total_variance = covXX + covYY;  
+
     double eigenvalue1 = (covXX + covYY + std::sqrt((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY)) / 2.0;
     double eigenvectorX1 = eigenvalue1 - covYY;
     double eigenvectorY1 = covXY;
+
+    double explained_variance = eigenvalue1 / total_variance;
+
+    double correlation = pearsonCorrelation(data);
 
     /* double eigenvalue2 = (covXX + covYY - std::sqrt((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY)) / 2.0;
     double eigenvectorX2 = eigenvalue2 - covYY;
@@ -53,7 +94,7 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     /*std::cout << "Slope-Intercept Form of Lines:" << std::endl;
     std::cout << "Line 1: y = " << slope1 << "x + " << yIntercept1 << std::endl;*/
 
-    return LineEquation(slope1, yIntercept1);
+    return LineEquation(slope1, yIntercept1, correlation);
 }
 
 

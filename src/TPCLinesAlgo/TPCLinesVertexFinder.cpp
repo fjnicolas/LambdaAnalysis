@@ -508,6 +508,35 @@ SLinearCluster TPCLinesVertexFinder::GetMainDirection(std::vector<SLinearCluster
 }
 
 
+
+// Structure to represent a rectangle
+struct Rectangle {
+    double x, y; // Position of the top-left corner
+    double width, height;
+};
+
+// Structure to represent a triangle with 3 vertices
+struct Triangle {
+    double x1, y1;
+    double x2, y2;
+    double x3, y3;
+};
+
+// Function to calculate the area of intersection between a rectangle and a triangle
+double IntersectionArea(const Rectangle& rect, const Triangle& tri) {
+    // Calculate the coordinates of the intersection rectangle
+    double x1 = std::max(rect.x, std::min(tri.x1, std::min(tri.x2, tri.x3)));
+    double x2 = std::min(rect.x + rect.width, std::min(tri.x1, std::min(tri.x2, tri.x3)));
+    double y1 = std::max(rect.y, std::min(tri.y1, std::min(tri.y2, tri.y3)));
+    double y2 = std::min(rect.y + rect.height, std::min(tri.y1, std::min(tri.y2, tri.y3)));
+
+    // Check if there is an intersection
+    if (x1 < x2 && y1 < y2) {
+        return (x2 - x1) * (y2 - y1);
+    }
+    return 0.0;
+}
+
 void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection){
 
     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In Origin finder\n";    
@@ -699,6 +728,27 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                     SPoint vertex2 = GetTrackssEuationOppositePoint( track2, track2List, intP );
                     STriangle triangle = STriangle(intP, vertex1, vertex2, cloHit, track1.GetIntegral(), track2.GetIntegral());
 
+                    // CHECK 0: empty area of the triangle
+                    // Calculate the total covered area
+                    double totalCoveredArea = 0;
+                    Triangle trianglePol = {intP.X(), intP.Y(), vertex1.X(), vertex1.Y(), vertex2.X(), vertex2.Y()};
+
+                    std::vector<SHit> triangleHits;
+                    std::vector<SHit> hitsAux =  track1.GetHits();
+                    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end() );
+                    hitsAux.clear();
+                    hitsAux =  track2.GetHits();
+                    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end() );
+                    
+                    for (SHit& hit : triangleHits){
+                        Rectangle rectPol = {hit.X()-0.5, hit.Y()-hit.Width(), 1, 2*hit.Width()};
+                        std::cout<<IntersectionArea(rectPol, trianglePol)<<std::endl;
+                        totalCoveredArea += IntersectionArea(rectPol, trianglePol);
+                    }
+
+                    std::cout<<"TOTAL COVERED AREA "<<totalCoveredArea<<std::endl;
+
+
                     // CHECK 1: check if the triangle direction intersects the main driection
                     // get closes segment in the MainDirection to the intersection point
                     double minD = 1e3;
@@ -805,6 +855,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
 
     return;
 }
+
 
 
 std::vector<SOrigin> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLinearCluster> tracksList, SPoint ballVertex){

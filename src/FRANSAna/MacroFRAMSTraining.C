@@ -18,22 +18,23 @@
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
 
-int MacroFRAMSTraining(std::string fInputFileName="")
+int MacroFRAMSTraining(std::string fInputFileName="", std::string fTreeDirName = "", std::string fTreeName = "FRAMSTree")
 {
 
   //--------- Configuration Parameters
-  // Use reco samples with reco vertex
-  bool fUseReco=false; 
-  fUseReco=true;
-
-  // Apply truth gap cut
-  bool fUseCut=false; //fUseCut=true;
-  TCut fCutS = "Gap>1."; //"Gap>1.5 && ProtonKE>0.03 && PionKE>0.02";
+  bool fUseReco=false; fUseReco=true;
+  bool fUseBestView=false; //fUseBestView=true;
+  bool fUseMultiplicityVars = false; fUseMultiplicityVars = true;
+  
+  // Apply quality cuts
+  bool fUseQualityCut=false; fUseQualityCut=true;
+  TCut fCutS = ""; //"Gap>1.5 && ProtonKE>0.03 && PionKE>0.02";
   TCut fCutBG = "";
 
-  bool fUseBestView=false; //fUseBestView=true;
+  fCutS = "NOrigins_C<3";
+  fCutBG = "NOrigins_C<3";
 
-  bool fUseMultiplicityVars = false; // fUseMultiplicityVars = true;
+
 
   // Number of events for training
   int nTrain = 360;
@@ -43,43 +44,21 @@ int MacroFRAMSTraining(std::string fInputFileName="")
   //fBGLabel = "QE";
   //BGLabel="RES";
 
-  //--------- Input trees
-  std::string tree_dirname = "";
-  tree_dirname = "framsTrue/";
-  if(fUseReco) tree_dirname = "framsReco/";
-  tree_dirname = "framsMine/";
-  tree_dirname = "";
-  std::string tree_name = "FRAMSTree";
-
-  /*std::string BGfilename = "InputFiles_v54/FRAMSAnaOutput_BG"+fBGLabel+".root";
-  std::string Sfilename = "InputFiles_v54/FRAMSAnaOutput_S.root";
-  // new files
-  BGfilename = "InputFiles_v69/QE/analyzeItOutput_R1-1_SR1-1000.root";
-  Sfilename = "InputFiles_v69/V0/analyzeItOutput_R1-1_SR1-10.root";
-  TFile *fBG = new TFile(BGfilename.c_str(),"READ");
-  //TTree *background = (TTree *)fBG->Get((tree_dirname+tree_name+"BG").c_str());
-  TTree *background = (TTree *)fBG->Get((tree_dirname+tree_name+"S").c_str());
-  TFile *fS = new TFile(Sfilename.c_str(),"READ");
-  TTree *signalTree = (TTree *)fS->Get((tree_dirname+tree_name+"S").c_str());*/
-
   // Input file
   TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
   fFile->ls();
-  TTree *fTree = (TTree *)fFile->Get((tree_dirname+tree_name).c_str());
+  TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
+  TTree *fTreeS = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
+  TTree *fTreeBG = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
 
 
   //--------- Output file
-  bool fUseCosmics=(fBGLabel=="Co");
-  std::string outputTMVAROOtFile = "TMVAResults/TMVAResults";
-  if(fUseReco) outputTMVAROOtFile = outputTMVAROOtFile + "_reco";
-  else outputTMVAROOtFile = outputTMVAROOtFile + "_true";
-  if(fUseCut) outputTMVAROOtFile = outputTMVAROOtFile + "_cut";
-  if(fUseCosmics)  outputTMVAROOtFile = outputTMVAROOtFile + "_cosmics";
-  outputTMVAROOtFile = outputTMVAROOtFile + ".root";
-  // ROOT file with TMVA output
-  TString outfileName( outputTMVAROOtFile.c_str() );
-  TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
-
+  gSystem->Exec( "rm -rf TMVAResults" );
+  gSystem->Exec( "mkdir TMVAResults" );
+  std::string fOutputTMVAROOtFileName = "TMVAResults/TMTMVAResults.root";
+  TFile* outputFile = TFile::Open( fOutputTMVAROOtFileName.c_str(), "CREATE" );
+  
+  
   // This loads the library
   TMVA::Tools::Instance();
 
@@ -99,12 +78,20 @@ int MacroFRAMSTraining(std::string fInputFileName="")
 
   // Define factory and data loader
   TMVA::Factory *factory = new TMVA::Factory( "FRAMSSelectionTMVA", outputFile,
-                                             "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
-
+                                              "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
 
 
   //Add variables for MVA
+
+  if(fUseMultiplicityVars){
+    dataloader->AddVariable( "NOrigins_C", "N_{C}", "", 'I' );
+    dataloader->AddVariable( "NOriginsM1_C", "N^{1}_{C}", "", 'I' );
+    dataloader->AddVariable( "NOriginsM2_C", "N^{2}_{C}", "", 'I' );
+    //dataloader->AddVariable( "NOriginsM3_C", "N^{>3}_C", "", 'I' );
+    dataloader->AddVariable( "HitDensity_C", "d", "", 'D' );
+  }
+
   if(fUseBestView){
     dataloader->AddVariable( "Alpha", "#alpha", "", 'D' );
     dataloader->AddVariable( "Eta", "#eta", "", 'D' );
@@ -117,14 +104,6 @@ int MacroFRAMSTraining(std::string fInputFileName="")
     dataloader->AddVariable( "Delta_C", "#Delta_{C}", "", 'D' );
     dataloader->AddVariable( "FitScore_C", "r_{C}", "", 'D' );
   }
-
-  if(fUseMultiplicityVars){
-    dataloader->AddVariable( "NOrigins_C", "N_{C}", "", 'I' );
-    dataloader->AddVariable( "NOriginsM1_C", "N^{1}_{C}", "", 'I' );
-    dataloader->AddVariable( "NOriginsM2_C", "N^{2}_{C}", "", 'I' );
-    //dataloader->AddVariable( "NOriginsM3_C", "N^{>3}_C", "", 'I' );
-    dataloader->AddVariable( "HitDensity_C", "d", "", 'D' );
-  }
   
 
   //Add spectator variables
@@ -133,14 +112,12 @@ int MacroFRAMSTraining(std::string fInputFileName="")
   dataloader->AddSpectator( "PionKE", "PionKE", "", 'D' );
 
   // You can add an arbitrary number of signal or background trees
-  Double_t signalWeight     = 1.0;
-  Double_t backgroundWeight = 1000;
-  /*dataloader->AddSignalTree    ( signalTree,     signalWeight );
-  dataloader->AddBackgroundTree( background, backgroundWeight );*/
-  dataloader->AddSignalTree    ( fTree,     signalWeight );
-  dataloader->AddBackgroundTree( fTree, backgroundWeight );
+  Double_t signalWeight     = 0.1;
+  Double_t backgroundWeight = 1.0;
+  dataloader->AddSignalTree    ( fTreeS,     signalWeight );
+  dataloader->AddBackgroundTree( fTreeBG, backgroundWeight );
 
-  // define signal and background
+  // define signal and background cuts
   TCut signalCut      = "IsSignal==1";
   TCut bgCutInclusive = "IsSignal!=1";
   TCut bgCutQE = "IsSignal!=1 && IntMode==0";
@@ -148,15 +125,16 @@ int MacroFRAMSTraining(std::string fInputFileName="")
   TCut bgCut = bgCutInclusive;
   if(fBGLabel=="QE") bgCut = bgCutQE;
   else if(fBGLabel=="RES") bgCut = bgCutRES;
-  dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, "SplitMode=random:!V" );
 
-  // Prepare for training
   TCut mycuts = "";
-  if(fUseCut) mycuts = fCutS;
-  TCut mycutb = fCutBG;
-  std::string tmva_options;
-  tmva_options = "nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain)+":SplitMode=Random:NormMode=NumEvents:!V";
-  dataloader->PrepareTrainingAndTestTree( mycuts, mycutb, tmva_options );
+  if(fUseQualityCut){
+    signalCut = signalCut + fCutS ;
+    bgCut = bgCut + fCutBG ;
+  }
+
+  std::string tmva_options = "nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain);
+  tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";
+  dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, tmva_options );
 
 
   // Cut optimisation
@@ -173,6 +151,7 @@ int MacroFRAMSTraining(std::string fInputFileName="")
   // TMVA ANN: MLP (recommended ANN) -- all ANNs in TMVA are Multilayer Perceptrons
   if (Use["MLP"])
     factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLP", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator" );
+  // Boosted Decision Tree
   if (Use["BDT"])  // Adaptive Boost
     factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT",
                          "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
@@ -192,8 +171,9 @@ int MacroFRAMSTraining(std::string fInputFileName="")
 
   delete factory;
   delete dataloader;
+
   // Launch the GUI for the root macros
-  if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
+  if (!gROOT->IsBatch()) TMVA::TMVAGui( fOutputTMVAROOtFileName.c_str() );
 
   return 0;
 }
