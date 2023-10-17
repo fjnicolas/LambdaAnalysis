@@ -54,10 +54,19 @@ namespace TPCLinesDistanceUtils{
 
 
     double GetpClusterDistanceW(SHit p1, SHit p2) {
-        double d0 = std::sqrt(std::pow(p1.X() - p2.X(), 2) + std::pow(p1.Y() - p2.Y(), 2));
-        double dp = std::sqrt(std::pow(p1.X() - p2.X(), 2) + std::pow(p1.Y() - p2.Y() + p2.Width(), 2));
-        double dm = std::sqrt(std::pow(p1.X() - p2.X(), 2) + std::pow(p1.Y() - p2.Y() - p2.Width(), 2));
-        return std::min(d0, std::min(dp, dm));
+        double dX = std::pow(p1.X() - p2.X(), 2);
+    
+        double d0 = std::sqrt( dX + std::pow(p1.Y() - p2.Y(), 2));
+        
+        double dY1 =  std::min( std::abs(p1.Y() + p1.Width() - p2.Y()),  std::abs(p1.Y() - p1.Width() - p2.Y()) );
+        double dY2 =  std::min( std::abs(p1.Y() - p2.Y() + p2.Width()),  std::abs(p1.Y() - p2.Y() - p2.Width()) );
+
+        double d1 = std::sqrt( dX + std::pow(dY1, 2));
+        double d2 = std::sqrt( dX + std::pow(dY2, 2));
+        
+        return std::min(d0, std::min( d1, d2 ));
+        //return std::min(d0, 0.5*(d1+d2));
+        //return std::min(d0, dY2);
     }
 
 

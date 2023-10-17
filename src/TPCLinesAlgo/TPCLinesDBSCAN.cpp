@@ -111,6 +111,13 @@ double DBSCANHitWidthDistance2( SHit& p1, SHit& p2) {
     return std::min(d0, std::min(dp, dm));
 }
 
+double DBSCANHitEuclidianDistanceDriftConversion( SHit& p1,  SHit& p2) {
+    //std::cout<<" In euclidian distance\n";
+    return std::sqrt((p1.X() - p2.X()) * (p1.X() - p2.X()) + 0.075*(p1.Y() - p2.Y()) * (p1.Y() - p2.Y()));
+}
+
+
+
 double DBSCANHitOverlapDistance( SHit& p1, SHit& p2) {
     double y_range1_min = p1.Y() - p1.Width();
     double y_range1_max = p1.Y() + p1.Width();

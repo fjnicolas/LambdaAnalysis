@@ -252,7 +252,7 @@ void TPCLinesDisplay::Show(
     // triangles
     for(size_t oIx=0; oIx<origins.size(); oIx++){
         std::cout<<"Drawing origin "<<oIx<<std::endl;
-        DrawVertex(origins[oIx].GetPoint(), legend, "Origin "+std::to_string(oIx), fColorsOrigins[oIx], 90, 0.5);
+        DrawVertex(origins[oIx].GetPoint(), legend, "Origin "+std::to_string(oIx)+" ("+std::to_string(origins[oIx].Multiplicity())+")", fColorsOrigins[oIx], 90, 0.5);
     }
 
 

@@ -537,7 +537,8 @@ double IntersectionArea(const Rectangle& rect, const Triangle& tri) {
     return 0.0;
 }
 
-void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection){
+
+void TPCLinesVertexFinder::GetAngleVertexes(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection){
 
     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In Origin finder\n";    
 
@@ -625,7 +626,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
 
                 // ------ Check if the tracks are connected
                 // calculate connection based on the tracks connectedes
-                float connTol = 6 * (track1.GetConnectedness() + track2.GetConnectedness()) / 2;
+                float connTol = 50 * (track1.GetConnectedness() + track2.GetConnectedness()) / 2;
                 float minConn = 1e3;
                 for (SLinearCluster trk1 : track1List) {
                     for (SLinearCluster trk2 : track2List) {
@@ -742,7 +743,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                     
                     for (SHit& hit : triangleHits){
                         Rectangle rectPol = {hit.X()-0.5, hit.Y()-hit.Width(), 1, 2*hit.Width()};
-                        std::cout<<IntersectionArea(rectPol, trianglePol)<<std::endl;
+                        //std::cout<<IntersectionArea(rectPol, trianglePol)<<std::endl;
                         totalCoveredArea += IntersectionArea(rectPol, trianglePol);
                     }
 
@@ -767,7 +768,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
                     double line_slope = mainTrackDir.GetTrackEquation().Slope();
                     double line_intercept = mainTrackDir.GetTrackEquation().Intercept();
                     
-                    SPoint intersection_point = check_arrow_line_intersection(start_point.X(), start_point.Y(),direction_vector.X(), direction_vector.Y(), line_slope, line_intercept);
+                    SPoint intersection_point = check_arrow_line_intersection(start_point.X(), start_point.Y(), direction_vector.X(), direction_vector.Y(), line_slope, line_intercept);
                     bool triangleIntersects = (intersection_point.X()!=-1 && intersection_point.Y()!=-1);
                     
                     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "Arrow line intersects the line equation at: (" << intersection_point.X() << ", " << intersection_point.Y() << ")" << std::endl;
@@ -857,8 +858,7 @@ void TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> trackList, std
 }
 
 
-
-std::vector<SOrigin> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLinearCluster> tracksList, SPoint ballVertex){
+std::vector<SOrigin> TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster> tracksList, SPoint ballVertex){
 
     std::vector<STriangle> triangleList;
     std::vector<SOrigin> originList;
@@ -868,11 +868,13 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLi
     std::vector<std::pair<int, int>> intersectingTracks;
 
     // ------- Look for possible intersections
-    // ------ Loop 1
     if (tracksList.size() > 0) {
+
+        // ------ Loop 1
         for (size_t ix = 0; ix < tracksList.size(); ++ix) {
             SLinearCluster track1 = tracksList[ix];
             std::cout<<ix<<std::endl;
+            
             // Loop through other tracks
             // ------ Loop 2
             for (size_t jx = ix+1; jx < tracksList.size(); ++jx) {
@@ -895,7 +897,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetInterectionsInBall(std::vector<SLi
 
                 // ------ Look for the intersection points
                 SPoint intP = GetTracksIntersection(track1, track2, 10, fTPCLinesVertexFinderPset.RefineVertexIntersection);
-                if(intP.X()==-1 and intP.Y()==-1) continue;
+                if(intP.X()==-1 && intP.Y()==-1) continue;
                 if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "   ** Intersection in: " << intP ;
                 
 

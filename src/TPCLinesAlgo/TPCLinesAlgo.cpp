@@ -27,9 +27,9 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
 
 //----------------------------------------------------------------------
 // Display function
-void TPCLinesAlgo::Display(std::string labelEv, std::string label){
+void TPCLinesAlgo::Display(std::string name){
 
-    fDisplay.Show(labelEv+"_FinalRecoTPCLines_"+label, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins);
+    fDisplay.Show(name, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins);
 
     return;
 }
@@ -432,7 +432,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         }  
     }
         
-    //Find secondary vertexes
+    /*//Find secondary vertexes
     std::vector<STriangle> vertexList;
     std::vector<SPoint> intersectionList;
     SLinearCluster mainDirection;
@@ -445,14 +445,20 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     float d1 = std::hypot( 0.3*(mainDirection.GetStartPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetStartPoint().Y() - fVertex.Point().Y()) );
     float d2 = std::hypot( 0.3*(mainDirection.GetEndPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetEndPoint().Y() - fVertex.Point().Y()) );
     fMainVertex = (d1<d2)? mainDirection.GetStartPoint() : mainDirection.GetEndPoint();
+    */
 
-    // ------ Get the parallel tracks
+
     std::vector<SOrigin> intersectionsInBall;
     intersectionsInBall.clear();
+    std::vector<STriangle> vertexList;
+    vertexList.clear();
     std::vector<SLinearCluster> NewTrackList;
     NewTrackList.clear();
+    std::vector<SPoint> intersectionList;
+    intersectionList.clear();
 
     if(finalLinearClusterV.size()>0){
+        
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
         
         for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
@@ -467,22 +473,33 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList.push_back( newTrack );    
         }
         
-        intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());
-        for(SOrigin & ori: intersectionsInBall){
-            std::cout<<ori;
+        intersectionsInBall = fVertexFinder.GetOrigins(NewTrackList, fVertex.Point());
+
+        //Find secondary vertexes
+        SLinearCluster mainDirection;
+        if(NewTrackList.size()>0){
+            fVertexFinder.GetAngleVertexes(NewTrackList, vertexList, intersectionList, mainDirection);
         }
 
-        bool accepted = vertexList.size()>0;
-        std::string outNamePreffix = accepted? "Accepted":"Rejected";
+        fMainVertex = mainDirection.GetStartPoint();
 
+        float d1 = std::hypot( 0.3*(mainDirection.GetStartPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetStartPoint().Y() - fVertex.Point().Y()) );
+        float d2 = std::hypot( 0.3*(mainDirection.GetEndPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetEndPoint().Y() - fVertex.Point().Y()) );
+        fMainVertex = (d1<d2)? mainDirection.GetStartPoint() : mainDirection.GetEndPoint();
+
+        // Save final results
         fFinalTrackList = NewTrackList;
         fMainDirection = mainDirection;
         fAngleList = vertexList;
         fOrigins = intersectionsInBall;
 
-        //fDisplay.Show(eventLabel+"_FinalRecoTPCLines_"+outNamePreffix, fHitList, LineEquation(0, 0), {}, NewTrackList, mainDirection, vertexList, fVertex, fVertexTrue, intersectionsInBall);
-        fDisplay.Show(eventLabel+"_FinalRecoTPCLines_"+outNamePreffix, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins);
+
+        for(SOrigin & ori: intersectionsInBall){
+            std::cout<<ori;
+        }
+
     }
+
 
 
     

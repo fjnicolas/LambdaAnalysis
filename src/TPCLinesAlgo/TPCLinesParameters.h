@@ -39,6 +39,7 @@ struct TrackFinderAlgorithmPsetType {
     bool CaptureMissingHits;
     int MinTrackHits;
     float HitDensityThreshold;
+    bool UseCompactness;
     int Verbose;
 
     // constructor
@@ -55,6 +56,7 @@ struct TrackFinderAlgorithmPsetType {
         bool _captureMissingHits,
         int _minTrackHits,
         float _hitDensityThreshold,
+        bool _useCompactness,
         int _verbose) : 
         MaxDTube(_maxDTube),
         MaxDCluster(_maxDCluster),
@@ -66,6 +68,7 @@ struct TrackFinderAlgorithmPsetType {
         CaptureMissingHits(_captureMissingHits),
         MinTrackHits(_minTrackHits),
         HitDensityThreshold(_hitDensityThreshold),
+        UseCompactness(_useCompactness),
         Verbose(_verbose)
     {}
 
@@ -80,6 +83,7 @@ struct TrackFinderAlgorithmPsetType {
         std::cout << "CaptureMissingHits: " << (CaptureMissingHits ? "true" : "false") << std::endl;
         std::cout << "MinTrackHits: " << MinTrackHits << std::endl;
         std::cout << "HitDensityThreshold: " << HitDensityThreshold << std::endl;
+        std::cout << "UseCompactness: " << UseCompactness << std::endl;
         std::cout << "Verbose: " << Verbose << std::endl;
     }
 };

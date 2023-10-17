@@ -38,6 +38,7 @@ private:
 
 // --------------- Distance functions for DBSCAN
 double DBSCANHitEuclidianDistance( SHit& p1,  SHit& p2);
+double DBSCANHitEuclidianDistanceDriftConversion( SHit& p1,  SHit& p2);
 double DBSCANHitManhattanDistance( SHit& p1,  SHit& p2);
 double DBSCANHitWidthDistance( SHit& p1, SHit& p2);
 double DBSCANHitWidthDistance2( SHit& p1, SHit& p2);

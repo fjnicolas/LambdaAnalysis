@@ -238,7 +238,9 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::Get2DClusters(std::vector<SHit>
         dbscan.setDistanceFunction(DBSCANHitWidthDistance2);
     else if(option=="DistanceOverlap")
         dbscan.setDistanceFunction(DBSCANHitOverlapDistance);
-    else
+    else if(option=="DistanceEuclidianDriftConversion")
+        dbscan.setDistanceFunction(DBSCANHitEuclidianDistanceDriftConversion);
+    else if(option=="DistanceEuclidian")
         dbscan.setDistanceFunction(DBSCANHitEuclidianDistance);
     
     // Fit the points
@@ -486,45 +488,54 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     }
     
     //---------- Compactness clusters block
-    if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"\n******** Making compactness clusters\n";
-
     // Vector to store the compact clusters
-    std::vector<SLinearCluster> compactLinearClustersV;
+    std::vector<SLinearCluster> finalClustersV = connectedLinearClustersV;
+    if(fTPCLinesTrackFinderPset.UseCompactness == true){
+        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"\n******** Making compactness clusters\n";
 
-    for(SLinearCluster &lCluster:connectedLinearClustersV){
+        // Vector to store the compact clusters
+        std::vector<SLinearCluster> compactLinearClustersV;
 
-        double clusterCompactness = lCluster.GetCompactness();
-        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"\n  Cluster compactness"<<clusterCompactness<<std::endl;
+        for(SLinearCluster &lCluster:connectedLinearClustersV){
 
-        std::vector<double> compactnessV = lCluster.GetCompactnessV();
-        std::pair<double, double> compactnessResult = ComputeConnectivityMode(compactnessV, fTPCLinesTrackFinderPset.MinClusterHits, clusterCompactness);
+            double clusterCompactness = lCluster.GetCompactness();
+            if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"\n  Cluster compactness"<<clusterCompactness<<std::endl;
 
-        
-        double epsilon;
-        //epsilon=compactnessResult.first+5*compactnessResult.second;
-        epsilon=3*compactnessResult.first;
+            std::vector<double> compactnessV = lCluster.GetCompactnessV();
+            std::pair<double, double> compactnessResult = ComputeConnectivityMode(compactnessV, fTPCLinesTrackFinderPset.MinClusterHits, clusterCompactness);
 
-        
-        if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"   --- Compacness Eps="<<compactnessResult.first<< " pm "<<compactnessResult.second<<" Epsilon="<<epsilon<<std::endl;
-        if(epsilon>0){
-            std::vector<SHit> hits = lCluster.GetHits();
-            std::vector<SLinearCluster> compactClusterList = Get2DClusters(hits, epsilon, fTPCLinesTrackFinderPset.MinClusterHits);
-            if(compactClusterList.size()>0)
-                compactLinearClustersV.insert(compactLinearClustersV.end(),compactClusterList.begin(),compactClusterList.end());
+            
+            double epsilon;
+            //epsilon=compactnessResult.first+5*compactnessResult.second;
+            epsilon=3*compactnessResult.first;
+
+            
+            if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"   --- Compacness Eps="<<compactnessResult.first<< " pm "<<compactnessResult.second<<" Epsilon="<<epsilon<<std::endl;
+            if(epsilon>0){
+                std::vector<SHit> hits = lCluster.GetHits();
+                std::vector<SLinearCluster> compactClusterList = Get2DClusters(hits, epsilon, fTPCLinesTrackFinderPset.MinClusterHits, "DistanceEuclidianDriftConversion");
+                //std::vector<SLinearCluster> compactClusterList = Get2DClusters(hits, epsilon, fTPCLinesTrackFinderPset.MinClusterHits, "DistanceEuclidian");
+                if(compactClusterList.size()>0)
+                    compactLinearClustersV.insert(compactLinearClustersV.end(),compactClusterList.begin(),compactClusterList.end());
+                else
+                    compactLinearClustersV.push_back(lCluster);
+            }
             else
                 compactLinearClustersV.push_back(lCluster);
         }
-        else
-            compactLinearClustersV.push_back(lCluster);
+
+        //::DISPLAY
+        if(fTPCLinesTrackFinderPset.Verbose>=2){
+            fDisplay.Show("Compactness clusters", hitList, houghLine, hitPCATubeList, compactLinearClustersV);
+        }
+
+        finalClustersV.clear();
+        finalClustersV = compactLinearClustersV;
     }
 
-    //::DISPLAY
-    if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show("Compactness clusters", hitList, houghLine, hitPCATubeList, compactLinearClustersV);
-    }
 
     // Vector of SLinearClusters to return
-    std::vector<SLinearCluster> recoTracks = MakeTrack(compactLinearClustersV);
+    std::vector<SLinearCluster> recoTracks = MakeTrack(finalClustersV);
 
 
     // Free hits for the next iteration

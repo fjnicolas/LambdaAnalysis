@@ -158,6 +158,7 @@ TrackFinderAlgorithmPsetType ReadTrackFinderAlgorithmPset(std::string filename, 
     fPset.CaptureMissingHits = pt.get<bool>("CaptureMissingHits");
     fPset.MinTrackHits = pt.get<int>("MinTrackHits");
     fPset.HitDensityThreshold = pt.get<float>("HitDensityThreshold");
+    fPset.UseCompactness = pt.get<bool>("UseCompactness");
     fPset.Verbose = pt.get<int>("Verbose");
     
     

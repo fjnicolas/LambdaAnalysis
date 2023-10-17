@@ -160,7 +160,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
                 if(Debug==-12){
                     gROOT->SetBatch(false);
-                    _TPCLinesAlgo.Display(ev.Label(), "Misselected");
+                    _TPCLinesAlgo.Display( "Misselected"+ev.Label());
                     gROOT->SetBatch(true);
                 }
 
@@ -168,6 +168,10 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             else
                 _EfficiencyCalculator.UpdateNotSelected(ev);
 
+            bool accepted = nAngles>0;
+            std::string outNamePreffix = accepted? "Accepted":"Rejected";
+            _TPCLinesAlgo.Display("FinalReco"+outNamePreffix + ev.Label());
+    
             if(recoEvent.GetNOrigins()>0){
                 _EfficiencyCalculator.UpdateHistograms(recoEvent);
 
@@ -180,7 +184,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                         int minMult = std::min(origins[0].Multiplicity(), origins[1].Multiplicity());
                         if(maxMult==2 && minMult==1){
                             gROOT->SetBatch(false);
-                            _TPCLinesAlgo.Display(ev.Label(), "Misselected");
+                            _TPCLinesAlgo.Display("Misselected"+ev.Label());
                             gROOT->SetBatch(true);
                         }
                     }
