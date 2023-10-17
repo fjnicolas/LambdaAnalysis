@@ -89,6 +89,22 @@ double DBSCANHitManhattanDistance( SHit& p1,  SHit& p2) {
 
 double DBSCANHitWidthDistance( SHit& p1, SHit& p2) {
     //std::cout<<" In width distance\n";
+    double dX = std::pow(p1.X() - p2.X(), 2);
+    
+    double d0 = std::sqrt( dX + std::pow(p1.Y() - p2.Y(), 2));
+    
+    double dY1 =  std::min( std::abs(p1.Y() + p1.Width() - p2.Y()),  std::abs(p1.Y() - p1.Width() - p2.Y()) );
+    double dY2 =  std::min( std::abs(p1.Y() - p2.Y() + p2.Width()),  std::abs(p1.Y() - p2.Y() - p2.Width()) );
+
+    double d1 = std::sqrt( dX + std::pow(dY1, 2));
+    double d2 = std::sqrt( dX + std::pow(dY2, 2));
+    
+    //return std::min(d0, std::min( d1, d2 ));
+    return std::min(d0, 0.5*(d1+d2));
+}
+
+double DBSCANHitWidthDistance2( SHit& p1, SHit& p2) {
+    //std::cout<<" In width distance\n";
     double d0 = std::sqrt(std::pow(p1.X() - p2.X(), 2) + std::pow(p1.Y() - p2.Y(), 2));
     double dp = std::sqrt(std::pow(p1.X() - p2.X(), 2) + std::pow(p1.Y() - p2.Y() + p2.Width(), 2));
     double dm = std::sqrt(std::pow(p1.X() - p2.X(), 2) + std::pow(p1.Y() - p2.Y() - p2.Width(), 2));
@@ -102,9 +118,11 @@ double DBSCANHitOverlapDistance( SHit& p1, SHit& p2) {
     double y_range2_max = p2.Y() + p2.Width();
     bool overlap = (y_range1_min <= y_range2_max) && (y_range1_max >= y_range2_min);
     double dX = p1.X() - p2.X();
-    double dY = 1;
+    double dY = 0;
+
     if (!overlap) {
-        dY = std::sqrt(std::pow(p1.X() - p2.X(), 2) + std::pow(p1.Y() - p2.Y(), 2));
+        dY = p1.Y() - p2.Y();
     }
+    
     return std::sqrt(std::pow(dX, 2) + std::pow(dY, 2));
 }

@@ -17,12 +17,16 @@ class LineEquation {
     private:
         float fM;
         float fN;
+        float fGoodness;
 
     public:
-        LineEquation(float slope=0, float intercept=0);
+        LineEquation(float slope=0, float intercept=0, float goodness=0);
+
+        void SetGoodness(float goodness);
         
         float Slope() {return fM;}
         float Intercept() {return fN;}
+        float Goodness() {return fGoodness;}
 
         SPoint GetLineClosestPoint(double a, double b, double c, SPoint p);
         SPoint GetLineClosestPoint(SPoint P);

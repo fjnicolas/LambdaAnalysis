@@ -12,10 +12,15 @@
 
 
 // Class functions for LineEquation class 
-LineEquation::LineEquation(float slope, float intercept):
+LineEquation::LineEquation(float slope, float intercept, float goodness):
     fM(slope),
-    fN(intercept)
+    fN(intercept),
+    fGoodness(goodness)
 {}
+
+void LineEquation::SetGoodness(float goodness){
+    fGoodness = goodness;
+}
 
 SPoint LineEquation::GetLineClosestPoint(double a, double b, double c, SPoint P) {
     

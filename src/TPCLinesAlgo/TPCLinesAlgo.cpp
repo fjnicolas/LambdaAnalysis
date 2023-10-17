@@ -269,7 +269,15 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
         SLinearCluster track = recoTrackList[trkix];
         double trackComp = track.GetCompactness();
         double trackConn = track.GetConnectedness();
-        if(fTPCLinesPset.Verbose>=2) std::cout << "\n Merging track " << trkix << " COMP " << trackComp << " CONN " << trackConn << std::endl;
+
+        // Get average residual
+        double trackAvResidual=0.;
+        LineEquation trk_eq = track.GetTrackEquation();
+        for (SHit hit : track.GetHits()) {
+            trackAvResidual = trackAvResidual +  trk_eq.GetDistance(SPoint(hit.X(), hit.Y()));
+        }
+        trackAvResidual/=track.NHits();
+        if(fTPCLinesPset.Verbose>=2) std::cout << "\n Merging track " << trkix << " COMP " << trackComp << " CONN " << trackConn << " AvResidual: "<<trackAvResidual<<std::endl;
 
         std::vector<SHit> candidateHits;
         std::vector<int> candidateHitsIx;
@@ -310,11 +318,18 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
         for (size_t ix = 0; ix < candidateHits.size(); ++ix) {
             SHit hit = candidateHits[sortedCandidateHits[ix]];
 
+            LineEquation trk_eqClosest = (std::abs(hit.X()-track.GetMinX())<std::abs(hit.X()-track.GetMaxX()))? track.GetTrackEquationStart():track.GetTrackEquationEnd();
+
             double minD = currentCluster.GetMinDistanceToCluster(hit);
             double minDConn = currentCluster.GetMinDistanceToClusterOverlap(hit);
-            if(fTPCLinesPset.Verbose>=2) std::cout << hit.X() << " " << hit.Y() << " " << minD << " " << minDConn << std::endl;
-            if(fTPCLinesPset.Verbose>=2) std::cout << "       " << hit.Id() << " " << hit.X() << " " << hit.Y() << " d " << minD << " dConn " << minDConn << std::endl;
-            if (minDConn < dTh * trackConn) {
+
+            double hypoY = track.GetTrackEquation().Slope() * hit.X() + track.GetTrackEquation().Intercept();
+            double minDHypo = std::abs(hypoY-hit.Y());
+            
+            double residual =  trk_eqClosest.GetDistance(SPoint(hit.X(), hit.Y()));
+
+            if(fTPCLinesPset.Verbose>=2) std::cout << "       " << hit.Id() << "  X=" << hit.X() << " Y=" << hit.Y() << " " << " d " << minD << " dConn " << minDConn << " dCompHypo" << minDHypo << " residual: "<<residual << std::endl;
+            if (minDConn < dTh * trackConn && minDHypo < dTh * trackComp){// && residual < dTh*trackAvResidual) {
                 newHitList.push_back(hit);
                 mergedHitsCounter[candidateHitsIx[sortedCandidateHits[ix]]] = true;
                 currentCluster = SCluster(newHitList);
@@ -398,15 +413,23 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     finalLinearClusterV = TPCLinesDirectionUtils::SlopeTrackMerger(finalLinearClusterV, 2, 15, fTPCLinesPset.Verbose); 
 
     // Isolated hit merger
-    std::vector<SHit> remainingHits = hitListForHough; 
-    remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());   
+    std::vector<SHit> remainingHits = hitListForHough;
+    remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
+    //fDisplay.Show(eventLabel+"_BeforeIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
     finalLinearClusterV = MergeIsolatedHits(finalLinearClusterV, remainingHits, 10);
+    //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);    
 
     // Characterize the tracks
-    for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
+    std::vector<SLinearCluster> auxFinalLinearClusterV = finalLinearClusterV;
+    finalLinearClusterV.clear();
+    for(size_t ix = 0; ix<auxFinalLinearClusterV.size(); ix++){
         //// !!!! WARNING
-        finalLinearClusterV[ix].FillResidualHits();
-        finalLinearClusterV[ix].AssignId(ix);
+        auxFinalLinearClusterV[ix].FillResidualHits();
+        auxFinalLinearClusterV[ix].AssignId(ix);
+        std::cout<<" ix:"<<ix<<" Goodness: "<<auxFinalLinearClusterV[ix].GetTrackEquation().Goodness()<<std::endl;
+        if(std::abs(auxFinalLinearClusterV[ix].GetTrackEquation().Goodness())>0.){
+            finalLinearClusterV.push_back(auxFinalLinearClusterV[ix]);
+        }  
     }
         
     //Find secondary vertexes
@@ -428,7 +451,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     intersectionsInBall.clear();
     std::vector<SLinearCluster> NewTrackList;
     NewTrackList.clear();
-    //if(fTPCLinesPset.VertexAlgorithm==2 && finalLinearClusterV.size()>0){
+
     if(finalLinearClusterV.size()>0){
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
         
@@ -441,7 +464,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             SLinearCluster newTrack(hitList);
             newTrack.FillResidualHits();
             newTrack.AssignId(ix);
-            NewTrackList.push_back( newTrack );
+            NewTrackList.push_back( newTrack );    
         }
         
         intersectionsInBall = fVertexFinder.GetInterectionsInBall(NewTrackList, fVertex.Point());

@@ -234,6 +234,8 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::Get2DClusters(std::vector<SHit>
     // Set the distance function
     if(option=="DistanceWidth")
         dbscan.setDistanceFunction(DBSCANHitWidthDistance);
+    else if(option=="DistanceWidth2")
+        dbscan.setDistanceFunction(DBSCANHitWidthDistance2);
     else if(option=="DistanceOverlap")
         dbscan.setDistanceFunction(DBSCANHitOverlapDistance);
     else
@@ -307,7 +309,8 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::CaptureMissingHits(std::vector<
             if (std::abs(hit.Y() - pEvalY)< hit.Width() ){
                 candidateHitList.push_back(hit);
                 if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"MERGING "<<hit.X()<<std::endl;
-            }else {
+            }
+            else {
                 unmatchedHitList.push_back(hit);
             }
         }
@@ -477,7 +480,6 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
         connectedLinearClustersV = CaptureMissingHits(connectedLinearClustersV, unmatchedHits);
     }
     
-
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
         fDisplay.Show("Connectedness clusters with capture", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
