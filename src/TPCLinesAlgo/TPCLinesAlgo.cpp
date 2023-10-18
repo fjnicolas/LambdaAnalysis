@@ -417,7 +417,8 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
     //fDisplay.Show(eventLabel+"_BeforeIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
     finalLinearClusterV = MergeIsolatedHits(finalLinearClusterV, remainingHits, 10);
-    //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);    
+    //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
+
 
     // Characterize the tracks
     std::vector<SLinearCluster> auxFinalLinearClusterV = finalLinearClusterV;
@@ -431,6 +432,59 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             finalLinearClusterV.push_back(auxFinalLinearClusterV[ix]);
         }  
     }
+
+
+    // ------ Get the short/vertex tracks and remove them
+    std::map<int, std::vector<int>> shortToLongTrackDict;
+    std::map<int, int> shortConnectionTrackDict;
+    std::vector<SLinearCluster> shortTrackList = TPCLinesDirectionUtils::GetVertexTracks(finalLinearClusterV, shortToLongTrackDict, shortConnectionTrackDict, 6, 3, 5, fTPCLinesPset.Verbose); 
+    std::cout<<"Number of SHORT TRACKS "<<shortTrackList.size()<<std::endl;
+    // remove the short tracks
+    std::vector<SLinearCluster> newTrackList;
+    for (SLinearCluster& track : finalLinearClusterV) {
+    
+        std::cout<<"TRACK ID: "<<track.GetId()<<std::endl;
+        if (shortToLongTrackDict.find(track.GetId()) == shortToLongTrackDict.end()) {
+            std::cout<<"   Merging Short for : "<<track.GetId()<<std::endl;
+
+            SLinearCluster newTrack = track;
+            
+            for(auto & sTrackId:shortToLongTrackDict){
+                if( sTrackId.second[0]==track.GetId() || sTrackId.second[1]==track.GetId() ) {
+                    std::vector<SHit> auxHits = track.GetHits();
+                    std::vector<SHit> auxHitsShort;
+                    for(SLinearCluster sTrack:shortTrackList){
+                        
+                        if(sTrack.GetId()==sTrackId.first){
+                            auxHitsShort = sTrack.GetHits(); 
+                            std::cout<<"   SHOHO "<<sTrack.GetId()<<" "<<auxHitsShort.size() <<" PreHits: "<<auxHits.size()<<std::endl;
+                        }
+                    }
+                    
+                    auxHits.insert(auxHits.begin(), auxHitsShort.begin(), auxHitsShort.end());
+                    newTrack = SLinearCluster(auxHits);
+                }
+                
+            }
+            
+            newTrack.FillResidualHits();
+            newTrack.AssignId(track.GetId());
+            newTrackList.push_back(newTrack);
+            std::cout<<" NEW SIZE "<<newTrackList.size()<<" NHits: "<<newTrack.NHits()<<std::endl;
+        }
+    }
+
+    finalLinearClusterV.clear();
+    for(SLinearCluster & trk: newTrackList){
+        finalLinearClusterV.push_back(trk);
+        std::cout<<"PIUP "<<trk.NHits()<<" "<<trk.GetId()<<std::endl;
+    }
+
+
+    std::cout<<" FINAL SIZE "<<finalLinearClusterV.size()<<std::endl;
+    
+
+
         
     /*//Find secondary vertexes
     std::vector<STriangle> vertexList;
@@ -478,7 +532,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         //Find secondary vertexes
         SLinearCluster mainDirection;
         if(NewTrackList.size()>0){
-            fVertexFinder.GetAngleVertexes(NewTrackList, vertexList, intersectionList, mainDirection);
+            fVertexFinder.GetAngleVertices(NewTrackList, vertexList, intersectionList, mainDirection);
         }
 
         fMainVertex = mainDirection.GetStartPoint();

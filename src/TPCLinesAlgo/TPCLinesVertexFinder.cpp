@@ -57,8 +57,10 @@ bool TPCLinesVertexFinder::TrackTriangleJunctionConatined(SLinearCluster track, 
     double juntionDirectionAngle = GetAngle360(juntionDirection[0], juntionDirection[1]);
     double VDir1Angle = GetAngle360(VDir1[0], VDir1[1]);
     double VDir2Angle = GetAngle360(VDir2[0], VDir2[1]);
-
-    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "V ANGLES: " << juntionDirectionAngle << ", " << VDir1Angle << ", " << VDir2Angle << std::endl;
+    
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "    MainTrackVertex: " << mainTrackVertex;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "    V ANGLES: " << juntionDirectionAngle << ", " << VDir1Angle << ", " << VDir2Angle << std::endl;
+    
 
 
     double minAngle = std::min(VDir1Angle, VDir2Angle);
@@ -72,13 +74,6 @@ bool TPCLinesVertexFinder::TrackTriangleJunctionConatined(SLinearCluster track, 
     }
     else {
         junctionContained = (juntionDirectionAngle<=minAngle+fExtraAngle) || (juntionDirectionAngle>=maxAngle-fExtraAngle);
-    }
-
-    if (!junctionContained) {
-        if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "JUNCTION NOT CONTAINED" << std::endl;
-    }
-    else{
-        if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "JUNCTION CONTAINED" << std::endl;
     }
 
     return junctionContained;
@@ -537,8 +532,122 @@ double IntersectionArea(const Rectangle& rect, const Triangle& tri) {
     return 0.0;
 }
 
+bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList){
+    if(fTPCLinesVertexFinderPset.Verbose>=1)
+        std::cout << " - - - Performing kinematic checks - - - "<<std::endl;
+    /*// CHECK 0: empty area of the triangle
+    // Calculate the total covered area
+    double totalCoveredArea = 0;
+    Triangle trianglePol = {intP.X(), intP.Y(), vertex1.X(), vertex1.Y(), vertex2.X(), vertex2.Y()};
 
-void TPCLinesVertexFinder::GetAngleVertexes(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection){
+    std::vector<SHit> triangleHits;
+    std::vector<SHit> hitsAux =  track1.GetHits();
+    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end() );
+    hitsAux.clear();
+    hitsAux =  track2.GetHits();
+    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end() );
+    
+    for (SHit& hit : triangleHits){
+        Rectangle rectPol = {hit.X()-0.5, hit.Y()-hit.Width(), 1, 2*hit.Width()};
+        //std::cout<<IntersectionArea(rectPol, trianglePol)<<std::endl;
+        totalCoveredArea += IntersectionArea(rectPol, trianglePol);
+    }
+
+    std::cout<<"TOTAL COVERED AREA "<<totalCoveredArea<<std::endl;*/
+
+
+    // CHECK 1: check if the triangle direction intersects the main driection
+    if(fTPCLinesVertexFinderPset.Verbose>=1)
+        std::cout << " - - - Check 1: Triangle direction intersects main direction - - - \n";
+    SPoint start_point(Triangle.GetMainVertex().X(), Triangle.GetMainVertex().Y());
+    SPoint direction_vector = Triangle.GetDirectorVector();
+    double line_slope = MainDirection.GetTrackEquation().Slope();
+    double line_intercept = MainDirection.GetTrackEquation().Intercept();
+    
+    SPoint intersection_point = check_arrow_line_intersection(start_point.X(), start_point.Y(), 
+    direction_vector.X(), direction_vector.Y(), line_slope, line_intercept);
+    bool triangleIntersects = (intersection_point.X()!=-1 && intersection_point.Y()!=-1);
+    
+    if(fTPCLinesVertexFinderPset.Verbose>=1){
+        
+        std::cout << "Arrow line intersects the line equation at: (" << intersection_point.X() << ", " << intersection_point.Y() << ")" << std::endl;
+    }
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<< "  ** Pass: "<<triangleIntersects<<std::endl;
+
+
+    
+    // CHECK 2: junction between the main direction and the triangle vertex
+    // is contained within the triangle
+    if(fTPCLinesVertexFinderPset.Verbose>=1)
+        std::cout << " - - - Check 2: junction between main direction origin and triangle vertex is contained - - - \n";
+    std::cout<<"JJJJ "<<MainDirection.GetMinX()<<std::endl;
+    bool junctionContained = TrackTriangleJunctionConatined(MainDirection, Triangle);
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<< "  ** Pass: "<<junctionContained<<std::endl;
+
+    // CHECK 3: check the juntion doesn't cross other tracks
+    if(fTPCLinesVertexFinderPset.Verbose>=1)
+        std::cout << " - - - Check 3: Junction do not intersect with other tracks - - - \n";
+    int nHitsInMiddle = GetNHitsBetweenJunction(MainDirection, Triangle, FreeTracksList, Triangle.GetMainVertex(), {track1.GetId()}, {track2.GetId()}, 1.5);
+    bool passJunctionIsFree = (nHitsInMiddle <= 1);
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "NHits in middle" << nHitsInMiddle << "Pass?" <<passJunctionIsFree  << std::endl;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<< "  ** Pass: "<<passJunctionIsFree<<std::endl;
+
+
+    // CHECK 4: how many hits of triangle tracks are contained in the main direciton hypothesis
+    if(fTPCLinesVertexFinderPset.Verbose>=1)
+        std::cout << " - - - Check 4: V hits conatied in the main direction - - - \n";
+    bool passAngleTracksNotInMain = true;
+    int nhits_track1_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track1.GetHits());
+    int nhits_track2_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track2.GetHits());
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" NHits of track "<<track1.GetId()<<" in main direction: "<<nhits_track1_inMainDir<<std::endl;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" NHits of track "<<track2.GetId()<<" in main direction: "<<nhits_track2_inMainDir<<std::endl;
+    passAngleTracksNotInMain = (1.*nhits_track1_inMainDir/track1.NHits()<fTPCLinesVertexFinderPset.MaxTrackFractionInMain && 
+    1.*nhits_track2_inMainDir/track2.NHits()<fTPCLinesVertexFinderPset.MaxTrackFractionInMain);
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" Pass AngleTracksNotInMain: "<<passAngleTracksNotInMain<<std::endl;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<< "  ** Pass: "<<passAngleTracksNotInMain<<std::endl;
+
+    // CHECK 5: triangle tracks start/end are not next to the main track edge hit
+    if(fTPCLinesVertexFinderPset.Verbose>=1)
+        std::cout << " - - - Check 5: Triangle tracks are not the main track edge hits - - - \n";
+
+    bool passTriangleEdgesNotInMain = true; 
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" Triangle vertex BC: "<<Triangle.GetVertexB().X()<<" "<<Triangle.GetVertexB().Y()<<
+    " "<<Triangle.GetVertexC().X()<<" "<<Triangle.GetVertexC().Y()<<std::endl;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" MainDirectionEdgeHits: "<<MainDirection.GetStartPoint().X()<<" "<<MainDirection.GetStartPoint().Y()<<" "<<MainDirection.GetEndPoint().X()<<" "<<MainDirection.GetEndPoint().Y()<<std::endl;
+    
+    double distanceBMainStart = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexB(), MainDirection.GetStartPoint());
+    double distanceBMainEnd = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexB(), MainDirection.GetEndPoint());
+    double distanceCMainStart = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexC(), MainDirection.GetStartPoint());
+    double distanceCMainEnd = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexC(), MainDirection.GetEndPoint());
+    // get the average compactness of all the tracks in the main direction
+    double meanComp = MainDirection.GetCompactness();
+
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" MainDir compactness:"<<meanComp<<std::endl;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << " Distances B: "<<distanceBMainStart<<" "<<distanceBMainEnd<<std::endl;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << " Distances C: "<<distanceCMainStart<<" "<<distanceCMainEnd<<std::endl;
+    
+    double _tol = 1.;
+
+    passTriangleEdgesNotInMain = distanceBMainStart>_tol*meanComp &&
+                                    distanceBMainEnd>_tol*meanComp &&
+                                    distanceCMainStart>_tol*meanComp &&
+                                    distanceCMainEnd>_tol*meanComp;
+
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<< "  ** Pass: "<<passTriangleEdgesNotInMain<<std::endl;                                
+
+
+
+    //bool passKinemanicChecks = triangleIntersects && junctionContained && passJunctionIsFree && passAngleTracksNotInMain && passTriangleEdgesNotInMain;
+    bool passKinemanicChecks = junctionContained && passJunctionIsFree && passAngleTracksNotInMain && passTriangleEdgesNotInMain;
+
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<< "  ** PassAllChecks: "<<passKinemanicChecks<<std::endl;
+    
+                        
+
+    return passKinemanicChecks;  
+}
+
+void TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection){
 
     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In Origin finder\n";    
 
@@ -558,7 +667,6 @@ void TPCLinesVertexFinder::GetAngleVertexes(std::vector<SLinearCluster> trackLis
             newTrackList.push_back(track);
         }
     }
-
 
     // ------ Get the parallel tracks
     std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(newTrackList, -2, 15, 30, fTPCLinesVertexFinderPset.Verbose);
@@ -580,7 +688,6 @@ void TPCLinesVertexFinder::GetAngleVertexes(std::vector<SLinearCluster> trackLis
     std::vector<SLinearCluster> MainDirTrackList;
     std::vector<SLinearCluster> FreeTracksList;
     SLinearCluster MainDirection = GetMainDirection(MainDirTrackList, FreeTracksList, parallelTracks, fTPCLinesVertexFinderPset.DecideMainTrack, fTPCLinesVertexFinderPset.Verbose);
-
 
     // ------- Look for possible intersections
     // ------ Loop 1
@@ -616,17 +723,15 @@ void TPCLinesVertexFinder::GetAngleVertexes(std::vector<SLinearCluster> trackLis
                     }
                 }
 
-
                 // ------ Skip if its in the same parallel cluster as track 1
                 if (std::find(track1ListIds.begin(), track1ListIds.end(),
                             track2.GetId()) != track1ListIds.end()) {
                     continue;
                 }
 
-
                 // ------ Check if the tracks are connected
                 // calculate connection based on the tracks connectedes
-                float connTol = 50 * (track1.GetConnectedness() + track2.GetConnectedness()) / 2;
+                float connTol = 5 * (track1.GetConnectedness() + track2.GetConnectedness()) / 2;
                 float minConn = 1e3;
                 for (SLinearCluster trk1 : track1List) {
                     for (SLinearCluster trk2 : track2List) {
@@ -637,7 +742,7 @@ void TPCLinesVertexFinder::GetAngleVertexes(std::vector<SLinearCluster> trackLis
                     }
                 }
 
-                //  calculate connection based on short tracks
+                // calculate connection based on short tracks
                 bool connectedThroughShortTrack = false;
                 if(shortConnectionTrackDict.find(track1.GetId()) != shortConnectionTrackDict.end()){
                     if(shortConnectionTrackDict[track1.GetId()] == track2.GetId()){
@@ -721,112 +826,16 @@ void TPCLinesVertexFinder::GetAngleVertexes(std::vector<SLinearCluster> trackLis
                     std::cout << std::endl;
                 }
                 
-
                 if(thereIsIntersectionVertex){
-                    
+
                     // ------ Create the triangle object
                     SPoint vertex1 = GetTrackssEuationOppositePoint( track1, track1List, intP );
                     SPoint vertex2 = GetTrackssEuationOppositePoint( track2, track2List, intP );
                     STriangle triangle = STriangle(intP, vertex1, vertex2, cloHit, track1.GetIntegral(), track2.GetIntegral());
 
-                    // CHECK 0: empty area of the triangle
-                    // Calculate the total covered area
-                    double totalCoveredArea = 0;
-                    Triangle trianglePol = {intP.X(), intP.Y(), vertex1.X(), vertex1.Y(), vertex2.X(), vertex2.Y()};
-
-                    std::vector<SHit> triangleHits;
-                    std::vector<SHit> hitsAux =  track1.GetHits();
-                    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end() );
-                    hitsAux.clear();
-                    hitsAux =  track2.GetHits();
-                    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end() );
+                    bool passKinemanicChecks = LambdaDecayKinematicCheck(triangle, MainDirection, track1, track2, FreeTracksList);
                     
-                    for (SHit& hit : triangleHits){
-                        Rectangle rectPol = {hit.X()-0.5, hit.Y()-hit.Width(), 1, 2*hit.Width()};
-                        //std::cout<<IntersectionArea(rectPol, trianglePol)<<std::endl;
-                        totalCoveredArea += IntersectionArea(rectPol, trianglePol);
-                    }
-
-                    std::cout<<"TOTAL COVERED AREA "<<totalCoveredArea<<std::endl;
-
-
-                    // CHECK 1: check if the triangle direction intersects the main driection
-                    // get closes segment in the MainDirection to the intersection point
-                    double minD = 1e3;
-                    SLinearCluster mainTrackDir = MainDirection;
-
-                    for (SLinearCluster mTrack : MainDirTrackList) {
-                        double d = mTrack.GetHitCluster().GetMinDistanceToCluster(intP);
-                        if (d < minD) {
-                            minD = d;
-                            mainTrackDir = mTrack;
-                        }
-                    }
-
-                    SPoint start_point(triangle.GetMainVertex().X(), triangle.GetMainVertex().Y());
-                    SPoint direction_vector = triangle.GetDirectorVector();
-                    double line_slope = mainTrackDir.GetTrackEquation().Slope();
-                    double line_intercept = mainTrackDir.GetTrackEquation().Intercept();
-                    
-                    SPoint intersection_point = check_arrow_line_intersection(start_point.X(), start_point.Y(), direction_vector.X(), direction_vector.Y(), line_slope, line_intercept);
-                    bool triangleIntersects = (intersection_point.X()!=-1 && intersection_point.Y()!=-1);
-                    
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "Arrow line intersects the line equation at: (" << intersection_point.X() << ", " << intersection_point.Y() << ")" << std::endl;
-                
-                    
-                    // CHECK 2: junction between the main direction and the triangle vertex
-                    // is contained within the triangle
-                    bool junctionContained = TrackTriangleJunctionConatined(MainDirection, triangle);
-
-
-                    // CHECK 3: check the juntion doesn't cross other tracks
-                    //int nHitsInMiddle = GetNHitsBetweenJunction(MainDirection, triangle, FreeTracksList, intP, track1ListIds, track2ListIds, 1.5);
-                    int nHitsInMiddle = GetNHitsBetweenJunction(MainDirection, triangle, FreeTracksList, intP, {track1.GetId()}, {track2.GetId()}, 1.5);
-                    bool passJunctionIsFree = (nHitsInMiddle <= 1);
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "NHits in middle" << nHitsInMiddle << "Pass?" <<passJunctionIsFree  << std::endl;
-
-
-                    // CHECK 4: how many hits of triangle tracks are contained in the main direciton hypothesis
-                    bool passAngleTracksNotInMain = true;
-                    int nhits_track1_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track1.GetHits());
-                    int nhits_track2_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track2.GetHits());
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" NHits of track "<<track1.GetId()<<" in main direction: "<<nhits_track1_inMainDir<<std::endl;
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" NHits of track "<<track2.GetId()<<" in main direction: "<<nhits_track2_inMainDir<<std::endl;
-                    passAngleTracksNotInMain = (1.*nhits_track1_inMainDir/track1.NHits()<fTPCLinesVertexFinderPset.MaxTrackFractionInMain && 
-                    1.*nhits_track2_inMainDir/track2.NHits()<fTPCLinesVertexFinderPset.MaxTrackFractionInMain);
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" Pass AngleTracksNotInMain: "<<passAngleTracksNotInMain<<std::endl;
-                    
-
-                    // CHECK 5: triangle tracks start/end are not next to the main track edge hit
-                    bool passTriangleEdgesNotInMain = true; 
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" Triangle vertex BC: "<<triangle.GetVertexB().X()<<" "<<triangle.GetVertexB().Y()<<
-                    " "<<triangle.GetVertexC().X()<<" "<<triangle.GetVertexC().Y()<<std::endl;
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" MainDirectionEdgeHits: "<<MainDirection.GetStartPoint().X()<<" "<<MainDirection.GetStartPoint().Y()<<" "<<MainDirection.GetEndPoint().X()<<" "<<MainDirection.GetEndPoint().Y()<<std::endl;
-                    
-                    double distanceBMainStart = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexB(), MainDirection.GetStartPoint());
-                    double distanceBMainEnd = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexB(), MainDirection.GetEndPoint());
-                    double distanceCMainStart = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexC(), MainDirection.GetStartPoint());
-                    double distanceCMainEnd = TPCLinesDistanceUtils::GetHitDistance(triangle.GetVertexC(), MainDirection.GetEndPoint());
-                    // get the average compactness of all the tracks in the main direction
-                    double meanComp = 0;
-                    for(SLinearCluster & trk:MainDirTrackList){
-                        meanComp+=trk.GetCompactness();
-                    }
-                    meanComp/=MainDirTrackList.size();
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" MainDir compactness:"<<meanComp<<std::endl;
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << " Distances B: "<<distanceBMainStart<<" "<<distanceBMainEnd<<std::endl;
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << " Distances C: "<<distanceCMainStart<<" "<<distanceCMainEnd<<std::endl;
-                    
-                    double _tol = 1.;
-
-                    passTriangleEdgesNotInMain = distanceBMainStart>_tol*meanComp &&
-                                                    distanceBMainEnd>_tol*meanComp &&
-                                                    distanceCMainStart>_tol*meanComp &&
-                                                    distanceCMainEnd>_tol*meanComp;
-
-                    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" Pass edge triangle hits not in main track edges: "<<passTriangleEdgesNotInMain<<std::endl;
-                    
-                    if(triangleIntersects && junctionContained && passJunctionIsFree && passAngleTracksNotInMain && passTriangleEdgesNotInMain){
+                    if(passKinemanicChecks){
                         if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"FOUND ORIGIN!\n";
                         vertexList.push_back(triangle);
                         originList.push_back(intP);
@@ -881,10 +890,9 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster
                 std::cout<<jx<<std::endl;
                 SLinearCluster track2 = tracksList[jx];
 
-
                 // ------ Check if the tracks are connected
                 // calculate connection based on the tracks connectedes
-                float connTol = 20 * std::max(track1.GetConnectedness(), track2.GetConnectedness());
+                float connTol = 3 * std::max(track1.GetConnectedness(), track2.GetConnectedness());
                 float conn = TPCLinesDistanceUtils::GetClusterConnectedness(track1.GetHitCluster(), track2.GetHitCluster());
                 bool connected = (conn < connTol); 
 
@@ -893,7 +901,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetOrigins(std::vector<SLinearCluster
                 }
 
                 if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "\n----- Potential intersection " << track1.GetId() << " " << track2.GetId() << " Conn:" << conn << " Tol:" << connTol << std::endl;
-
 
                 // ------ Look for the intersection points
                 SPoint intP = GetTracksIntersection(track1, track2, 10, fTPCLinesVertexFinderPset.RefineVertexIntersection);

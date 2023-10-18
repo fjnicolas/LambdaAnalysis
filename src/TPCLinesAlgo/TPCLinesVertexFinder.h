@@ -58,7 +58,7 @@ class TPCLinesVertexFinder {
 
         std::vector<SLinearCluster> GetCollinearTracks(SLinearCluster mainTrack, std::vector<SLinearCluster> trackList);
 
-        
+        bool LambdaDecayKinematicCheck(STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList);
 
 
     public:
@@ -66,7 +66,7 @@ class TPCLinesVertexFinder {
         TPCLinesVertexFinder(VertexFinderAlgorithmPsetType tpcLinesVertexFinderPset);
 
         // main function
-        void GetAngleVertexes(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection);
+        void GetAngleVertices(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection);
 
         std::vector<SOrigin> GetOrigins(std::vector<SLinearCluster> tracksList, SPoint ballVertex);
 

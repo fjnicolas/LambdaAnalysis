@@ -221,7 +221,7 @@ namespace TPCLinesDirectionUtils{
             std::vector<SLinearCluster> posteriorTracks;
             float sTrackMaxX = sTrack.GetMaxX();
             
-            if(verbose>=1) std::cout << sTrack.GetId() << std::endl;
+            if(verbose>=1) std::cout << " Short Track Candidate ID: "<<sTrack.GetId() << std::endl;
 
             for (SLinearCluster lTrack : trackList) {
                 if (lTrack.GetId() == sTrack.GetId()) {
@@ -260,11 +260,12 @@ namespace TPCLinesDirectionUtils{
             float minY = std::min(lTrack1.GetMeanY(), lTrack2.GetMeanY());
             float maxY = std::max(lTrack1.GetMeanY(), lTrack2.GetMeanY());
             float sTrackSlope = sTrack.GetTrackEquation().Slope();
-
-            //if(verbose>=1) std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << std::endl;
+            
+            if(verbose>=1) std::cout << " Short Track Candidate ID: "<<sTrack.GetId() <<" , slope analysis: "<< std::endl;
+            if(verbose>=1) std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << std::endl;
             //if(verbose>=1) std::cout << "minY " << minY << " maxY " << maxY << " shortSlope " << sTrack.GetMeanY() << std::endl;
-
-            if (minSlope < sTrackSlope && sTrackSlope < maxSlope && minY < sTrack.GetMeanY() && sTrack.GetMeanY() < maxY) {
+            
+            if (minSlope < sTrackSlope && sTrackSlope < maxSlope && minY){// < sTrack.GetMeanY() && sTrack.GetMeanY() < maxY) {
                 finalShortTracks.push_back(sTrack);
                 shortToLongMap[sTrack.GetId()] = { lTrack1.GetId(), lTrack2.GetId() };
                 connectionsMap[lTrack1.GetId()] = lTrack2.GetId();
