@@ -262,7 +262,7 @@ namespace TPCLinesDirectionUtils{
             float sTrackSlope = sTrack.GetTrackEquation().Slope();
             
             if(verbose>=1) std::cout << " Short Track Candidate ID: "<<sTrack.GetId() <<" , slope analysis: "<< std::endl;
-            if(verbose>=1) std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << std::endl;
+            if(verbose>=1) std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << " Min/Max Y:"<< minY<<" "<<maxY << std::endl;
             //if(verbose>=1) std::cout << "minY " << minY << " maxY " << maxY << " shortSlope " << sTrack.GetMeanY() << std::endl;
             
             if (minSlope < sTrackSlope && sTrackSlope < maxSlope && minY){// < sTrack.GetMeanY() && sTrack.GetMeanY() < maxY) {

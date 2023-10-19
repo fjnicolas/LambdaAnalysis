@@ -68,14 +68,13 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     covYY /= data.size();
     covXY /= data.size();
 
-    // Total variance (sum of covariances)
-    double total_variance = covXX + covYY;  
-
     double eigenvalue1 = (covXX + covYY + std::sqrt((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY)) / 2.0;
     double eigenvectorX1 = eigenvalue1 - covYY;
     double eigenvectorY1 = covXY;
 
-    double explained_variance = eigenvalue1 / total_variance;
+    // Total variance (sum of covariances)
+    //double total_variance = covXX + covYY;  
+    //double explained_variance = eigenvalue1 / total_variance;
 
     double correlation = pearsonCorrelation(data);
 
