@@ -48,7 +48,7 @@ class TPCLinesVertexFinder {
         
         SPoint check_arrow_line_intersection(float Ax, float Ay, float Dx, float Dy, float line_slope, float line_intercept);
         
-        SPoint GetTrackssEuationOppositePoint(SLinearCluster track, std::vector<SLinearCluster> trackList, SPoint p);
+        SPoint GetTracksEquationOppositePoint(SLinearCluster track, std::vector<SLinearCluster> trackList, SPoint p);
 
         SLinearCluster GetMainDirection(std::vector<SLinearCluster> & mainDirTrackList, 
                                 std::vector<SLinearCluster>& freeTrackList,
@@ -66,7 +66,7 @@ class TPCLinesVertexFinder {
         TPCLinesVertexFinder(VertexFinderAlgorithmPsetType tpcLinesVertexFinderPset);
 
         // main function
-        void GetAngleVertices(std::vector<SLinearCluster> trackList, std::vector<STriangle>& vertexList, std::vector<SPoint> &originList, SLinearCluster &mainDirection);
+        std::vector<SOrigin> GetAngleVertices(std::vector<SLinearCluster> trackList, SPoint ballVertex, std::vector<STriangle>& vertexList,  SLinearCluster &mainDirection);
 
         std::vector<SOrigin> GetOrigins(std::vector<SLinearCluster> tracksList, SPoint ballVertex);
 

@@ -477,29 +477,8 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     finalLinearClusterV.clear();
     for(SLinearCluster & trk: newTrackList){
         finalLinearClusterV.push_back(trk);
-        std::cout<<"PIUP "<<trk.NHits()<<" "<<trk.GetId()<<std::endl;
     }
 
-
-    std::cout<<" FINAL SIZE "<<finalLinearClusterV.size()<<std::endl;
-    
-
-
-        
-    /*//Find secondary vertexes
-    std::vector<STriangle> vertexList;
-    std::vector<SPoint> intersectionList;
-    SLinearCluster mainDirection;
-    if(finalLinearClusterV.size()>0)
-        fVertexFinder.GetOrigins(finalLinearClusterV, vertexList, intersectionList, mainDirection);
-
-
-    fMainVertex = mainDirection.GetStartPoint();
-
-    float d1 = std::hypot( 0.3*(mainDirection.GetStartPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetStartPoint().Y() - fVertex.Point().Y()) );
-    float d2 = std::hypot( 0.3*(mainDirection.GetEndPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetEndPoint().Y() - fVertex.Point().Y()) );
-    fMainVertex = (d1<d2)? mainDirection.GetStartPoint() : mainDirection.GetEndPoint();
-    */
 
 
     std::vector<SOrigin> intersectionsInBall;
@@ -508,13 +487,11 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     vertexList.clear();
     std::vector<SLinearCluster> NewTrackList;
     NewTrackList.clear();
-    std::vector<SPoint> intersectionList;
-    intersectionList.clear();
 
     if(finalLinearClusterV.size()>0){
         
+        // ------- Get the parallel tracks
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
-        
         for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
             std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
             for(size_t jx = 1; jx<parallelTracks[ix].size(); jx++){
@@ -527,16 +504,16 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList.push_back( newTrack );    
         }
         
-        intersectionsInBall = fVertexFinder.GetOrigins(NewTrackList, fVertex.Point());
+        //intersectionsInBall = fVertexFinder.GetOrigins(NewTrackList, fVertex.Point());
 
         //Find secondary vertexes
         SLinearCluster mainDirection;
         if(NewTrackList.size()>0){
-            fVertexFinder.GetAngleVertices(NewTrackList, vertexList, intersectionList, mainDirection);
+            intersectionsInBall = fVertexFinder.GetAngleVertices(NewTrackList, fVertex.Point(), vertexList, mainDirection);
         }
 
+        // Set the main vertex
         fMainVertex = mainDirection.GetStartPoint();
-
         float d1 = std::hypot( 0.3*(mainDirection.GetStartPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetStartPoint().Y() - fVertex.Point().Y()) );
         float d2 = std::hypot( 0.3*(mainDirection.GetEndPoint().X() - fVertex.Point().X()), 0.075*(mainDirection.GetEndPoint().Y() - fVertex.Point().Y()) );
         fMainVertex = (d1<d2)? mainDirection.GetStartPoint() : mainDirection.GetEndPoint();

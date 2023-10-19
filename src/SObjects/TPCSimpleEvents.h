@@ -41,6 +41,7 @@ class SOrigin {
         void AddTrack(SLinearCluster track, SPoint p); 
         bool HasTrackIndex(int ix);
         int NHits(){return fNHits;};
+        SLinearCluster GetTrackEntry(size_t ix){ return fTrackList[ix];};
 
         //friend std::ostream& operator<<(std::ostream& out, SOrigin const& ori);
 
