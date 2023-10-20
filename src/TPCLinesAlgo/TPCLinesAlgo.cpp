@@ -419,27 +419,29 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     finalLinearClusterV = MergeIsolatedHits(finalLinearClusterV, remainingHits, 10);
     //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
 
-
+    
     // Characterize the tracks
     std::vector<SLinearCluster> auxFinalLinearClusterV = finalLinearClusterV;
     finalLinearClusterV.clear();
+    int trackCont = 0;
     for(size_t ix = 0; ix<auxFinalLinearClusterV.size(); ix++){
         //// !!!! WARNING
         auxFinalLinearClusterV[ix].FillResidualHits();
-        auxFinalLinearClusterV[ix].AssignId(ix);
+       
         std::cout<<" ix:"<<ix<<" Goodness: "<<auxFinalLinearClusterV[ix].GetTrackEquation().Goodness()<<std::endl;
-        if(std::abs(auxFinalLinearClusterV[ix].GetTrackEquation().Goodness())>0.){
+        if( std::abs(auxFinalLinearClusterV[ix].GetTrackEquation().Goodness())<fTPCLinesPset.MinTrackGoodness){
             finalLinearClusterV.push_back(auxFinalLinearClusterV[ix]);
+            finalLinearClusterV[trackCont].AssignId(trackCont);
+            trackCont++;
         }  
     }
-
 
     // ------ Get the short/vertex tracks and remove them
     std::map<int, std::vector<int>> shortToLongTrackDict;
     std::map<int, int> shortConnectionTrackDict;
     std::vector<SLinearCluster> shortTrackList = TPCLinesDirectionUtils::GetVertexTracks(finalLinearClusterV, shortToLongTrackDict, shortConnectionTrackDict, 6, 3, 5, fTPCLinesPset.Verbose); 
-    std::cout<<"Number of SHORT TRACKS "<<shortTrackList.size()<<std::endl;
     // remove the short tracks
+
     std::vector<SLinearCluster> newTrackList;
     for (SLinearCluster& track : finalLinearClusterV) {
     
@@ -479,19 +481,19 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         finalLinearClusterV.push_back(trk);
     }
 
-
-
     std::vector<SOrigin> intersectionsInBall;
     intersectionsInBall.clear();
     std::vector<STriangle> vertexList;
     vertexList.clear();
     std::vector<SLinearCluster> NewTrackList;
     NewTrackList.clear();
+    std::vector<SOrigin> associatedOrigins;
+    associatedOrigins.clear();
 
     if(finalLinearClusterV.size()>0){
         
         // ------- Get the parallel tracks
-        std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, 0);
+        std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 30, fTPCLinesPset.Verbose);
         for(size_t ix = 0; ix<parallelTracks.size(); ix++){       
             std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
             for(size_t jx = 1; jx<parallelTracks[ix].size(); jx++){
@@ -503,13 +505,13 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             newTrack.AssignId(ix);
             NewTrackList.push_back( newTrack );    
         }
-        
-        //intersectionsInBall = fVertexFinder.GetOrigins(NewTrackList, fVertex.Point());
 
+
+        std::cout<<" We have "<<NewTrackList.size()<<" tracks\n";
         //Find secondary vertexes
         SLinearCluster mainDirection;
         if(NewTrackList.size()>0){
-            intersectionsInBall = fVertexFinder.GetAngleVertices(NewTrackList, fVertex.Point(), vertexList, mainDirection);
+            intersectionsInBall = fVertexFinder.GetAngleVertices(NewTrackList, fVertex.Point(), vertexList, associatedOrigins, mainDirection);
         }
 
         // Set the main vertex
@@ -524,7 +526,6 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         fAngleList = vertexList;
         fOrigins = intersectionsInBall;
 
-
         for(SOrigin & ori: intersectionsInBall){
             std::cout<<ori;
         }
@@ -538,7 +539,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     double hitDensity = GetAverageHitDensity();
     std::cout<<"Hit density: "<<hitDensity<<std::endl;
 
-    SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, hitDensity);
+    SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, associatedOrigins, hitDensity);
     fRecoEvent = recoEvent;
 
     return;

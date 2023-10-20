@@ -97,6 +97,7 @@ struct VertexFinderAlgorithmPsetType {
     float MaxTrackFractionInMain = 0.75;
     bool DecideMainTrack = false;
     bool AddCollinearLines = false;
+    float VertexDistanceROI = 30;
     int Verbose;
 
     // constructor
@@ -109,6 +110,7 @@ struct VertexFinderAlgorithmPsetType {
         float _maxTrackFractionInMain,
         bool _decideMainTrack,
         bool _addCollinearLines,
+        float _vertexDistanceROI,
         int _verbose): 
         MaxDistToEdge(_maxDistToEdge),
         RefineVertexIntersection(_refineVertexIntersection),
@@ -116,6 +118,7 @@ struct VertexFinderAlgorithmPsetType {
         MaxTrackFractionInMain(_maxTrackFractionInMain),
         DecideMainTrack(_decideMainTrack),
         AddCollinearLines(_addCollinearLines),
+        VertexDistanceROI(_vertexDistanceROI),
         Verbose(_verbose)
     {}
 
@@ -126,6 +129,7 @@ struct VertexFinderAlgorithmPsetType {
         std::cout << "MaxTrackFractionInMain: " << MaxTrackFractionInMain << std::endl;
         std::cout << "DecideMainTrack: " << (DecideMainTrack ? "true" : "false") << std::endl;
         std::cout << "AddCollinearLines: " << (AddCollinearLines ? "true" : "false") << std::endl;
+        std::cout << "VertexDistanceROI: " << VertexDistanceROI << std::endl;
         std::cout << "Verbose: " << Verbose << std::endl;
     }
 };
@@ -174,6 +178,7 @@ struct TPCLinesAlgoPsetType{
     bool RemoveIsolatedHits;
     double MaxNeighbourDistance;
     int MinNeighboursHits;
+    float MinTrackGoodness;
     int VertexAlgorithm;
     int View;
     std::string OutputPath;
@@ -194,6 +199,7 @@ struct TPCLinesAlgoPsetType{
         bool _removeIsolatedHits,
         double _maxNeighbourDistance,
         int _minNeighboursHits,
+        float _minTrackGoodness,
         int _vertexAlgorithm,
         int _view,
         std::string _outputPath,
@@ -209,6 +215,7 @@ struct TPCLinesAlgoPsetType{
         RemoveIsolatedHits(_removeIsolatedHits),
         MaxNeighbourDistance(_maxNeighbourDistance), 
         MinNeighboursHits(_minNeighboursHits),
+        MinTrackGoodness(_minTrackGoodness),
         VertexAlgorithm(_vertexAlgorithm),
         View(_view),
         OutputPath(_outputPath),

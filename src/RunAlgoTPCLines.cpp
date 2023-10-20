@@ -3,6 +3,7 @@
 
 #include "TString.h"
 #include <TApplication.h>
+#include "TImage.h"
 
 #include "CommandLineParser.h"
 #include "SEventHandle.h"
@@ -11,6 +12,8 @@
 #include "TPCSimpleEvents.h"
 #include "TPCLinesParameters.h"
 #include "TPCLinesAlgo.h"
+#include "ChargeDensity.h"
+#include "ChargeDensityPset.h"
 
 void RunAlgoTPCLines(const CommandLineParser& parser)
 {
@@ -35,6 +38,14 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
     // Set batch mode
     if(Debug==0) gROOT->SetBatch(true);
+
+    // ---- FRAMS parameters ----------------------------------------
+    double fFRANSScoreCut = 0.1;
+
+    FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
+    fPsetFRANS.Verbose = Debug;
+    std::cout<<"  njvisfnvioanvownvr "<<fPsetFRANS.TMVAFilename<<" "<<fPsetFRANS.OutputPath<<std::endl;
+    fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
 
     // ---- TPCLines parameters ----------------------------------------
     TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset( FindFile("trackfinderalg_config.fcl"), "TrackFinderAlg:");
@@ -72,8 +83,11 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     int nEvents=0;
 
 
+
     // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
+    // Define FRANS LINES ALGORITHM
+    ChargeDensity _FRAMSAlgo(fPsetFRANS);
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
 
@@ -152,10 +166,43 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 _TPCLinesAlgo.AnaView(ev.Label());
                 recoEvent = _TPCLinesAlgo.GetRecoEvent();
             }
+
+
+            // FRANS part
+            std::vector<STriangle> angleList = recoEvent.GetAngleList();
+            std::vector<SOrigin> associatedOrigins = recoEvent.GetAssociatedOrigins();
+            double bestFRANSScore = -1000;
+            TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 600, 0, 800, 1200);
+            
+            for(size_t orix=0; orix<angleList.size(); orix++){
+                SVertex fVertex(associatedOrigins[orix].GetPoint(), std::to_string(view));
+                std::cout<<" LAMBDA CANDIDATE "<<fVertex<<std::endl;
+
+
+                SVertex fVertexMine = SVertex( SPoint( fVertex.X()+_TPCLinesAlgo.ShiftX(),
+                                                fVertex.Y()+_TPCLinesAlgo.ShiftY())
+                                            , "");
+
+                SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");                        
+
+                std::cout<<" VertexTrue "<<fVertexTrue;
+                std::cout<<" VertexMine "<<fVertexMine;
+                
+                _FRAMSAlgo.Fill(hitList, fVertexMine);
+
+                double score = _FRAMSAlgo.Score();
+                if(score>bestFRANSScore){
+                    bestFRANSScore = score;
+                }    
+                _FRAMSAlgo.Display(cDisplay);
+            }
             
             int nAngles = recoEvent.GetNAngles();
+
+            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
+
             // Update the efficiency calculator
-            if(nAngles>0){
+            if(accepted){
                 _EfficiencyCalculator.UpdateSelected(ev);
 
                 if(Debug==-12){
@@ -168,10 +215,15 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             else
                 _EfficiencyCalculator.UpdateNotSelected(ev);
 
-            bool accepted = nAngles>0;
+            
             std::string outNamePreffix = accepted? "Accepted":"Rejected";
-            _TPCLinesAlgo.Display("FinalReco"+outNamePreffix + ev.Label());
-    
+            _TPCLinesAlgo.Display("FinalReco" + outNamePreffix + ev.Label());
+            
+            std::string fransOutputLabel = "FinalReco" + outNamePreffix + ev.Label() + "FRANS";
+            cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+fransOutputLabel+".pdf").c_str() );
+            delete cDisplay;
+            
+            
             if(recoEvent.GetNOrigins()>0){
                 _EfficiencyCalculator.UpdateHistograms(recoEvent);
 

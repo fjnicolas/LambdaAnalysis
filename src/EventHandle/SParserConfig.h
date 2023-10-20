@@ -181,6 +181,7 @@ VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename
     fPset.MaxTrackFractionInMain = pt.get<float>("MaxTrackFractionInMain");
     fPset.DecideMainTrack = pt.get<bool>("DecideMainTrack");
     fPset.AddCollinearLines = pt.get<bool>("AddCollinearLines");
+    fPset.VertexDistanceROI = pt.get<float>("VertexDistanceROI");
     fPset.Verbose = pt.get<int>("Verbose");
     
     
@@ -222,6 +223,7 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string bloc
     fPset.RemoveIsolatedHits = pt.get<bool>("RemoveIsolatedHits");
     fPset.MaxNeighbourDistance = pt.get<double>("MaxNeighbourDistance");
     fPset.MinNeighboursHits = pt.get<int>("MinNeighboursHits");
+    fPset.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
     fPset.VertexAlgorithm = pt.get<int>("VertexAlgorithm");
     fPset.View = pt.get<int>("View");
     fPset.OutputPath = pt.get<std::string>("OutputPath");

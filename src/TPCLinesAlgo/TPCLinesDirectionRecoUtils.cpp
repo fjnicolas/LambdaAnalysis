@@ -246,20 +246,28 @@ namespace TPCLinesDirectionUtils{
             }
         }
 
+        
         std::vector<SLinearCluster> finalShortTracks;
         shortToLongMap.clear();
         connectionsMap.clear();
 
+        std::cout<<" COntrol check\n";
         // Check slope and y position
         for (SLinearCluster& sTrack : shortTracks2) {
+
+            std::cout<<" COntrol check\n";
             SLinearCluster lTrack1 = trackList[shortToLongDict[sTrack.GetId()][0]];
             SLinearCluster lTrack2 = trackList[shortToLongDict[sTrack.GetId()][1]];
             
+            std::cout<<" COntrol check\n";
             float minSlope = std::min(lTrack1.GetTrackEquation().Slope(), lTrack2.GetTrackEquation().Slope());
             float maxSlope = std::max(lTrack1.GetTrackEquation().Slope(), lTrack2.GetTrackEquation().Slope());
+            std::cout<<" COntrol check\n";
             float minY = std::min(lTrack1.GetMeanY(), lTrack2.GetMeanY());
             float maxY = std::max(lTrack1.GetMeanY(), lTrack2.GetMeanY());
             float sTrackSlope = sTrack.GetTrackEquation().Slope();
+
+            std::cout<<" COntrol check\n";
             
             if(verbose>=1) std::cout << " Short Track Candidate ID: "<<sTrack.GetId() <<" , slope analysis: "<< std::endl;
             if(verbose>=1) std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << " Min/Max Y:"<< minY<<" "<<maxY << std::endl;

@@ -66,9 +66,7 @@ class TPCLinesVertexFinder {
         TPCLinesVertexFinder(VertexFinderAlgorithmPsetType tpcLinesVertexFinderPset);
 
         // main function
-        std::vector<SOrigin> GetAngleVertices(std::vector<SLinearCluster> trackList, SPoint ballVertex, std::vector<STriangle>& vertexList,  SLinearCluster &mainDirection);
-
-        std::vector<SOrigin> GetOrigins(std::vector<SLinearCluster> tracksList, SPoint ballVertex);
+        std::vector<SOrigin> GetAngleVertices(std::vector<SLinearCluster> trackList, SPoint ballVertex, std::vector<STriangle>& vertexList, std::vector<SOrigin>& associatedOrigins,  SLinearCluster &mainDirection);
 
         
 };

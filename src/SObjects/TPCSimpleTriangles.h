@@ -13,7 +13,7 @@
 #include <iostream>
 #include <string>
 #include <iosfwd>
-
+#include <map>
 
 #include "TPCSimpleLines.h"
 #include "TPCSimpleHits.h"
@@ -31,6 +31,8 @@ class STriangle {
         LineEquation fDirection;
         LineEquation fMomentumHypo1;
         LineEquation fMomentumHypo2;
+
+        double fOpeningAngle;
         
     public:
         STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, double weight_b=1, double weight_c=1);
@@ -70,6 +72,12 @@ class STriangle {
         LineEquation GetMomentumHypo2() const {
             return fMomentumHypo2;
         }
+
+        double GetOpeningAngle() const {
+            return fOpeningAngle;
+        }
+
+        double ComputeCoveredArea(std::vector<SHit> triangleHits, double widthTol);
 
         
 };

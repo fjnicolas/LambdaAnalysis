@@ -8,7 +8,8 @@ TPCLinesAlg:
     MaxHoughTracks: 15 
     RemoveIsolatedHits: true 
     MaxNeighbourDistance: 2 
-    MinNeighboursHits: 2 
+    MinNeighboursHits: 2
+    MinTrackGoodness: 3
     VertexAlgorithm: 1
     View: 2
     OutputPath: OutputLambdaAna

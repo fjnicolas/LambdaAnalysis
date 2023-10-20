@@ -12,7 +12,7 @@ ChargeDensityAlg:
     CumulativeCut: 0.8
     SlidingWindowN: 3
     NSamplesBeginSlope: 3
-    MaxRadius: 70
+    MaxRadius: 90
     DebugMode: false
     CalculateScore: true
     TMVAFilename: "FRAMSSelectionTMVA_BDT.weights.xml"

@@ -63,11 +63,12 @@ class SEvent {
         std::vector<SLinearCluster> fTrackList;
         std::vector<SOrigin> fOriginList;
         std::vector<STriangle> fAngleList;
+        std::vector<SOrigin> fAssociatedOrigins;
         double fHitDensity;
     
         
     public:
-        SEvent(std::vector<SLinearCluster> tracks={}, std::vector<SOrigin> origins={}, std::vector<STriangle> angles = {}, double hitDensity=0);
+        SEvent(std::vector<SLinearCluster> tracks={}, std::vector<SOrigin> origins={}, std::vector<STriangle> angles = {}, std::vector<SOrigin> associatedOrigins = {}, double hitDensity=0);
 
         std::vector<SOrigin> GetOrigins(){return fOriginList;};
         int GetNOrigins(){ return fOriginList.size();};
@@ -75,6 +76,9 @@ class SEvent {
         int GetNOriginsMultGt(int mult);
 
         int GetNAngles(){ return fAngleList.size();};
+
+        std::vector<STriangle> GetAngleList(){return fAngleList;};
+        std::vector<SOrigin> GetAssociatedOrigins(){return fAssociatedOrigins;};
 
         double HitDensity(){return fHitDensity;};
         
