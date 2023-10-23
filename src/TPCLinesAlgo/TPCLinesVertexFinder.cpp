@@ -844,7 +844,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     for(SOrigin &ori:originList){
                         
                         bool originInTrack = false;
-                        for(size_t j=0; j<ori.Multiplicity(); j++){
+                        for(int j=0; j<ori.Multiplicity(); j++){
                             if(ori.GetTrackEntry(j).GetId() == track.GetId())
                                 originInTrack = true;
                         }
@@ -893,7 +893,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             //main track and the V tracks cannot be connected
             std::vector<SOrigin> mainTrackOrigins;
             for(SOrigin &ori2:originList){
-                for(size_t k=0; k<ori2.Multiplicity(); k++){
+                for(Integral k=0; k<ori2.Multiplicity(); k++){
                     if(mainTrack.GetId()==ori2.GetTrackEntry(k).GetId()){
                         mainTrackOrigins.push_back(ori2);
                     }
@@ -902,7 +902,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
 
             bool connectedThroughOthers = false;
             for(SOrigin &ori2:mainTrackOrigins){
-                for(size_t k=0; k<ori2.Multiplicity(); k++){
+                for(int k=0; k<ori2.Multiplicity(); k++){
                     if(track1.GetId()==ori2.GetTrackEntry(k).GetId() || track2.GetId()==ori2.GetTrackEntry(k).GetId()){
                         connectedThroughOthers=true;
                     }
