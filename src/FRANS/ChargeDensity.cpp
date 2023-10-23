@@ -354,7 +354,7 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
               
               for(size_t k=0; k<hitWeights.size(); k++){
                 double dBin = GetDistance(hit.X(), hitY[k], vCh, vTimeTick);
-                fZ[static_cast<int>(dBin)] += hit.Integral();
+                fZ[static_cast<int>(dBin)] += hit.Integral()/sumWeights;
               }
             
             }
