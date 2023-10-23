@@ -44,12 +44,6 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
 }
 
 
-double ChargeDensity::GetDistance(int x, double y, int x0, double y0){
-  //std::cout<<x-x0<<" "<<y-y0<<std::endl;
-  return std::sqrt( std::pow( ((double)(x-x0))/fFRANSPset.NWirePack, 2) + std::pow( (y-y0)/fFRANSPset.NDriftPack, 2) );
-}
-
-
 void ChargeDensity::Rescale(std::vector<double>& wf, double kappa){
   std::transform(wf.begin(), wf.end(), wf.begin(), [&kappa](double& z){return z*kappa;});
 }
@@ -128,6 +122,7 @@ void ChargeDensity::FillCumulative(){
 }
 
 
+// ----------- Update Metrics -----------
 void ChargeDensity::UpdateMetrics(){
 
   // --- absolute normalization
@@ -264,68 +259,105 @@ void ChargeDensity::UpdateMetrics(){
 }
 
 
-// --- Fill function
-void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex){
-
-  fVertex = vertex;
-
-  double vTimeTick = vertex.Y();
-  int vCh = vertex.X();
-
-  std::vector<SHit> Hits;
-  double d_vertexhit=1e6;
-  SHit VertexHit;
+// ----------- Distance function -----------
+double ChargeDensity::GetDistance(int x, double y, int x0, double y0) {
+    const double deltaX = static_cast<double>(x - x0) / fFRANSPset.NWirePack;
+    const double deltaY = (y - y0) / fFRANSPset.NDriftPack;
+    return std::hypot(deltaX, deltaY);
+}
 
 
+// ----------- Gauss function -----------
+double gaussian(double x, double mu, double sig) {
+    return exp(-0.5 * pow((x - mu) / sig, 2)) / (sig * sqrt(2 * M_PI));
+}
 
-  // Get growing start point (closest hit to the vertex channel and TT)
-  for(auto &hit: hitsVect){
-    Hits.push_back(hit);
-    double d = GetDistance(hit.X(), hit.Y(), vCh, vTimeTick);
-    if(d<d_vertexhit){
-      d_vertexhit = d;
-      VertexHit = hit;
+
+// ----------- Fill function -----------
+void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
+    fVertex = vertex;
+    double vTimeTick = vertex.Y();
+    int vCh = vertex.X();
+
+    std::vector<SHit> Hits;
+    double d_vertexhit = 1e6;
+    SHit VertexHit;
+
+    // Find the closest hit to the vertex channel and TT
+    for (auto &hit : hitsVect) {
+        Hits.push_back(hit);
+        double d = GetDistance(hit.X(), hit.Y(), vCh, vTimeTick);
+        if (d < d_vertexhit) {
+            d_vertexhit = d;
+            VertexHit = hit;
+        }
     }
-  }
 
-  //Redefine start vertex
-  vTimeTick = VertexHit.Y();
-  vCh = VertexHit.X();
+    // Redefine start vertex
+    vTimeTick = VertexHit.Y();
+    vCh = VertexHit.X();
 
-  std::cout<<" Refactored vertex: "<<vCh<<" "<<vTimeTick<<std::endl;
+    std::cout << "Refactored vertex: " << vCh << " " << vTimeTick << std::endl;
 
-  // reset vectors
-  fZ.clear();
-  fZ.resize(DefaultMaxZSize, 0);
-  fRho.clear();
-  fZCum.clear();
-  fZCumStart.clear();
-  fZCumDer.clear();
-  fZCumDerErr.clear();
-  fNHits=0;
-  fAverageHitChi2=0;
+    // Reset vectors
+    fZ.clear();
+    fZ.resize(DefaultMaxZSize, 0);
+    fRho.clear();
+    fZCum.clear();
+    fZCumStart.clear();
+    fZCumDer.clear();
+    fZCumDerErr.clear();
+    fNHits = 0;
+    fAverageHitChi2 = 0;
 
-  int dMax=0;
-  for(auto &hit: Hits){
-    double d = GetDistance(hit.X(), hit.Y(), vCh, vTimeTick);
-    if(d<DefaultMaxZSize){
-      fZ[(int)d]+=hit.Integral();
-      fNHits++;
-      fAverageHitChi2 = fAverageHitChi2 + hit.Chi2();
-      if(d>dMax) dMax = (int) d;
+    // Fill the vectors
+    int dMax = 0;
+    for (auto &hit : Hits) {
+        double d = GetDistance(hit.X(), hit.Y(), vCh, vTimeTick);
+        if (d < DefaultMaxZSize) {
+            if(fFRANSPset.UseHitWidth){
+
+              // lower and upper time ticks of the hit
+              size_t lower_bin = std::floor(hit.Y()-hit.Width());
+              size_t uppper_bin = std::ceil(hit.Y()+hit.Width());
+
+              std::vector<double> hitWeights;
+              std::vector<double> hitY;
+              for(size_t k = lower_bin; k<=uppper_bin; k++){
+                hitWeights.push_back(gaussian(k, hit.Y(), hit.Width()));
+                hitY.push_back(k+0.5);
+              }
+
+              double sumWeights = 0;
+              sumWeights = std::accumulate(hitWeights.begin(), hitWeights.end(), 0.);
+              
+              for(size_t k=0; k<hitWeights.size(); k++){
+                double dBin = GetDistance(hit.X(), hitY[k], vCh, vTimeTick);
+                fZ[static_cast<int>(dBin)] += hit.Integral();
+              }
+            
+            }
+            else{
+              fZ[static_cast<int>(d)] += hit.Integral();
+            }
+
+            fNHits++;
+            fAverageHitChi2 += hit.Chi2();
+            if (d > dMax) dMax = static_cast<int>(d);
+        }
     }
-  }
-  fAverageHitChi2 = fAverageHitChi2/fNHits;
 
-  fZ.resize(dMax);
+    fAverageHitChi2 /= fNHits;
+    fZ.resize(dMax);
 
-  if(fZ.size()>1)
-    UpdateMetrics();
+
+    if(fZ.size()>1)
+      UpdateMetrics();
 
 }
 
 
-//void ChargeDensity::Save2ROOT(art::TFileDirectory tfdir, std::string name){
+// ----------- Display function -----------
 void ChargeDensity::Display(TCanvas *c){
 
   gStyle->SetPalette(112,0);
@@ -346,16 +378,20 @@ void ChargeDensity::Display(TCanvas *c){
 
   TPad *pad1 = new TPad("pad1", "pad1", 0., 0., .98, 0.33);
   pad1->Draw();
-  TPad *pad2 = new TPad("pad2", "pad2", 0., .33, .98, .66);
-  pad2->Draw();
+  TPad *pad2A = new TPad("pad2A", "pad2A", 0., .33, .49, .66);
+  pad2A->Draw();
+  TPad *pad2B = new TPad("pad2B", "pad2B", 0.49, .33, .98, .66);
+  pad2B->Draw();
   TPad *pad3 = new TPad("pad3", "pad3", 0., .66, .98, 1.0);
   pad3->Draw();
 
-  pad1->SetBottomMargin(0.1);
-  pad2->SetBottomMargin(0.1);
-  pad3->SetBottomMargin(0.1);
+  pad1->SetBottomMargin(0.15);
   pad1->SetLeftMargin(0.12);
-  pad2->SetLeftMargin(0.12);
+  pad2A->SetBottomMargin(0.15);
+  pad2A->SetLeftMargin(0.2);
+  pad2A->SetRightMargin(0.);
+  pad2B->SetBottomMargin(0.15);
+  pad3->SetBottomMargin(0.15);
   pad3->SetLeftMargin(0.12);
 
 
@@ -365,7 +401,7 @@ void ChargeDensity::Display(TCanvas *c){
   gStyle->SetLabelFont(60, "XYZ");
   gStyle->SetLabelSize(0.08, "XYZ");
   //AXIS OFFSETS AND SIZES
-  gStyle->SetTitleXOffset (0.60);
+  gStyle->SetTitleXOffset (0.85);
   gStyle->SetTitleXSize (0.08);
   gStyle->SetTitleYOffset (0.65);
   gStyle->SetTitleYSize (0.08);
@@ -383,30 +419,46 @@ void ChargeDensity::Display(TCanvas *c){
   leg1->SetBorderSize(1); leg1->SetTextFont(62); leg1->SetTextSize(0.1);
   std::ostringstream legLabel1; legLabel1 << std::setprecision(2);
   legLabel1 << "Score=" << score;
+  leg1->SetBorderSize(0);
+  leg1->SetFillStyle(0);
+  leg1->SetTextFont(62);
+  leg1->SetTextSize(0.075);
   leg1->AddEntry(gr, legLabel1.str().c_str(), "");
   leg1->Draw("same");
 
 
-  pad2->cd();
+  pad2A->cd();
   TGraph *grCum = new TGraph(fRho.size(), &fRho[0], &fZCum[0]);
-  TGraph *grCumStart = new TGraph(fZCumStart.size(), &fRho[0], &fZCumStart[0]);
   grCum->SetTitle("");
   grCum->GetHistogram()->GetYaxis()->SetTitle("Z(#rho) [ADCxTT]");
   grCum->GetHistogram()->GetXaxis()->SetTitle("#rho");
   grCum->GetHistogram()->GetYaxis()->SetRangeUser(0, 1);
-  grCumStart->SetLineColor(kRed);
+  grCum->GetHistogram()->GetYaxis()->SetTitleOffset(1.2);
   grCum->Draw("alp");
-  grCumStart->Draw("lp same");
+
+  
+  pad2B->cd();
+  TGraph *grCumStart = new TGraph(fZCumStart.size(), &fRho[0], &fZCumStart[0]);
+  grCumStart->SetTitle("");
+  //grCumStart->GetHistogram()->GetYaxis()->SetTitle("Z(#rho) [ADCxTT]");
+  grCumStart->GetHistogram()->GetXaxis()->SetTitle("#rho");
+  grCumStart->GetHistogram()->GetYaxis()->SetRangeUser(0, 1);
+  grCumStart->SetLineColor(kRed+2);
+  grCumStart->Draw("alp");
 
   TLegend* leg2 = new TLegend(0.5, 0.60, 0.85, 0.85);
-  leg2->SetBorderSize(1); leg2->SetTextFont(62); leg2->SetTextSize(0.1);
+  leg2->SetBorderSize(0);
+  leg2->SetFillStyle(0);
+  leg2->SetTextFont(62);
+  leg2->SetTextSize(0.075);
+  leg2->SetHeader("Start");
   std::ostringstream legLabel2;
   legLabel2 << std::setprecision(3);
   legLabel2 << "#Delta=" << fDelta;
-  leg2->AddEntry(grCum, legLabel2.str().c_str(), "");
+  leg2->AddEntry(grCumStart, legLabel2.str().c_str(), "");
   legLabel2.str("");
   legLabel2 << "FitSc="<<fFitScore;
-  leg2->AddEntry(grCum, legLabel2.str().c_str(), "");
+  leg2->AddEntry(grCumStart, legLabel2.str().c_str(), "");
   leg2->Draw("same");
 
 
@@ -418,9 +470,10 @@ void ChargeDensity::Display(TCanvas *c){
   grDer->Draw("alp");
 
   TLegend* leg3 = new TLegend(0.5, 0.60, 0.85, 0.85);
-  leg3->SetBorderSize(1);
+  leg3->SetBorderSize(0);
+  leg3->SetFillStyle(0);
   leg3->SetTextFont(62);
-  leg3->SetTextSize(0.1);
+  leg3->SetTextSize(0.075);
   std::ostringstream legLabel3;
   legLabel3 << std::setprecision(3);
   legLabel3 << "#eta=" << fEta;

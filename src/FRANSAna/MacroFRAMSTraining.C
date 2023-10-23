@@ -24,20 +24,18 @@ int MacroFRAMSTraining(std::string fInputFileName="", std::string fTreeDirName =
   //--------- Configuration Parameters
   bool fUseReco=false; fUseReco=true;
   bool fUseBestView=false; //fUseBestView=true;
-  bool fUseMultiplicityVars = false; fUseMultiplicityVars = true;
+  bool fUseMultiplicityVars = false; //fUseMultiplicityVars = true;
   
   // Apply quality cuts
-  bool fUseQualityCut=false; fUseQualityCut=true;
+  bool fUseQualityCut=false; //fUseQualityCut=true;
   TCut fCutS = ""; //"Gap>1.5 && ProtonKE>0.03 && PionKE>0.02";
   TCut fCutBG = "";
 
   fCutS = "NOrigins_C<3";
   fCutBG = "NOrigins_C<3";
 
-
-
   // Number of events for training
-  int nTrain = 360;
+  int nTrain = 400;
 
   //Background label name
   std::string fBGLabel = "Inclusive";
@@ -69,7 +67,7 @@ int MacroFRAMSTraining(std::string fInputFileName="", std::string fTreeDirName =
   // 1-dimensional likelihood ("naive Bayes estimator")
   Use["Likelihood"]      = 0;
   // Linear Discriminant Analysis
-  Use["Fisher"]          = 0;
+  Use["Fisher"]          = 1;
   // Boosted Decision Trees
   Use["BDT"]             = 1;
   // Neural Networks (all are feed-forward Multilayer Perceptrons)

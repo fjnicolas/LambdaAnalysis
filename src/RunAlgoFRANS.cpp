@@ -54,7 +54,6 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // ---- FRAMS parameters ----------------------------------------
     FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
-    std::cout<<"  njvisfnvioanvownvr "<<fPsetFRANS.TMVAFilename<<" "<<fPsetFRANS.OutputPath<<std::endl;
     fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
     
     // ---- TPCLines parameters ----------------------------------------
@@ -244,18 +243,20 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             std::string outputLabel2 = (_FRAMSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
 
                         
-            TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
-            _FRAMSAlgo.Display(cDisplay);
+            if(Debug>=0){
+                TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
+                _FRAMSAlgo.Display(cDisplay);
 
-            // Save TCanvas and pdf
-            TImage *img = TImage::Create();
-            img->FromPad(cDisplay);
-            fransPlotsDirectory->cd();
-            img->Write( ("image/"+outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)+".pdf").c_str() );
-            cDisplay->Write();
+                // Save TCanvas and pdf
+                TImage *img = TImage::Create();
+                img->FromPad(cDisplay);
+                fransPlotsDirectory->cd();
+                img->Write( ("image/"+outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)+".pdf").c_str() );
+                cDisplay->Write();
 
-            delete cDisplay;
-            delete img;
+                delete cDisplay;
+                delete img;
+            }
         }
 
     }

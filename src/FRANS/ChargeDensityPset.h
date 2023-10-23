@@ -19,6 +19,7 @@ struct FRAMSPsetType {
   int SlidingWindowN;
   int NSamplesBeginSlope;
   int MaxRadius;
+  bool UseHitWidth;
   int Verbose;
   bool CalculateScore;
   std::string TMVAFilename;
@@ -36,6 +37,7 @@ struct FRAMSPsetType {
                 int windowN=3,
                 int samplesSlope=3,
                 int radius=70,
+                bool useHitWidth=true,
                 int verbose=0,
                 bool calculate=false,
                 const std::string& filename="",
@@ -51,11 +53,31 @@ struct FRAMSPsetType {
                     SlidingWindowN(windowN),
                     NSamplesBeginSlope(samplesSlope),
                     MaxRadius(radius),
+                    UseHitWidth(useHitWidth),
                     Verbose(verbose),
                     CalculateScore(calculate),
                     TMVAFilename(filename),
                     OutputPath(outputpath)
   {}
+
+  void Print() const {
+    std::cout << "ApplyRawSmoothing: " << ApplyRawSmoothing << std::endl;
+    std::cout << "ApplySmoothing: " << ApplySmoothing << std::endl;
+    std::cout << "ApplyCumulativeSmoothing: " << ApplyCumulativeSmoothing << std::endl;
+    std::cout << "NDriftPack: " << NDriftPack << std::endl;
+    std::cout << "NWirePack: " << NWirePack << std::endl;
+    std::cout << "ExpoAvSmoothPar: " << ExpoAvSmoothPar << std::endl;
+    std::cout << "UnAvNeighbours: " << UnAvNeighbours << std::endl;
+    std::cout << "CumulativeCut: " << CumulativeCut << std::endl;
+    std::cout << "SlidingWindowN: " << SlidingWindowN << std::endl;
+    std::cout << "NSamplesBeginSlope: " << NSamplesBeginSlope << std::endl;
+    std::cout << "MaxRadius: " << MaxRadius << std::endl;
+    std::cout << "UseHitWidth: " << UseHitWidth << std::endl;
+    std::cout << "Verbose: " << Verbose << std::endl;
+    std::cout << "CalculateScore: " << CalculateScore << std::endl;
+    std::cout << "TMVAFilename: " << TMVAFilename << std::endl;
+    std::cout << "OutputPath: " << OutputPath << std::endl;
+  }
 };
 
 

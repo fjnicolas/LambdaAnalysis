@@ -129,6 +129,7 @@ FRAMSPsetType ReadFRANSPset(std::string filename, std::string blockName){
     fPset.SlidingWindowN = pt.get<int>("SlidingWindowN");
     fPset.NSamplesBeginSlope = pt.get<int>("NSamplesBeginSlope");
     fPset.MaxRadius = pt.get<int>("MaxRadius");
+    fPset.UseHitWidth = pt.get<bool>("UseHitWidth");
     fPset.Verbose = pt.get<int>("Verbose");
     fPset.CalculateScore = pt.get<bool>("CalculateScore");
     fPset.TMVAFilename = pt.get<std::string>("TMVAFilename");

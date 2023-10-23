@@ -61,7 +61,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
     fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
 
+
     fPsetAnaView.Print();
+    fPsetFRANS.Print();
 
     // Check if the directory exists, create it if not
     gSystem->Exec(("rm -rf "+fPsetAnaView.OutputPath).c_str());

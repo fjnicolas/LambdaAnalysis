@@ -198,7 +198,6 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     double yIntercept1 = meanY - slope1 * meanX; // Since the line passes through the mean
 
     LinearRegressionResult LinRegResult = linearRegression(data);
-    std::cout << "\nLinear regression Slope: " << LinRegResult.slope << "Intercept: " << LinRegResult.intercept << std::endl;
     double RSquared = calculateR_squared(data, LinRegResult);
    
     double Pearson = pearsonCorrelation(data);
@@ -207,8 +206,9 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     double mae = calculateMAE(data, slope1, yIntercept1);
     double mse = calculateMSE(data, slope1, yIntercept1);
     
+    /*std::cout << "\nLinear regression Slope: " << LinRegResult.slope << "Intercept: " << LinRegResult.intercept << std::endl;
     std::cout<<"Exaplined variance "<<explained_variance<<" Pearson: "<<Pearson<<" SSR:"<<Residual<<" RSq:"<<RSquared<<std::endl;
-    std::cout << "MAE: " << mae << " MSE: " << mse << std::endl;
+    std::cout << "MAE: " << mae << " MSE: " << mse << std::endl;*/
 
     double correlation = mae/calculateAverageWidth(data);
 

@@ -77,7 +77,7 @@ int MacroFRAMSEvaluate()
 
   Double_t Alpha_C, Eta_C, Delta_C, FitScore_C;
   Double_t Gap, ProtonKE, PionKE;
-  fTree->SetBranchAddress("Alpha_C", &Alpha_C);
+  //fTree->SetBranchAddress("Alpha_C", &Alpha_C);
   fTree->SetBranchAddress( "Eta_C", &Eta_C );
   fTree->SetBranchAddress( "Delta_C", &Delta_C);
   fTree->SetBranchAddress( "FitScore_C", &FitScore_C );
