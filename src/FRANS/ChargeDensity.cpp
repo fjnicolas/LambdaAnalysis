@@ -21,10 +21,12 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
 
   // Right now we only use the collection view
   if(fFRANSPset.CalculateScore){
-    fTMVAReader.AddVariable( "Alpha_C", &fAlpha );
+    if(fFRANSPset.UseAlpha)
+      fTMVAReader.AddVariable( "Alpha_C", &fAlpha );
     fTMVAReader.AddVariable( "Eta_C", &fEta );
     fTMVAReader.AddVariable( "Delta_C", &fDelta);
     fTMVAReader.AddVariable( "FitScore_C", &fFitScore );
+
 
     fTMVAReader.AddSpectator( "Gap", &fGap );
     fTMVAReader.AddSpectator( "ProtonKE", &fProtonKE );
@@ -273,8 +275,36 @@ double gaussian(double x, double mu, double sig) {
 }
 
 
+// ----------- Reset function -----------
+void ChargeDensity::Reset() {
+    // Reset vectors
+    fZ.clear();
+    fZ.resize(DefaultMaxZSize, 0);
+    fRho.clear();
+    fZCum.clear();
+    fZCumStart.clear();
+    fZCumDer.clear();
+    fZCumDerErr.clear();
+    fNHits = 0;
+    fAverageHitChi2 = 0;
+
+    // default values
+    fDelta = 0.5;
+    fEta = 1.;
+    fFitScore = 1.;
+    fAlpha = 10e3;
+    fOmega = 1.;
+    fTau = 0.;
+    fScore = -1e4;
+}
+
+
 // ----------- Fill function -----------
 void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
+
+    // Reset all vectors and variables
+    Reset();
+  
     fVertex = vertex;
     double vTimeTick = vertex.Y();
     int vCh = vertex.X();
@@ -299,16 +329,7 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
 
     std::cout << "Refactored vertex: " << vCh << " " << vTimeTick << std::endl;
 
-    // Reset vectors
-    fZ.clear();
-    fZ.resize(DefaultMaxZSize, 0);
-    fRho.clear();
-    fZCum.clear();
-    fZCumStart.clear();
-    fZCumDer.clear();
-    fZCumDerErr.clear();
-    fNHits = 0;
-    fAverageHitChi2 = 0;
+    
 
     // Fill the vectors
     int dMax = 0;

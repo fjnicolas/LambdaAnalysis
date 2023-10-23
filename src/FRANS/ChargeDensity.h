@@ -113,6 +113,7 @@ class ChargeDensity{
 
     TMVA::Reader fTMVAReader;
 
+    void Reset();
     double GetDistance(int x, double y, int x0, double y0);
     void UpdateMetrics();
     void ApplyExpoAvSmoothing(std::vector<double>& wf);

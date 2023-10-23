@@ -40,7 +40,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     if(Debug==0) gROOT->SetBatch(true);
 
     // ---- FRAMS parameters ----------------------------------------
-    double fFRANSScoreCut = 0.1;
+    double fFRANSScoreCut = 0.;
 
     FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
@@ -195,8 +195,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 double score = _FRAMSAlgo.Score();
                 if(score>bestFRANSScore){
                     bestFRANSScore = score;
+                    _FRAMSAlgo.Display(cDisplay);
                 }    
-                _FRAMSAlgo.Display(cDisplay);
             }
             
             int nAngles = recoEvent.GetNAngles();
@@ -222,7 +222,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             _TPCLinesAlgo.Display("FinalReco" + outNamePreffix + ev.Label());
             
             std::string fransOutputLabel = "FinalReco" + outNamePreffix + ev.Label() + "FRANS";
-            cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+fransOutputLabel+".pdf").c_str() );
+            if(bestFRANSScore!=-1000){
+                cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+fransOutputLabel+".pdf").c_str() );
+            }
             delete cDisplay;
             
             

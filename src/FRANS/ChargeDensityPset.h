@@ -22,6 +22,7 @@ struct FRAMSPsetType {
   bool UseHitWidth;
   int Verbose;
   bool CalculateScore;
+  bool UseAlpha;
   std::string TMVAFilename;
   std::string OutputPath;
 
@@ -40,6 +41,7 @@ struct FRAMSPsetType {
                 bool useHitWidth=true,
                 int verbose=0,
                 bool calculate=false,
+                bool useAlpha=false,
                 const std::string& filename="",
                 const std::string& outputpath="" )
                   : ApplyRawSmoothing(rawSmoothing),
@@ -56,6 +58,7 @@ struct FRAMSPsetType {
                     UseHitWidth(useHitWidth),
                     Verbose(verbose),
                     CalculateScore(calculate),
+                    UseAlpha(useAlpha),
                     TMVAFilename(filename),
                     OutputPath(outputpath)
   {}
@@ -75,6 +78,7 @@ struct FRAMSPsetType {
     std::cout << "UseHitWidth: " << UseHitWidth << std::endl;
     std::cout << "Verbose: " << Verbose << std::endl;
     std::cout << "CalculateScore: " << CalculateScore << std::endl;
+    std::cout << "UseAlpha: " << UseAlpha << std::endl;
     std::cout << "TMVAFilename: " << TMVAFilename << std::endl;
     std::cout << "OutputPath: " << OutputPath << std::endl;
   }
