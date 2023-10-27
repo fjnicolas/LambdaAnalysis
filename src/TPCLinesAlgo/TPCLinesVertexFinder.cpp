@@ -849,9 +849,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     std::cout<<"   Connectedness Overlap HitsCluster 1/2: "<<connOvVertexHitsCluster1<<" "<<connOvVertexHitsCluster2<<std::endl;
                     std::cout<<"   Connectedness X HitsCluster 1/2: "<<connXVertexHitsCluster1<<" "<<connXVertexHitsCluster2<<std::endl;
                     // vertex hits must be connected to the tracks
-                    float tolConnVertexHits = 3.;
-                    //if(connVertexHitsCluster1>tolConnVertexHits*track1.GetConnectedness() || connVertexHitsCluster2>tolConnVertexHits*track2.GetConnectedness()){
-                    //if(c >tolConnVertexHits*track1.GetConnectedness() || connVertexHitsCluster2>tolConnVertexHits*track2.GetConnectedness()){
                     if( connXVertexHitsCluster1>2 || connXVertexHitsCluster2>2){
                         std::cout<<" VERTEX HITS NOT CONNECTED\n";
                         continue;

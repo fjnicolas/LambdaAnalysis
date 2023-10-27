@@ -40,8 +40,8 @@ private:
     double fStepXToLength;
     double fStepYToLength;
 
+    // Track legnth
     double fTrackLength;
-
     // Define the hit points and path lengths as private members
     std::vector<SHit> fHitList;
     std::vector<double> fPathLengths;

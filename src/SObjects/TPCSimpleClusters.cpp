@@ -392,7 +392,7 @@ double SLinearCluster::GetOccupancy(){
 
         double d = std::hypot( cloPoint.X()-fMinX, cloPoint.Y()-fYAtMinX);
 
-        int binIndex = static_cast<int> (d / step );
+        unsigned int binIndex = static_cast<unsigned int> (d / step );
         
         std::cout<<h.X()<<" "<<h.Y()<<" "<<d<<" "<<binIndex<<std::endl;
         if(binIndex<bins.size()) bins[binIndex]++;
@@ -420,7 +420,7 @@ double SLinearCluster::GetOccupancy1D(){
 
     for (const SHit& h : GetHits()){
         
-        int binIndex = static_cast<int> (h.X()-fMinX);
+        unsigned int binIndex = static_cast<unsigned int> (h.X()-fMinX);
         std::cout<<h.X()<<" "<<h.Y()<<" "<<binIndex<<std::endl;
         if(binIndex<bins.size()) bins[binIndex]++;
     }

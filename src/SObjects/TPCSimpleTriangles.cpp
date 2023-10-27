@@ -166,13 +166,14 @@ double STriangle::ComputeCoveredArea(std::vector<SHit> triangleHits, double widt
    
     std::vector<Point> triangle = { {fMainVertex.X(), fMainVertex.Y()}, {fVertexB.X(), fVertexB.Y()}, {fVertexC.X(), fVertexC.Y()} };
     std::vector<Line> verticalLines = {{1.0, 3.0}, {2.0, 2.0}, {3.0, 2.0}};
-
+    double fractionSum = 0;
     for (SHit &hit : triangleHits){
         Line line = {hit.X(), hit.Y(), hit.Width()};
         double fraction = fractionOfLineInTriangle(triangle, line);
+        fractionSum+=fraction;
     }
 
     //sdouble coverageFraction = static_cast<double>(NCovered) / N;
 
-    return 1;
+    return fractionSum;
 }

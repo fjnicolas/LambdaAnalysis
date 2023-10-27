@@ -20,11 +20,11 @@
 
 // Constructor to initialize the collection
 SCalo::SCalo(const std::vector<SHit>& hits)
-    : fHitList(hits),
-    fHitIntegralToEnergy( (1 / 0.0201293) *  23.6e-6 ),
+    : fHitIntegralToEnergy( (1 / 0.0201293) *  23.6e-6 ),
     fStepXToLength(0.3),
     fStepYToLength(0.075),
-    fTrackLength(0)
+    fTrackLength(0),
+    fHitList(hits)
 {
     CalculateResidualRange();
 }
