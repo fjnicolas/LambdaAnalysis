@@ -181,13 +181,6 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     double eigenvectorX1 = eigenvalue1 - covYY;
     double eigenvectorY1 = covXY;
 
-    // Total variance (sum of covariances)
-    double total_variance = covXX + covYY;
-    double explained_variance = eigenvalue1 / total_variance;
-
-    //double correlation = pearsonCorrelation(data);
-    
-
     /* double eigenvalue2 = (covXX + covYY - std::sqrt((covXX - covYY) * (covXX - covYY) + 4 * covXY * covXY)) / 2.0;
     double eigenvectorX2 = eigenvalue2 - covYY;
     double eigenvectorY2 = covXY;*/
@@ -198,6 +191,12 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     double slope1 = eigenvectorY1 / eigenvectorX1;
     double yIntercept1 = meanY - slope1 * meanX; // Since the line passes through the mean
 
+    double mae = calculateMAE(data, slope1, yIntercept1);
+
+    /*// Total variance (sum of covariances)
+    double total_variance = covXX + covYY;
+    double explained_variance = eigenvalue1 / total_variance;
+
     LinearRegressionResult LinRegResult = linearRegression(data);
     double RSquared = calculateR_squared(data, LinRegResult);
    
@@ -207,7 +206,7 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     double mae = calculateMAE(data, slope1, yIntercept1);
     double mse = calculateMSE(data, slope1, yIntercept1);
     
-    /*std::cout << "\nLinear regression Slope: " << LinRegResult.slope << "Intercept: " << LinRegResult.intercept << std::endl;
+    std::cout << "\nLinear regression Slope: " << LinRegResult.slope << "Intercept: " << LinRegResult.intercept << std::endl;
     std::cout<<"Exaplined variance "<<explained_variance<<" Pearson: "<<Pearson<<" SSR:"<<Residual<<" RSq:"<<RSquared<<std::endl;
     std::cout << "MAE: " << mae << " MSE: " << mse << std::endl;*/
 
