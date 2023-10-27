@@ -10,8 +10,9 @@
 
 #include "TPCSimpleEvents.h"
 
-SOrigin::SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge) :
+SOrigin::SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge, double yError) :
     fVertex(p),
+    fYError(yError),
     fTrackList(tracks),
     fMultiplicity(tracks.size()),
     fNHits(0),

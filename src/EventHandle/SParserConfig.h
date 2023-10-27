@@ -194,6 +194,7 @@ VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename
     fPset.VertexCompactnessTol = pt.get<float>("VertexCompactnessTol");
     fPset.MinTrackOccupancy = pt.get<float>("MinTrackOccupancy");
     fPset.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
+    fPset.MakeCalorimetry = pt.get<bool>("MakeCalorimetry");
     fPset.Verbose = pt.get<int>("Verbose");
     
     

@@ -16,6 +16,7 @@ VertexFinderAlg:
     VertexCompactnessTol: 1.5
     MinTrackOccupancy: 0.6
     MinTrackGoodness: 10
+    MakeCalorimetry: false
     Verbose: 0
 }
 

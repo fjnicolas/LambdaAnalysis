@@ -117,6 +117,7 @@ struct VertexFinderAlgorithmPsetType {
     float VertexCompactnessTol = 1.5;
     float MinTrackOccupancy = 0.6;
     float MinTrackGoodness = 1000;
+    bool MakeCalorimetry = false;
     int Verbose;
 
     // constructor
@@ -137,6 +138,7 @@ struct VertexFinderAlgorithmPsetType {
         float _vertexCompactnessTol,
         float _minTrackOccupancy,
         float _minTrackGoodness,
+        bool _makeCalorimetry,
         int _verbose): 
         MaxDistToEdge(_maxDistToEdge),
         RefineVertexIntersection(_refineVertexIntersection),
@@ -152,6 +154,7 @@ struct VertexFinderAlgorithmPsetType {
         VertexCompactnessTol(_vertexCompactnessTol),
         MinTrackOccupancy(_minTrackOccupancy),
         MinTrackGoodness(_minTrackGoodness),
+        MakeCalorimetry(_makeCalorimetry),
         Verbose(_verbose)
     {}
 
@@ -169,6 +172,7 @@ struct VertexFinderAlgorithmPsetType {
         std::cout << "VertexHitsMinHits: " << VertexHitsMinHits << std::endl;
         std::cout << "VertexCompactnessTol: " << VertexCompactnessTol << std::endl;
         std::cout << "MinTrackOccupancy: " << MinTrackOccupancy << std::endl;
+        std::cout << "MakeCalorimetry: " << (MakeCalorimetry ? "true" : "false") << std::endl;
         std::cout << "Verbose: " << Verbose << std::endl;
     }
 };

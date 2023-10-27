@@ -564,6 +564,19 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
                         SLinearCluster startCluster(startHits);
                         SLinearCluster endCluster(endHits);
 
+                        // assign the kink hit to the closest line
+                        double dStart = startCluster.GetTrackEquation().GetDistance(SPoint(kinkHit.X(), kinkHit.Y()));
+                        double dEnd = endCluster.GetTrackEquation().GetDistance(SPoint(kinkHit.X(), kinkHit.Y()));
+
+                        if(dStart<dEnd){
+                            startHits.push_back(kinkHit);
+                            startCluster = SLinearCluster(startHits);
+                        }
+                        else{
+                            endHits.push_back(kinkHit);
+                            endCluster = SLinearCluster(endHits);
+                        }
+
                         double startCompactness = startCluster.GetCompactness();
                         double endCompactness = endCluster.GetCompactness();
                         double maxCompactness = std::max(startCompactness, endCompactness);

@@ -744,6 +744,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
 
                 // ------ Look for the intersection points
                 SPoint intP = GetTracksIntersection(track1, track2, 50, fTPCLinesVertexFinderPset.RefineVertexIntersection);
+                
                 if(intP.X()==-1 and intP.Y()==-1) continue;
 
                 // Get closest hit of each track to the intersection point
@@ -754,6 +755,8 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 SHit cloHit2 = cloHit2Pair.first;
                 double dHit2 = cloHit2Pair.second;
                 SHit cloHit = (dHit1 < dHit2) ? cloHit1 : cloHit2;
+
+                double intPYerror = cloHit.Width();
 
                 // Get the edge hits of each track to the intersection point
                 SPoint edgeHit1 = ( std::abs(track1.GetStartPoint().X()-intP.X()) < std::abs(track1.GetEndPoint().X()-intP.X()) )? track1.GetStartPoint():track1.GetEndPoint();
@@ -868,6 +871,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                         }
                     }
                     intP = SPoint(vertexHit.X(), vertexHit.Y());
+                    intPYerror = vertexHit.Width();
                 }
                 
 
@@ -890,7 +894,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     // ------ Origin assigment
                     if(usedTrack[ix]==false && usedTrack[jx]==false){
                         intersectingTracks.push_back(std::make_pair(ix, jx));
-                        SOrigin newOr = SOrigin(intP, {track1, track2}, true);
+                        SOrigin newOr = SOrigin(intP, {track1, track2}, true, intPYerror);
                         originList.push_back( newOr );
                         // mark as used tracks
                         usedTrack[ix]=true;
@@ -906,9 +910,13 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                         for(SOrigin & ori:originList){
                             if(ori.HasTrackIndex(previousTrack.GetId())==true){
                                 float d = std::hypot(ori.GetPoint().X() - intP.X(), ori.GetPoint().Y() - intP.Y());
-                                if(d<=2){
-                                    ori.AddTrack(newTrack, intP);
-                                    std::cout<<"   END = Adding new track to origin "<<ori.GetPoint().X()<<ix<<" "<<jx<<std::endl;
+                                bool intersectionCompatible = std::abs(ori.GetPoint().X() - intP.X())<=2;
+                                intersectionCompatible = intersectionCompatible && std::abs(ori.GetPoint().Y() - intP.Y())<2*ori.GetYError();
+                                if(intersectionCompatible){
+                                    if(!ori.HasTrackIndex(newTrack.GetId())){
+                                        ori.AddTrack(newTrack, intP);
+                                        std::cout<<"   END = Adding new track to origin "<<ori.GetPoint().X()<<ix<<" "<<jx<<std::endl;
+                                    }
                                     usedTrack[ix]=true;
                                     usedTrack[jx]=true;
                                     merged=true;
@@ -920,7 +928,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
 
                         if(merged==false){
                             intersectingTracks.push_back(std::make_pair(ix, jx));
-                            SOrigin newOr(intP, {track1, track2}, true);
+                            SOrigin newOr(intP, {track1, track2}, true, intPYerror);
                             std::cout<<"   END = Adding new origin..."<<newOr;
                             originList.push_back( newOr );
                             usedTrack[ix]=true;
@@ -964,7 +972,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 if(usedTrack[k]==false){
                     std::cout<<"  Adding kink track "<<track.GetId()<<" at "<<edgePointClosest;
                     SLinearCluster kinkTrack = track;
-                    SOrigin newOr(track.GetStartPoint(), {track}, false);
+                    SOrigin newOr(track.GetStartPoint(), {track}, false, track.GetAverageWidth());
                     originList.push_back( newOr );
                 }
             }
@@ -972,7 +980,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             else if(isKink==false && trackLength>= 2 ){
                 if(usedTrack[k]==false){
                     std::cout<<"  Adding new origin for unmatched track "<<track.GetId()<<" at "<<edgePointClosest;
-                    singleOriginsList.push_back( SOrigin(edgePointClosest, {track}, true) );  
+                    singleOriginsList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );  
                 }
                 // in matched, but its a long track and the closest hit is not matched, add origin
                 else{
@@ -1000,7 +1008,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                         }
                         if(unmatchedClosestEdge){
                             std::cout<<"  Adding new origin for unmatched long track "<<track.GetId()<<" at "<<edgePointClosest;
-                            singleOriginsList.push_back( SOrigin(edgePointClosest, {track}, true) );
+                            singleOriginsList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );
                         }
                     }
                     
@@ -1041,7 +1049,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             
             SLinearCluster mainTrack = ori1.GetTrackEntry(0);
 
-             // Only intersetctions between "good" tracks
+            // Only intersetctions between "good" tracks
             if(std::abs(mainTrack.GetTrackEquation().Goodness())>fTPCLinesVertexFinderPset.MinTrackGoodness) continue;
 
             double occ3 = mainTrack.GetOccupancy1D();

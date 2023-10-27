@@ -25,6 +25,7 @@
 class SOrigin {
     private:
         SPoint fVertex;
+        double fYError;
         std::vector<SLinearCluster> fTrackList;
         int fMultiplicity;
         int fNHits;
@@ -33,9 +34,10 @@ class SOrigin {
         
         
     public:
-        SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge);
+        SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge, double yError);
         
         SPoint GetPoint(){ return fVertex;};
+        double GetYError(){ return fYError;};
         std::vector<SLinearCluster> GetTracks(){ return fTrackList; };
         int Multiplicity(){return fMultiplicity;};
         void AddTrack(SLinearCluster track, SPoint p); 
