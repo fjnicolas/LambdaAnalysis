@@ -24,6 +24,8 @@ namespace TPCLinesDistanceUtils{
 
     double GetClusterMinDistance(SCluster cluster1, SCluster cluster2);
 
+    double GetClusterMinDistanceX(SCluster cluster1, SCluster cluster2);
+
     double GetClusterConnectedness(SCluster cluster1, SCluster cluster2);
 
     double GetClusterConnectednessOverlap(SCluster cluster1, SCluster cluster2);

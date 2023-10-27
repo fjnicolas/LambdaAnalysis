@@ -40,7 +40,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     if(Debug==0) gROOT->SetBatch(true);
 
     // ---- FRAMS parameters ----------------------------------------
-    double fFRANSScoreCut = 0.;
+    double fFRANSScoreCut = 0.1;
 
     FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;

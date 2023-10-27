@@ -10,6 +10,7 @@ if(DEFINED ENV{LARSOFT_VERSION})
             TPCSimpleClusters.cpp
             TPCSimpleLines.cpp
             TPCSimpleTriangles.cpp
+            TPCSimpleCalo.cpp
             TPCLinesDistanceUtils.cpp
             TPCSimpleEvents.cpp
             TPCLinesPCA.cpp
@@ -37,6 +38,8 @@ add_library(sobjects_library
     TPCSimpleLines.h
     TPCSimpleTriangles.cpp
     TPCSimpleTriangles.h
+    TPCSimpleCalo.cpp
+    TPCSimpleCalo.h
     TPCLinesDistanceUtils.cpp
     TPCLinesDistanceUtils.h
     TPCSimpleEvents.cpp

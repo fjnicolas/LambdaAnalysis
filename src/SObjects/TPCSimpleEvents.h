@@ -39,6 +39,7 @@ class SOrigin {
         std::vector<SLinearCluster> GetTracks(){ return fTrackList; };
         int Multiplicity(){return fMultiplicity;};
         void AddTrack(SLinearCluster track, SPoint p); 
+        bool IsEdgeOrigin(){return fEdgeOrigin;};
         bool HasTrackIndex(int ix);
         int NHits(){return fNHits;};
         SLinearCluster GetTrackEntry(size_t ix){ return fTrackList[ix];};
@@ -71,7 +72,7 @@ class SEvent {
         SEvent(std::vector<SLinearCluster> tracks={}, std::vector<SOrigin> origins={}, std::vector<STriangle> angles = {}, std::vector<SOrigin> associatedOrigins = {}, double hitDensity=0);
 
         std::vector<SOrigin> GetOrigins(){return fOriginList;};
-        int GetNOrigins(){ return fOriginList.size();};
+        int GetNOrigins();
         int GetNOriginsMult(int mult);
         int GetNOriginsMultGt(int mult);
 

@@ -36,6 +36,7 @@ class TPCLinesHough {
 
         // weight function
         double HoughWeightDistance(LineEquation line, std::vector<SHit> hitList);
+        double HoughWeightDistanceIntegral(LineEquation line, std::vector<SHit> hitList);
 
         // alternative weight functions
         double HoughWeightAverageDistance(LineEquation line, std::vector<SHit> hitList);

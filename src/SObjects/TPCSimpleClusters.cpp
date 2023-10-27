@@ -145,9 +145,60 @@ std::pair<SHit, double> SCluster::GetClosestHitToPoint(const T& h) {
 }
 
 
+// Function to calculate the slope between two data points
+double SLinearCluster::CalculateSlope(const SHit& p1, const SHit& p2) {
+    return (p2.Y() - p1.Y()) / (p2.X() - p1.X());
+}
+
+    
+// Function to find the data point with the maximum slope variation using N neighbors
+SHit SLinearCluster::FindMaxVariationPointSlidingWindow(std::vector<SHit> data, size_t N) {
+    if (data.size() < N + 2 + 1) {
+        // Not enough data points for N neighbors; return an invalid point.
+        return SHit(-1, -1, -1);
+    }
+
+    std::sort(data.begin(), data.end(), [&](SHit& a, SHit& b) {return a.X() < b.X();});
+    TPCLinesPCA pcaAlgo;
+    double maxVariation = 0.0;
+    SHit maxVariationPoint = SHit(-1, -1, -1);
+
+    std::vector<double> slopesVector;
+    for (size_t i = N; i < data.size() - N; ++i) {
+
+        /*double avgSlope = 0.0;
+        for (size_t j = i - N; j <= i + N; ++j) {
+            avgSlope += CalculateSlope(data[j], data[j + 1]);
+        }
+        avgSlope /= (2 * N + 1);
+
+        double slope = CalculateSlope(data[i - N], data[i + N]);
+
+        std::cout<<avgSlope<<std::endl
+        double slopeVariation = std::abs(slope - avgSlope);
+        ;*/
+
+        std::vector<SHit> subset(data.begin() + (i - N), data.begin() + (i + N + 1));
+        double subSlope = pcaAlgo.PerformPCA2D(subset).Slope();
+
+        slopesVector.push_back(subSlope);
+    }
+
+    for (size_t j = 1; j < slopesVector.size(); j++) {
+
+        double slopeVariation = std::abs(slopesVector[j]-slopesVector[j-1]);
+        std::cout<<j<<" "<<slopesVector[j]<<" "<<slopeVariation<<std::endl;
+        if (slopeVariation > maxVariation) {
+            maxVariation = slopeVariation;
+            maxVariationPoint = data[j+N];
+        }
+    }
+
+    return maxVariationPoint;
+}
+
 
 //------------------------------  SLinearCluster
-
 SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
 
     fId = -1;
@@ -162,8 +213,7 @@ SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
     fMeanX = 0;
     fMeanY = 0;
 
-    for (
-        auto &hit : hitList) {
+    for (auto &hit : hitList) {
         if (hit.X() < fMinX) {
             fMinX = hit.X();
             fYAtMinX = hit.Y();
@@ -192,8 +242,10 @@ SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
         TPCLinesPCA pcaAlgo;
         fTrackEquation = pcaAlgo.PerformPCA2D(hitList);
         if(hitList.size()>6){
-            fTrackEquationStart = pcaAlgo.PerformPCA2DThreshold(hitList, 0.5 );
-            fTrackEquationEnd = pcaAlgo.PerformPCA2DThreshold(hitList, 0.5, true);
+            double trackPercentageCut = 0.5;
+
+            fTrackEquationStart = pcaAlgo.PerformPCA2DThreshold(hitList, trackPercentageCut );
+            fTrackEquationEnd = pcaAlgo.PerformPCA2DThreshold(hitList, 1-trackPercentageCut, true);
         }
         else{
             fTrackEquationStart = fTrackEquation;
@@ -207,6 +259,10 @@ SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
     
 }
 
+
+float SLinearCluster::GetHitDensity(){
+    return NHits()/(fMaxX-fMinX);
+}
 
 double SLinearCluster::GetIntegral(){
     double w = 0;
@@ -273,7 +329,8 @@ std::vector<int> SLinearCluster::detect_outliers_iqr2(std::vector<double> data, 
     return outlier_indices;
 }
 
-void SLinearCluster::FillResidualHits() {
+
+void SLinearCluster::FillResidualHits(bool customKinkPoint) {
     fHasResidualHits = true;
     //std::cout << "\n\n +-+-+-+-+-+-+- Filling residual hits +-+-+-+-+-+-+-" << std::endl;
 
@@ -302,16 +359,80 @@ void SLinearCluster::FillResidualHits() {
         fMainHitCluster = SCluster(mainHitList);
 
         TPCLinesPCA pcaAlgo;
+        double trackPercentageCut = 0.5;
 
         fTrackEquation= pcaAlgo.PerformPCA2D(mainHitList);
         if (mainHitList.size() > 6) {
-            fTrackEquationStart = pcaAlgo.PerformPCA2DThreshold(mainHitList, 0.5 );
-            fTrackEquationEnd = pcaAlgo.PerformPCA2DThreshold(mainHitList, 0.5, true);
+            if(customKinkPoint){
+                SHit kinkHit = FindMaxVariationPointSlidingWindow(mainHitList, 3);
+                if(kinkHit.X()!=-1){
+                    trackPercentageCut = (kinkHit.X()-fMinX) / (fMaxX-fMinX);
+                }
+            }
+            
+            fTrackEquationStart = pcaAlgo.PerformPCA2DThreshold(mainHitList, trackPercentageCut );
+            fTrackEquationEnd = pcaAlgo.PerformPCA2DThreshold(mainHitList, 1-trackPercentageCut, true);
         } else {
             fTrackEquationStart = fTrackEquation;
             fTrackEquationEnd = fTrackEquation;
         }
     }
+}
+
+
+double SLinearCluster::GetOccupancy(){
+    int numBins = NHits();
+    std::vector<int> bins(numBins, 0);
+
+    double trackLenght = std::hypot( fMaxX-fMinX, fYAtMaxX-fYAtMinX );
+    double step = trackLenght/numBins;
+
+    for (const SHit& h : GetHits()){
+        SPoint cloPoint = fTrackEquation.GetLineClosestPoint(SPoint(h.X(), h.Y()));
+
+        double d = std::hypot( cloPoint.X()-fMinX, cloPoint.Y()-fYAtMinX);
+
+        int binIndex = static_cast<int> (d / step );
+        
+        std::cout<<h.X()<<" "<<h.Y()<<" "<<d<<" "<<binIndex<<std::endl;
+        if(binIndex<bins.size()) bins[binIndex]++;
+    }
+
+    int slotsFilled = 0;
+    for (int count : bins) {
+        if (count > 0) {
+            slotsFilled++;
+        }
+    }
+
+    return (1.*slotsFilled)/numBins;
+}
+
+double SLinearCluster::GetOccupancy1D(){
+    int nX = fMaxX-fMinX;
+    
+    std::cout<<"  Getting occupancy for track "<<GetId()<<" with "<<NHits()<<" hits, minX="<<fMinX<<" maxX="<<fMaxX<<" nX="<<nX<<std::endl;
+    
+
+    if(nX<1) return 0;
+
+    std::vector<int> bins(nX, 0);
+
+    for (const SHit& h : GetHits()){
+        
+        int binIndex = static_cast<int> (h.X()-fMinX);
+        std::cout<<h.X()<<" "<<h.Y()<<" "<<binIndex<<std::endl;
+        if(binIndex<bins.size()) bins[binIndex]++;
+    }
+
+    int slotsFilled = 0;
+    for (int count : bins) {
+        if (count > 0) {
+            slotsFilled++;
+        }
+    }
+
+    return (1.*slotsFilled)/nX;
 }
 
 // instances

@@ -40,6 +40,9 @@ struct TrackFinderAlgorithmPsetType {
     int MinTrackHits;
     float HitDensityThreshold;
     bool UseCompactness;
+    double ConnectednessTol;
+    double ConnectednessWidthTol;
+    double CompactnessTol;
     int Verbose;
 
     // constructor
@@ -57,6 +60,9 @@ struct TrackFinderAlgorithmPsetType {
         int _minTrackHits,
         float _hitDensityThreshold,
         bool _useCompactness,
+        double _connectednessTol,
+        double _connectednessWidthTol,
+        double _compactnessTol,
         int _verbose) : 
         MaxDTube(_maxDTube),
         MaxDCluster(_maxDCluster),
@@ -69,6 +75,9 @@ struct TrackFinderAlgorithmPsetType {
         MinTrackHits(_minTrackHits),
         HitDensityThreshold(_hitDensityThreshold),
         UseCompactness(_useCompactness),
+        ConnectednessTol(_connectednessTol),
+        ConnectednessWidthTol(_connectednessWidthTol),
+        CompactnessTol(_compactnessTol),
         Verbose(_verbose)
     {}
 
@@ -84,6 +93,9 @@ struct TrackFinderAlgorithmPsetType {
         std::cout << "MinTrackHits: " << MinTrackHits << std::endl;
         std::cout << "HitDensityThreshold: " << HitDensityThreshold << std::endl;
         std::cout << "UseCompactness: " << UseCompactness << std::endl;
+        std::cout << "ConnectednessTol: " << ConnectednessTol << std::endl;
+        std::cout << "ConnectednessWidthTol: " << ConnectednessWidthTol << std::endl;
+        std::cout << "CompactnessTol: " << CompactnessTol << std::endl;
         std::cout << "Verbose: " << Verbose << std::endl;
     }
 };
@@ -98,6 +110,13 @@ struct VertexFinderAlgorithmPsetType {
     bool DecideMainTrack = false;
     bool AddCollinearLines = false;
     float VertexDistanceROI = 30;
+    float AngleTolerance = 5;
+    float TriangleInequalityTol = 1.;
+    float VertexHitsTol = 1.5;
+    int VertexHitsMinHits = 5;
+    float VertexCompactnessTol = 1.5;
+    float MinTrackOccupancy = 0.6;
+    float MinTrackGoodness = 1000;
     int Verbose;
 
     // constructor
@@ -111,6 +130,13 @@ struct VertexFinderAlgorithmPsetType {
         bool _decideMainTrack,
         bool _addCollinearLines,
         float _vertexDistanceROI,
+        float _angleTolerance,
+        float _triangleInequalityTol,
+        float _vertexHitsTol,
+        int vertexHitsMinHits,
+        float _vertexCompactnessTol,
+        float _minTrackOccupancy,
+        float _minTrackGoodness,
         int _verbose): 
         MaxDistToEdge(_maxDistToEdge),
         RefineVertexIntersection(_refineVertexIntersection),
@@ -119,6 +145,13 @@ struct VertexFinderAlgorithmPsetType {
         DecideMainTrack(_decideMainTrack),
         AddCollinearLines(_addCollinearLines),
         VertexDistanceROI(_vertexDistanceROI),
+        AngleTolerance(_angleTolerance),
+        TriangleInequalityTol(_triangleInequalityTol),
+        VertexHitsTol(_vertexHitsTol),
+        VertexHitsMinHits(vertexHitsMinHits),
+        VertexCompactnessTol(_vertexCompactnessTol),
+        MinTrackOccupancy(_minTrackOccupancy),
+        MinTrackGoodness(_minTrackGoodness),
         Verbose(_verbose)
     {}
 
@@ -130,6 +163,12 @@ struct VertexFinderAlgorithmPsetType {
         std::cout << "DecideMainTrack: " << (DecideMainTrack ? "true" : "false") << std::endl;
         std::cout << "AddCollinearLines: " << (AddCollinearLines ? "true" : "false") << std::endl;
         std::cout << "VertexDistanceROI: " << VertexDistanceROI << std::endl;
+        std::cout << "AngleTolerance: " << AngleTolerance << std::endl;
+        std::cout << "TriangleInequalityTol: " << TriangleInequalityTol << std::endl;
+        std::cout << "VertexHitsTol: " << VertexHitsTol << std::endl;
+        std::cout << "VertexHitsMinHits: " << VertexHitsMinHits << std::endl;
+        std::cout << "VertexCompactnessTol: " << VertexCompactnessTol << std::endl;
+        std::cout << "MinTrackOccupancy: " << MinTrackOccupancy << std::endl;
         std::cout << "Verbose: " << Verbose << std::endl;
     }
 };
@@ -179,6 +218,7 @@ struct TPCLinesAlgoPsetType{
     double MaxNeighbourDistance;
     int MinNeighboursHits;
     float MinTrackGoodness;
+    bool CustomKinkPoint;
     int VertexAlgorithm;
     int View;
     std::string OutputPath;
@@ -200,6 +240,7 @@ struct TPCLinesAlgoPsetType{
         double _maxNeighbourDistance,
         int _minNeighboursHits,
         float _minTrackGoodness,
+        bool customKinkPoint,
         int _vertexAlgorithm,
         int _view,
         std::string _outputPath,
@@ -216,6 +257,7 @@ struct TPCLinesAlgoPsetType{
         MaxNeighbourDistance(_maxNeighbourDistance), 
         MinNeighboursHits(_minNeighboursHits),
         MinTrackGoodness(_minTrackGoodness),
+        CustomKinkPoint(customKinkPoint),
         VertexAlgorithm(_vertexAlgorithm),
         View(_view),
         OutputPath(_outputPath),
@@ -235,6 +277,7 @@ struct TPCLinesAlgoPsetType{
         std::cout << "RemoveIsolatedHits: " <<  RemoveIsolatedHits << std::endl;
         std::cout << "MaxNeighbourDistance: " <<  MaxNeighbourDistance << std::endl;
         std::cout << "MinNeighboursHits: " <<  MinNeighboursHits << std::endl;
+        std::cout << "CustomKinkPoint: " <<  CustomKinkPoint << std::endl;
         std::cout << "Verbose: " <<  Verbose << std::endl;
         std::cout << "DebugMode: " <<  DebugMode << std::endl;
 

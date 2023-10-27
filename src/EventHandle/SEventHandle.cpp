@@ -177,9 +177,9 @@ void EfficiencyCalculator::DrawHistograms(TCanvas *c){
 
     hProf2DMatrix->Draw("colz");
 
-    int maxMult=5;
+    int maxMult=4;
     // Add percentage values to each bin as labels
-    for (Int_t i = 2; i <= maxMult; ++i) {
+    for (Int_t i = 1; i <= maxMult; ++i) {
         for (Int_t j = 1; j <maxMult; ++j) {
             Double_t binContent = hProf2DMatrix->GetBinContent(i, j);
             // two to replace the symmetric matrix, double counting
@@ -194,7 +194,7 @@ void EfficiencyCalculator::DrawHistograms(TCanvas *c){
         }
     }
 
-    hProf2DMatrix->GetXaxis()->SetRangeUser(1, 5);
+    hProf2DMatrix->GetXaxis()->SetRangeUser(0, 4);
     hProf2DMatrix->GetYaxis()->SetRangeUser(0, 4);
     hProf2DMatrix->GetXaxis()->SetNdivisions(4);
     hProf2DMatrix->GetYaxis()->SetNdivisions(4);

@@ -20,6 +20,7 @@
 #include "TPCSimpleClusters.h"
 #include "TPCSimpleLines.h"
 #include "TPCSimpleTriangles.h"
+#include "TPCSimpleCalo.h"
 #include "TPCLinesParameters.h"
 #include "TPCLinesDistanceUtils.h"
 #include "TPCSimpleEvents.h"
@@ -33,7 +34,7 @@ class TPCLinesVertexFinder {
 
         double GetAngle360(double x, double y);
         
-        bool TrackTriangleJunctionConatined(SLinearCluster track, STriangle tri);
+        bool TrackTriangleJunctionContained(SLinearCluster track, STriangle tri, double extraAngle);
         
         int GetNHitsBetweenJunction(SLinearCluster track, STriangle tri, std::vector<SLinearCluster> trackList, SPoint intP, std::vector<int> track1ListIx, 
         std::vector<int> track2ListIx, double tol);
@@ -59,6 +60,8 @@ class TPCLinesVertexFinder {
         std::vector<SLinearCluster> GetCollinearTracks(SLinearCluster mainTrack, std::vector<SLinearCluster> trackList);
 
         bool LambdaDecayKinematicCheck(STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList);
+
+        bool CalorimetryCheck(STriangle Triangle);
 
 
     public:

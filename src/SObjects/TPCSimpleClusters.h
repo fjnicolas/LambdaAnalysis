@@ -81,7 +81,7 @@ class SLinearCluster {
         int fId;
         SCluster fHitCluster;
 
-        static constexpr double DefaultMax = std::numeric_limits<double>::max();
+        static constexpr double DefaultMax = std::numeric_limits<int>::max();
    
         float fMinX;
         float fMinY;
@@ -104,6 +104,8 @@ class SLinearCluster {
         SPoint fCoMPoint;
         bool fHasStartEndPoints;
         bool fHasResidualHits;
+
+        double CalculateSlope(const SHit& p1, const SHit& p2);
 
 
     public:
@@ -130,9 +132,13 @@ class SLinearCluster {
         SPoint GetEndPoint()  { return fEndPoint; }
         SPoint GetCoMPoint()  { return fCoMPoint; }
 
+        float GetHitDensity();
+
         LineEquation GetTrackEquation() { return fTrackEquation; }
         LineEquation GetTrackEquationStart() { return fTrackEquationStart; }
         LineEquation GetTrackEquationEnd() { return fTrackEquationEnd; }
+
+        SHit FindMaxVariationPointSlidingWindow(std::vector<SHit> data, size_t N);
 
         SCluster GetHitCluster(){return fHitCluster;};
     
@@ -148,7 +154,10 @@ class SLinearCluster {
         std::vector<int> detect_outliers_iqr(std::vector<float> data, float threshold);
         std::vector<int> detect_outliers_iqr2(std::vector<double> data, double threshold = 1.5);
 
-        void FillResidualHits();
+        void FillResidualHits(bool customKinkPoint=false);
+
+        double GetOccupancy();
+        double GetOccupancy1D();
 
 };
 

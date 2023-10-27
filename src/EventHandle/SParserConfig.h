@@ -161,6 +161,9 @@ TrackFinderAlgorithmPsetType ReadTrackFinderAlgorithmPset(std::string filename, 
     fPset.MinTrackHits = pt.get<int>("MinTrackHits");
     fPset.HitDensityThreshold = pt.get<float>("HitDensityThreshold");
     fPset.UseCompactness = pt.get<bool>("UseCompactness");
+    fPset.ConnectednessTol = pt.get<double>("ConnectednessTol");
+    fPset.ConnectednessWidthTol = pt.get<double>("ConnectednessWidthTol");
+    fPset.CompactnessTol = pt.get<double>("CompactnessTol");
     fPset.Verbose = pt.get<int>("Verbose");
     
     
@@ -184,6 +187,13 @@ VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename
     fPset.DecideMainTrack = pt.get<bool>("DecideMainTrack");
     fPset.AddCollinearLines = pt.get<bool>("AddCollinearLines");
     fPset.VertexDistanceROI = pt.get<float>("VertexDistanceROI");
+    fPset.AngleTolerance = pt.get<float>("AngleTolerance");
+    fPset.TriangleInequalityTol = pt.get<float>("TriangleInequalityTol");
+    fPset.VertexHitsTol = pt.get<float>("VertexHitsTol");
+    fPset.VertexHitsMinHits = pt.get<int>("VertexHitsMinHits");
+    fPset.VertexCompactnessTol = pt.get<float>("VertexCompactnessTol");
+    fPset.MinTrackOccupancy = pt.get<float>("MinTrackOccupancy");
+    fPset.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
     fPset.Verbose = pt.get<int>("Verbose");
     
     
@@ -226,6 +236,7 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string bloc
     fPset.MaxNeighbourDistance = pt.get<double>("MaxNeighbourDistance");
     fPset.MinNeighboursHits = pt.get<int>("MinNeighboursHits");
     fPset.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
+    fPset.CustomKinkPoint = pt.get<bool>("CustomKinkPoint");
     fPset.VertexAlgorithm = pt.get<int>("VertexAlgorithm");
     fPset.View = pt.get<int>("View");
     fPset.OutputPath = pt.get<std::string>("OutputPath");

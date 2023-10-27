@@ -47,6 +47,19 @@ double TPCLinesHough::HoughWeightDistance(LineEquation line, std::vector<SHit> h
     return weight;
 }
 
+double TPCLinesHough::HoughWeightDistanceIntegral(LineEquation line, std::vector<SHit> hitList) {
+    double weight = 0;
+    for (auto hit : hitList) {
+        double d = line.GetDistance(SPoint{hit.X(), hit.Y()});
+        if (d < 1) {
+            weight += hit.Integral();
+        } else {
+            weight += hit.Integral() / d;
+        }
+    }
+    return weight;
+}
+
 double TPCLinesHough::HoughWeightAverageDistance(LineEquation line, std::vector<SHit> hitList) {
     std::vector<double> D;
     for (auto hit : hitList) {
@@ -123,7 +136,7 @@ HoughLine TPCLinesHough::GetBestHoughLine(std::vector<SHit> hitList, SVertex ver
             }
 
             // get a score to the hough line
-            double hypoLineWeight = HoughWeightDistance(hypoLine, hitHoughList);
+            double hypoLineWeight = HoughWeightDistanceIntegral(hypoLine, hitHoughList);
 
             if (hypoLineWeight > bestHoughLine.Score()) {
                 bestHoughLine.SetLineEquation ( hypoLine );

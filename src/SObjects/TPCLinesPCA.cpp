@@ -193,6 +193,7 @@ LineEquation TPCLinesPCA::PerformPCA2D(std::vector<SHit>& data) {
     double eigenvectorY2 = covXY;*/
 
 
+
     // Calculate slopes (m) and intercepts (b) for lines
     double slope1 = eigenvectorY1 / eigenvectorX1;
     double yIntercept1 = meanY - slope1 * meanX; // Since the line passes through the mean
