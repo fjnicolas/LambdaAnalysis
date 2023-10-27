@@ -449,10 +449,6 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         finalLinearClusterV[ix].AssignId(ix);
     }
 
-    
-
-
-    
 
     // ------ Get the short/vertex tracks and remove them
     std::map<int, std::vector<int>> shortToLongTrackDict;
