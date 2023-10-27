@@ -9,9 +9,11 @@ TPCLinesAlg:
     RemoveIsolatedHits: true 
     MaxNeighbourDistance: 2 
     MinNeighboursHits: 2
-    MinTrackGoodness: 3
+    MinTrackGoodness: 10
+    CustomKinkPoint: false
     VertexAlgorithm: 1
     View: 2
+
     OutputPath: OutputLambdaAna
     Verbose: 0
     DebugMode: -1 

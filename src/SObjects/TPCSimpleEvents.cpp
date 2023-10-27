@@ -47,10 +47,19 @@ SEvent::SEvent(std::vector<SLinearCluster> tracks, std::vector<SOrigin> origins,
     fHitDensity(hitDensity)
 {}
 
+int SEvent::GetNOrigins(){
+    int n=0;
+    for(SOrigin & ori :fOriginList){
+        if(!ori.IsEdgeOrigin()) continue;
+        n++;
+    }
+    return n;
+}
 
 int SEvent::GetNOriginsMult(int mult){
     int n=0;
     for(SOrigin & ori :fOriginList){
+        if(!ori.IsEdgeOrigin()) continue;
         if(ori.Multiplicity()==mult){
             n++;
         }

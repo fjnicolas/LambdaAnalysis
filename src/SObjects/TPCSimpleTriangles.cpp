@@ -14,8 +14,12 @@ double get_momentum(double ke, double m) {
     return ke * std::sqrt(1 + 2. * m / ke);
 }
 
-STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, double weight_b, double weight_c)
+STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track2, SLinearCluster track1, SLinearCluster mainTrack, double weight_b, double weight_c)
 {
+    fTrack1 = track1;
+    fTrack2 = track2;
+    fMainTrack = mainTrack;
+    
     fMainVertex = main_vertex;
     fMainVertexHit = mainhit;
     
@@ -158,12 +162,6 @@ double fractionOfLineInTriangle(const std::vector<Point>& triangle, const Line& 
 }
 
 
-
-
-
-
-
-
 double STriangle::ComputeCoveredArea(std::vector<SHit> triangleHits, double widthTol) {
    
     std::vector<Point> triangle = { {fMainVertex.X(), fMainVertex.Y()}, {fVertexB.X(), fVertexB.Y()}, {fVertexC.X(), fVertexC.Y()} };
@@ -172,7 +170,6 @@ double STriangle::ComputeCoveredArea(std::vector<SHit> triangleHits, double widt
     for (SHit &hit : triangleHits){
         Line line = {hit.X(), hit.Y(), hit.Width()};
         double fraction = fractionOfLineInTriangle(triangle, line);
-        std::cout<<" Cov "<<hit.X()<<" "<<fraction<<std::endl;
     }
 
     //sdouble coverageFraction = static_cast<double>(NCovered) / N;

@@ -17,7 +17,7 @@ ChargeDensityAlg:
     DebugMode: false
     CalculateScore: true
     UseAlpha: false
-    TMVAFilename: "NEWFRAMSSelectionTMVA_BDT.weights.xml"
+    TMVAFilename: "NoAlphaFRAMSSelectionTMVA_BDT.weights.xml"
     OutputPath: "OutputLambdaAna"
     Verbose: 0
 }

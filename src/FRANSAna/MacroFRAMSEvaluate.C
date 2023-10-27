@@ -1,131 +1,98 @@
 #include <cstdlib>
 #include <iostream>
-#include <map>
 #include <string>
-
-#include "TChain.h"
 #include "TFile.h"
 #include "TTree.h"
-#include "TString.h"
-#include "TObjString.h"
-#include "TSystem.h"
-#include "TROOT.h"
+#include "TCanvas.h"
+#include "TH2F.h"
+#include "TEfficiency.h"
+#include "TMVA/Reader.h"
 
-#include "TMVA/Factory.h"
-#include "TMVA/DataLoader.h"
-#include "TMVA/Tools.h"
-#include "TMVA/TMVAGui.h"
+int MacroFRAMSEvaluate(
+    const std::string& weightsPath = "FRAMSSelectionTMVA_BDT.weights.xml",
+    const std::string& fileName = "LambdaAnaOutput.root",
+    const std::string& treeName = "FRAMSTree"
+) {
+    const double scoreCut = 0.15;
 
-int MacroFRAMSEvaluate()
-{
-  double fScoreCut = 0.15;
-  //--------- Configuration Parameters
-  // Use reco samples with reco vertex
-  bool fUseReco=false; //fUseReco=true;
+    bool evaluteSignalOnly = true;
 
-  bool fEvaluateSignal = true; fEvaluateSignal = false;
+    TFile inputFile(fileName.c_str(), "READ");
+    TTree* tree = static_cast<TTree*>(inputFile.Get(treeName.c_str()));
 
-  //Background label name
-  std::string fBGLabel = "";
-  fBGLabel = "QE";
-  //fBGLabel="Res";
-  //fBGLabel="Co";
+    TMVA::Reader reader;
+    Float_t alpha_C, eta_C, delta_C, fitScore_C, gap, protonKE, pionKE;
+    Int_t isSignal;
 
-  // Input weights
-  std::string fWeightsPath = "Weights/FRAMSSelectionTMVA_BDT.weights.xml";
+    //reader.AddVariable("Alpha_C", &alpha_C);
+    reader.AddVariable("Eta_C", &eta_C);
+    reader.AddVariable("Delta_C", &delta_C);
+    reader.AddVariable("FitScore_C", &fitScore_C);
+    reader.AddSpectator("Gap", &gap);
+    reader.AddSpectator("ProtonKE", &protonKE);
+    reader.AddSpectator("PionKE", &pionKE);
+    reader.BookMVA("FRAMS BDT", weightsPath.c_str());
 
-  //--------- Input tree
-  std::string tree_dirname = "framsTrue/";
-  if(fUseReco) tree_dirname = "framsReco/";
-  std::string tree_name = "FRAMSTree";
-  if(fEvaluateSignal) tree_name+="S";
-  //else tree_name+="BG";
-  else tree_name+="S";
+    double Alpha_C, Eta_C, Delta_C, FitScore_C, Gap, ProtonKE, PionKE;
+    tree->SetBranchAddress("Alpha_C", &Alpha_C);
+    tree->SetBranchAddress("Eta_C", &Eta_C);
+    tree->SetBranchAddress("Delta_C", &Delta_C);
+    tree->SetBranchAddress("FitScore_C", &FitScore_C);
+    tree->SetBranchAddress("Gap", &Gap);
+    tree->SetBranchAddress("ProtonKE", &ProtonKE);
+    tree->SetBranchAddress("PionKE", &PionKE);
+    tree->SetBranchAddress("IsSignal", &isSignal);
 
-  std::string BGfilename = "InputFiles_v54/FRAMSAnaOutput_BG"+fBGLabel+".root";
-  std::string Sfilename = "InputFiles_v54/FRAMSAnaOutput_S.root";
+    TEfficiency* efficiency = new TEfficiency("effS", "Selection Efficiency;Gap [cm];#epsilon", 21, -1, 20);
+    TH2F hC("hC", ";Gap [cm]; Score", 21, -1, 20, 40, -1., 1.);
 
-  // new files
-  BGfilename = "InputFiles_v69/QE/analyzeItOutput_R1-1_SR1-1000.root";
-  Sfilename = "InputFiles_v69/V0/analyzeItOutput_R1-1_SR1-10.root";
+    for (Long64_t ievt = 0; ievt < tree->GetEntries(); ievt++) {
+        tree->GetEntry(ievt);
 
-  std::string filename=Sfilename;
-  if(!fEvaluateSignal) filename = BGfilename;
+        alpha_C = Alpha_C;
+        eta_C = Eta_C;
+        delta_C = Delta_C;
+        fitScore_C = FitScore_C;
+        gap = Gap;
+        protonKE = ProtonKE;
+        pionKE = PionKE;
 
+        if(evaluteSignalOnly && !isSignal) continue;
 
-  TFile *fInputFile = new TFile(filename.c_str(),"READ");
-  TTree *fTree = (TTree *)fInputFile->Get((tree_dirname+tree_name).c_str());
+        // Retrieve the corresponding MVA output
+        double score = reader.EvaluateMVA("FRAMS BDT");
+        std::cout << ievt << " " << isSignal << " " << eta_C << " Gap=" << gap << " " << score << std::endl;
 
-  // Create TMVA::Reader object
-  TMVA::Reader *fTMVAReader = new TMVA::Reader();
-
-  // Add variables
-  Float_t fAlpha_C, fEta_C, fDelta_C, fFitScore_C;
-  Float_t fGap, fProtonKE, fPionKE;
-
-  fTMVAReader->AddVariable( "Alpha_C", &fAlpha_C );
-  fTMVAReader->AddVariable( "Eta_C", &fEta_C );
-  fTMVAReader->AddVariable( "Delta_C", &fDelta_C);
-  fTMVAReader->AddVariable( "FitScore_C", &fFitScore_C );
-
-  fTMVAReader->AddSpectator( "Gap", &fGap );
-  fTMVAReader->AddSpectator( "ProtonKE", &fProtonKE );
-  fTMVAReader->AddSpectator( "PionKE", &fPionKE );
-
-  fTMVAReader->BookMVA( "FRAMS BDT",  fWeightsPath.c_str()  );
+        bool passCut = score > scoreCut;
+        efficiency->Fill(passCut, gap);
+        hC.Fill(gap, score);
+    }
 
 
-  Double_t Alpha_C, Eta_C, Delta_C, FitScore_C;
-  Double_t Gap, ProtonKE, PionKE;
-  //fTree->SetBranchAddress("Alpha_C", &Alpha_C);
-  fTree->SetBranchAddress( "Eta_C", &Eta_C );
-  fTree->SetBranchAddress( "Delta_C", &Delta_C);
-  fTree->SetBranchAddress( "FitScore_C", &FitScore_C );
 
-  fTree->SetBranchAddress( "Gap", &Gap );
-  fTree->SetBranchAddress( "ProtonKE", &ProtonKE );
-  fTree->SetBranchAddress( "PionKE", &PionKE );
+    TCanvas* c1 = new TCanvas("example", "", 800, 400);
+    c1->Divide(2, 1);
+    
 
-  //create one-dimensional TEfficiency object with fixed bin size
-  TEfficiency* pEff = new TEfficiency("effS","Selection Efficiency;Gap [cm];",21,-1,20);
-  bool passCut;
+    c1->cd(1);
+    gPad->SetBottomMargin(0.15);
+    gPad->SetLeftMargin(0.15);
+    efficiency->Draw("AP");
+    gPad->Update();
+    efficiency->GetPaintedGraph()->GetXaxis()->SetTitleOffset(1.2);
+    efficiency->GetPaintedGraph()->GetYaxis()->SetTitleOffset(1.2);
 
-  TH2F hC("hC", ";Gap [cm]; Score", 21, -1, 20, 40, -1., 1.);
+    c1->cd(2);
+    gPad->SetBottomMargin(0.15);
+    gPad->SetLeftMargin(0.15);
+    hC.GetXaxis()->SetTitleOffset(1.);
+    hC.GetYaxis()->SetTitleOffset(1.);
+    hC.Draw();
 
-  for (Long64_t ievt=0; ievt<fTree->GetEntries();ievt++) {
+    c1->cd();
+    c1->Update();
+    c1->WaitPrimitive();
 
-    fTree->GetEntry(ievt);
-
-    fAlpha_C=Alpha_C; fEta_C=Eta_C; fDelta_C=Delta_C; fFitScore_C=FitScore_C;
-    fGap=Gap; fProtonKE=ProtonKE; fPionKE=PionKE;
-
-    // retrieve the corresponding MVA output
-    double score = fTMVAReader->EvaluateMVA( "FRAMS BDT" );
-
-    std::cout<<ievt<<" "<<score<<std::endl;
-
-    passCut = score > fScoreCut;
-    pEff->Fill(passCut, Gap);
-
-    hC.Fill(Gap, score);
-
-
-  } // end of event loop
-
-  delete fTMVAReader;
-
-  TCanvas* c1 = new TCanvas("example","",600,400);
-  c1->Divide(2,1);
-  c1->SetFillStyle(1001);
-  c1->SetFillColor(kWhite);
-  c1->cd(1);
-  pEff->Draw("AP");
-
-  c1->cd(2);
-  hC.Draw();
-
-  c1->cd();
-
-  c1->Update(); c1->WaitPrimitive();
-  return 0;
+    delete efficiency;
+    return 0;
 }

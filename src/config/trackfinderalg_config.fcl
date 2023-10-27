@@ -5,14 +5,17 @@ TrackFinderAlg:
     MaxDTube: 10 
     MaxDCluster: 5
     SingleWireMode: false 
-    MinClusterHits: 3 
+    MinClusterHits: 3
     DCleaning: 2. 
     ClusterCompletenessCut: 0.8 
     ClusterAngleCut: 5 
     CaptureMissingHits: true 
-    MinTrackHits: 3 
+    MinTrackHits: 3
     HitDensityThreshold: 2
     UseCompactness: true
+    ConnectednessTol: 5.
+    ConnectednessWidthTol: 2
+    CompactnessTol: 2.
     Verbose: 0
 }
 

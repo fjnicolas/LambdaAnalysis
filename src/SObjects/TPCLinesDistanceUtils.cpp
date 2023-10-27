@@ -25,6 +25,19 @@ namespace TPCLinesDistanceUtils{
         return minDistance;
     }
 
+    double GetClusterMinDistanceX(SCluster cluster1, SCluster cluster2) {
+        int minDistance = 1e4;
+        for (SHit& hit1 : cluster1.GetHits()) {
+            for (SHit& hit2 : cluster2.GetHits()) {
+                double distance = std::abs(hit1.X() - hit2.X());
+                if (distance < minDistance) {
+                    minDistance = distance;
+                }
+            }
+        }
+        return minDistance;
+    }
+
     double GetClusterConnectedness(SCluster cluster1, SCluster cluster2) {
         double minDistance = 1e4;
         for (SHit& hit1 : cluster1.GetHits()) {

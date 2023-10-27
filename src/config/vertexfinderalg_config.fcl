@@ -2,13 +2,20 @@ BEGIN_PROLOG
 
 VertexFinderAlg:
 {
-    MaxDistToEdge: 3 
+    MaxDistToEdge: 2
     RefineVertexIntersection: true 
     UseEdgesDiscard: true 
     MaxTrackFractionInMain: 0.75 
     DecideMainTrack: true 
     AddCollinearLines: false
     VertexDistanceROI: 30
+    AngleTolerance: 25
+    TriangleInequalityTol: 1
+    VertexHitsTol: 2.
+    VertexHitsMinHits: 5
+    VertexCompactnessTol: 1.5
+    MinTrackOccupancy: 0.6
+    MinTrackGoodness: 10
     Verbose: 0
 }
 

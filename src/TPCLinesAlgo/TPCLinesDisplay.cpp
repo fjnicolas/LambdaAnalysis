@@ -142,9 +142,8 @@ void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend& leg, std::string labe
     if(label!="")
         leg.AddEntry(pointGraph, label.c_str(), "p");
 
-
     // Draw the point
-    pointGraph->Draw("P"); // A: Axis, P: Po
+    pointGraph->Draw("P");
 
     // Draw the triangle
     triangle->Draw("F");
@@ -245,14 +244,23 @@ void TPCLinesDisplay::Show(
     // triangles
     for(size_t oIx=0; oIx<originAngles.size(); oIx++){
         std::cout<<"Drawing origin angle "<<oIx<<std::endl;
-        DrawTriangle(originAngles[oIx], legend, "Origin "+std::to_string(oIx), fColorsOrigins[oIx], 90, 0.5);
+        std::string VLabel = "V_{"+std::to_string(oIx)+"} ";
+        VLabel = VLabel + originAngles[oIx].GetTrack1().GetId()+"-"+originAngles[oIx].GetTrack2().GetId()+"#rightarrow";
+        VLabel = VLabel + originAngles[oIx].GetMainTrack().GetId();
+
+        DrawTriangle(originAngles[oIx], legend, VLabel, fColorsOrigins[oIx], 90, 0.5);
     }
 
 
-    // triangles
+    // origins
     for(size_t oIx=0; oIx<origins.size(); oIx++){
         std::cout<<"Drawing origin "<<oIx<<std::endl;
-        DrawVertex(origins[oIx].GetPoint(), legend, "Origin "+std::to_string(oIx)+" ("+std::to_string(origins[oIx].Multiplicity())+")", fColorsOrigins[oIx], 90, 0.5);
+        std::string originLabel = "#omicron_{"+std::to_string(oIx)+"} (m="+std::to_string(origins[oIx].Multiplicity())+"),";
+        for(SLinearCluster & trk:origins[oIx].GetTracks()){
+            int sign = (origins[oIx].IsEdgeOrigin())? 1:-1;
+            originLabel += " "+std::to_string(sign*trk.GetId());
+        }
+        DrawVertex(origins[oIx].GetPoint(), legend, originLabel.c_str(), fColorsOrigins[oIx], 90, 0.5);
     }
 
 
