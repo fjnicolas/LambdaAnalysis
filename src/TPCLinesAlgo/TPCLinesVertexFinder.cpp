@@ -700,26 +700,12 @@ bool TPCLinesVertexFinder::CalorimetryCheck(STriangle Triangle){
 
 std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearCluster> trackList, SPoint ballVertex, std::vector<STriangle>& vertexList,  std::vector<SOrigin>& associatedOrigins,  SLinearCluster &mainDirection){
 
-    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In Origin finder\n";    
-
-    // ------- Reset and set variables
-    std::vector<SOrigin> originList;
-    vertexList.clear();
-    // Variables for the origin assignment
-    std::vector<bool> usedTrack(trackList.size(), false);
-    std::vector<std::pair<int, int>> intersectingTracks;
-    std::vector<std::pair<int, int>> kinkTracks;
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In Origin finder\n";
     
-    // ------ Get main track
-    std::vector<std::vector<SLinearCluster>> parallelTracks;
-    for(SLinearCluster &trk:trackList){
-        parallelTracks.push_back({trk});
-    }
-    std::vector<SLinearCluster> MainDirTrackList;
-    std::vector<SLinearCluster> FreeTracksList;
-    SLinearCluster MainDirection = GetMainDirection(MainDirTrackList, FreeTracksList, parallelTracks, fTPCLinesVertexFinderPset.DecideMainTrack, fTPCLinesVertexFinderPset.Verbose);
 
-    // ------- Look for possible intersections
+    // ------- First look for all possible intersections
+    // Vector to store the intersections
+    std::vector<SOrigin> allIntersections;
     // ------ Loop 1
     if (trackList.size() > 0) {
         for (size_t ix = 0; ix < trackList.size(); ++ix) {
@@ -858,7 +844,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     }   
                 }
 
-
                 // Finally define the vertex
                 if(intersectionPointCompactnessCompatible==false){
                     float minD = 1e3;
@@ -873,8 +858,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     intP = SPoint(vertexHit.X(), vertexHit.Y());
                     intPYerror = vertexHit.Width();
                 }
-                
-
     
                 if(fTPCLinesVertexFinderPset.Verbose>=1){
                     std::cout << "      Vertex set to: " << intP << std::endl;
@@ -889,72 +872,147 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 // keep the vertex if is within the PANDORA ROI
                 bool isIntersection= (intP.X()!=-1 && intP.Y()!=-1 && dIntPBallVertex<fTPCLinesVertexFinderPset.VertexDistanceROI);
 
-                if(isIntersection && inEdgeOrigin){
-                    
-                    // ------ Origin assigment
-                    if(usedTrack[ix]==false && usedTrack[jx]==false){
-                        intersectingTracks.push_back(std::make_pair(ix, jx));
-                        SOrigin newOr = SOrigin(intP, {track1, track2}, true, intPYerror);
-                        originList.push_back( newOr );
-                        // mark as used tracks
-                        usedTrack[ix]=true;
-                        usedTrack[jx]=true;
-                        std::cout<<"   END = Adding completely new origin..."<<newOr;
-                    }
-                    else if(usedTrack[ix]==false || usedTrack[jx]==false || (usedTrack[ix]==true && usedTrack[jx]==true)){
-
-                        SLinearCluster newTrack = (usedTrack[ix]==false) ? track1 : track2;
-                        SLinearCluster previousTrack = (usedTrack[ix]==true) ? track1 : track2;
-
-                        bool merged=false;
-                        for(SOrigin & ori:originList){
-                            if(ori.HasTrackIndex(previousTrack.GetId())==true){
-                                float d = std::hypot(ori.GetPoint().X() - intP.X(), ori.GetPoint().Y() - intP.Y());
-                                bool intersectionCompatible = std::abs(ori.GetPoint().X() - intP.X())<=2;
-                                intersectionCompatible = intersectionCompatible && std::abs(ori.GetPoint().Y() - intP.Y())<2*ori.GetYError();
-                                if(intersectionCompatible){
-                                    if(!ori.HasTrackIndex(newTrack.GetId())){
-                                        ori.AddTrack(newTrack, intP);
-                                        std::cout<<"   END = Adding new track to origin "<<ori.GetPoint().X()<<ix<<" "<<jx<<std::endl;
-                                    }
-                                    usedTrack[ix]=true;
-                                    usedTrack[jx]=true;
-                                    merged=true;
-                                }
-                            }
-                        }
-
-                        std::cout<<" Merged? "<<merged<<std::endl;
-
-                        if(merged==false){
-                            intersectingTracks.push_back(std::make_pair(ix, jx));
-                            SOrigin newOr(intP, {track1, track2}, true, intPYerror);
-                            std::cout<<"   END = Adding new origin..."<<newOr;
-                            originList.push_back( newOr );
-                            usedTrack[ix]=true;
-                            usedTrack[jx]=true;
-                        }
-
-                    }
+                if(isIntersection){
+                    SOrigin newOr = SOrigin(intP, {track1, track2}, inEdgeOrigin, intPYerror);
+                    allIntersections.push_back(newOr);
                 }
-                else{ // Add a possible kink
-                    int mainTrackIndex = (track1.NHits()>track2.NHits())? track1.GetId():track2.GetId();
-                    int secondTrackIndex = (track1.NHits()<track2.NHits())? track1.GetId():track2.GetId();
-                    kinkTracks.push_back(std::make_pair(secondTrackIndex, mainTrackIndex));
-                    std::cout<<" Added kink for track "<<secondTrackIndex<<" with main track "<<mainTrackIndex<<std::endl;
-                }
-
 
             }
         }
     }
+
     
+    // ------ Second study the origin hierarchy
+    // Reset and set variables
+    std::vector<SOrigin> originList;
+    vertexList.clear();
+    // Variables for the origin assignment
+    std::map<int, bool> usedTrack;
+    for(SLinearCluster &trk:trackList) usedTrack[trk.GetId()]=false;
+    std::vector<std::pair<int, int>> kinkTracks;
 
-    std::vector<SOrigin> singleOriginsList;
-    // ------ Origins for unmatched tracks
-    for(size_t k=0; k<trackList.size(); k++){
+    // First create origins for the intersection within the edges
+    for(SOrigin & ori:allIntersections){
+        // Skip the intersection if it's not within the edges
+        if(ori.IsEdgeOrigin()== false) continue;
 
-        SLinearCluster track = trackList[k];
+        // Get the intersection attributes
+        SLinearCluster track1 = ori.GetTrackEntry(0);
+        SLinearCluster track2 = ori.GetTrackEntry(1);
+        SPoint intP = ori.GetPoint();
+        double intPYerror = ori.GetYError();
+        std::cout<<"  Intersection "<<ori.GetPoint().X()<<" "<<ori.GetPoint().Y()<<std::endl;
+
+        // ------ Origin assigment
+        // Completeley new origin
+        if(usedTrack[track1.GetId()]==false && usedTrack[track2.GetId()]==false){
+            SOrigin newOr = SOrigin(intP, {track1, track2}, true, intPYerror);
+            originList.push_back( newOr );
+            // mark as used tracks
+            usedTrack[track1.GetId()]=true;
+            usedTrack[track2.GetId()]=true;
+            std::cout<<"   END = Adding completely new origin..."<<newOr;
+        }
+        // If some of the tracks already used or both used
+        else if(usedTrack[track1.GetId()]==false || usedTrack[track2.GetId()]==false || (usedTrack[track1.GetId()]==true && usedTrack[track2.GetId()]==true)){
+
+            SLinearCluster newTrack = (usedTrack[track1.GetId()]==false) ? track1 : track2;
+            SLinearCluster previousTrack = (usedTrack[track2.GetId()]==true) ? track1 : track2;
+
+            bool merged=false;
+            for(SOrigin & oriAux:originList){
+                
+                bool intersectionCompatible = std::abs(oriAux.GetPoint().X() - intP.X())<=2;
+                intersectionCompatible = intersectionCompatible && std::abs(oriAux.GetPoint().Y() - intP.Y())<2*oriAux.GetYError();
+                if(intersectionCompatible){
+                    if(!oriAux.HasTrackIndex(newTrack.GetId())){
+                        oriAux.AddTrack(newTrack, intP, intPYerror);
+                        std::cout<<"   END = Adding new track to origin \n";
+                    }
+                    usedTrack[track1.GetId()]=true;
+                    usedTrack[track2.GetId()]=true;
+                    merged=true;
+                }
+                
+            }
+
+            std::cout<<" Merged? "<<merged<<std::endl;
+
+            if(!merged){
+                SOrigin newOr(intP, {track1, track2}, true, intPYerror);
+                std::cout<<"   END = Adding new origin..."<<newOr;
+                originList.push_back( newOr );
+                usedTrack[track1.GetId()]=true;
+                usedTrack[track2.GetId()]=true;
+            }
+
+        }
+    
+    }
+
+    
+    // Second create origins for the not within edges intersections
+    std::cout<<" MERGING KINKS\n";
+    for(SOrigin & ori:allIntersections){
+        // Skip the intersection if it's within the edges
+        if(ori.IsEdgeOrigin()== true) continue;
+
+        // get the intersection attributes
+        SLinearCluster track1 = ori.GetTrackEntry(0);
+        SLinearCluster track2 = ori.GetTrackEntry(1);
+        SPoint intP = ori.GetPoint();
+        double intPYerror = ori.GetYError();
+
+        std::cout<<"  Potnetial Intersection Kink "<<ori.GetPoint().X()<<" "<<ori.GetPoint().Y()<<" Tracks: "<<ori.GetTrackEntry(0).GetId()<<" "<<ori.GetTrackEntry(1).GetId()<<std::endl;
+        // check if the kink origin is comaptible with other origins
+        bool merged=false;
+        /*
+        for(SOrigin & oriAux:originList){
+            bool intersectionCompatible = std::abs(ori.GetPoint().X() - oriAux.GetPoint().X())<=2;
+            intersectionCompatible = intersectionCompatible && std::abs(ori.GetPoint().Y() - oriAux.GetPoint().Y())<2*oriAux.GetYError();
+
+            std::cout<<" Compaticle? "<<intersectionCompatible<<std::endl;
+            if(intersectionCompatible){
+                if(!oriAux.HasTrackIndex(track1.GetId())){
+                    oriAux.AddTrack(track1, intP, intPYerror);
+                    std::cout<<"   END = Adding new track to origin \n";
+                }
+                if(!oriAux.HasTrackIndex(track2.GetId())){
+                    oriAux.AddTrack(track2, intP, intPYerror);
+                    std::cout<<"   END = Adding new track to origin \n";
+                }
+                usedTrack[track1.GetId()]=true;
+                usedTrack[track2.GetId()]=true;
+                merged=true;
+            }
+        }*/
+
+        // if not merged, add the kink track to the shorter one
+        if(!merged){
+            // set the kink track to the shorter one
+            int kinkTrackIx;
+            SLinearCluster kinkTrack;
+            if( track1.NHits()>track2.NHits() ){
+                kinkTrackIx = track2.GetId();
+                kinkTrack = track2;
+            }
+            else{
+                kinkTrackIx = track1.GetId();
+                kinkTrack = track1; 
+            }
+
+            if(usedTrack[kinkTrackIx]==false){
+                SOrigin newOr(ori.GetPoint(), {kinkTrack}, false, ori.GetYError());
+                originList.push_back( newOr );
+                usedTrack[kinkTrackIx]=true;
+                std::cout<<"  Adding kink track "<<kinkTrack.GetId()<<" at "<<ori.GetPoint();
+            }
+        }
+    }
+    
+    // Third create origins for the unmatched tracks
+    for(SLinearCluster & track:trackList){
+
         float d1 = std::hypot( 0.3*(track.GetStartPoint().X() - ballVertex.X()), 0.075*(track.GetStartPoint().Y() - ballVertex.Y()) );
         float d2 = std::hypot( 0.3*(track.GetEndPoint().X() - ballVertex.X()), 0.075*(track.GetEndPoint().Y() - ballVertex.Y()) );
         float d = std::min(d1, d2);
@@ -964,61 +1022,66 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         double trackLength = std::hypot( 0.3*(track.GetStartPoint().X() - track.GetEndPoint().X()), 0.075*(track.GetStartPoint().Y()-track.GetEndPoint().Y()) );
     
         std::cout<<" Track "<<track.GetId()<<" "<<trackLength<<" "<<d<<"\n";
-        if( d < fTPCLinesVertexFinderPset.VertexDistanceROI){
-            bool isKink = std::find_if(kinkTracks.begin(), kinkTracks.end(), [&](const std::pair<int, int>& element) {return element.first == track.GetId();}) != kinkTracks.end();
-
-            // if its a kink
-            if(isKink==true){
-                if(usedTrack[k]==false){
-                    std::cout<<"  Adding kink track "<<track.GetId()<<" at "<<edgePointClosest;
-                    SLinearCluster kinkTrack = track;
-                    SOrigin newOr(track.GetStartPoint(), {track}, false, track.GetAverageWidth());
-                    originList.push_back( newOr );
+        if(d > fTPCLinesVertexFinderPset.VertexDistanceROI) continue;
+        if(trackLength<2) continue;
+        
+        // add single origin if completely unmatched
+        if(usedTrack[track.GetId()]==false){
+            bool merged = false;
+            for(SOrigin & ori:originList){
+                bool intersectionCompatible = std::abs(ori.GetPoint().X() - edgePointClosest.X())<=2;
+                intersectionCompatible = intersectionCompatible && std::abs(ori.GetPoint().Y() - edgePointClosest.Y())<2*ori.GetYError();
+                if(intersectionCompatible){
+                    ori.AddTrack(track, edgePointClosest, 0);
+                    std::cout<<"   END = Adding to the existing one \n";
+                    merged=true;
                 }
             }
-            // add origin in completely unmatched tracks
-            else if(isKink==false && trackLength>= 2 ){
-                if(usedTrack[k]==false){
-                    std::cout<<"  Adding new origin for unmatched track "<<track.GetId()<<" at "<<edgePointClosest;
-                    singleOriginsList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );  
+            if(!merged){
+                std::cout<<"  Adding new origin for unmatched track "<<track.GetId()<<" at "<<edgePointClosest;
+                originList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );
+                
+            }
+            usedTrack[track.GetId()]=true;
+            
+        }
+        // in matched, but its a long track and the closest hit is not matched, add origin
+        else if(usedTrack[track.GetId()]==true && track.NHits()>=10){
+    
+            bool unmatchedClosestEdge = true;
+            for(SOrigin &ori:originList){
+                
+                bool originInTrack = false;
+                for(int j=0; j<ori.Multiplicity(); j++){
+                    if(ori.GetTrackEntry(j).GetId() == track.GetId())
+                        originInTrack = true;
                 }
-                // in matched, but its a long track and the closest hit is not matched, add origin
-                else{
-                    if(track.NHits()>=10){
-                        
-                        bool unmatchedClosestEdge = true;
-                        for(SOrigin &ori:originList){
-                            
-                            bool originInTrack = false;
-                            for(int j=0; j<ori.Multiplicity(); j++){
-                                if(ori.GetTrackEntry(j).GetId() == track.GetId())
-                                    originInTrack = true;
-                            }
 
 
-                            if(originInTrack==true){
-                                float dClosest = std::hypot( 0.3*(edgePointClosest.X() - ori.GetPoint().X()), 0.075*(edgePointClosest.Y() - ori.GetPoint().Y()) );
-                                float dFarthest = std::hypot( 0.3*(edgePointFarthest.X() - ori.GetPoint().X()), 0.075*(edgePointFarthest.Y() - ori.GetPoint().Y()) );
-                                if(dFarthest>dClosest){
-                                    unmatchedClosestEdge=false;
-                                    std::cout<<"Closest "<<edgePointClosest;
-                                    std::cout<<"Farthest "<<edgePointFarthest;
-                                }
-                            }
-                        }
-                        if(unmatchedClosestEdge){
-                            std::cout<<"  Adding new origin for unmatched long track "<<track.GetId()<<" at "<<edgePointClosest;
-                            singleOriginsList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );
-                        }
+                if(originInTrack==true){
+                    float dClosest = std::hypot( 0.3*(edgePointClosest.X() - ori.GetPoint().X()), 0.075*(edgePointClosest.Y() - ori.GetPoint().Y()) );
+                    float dFarthest = std::hypot( 0.3*(edgePointFarthest.X() - ori.GetPoint().X()), 0.075*(edgePointFarthest.Y() - ori.GetPoint().Y()) );
+                    if(dFarthest>dClosest){
+                        unmatchedClosestEdge=false;
+                        std::cout<<"Closest "<<edgePointClosest;
+                        std::cout<<"Farthest "<<edgePointFarthest;
                     }
-                    
                 }
+            }
+            if(unmatchedClosestEdge){
+                std::cout<<"  Adding new origin for unmatched long track "<<track.GetId()<<" at "<<edgePointClosest;
+                originList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );
+                usedTrack[track.GetId()]=true;
             }
         }
+               
     }
 
-    originList.insert(originList.begin(), singleOriginsList.begin(), singleOriginsList.end());
 
+    // ------ Sort origins by NHits
+    std::sort(originList.begin(), originList.end(), [](SOrigin& obj1, SOrigin& obj2) {
+        return obj1.TotalCharge() > obj2.TotalCharge();
+    });
 
     // ------ Only check kinematics if the intersection is not within the MainDirection
     for(SOrigin &ori:originList){
@@ -1109,16 +1172,16 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         }
 
     }
-   
-
-    // sort by NHits
-    std::sort(originList.begin(), originList.end(), [](SOrigin& obj1, SOrigin& obj2) {
-        return obj1.NHits() > obj2.NHits();
-    });
 
 
-    // set the main direction
-    mainDirection = MainDirection;
+    // ------ Get main track for event display
+    std::vector<std::vector<SLinearCluster>> parallelTracks;
+    for(SLinearCluster &trk:trackList){
+        parallelTracks.push_back({trk});
+    }
+    std::vector<SLinearCluster> MainDirTrackList;
+    std::vector<SLinearCluster> FreeTracksList;
+    mainDirection = GetMainDirection(MainDirTrackList, FreeTracksList, parallelTracks, fTPCLinesVertexFinderPset.DecideMainTrack, fTPCLinesVertexFinderPset.Verbose);
 
     // return origins vector
     return originList;

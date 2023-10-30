@@ -201,7 +201,11 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             
             int nAngles = recoEvent.GetNAngles();
 
-            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
+            int nOrigins = recoEvent.GetNOrigins();
+            int nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
+
+            //bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
+            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
 
             // Update the efficiency calculator
             if(accepted){

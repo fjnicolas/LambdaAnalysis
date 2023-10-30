@@ -40,10 +40,11 @@ class SOrigin {
         double GetYError(){ return fYError;};
         std::vector<SLinearCluster> GetTracks(){ return fTrackList; };
         int Multiplicity(){return fMultiplicity;};
-        void AddTrack(SLinearCluster track, SPoint p); 
+        void AddTrack(SLinearCluster track, SPoint p, double yError); 
         bool IsEdgeOrigin(){return fEdgeOrigin;};
         bool HasTrackIndex(int ix);
         int NHits(){return fNHits;};
+        double TotalCharge();
         SLinearCluster GetTrackEntry(size_t ix){ return fTrackList[ix];};
 
         //friend std::ostream& operator<<(std::ostream& out, SOrigin const& ori);

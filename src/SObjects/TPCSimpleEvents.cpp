@@ -23,11 +23,12 @@ SOrigin::SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge, doub
     }
 }
 
-void SOrigin::AddTrack(SLinearCluster track, SPoint p){
+void SOrigin::AddTrack(SLinearCluster track, SPoint p, double yError){
     fTrackList.push_back(track);
     fMultiplicity++;
     SPoint newPoint = SPoint( (fVertex.X()+p.X())/2., (fVertex.Y()+p.Y())/2.  );
     fVertex = newPoint;
+    fYError = std::sqrt( std::pow(fYError,2) + std::pow(yError,2) );
     fNHits+=track.NHits();
 }
 
@@ -37,6 +38,16 @@ bool SOrigin::HasTrackIndex(int ix){
         if(ix==trk.GetId()) hasIx=true;
     }
     return hasIx;
+}
+
+double SOrigin::TotalCharge(){
+    double totalCharge = 0;
+    for(SLinearCluster &trk: fTrackList){
+        for(SHit &hit:trk.GetHits()){
+            totalCharge+=hit.Integral();
+        }
+    }
+    return totalCharge;
 }
 
 

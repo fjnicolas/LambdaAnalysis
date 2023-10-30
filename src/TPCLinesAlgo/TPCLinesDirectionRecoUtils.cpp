@@ -173,7 +173,9 @@ namespace TPCLinesDirectionUtils{
     bool check_overlap_and_find_region(int a1, int a2, int b1, int b2, int & overlapStart, int & overlapEnd) {
         overlapEnd=0;
         overlapStart=0;
-        if ((a1 <= b1 && b1 <= a2) || (a1 <= b2 && b2 <= a2)) {
+        std::cout << "        Checking overlap: "<<a1<<" "<<a2<<" - "<<b1<<" "<<b2<<std::endl; 
+        //if ((a1 <= b1 && b1 <= a2) || (a1 <= b2 && b2 <= a2)) {
+        if( (a1 <= b1 && b1 <= a2) || (b1 <= a1 && a1 <= b2)) {
             int overlap_start = std::max(a1, b1);
             int overlap_end = std::min(a2, b2);
             
@@ -287,14 +289,14 @@ namespace TPCLinesDirectionUtils{
 
 
     std::vector<std::vector<SLinearCluster>> GetParallelTracks(
-        std::vector<SLinearCluster>& trackList, double dist1DTh, double fAngleTh, double fMaxDWires, int verbose) {
+        std::vector<SLinearCluster>& trackList, double fDist1DTh, double fAngleTh, double fMaxDWires, int verbose) {
         
         if(verbose>=1) std::cout << "\n+-+-+-+-+-+-+- Parallel track finder +-+-+-+-+-+-+-\n";
 
         if(trackList.size()<=1){
             return {trackList};
         }
-        // sort tracks by start point
+        // Step 1: sort tracks by start point
         std::vector<SLinearCluster> sortedTracks = trackList;
         std::sort(sortedTracks.begin(), sortedTracks.end(), CompareSLinearClustersByMinX());
 
@@ -311,10 +313,11 @@ namespace TPCLinesDirectionUtils{
             candidatesPerTrackId[sortedTracks[trkix].GetId()] = {};
         }
 
-
+        // loop
         for (size_t trkix = 0; trkix < sortedTracks.size(); ++trkix) {
+            
             SLinearCluster trk = sortedTracks[trkix];
-            if(verbose>=1) std::cout << "\n *** Parallel junctions study... Track: " << trk.GetId()
+            if(verbose>=1) std::cout << "\n *** Parallel tracks function... Track: " << trk.GetId()
                     << " min/max X = " << trk.GetMinX() << "/" << trk.GetMaxX() << "\n";
                     
             for (size_t trkjx = trkix + 1; trkjx < sortedTracks.size(); ++trkjx) {
@@ -324,20 +327,18 @@ namespace TPCLinesDirectionUtils{
                         << " Xdiff:" << trk2.GetMinX() - trk.GetMaxX() << "\n";
 
                 // Consider the track if it starts after the track1
-                if (trk2.GetMinX() - trk.GetMaxX() > dist1DTh) {
+                if (trk2.GetMinX() - trk.GetMaxX() > fDist1DTh) {
                     
                     // Close enough in X
                     if (std::abs(trk2.GetMinX() - trk.GetMaxX()) > fMaxDWires) {
                         continue;
                     }
      
-                    
                     // Check the tracks match
                     bool hypoConnected = GetLineHypoDistance(trk, trk2);
                     if (!hypoConnected) {
                         continue;
                     }
-
 
                     // Check if track is fully contained
                     bool fullContained = false;
@@ -366,9 +367,12 @@ namespace TPCLinesDirectionUtils{
                     double angleCoM = std::atan(slpCoM) * 180.0 / M_PI;
                     double angle_between = std::abs(angle1 - angle2);
                     bool slopesCompatible = angle_between < fAngleTh && std::abs(angleCoM - angle1) < fAngleTh && std::abs(angleCoM - angle2) < fAngleTh;
-                    if(verbose>=1) std::cout << "        angle1: " << angle1 << " angle2: " << angle2 
+                    
+                    if(verbose>=1){
+                        std::cout << "        angle1: " << angle1 << " angle2: " << angle2 
                             << " angleCOM: " << angleCoM << " angle_diff= " << angle_between << "\n";
-                    if(verbose>=1) std::cout << "        Slopes Compatible " << slopesCompatible << "\n";
+                        std::cout << "        Slopes Compatible " << slopesCompatible << "\n";
+                    }
 
                     if (fullContained) {
                         scorePairs[1.0 / angle_between] = {trk.GetId(), trk2.GetId()};
@@ -390,11 +394,13 @@ namespace TPCLinesDirectionUtils{
                     const std::pair<double, std::vector<int>>& rhs) {
                     return lhs.first > rhs.first;
                 });
-        if(verbose>=1) std::cout << "SCORES\n";
-        for (const auto& pair : sortedScorePairs) {
-            if(verbose>=1) std::cout << "Score " << pair.first << " Pair [" << pair.second[0] << ", " << pair.second[1] << "]\n";
+        if(verbose>=1){
+            std::cout << "Candidare parallel merge SCORES\n";
+            for (const auto& pair : sortedScorePairs)
+                std::cout << "Score " << pair.first << " Pair [" << pair.second[0] << ", " << pair.second[1] << "]\n";
         }
 
+        // Perform the merging
         std::vector<std::vector<int>> finalTrackCluster;
         for (const auto& pair : sortedScorePairs){
             double score = pair.first;
@@ -439,10 +445,14 @@ namespace TPCLinesDirectionUtils{
                 }
             }
 
+            // If no merging cluster found, create a new one
             if (mergingClusterIx == -1) {
+                if(verbose>=1) std::cout << "  No previous cluster found, creating new cluster with IDs=" << id1 << " " << id2 << "\n";
                 finalTrackCluster.push_back({id1, id2});
             }
+            // If merging cluster found, check if the tracks overlap with the tracks in the cluster
             else {
+                if(verbose>=1) std::cout << "  Previous cluster found, checking overlap region\n";
                 std::vector<SLinearCluster> mergingTracks;
                 for (int trkIx : mergingTracksIx) {
                     mergingTracks.push_back(sortedTracks[trackIdToIndexDict[trkIx]]);
@@ -456,11 +466,12 @@ namespace TPCLinesDirectionUtils{
                         int overlap_start, overlap_end;
                         bool overlap_exists = check_overlap_and_find_region(trackInCluster.GetMinX(), trackInCluster.GetMaxX(), mTrack.GetMinX(), mTrack.GetMaxX(), overlap_start, overlap_end);
 
-                        if(verbose>=1) std::cout << "OOO " << overlap_start << " " << overlap_end << "\n";
+                        if(verbose>=1) std::cout << "    Overlap with cluster track " << trackInCluster.GetId() << " for merging track " << mTrack.GetId() << " start/end " << overlap_start << " " << overlap_end << "\n";
                         if (overlap_exists) {
                             overlaps = true;
                             break;
                         }
+
                     }
                     if (overlaps) {
                         break;
@@ -468,22 +479,68 @@ namespace TPCLinesDirectionUtils{
                 }
 
                 if (!overlaps) {
-                    finalTrackCluster[mergingClusterIx].insert(finalTrackCluster[mergingClusterIx].end(), mergingTracksIx.begin(), mergingTracksIx.end());
-                    if(verbose>=1) std::cout << "         Merging tracks ";
-                    for (int trkIx : mergingTracksIx) {
-                        if(verbose>=1) std::cout << trkIx << " ";
+                    
+                    // if the score is negative, we have to check if the tracks are slopes compatible 
+                    bool hasToMerge = score > 0;
+                    if(score<0){
+                        // cluster hits
+                        std::vector<SHit> hitsInCluster;
+                        for (int trackId : cluster) {
+                            SLinearCluster trackInCluster = sortedTracks[trackIdToIndexDict[trackId]];
+                            std::vector<SHit> auxHits = trackInCluster.GetHits();
+                            hitsInCluster.insert(hitsInCluster.end(), auxHits.begin(), auxHits.end());
+                        }
+                        //potential merging hits
+                        std::vector<SHit> mergingHits;
+                        for (SLinearCluster mTrack : mergingTracks) {
+                            std::vector<SHit> auxHits = mTrack.GetHits();
+                            mergingHits.insert(mergingHits.end(), auxHits.begin(), auxHits.end());
+                        }
+
+                        SLinearCluster mergingTrack(mergingHits);
+                        SLinearCluster mergingCluster(hitsInCluster);       
+                        // Check the angle compatibility
+                        LineEquation mergingTrackEq, clusterTrackEq;
+                        
+                        // Get closest edges
+                        if (mergingTrack.GetMeanX() > mergingCluster.GetMeanX()) {
+                            mergingTrackEq = mergingTrack.GetTrackEquationStart();
+                            clusterTrackEq = mergingCluster.GetTrackEquationEnd();
+                        } else {
+                            mergingTrackEq = mergingTrack.GetTrackEquationEnd();
+                            clusterTrackEq = mergingCluster.GetTrackEquationStart();
+                        }
+
+                        double angle1 = std::atan(mergingTrackEq.Slope()) * 180.0 / M_PI;
+                        double angle2 = std::atan(clusterTrackEq.Slope()) * 180.0 / M_PI;
+                        double slpCoM = (mergingCluster.GetCoMPoint().Y() - mergingTrack.GetCoMPoint().Y()) / (mergingCluster.GetCoMPoint().X() - mergingTrack.GetCoMPoint().X());
+                        double angleCoM = std::atan(slpCoM) * 180.0 / M_PI;
+                        double angle_between = std::abs(angle1 - angle2);
+                        bool slopesCompatible = angle_between < fAngleTh && std::abs(angleCoM - angle1) < fAngleTh && std::abs(angleCoM - angle2) < fAngleTh;
+
+                        hasToMerge = slopesCompatible;
                     }
-                    if(verbose>=1) std::cout << "in cluster ";
-                    for (int trackId : cluster) {
-                        if(verbose>=1) std::cout << trackId << " ";
+
+                    if(hasToMerge){
+                        if(verbose>=1){
+                            std::cout << "         Merging tracks ";
+                            for (int trkIx : mergingTracksIx) std::cout << trkIx << " ";
+                            std::cout << "in cluster ";
+                            for (int trackId : cluster) std::cout << trackId << " ";
+                            std::cout << "\n";
+                        }
+
+                        finalTrackCluster[mergingClusterIx].insert(finalTrackCluster[mergingClusterIx].end(), mergingTracksIx.begin(), mergingTracksIx.end());
                     }
-                    if(verbose>=1) std::cout << "\n";
+
                 } else {
                     finalTrackCluster.push_back(mergingTracksIx);
                 }
             }
         }
 
+        // Fill the vectors to return
+        // matched parallel tracks
         std::vector<std::vector<SLinearCluster>> finalTrackClusterList;
         std::vector<std::vector<int>> finalTrackClusterIndexes = finalTrackCluster;
         for (const std::vector<int>& cluster : finalTrackCluster) {
@@ -493,15 +550,13 @@ namespace TPCLinesDirectionUtils{
             }
             finalTrackClusterList.push_back(trackList);
         }
-
+        // unmatched tracks
         std::vector<int> allParallelTracks;
         for (const std::vector<int>& sublist : finalTrackCluster) {
             allParallelTracks.insert(allParallelTracks.end(), sublist.begin(), sublist.end());
         }
-
         for (SLinearCluster track : sortedTracks) {
             if (std::find(allParallelTracks.begin(), allParallelTracks.end(), track.GetId()) == allParallelTracks.end()) {
-                finalTrackClusterIndexes.push_back({track.GetId()});
                 finalTrackClusterList.push_back({sortedTracks[trackIdToIndexDict[track.GetId()]]});
             }
         }

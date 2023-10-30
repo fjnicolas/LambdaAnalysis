@@ -283,7 +283,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
             trackAvResidual = trackAvResidual +  trk_eq.GetDistance(SPoint(hit.X(), hit.Y()));
         }
         trackAvResidual/=track.NHits();
-        if(fTPCLinesPset.Verbose>=2) std::cout << "\n Merging track " << trkix << " COMP " << trackComp << " CONN " << trackConn << " AvResidual: "<<trackAvResidual<<std::endl;
+        if(fTPCLinesPset.Verbose>=2) std::cout << "\n Merging track " << trkix << " " <<track.GetMinX()<<" "<<track.GetMaxX()<< " COMP " << trackComp << " CONN " << trackConn << " AvResidual: "<<trackAvResidual<<std::endl;
 
         std::vector<SHit> candidateHits;
         std::vector<int> candidateHitsIx;
@@ -303,7 +303,6 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
         }
 
         // sort hits by distance to the cluster
-
         std::vector<int> sortedCandidateHits(candidateHits.size());
         std::iota(sortedCandidateHits.begin(), sortedCandidateHits.end(), 0);
         std::sort(sortedCandidateHits.begin(), sortedCandidateHits.end(), [&](int i, int j)->bool {
@@ -335,7 +334,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
             double residual =  trk_eqClosest.GetDistance(SPoint(hit.X(), hit.Y()));
 
             if(fTPCLinesPset.Verbose>=2) std::cout << "       " << hit.Id() << "  X=" << hit.X() << " Y=" << hit.Y() << " " << " d " << minD << " dConn " << minDConn << " dCompHypo" << minDHypo << " residual: "<<residual << std::endl;
-            if (minDConn < dTh * trackConn && minDHypo < dTh * trackComp){// && residual < dTh*trackAvResidual) {
+            if (minDConn < dTh * trackConn && minDHypo < dTh * trackComp && minD < dTh * trackComp){// && residual < dTh*trackAvResidual) {
                 newHitList.push_back(hit);
                 mergedHitsCounter[candidateHitsIx[sortedCandidateHits[ix]]] = true;
                 currentCluster = SCluster(newHitList);
@@ -443,12 +442,10 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
 
     
     // Characterize the tracks
-
     for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
         finalLinearClusterV[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
         finalLinearClusterV[ix].AssignId(ix);
     }
-
 
     // ------ Get the short/vertex tracks and remove them
     std::map<int, std::vector<int>> shortToLongTrackDict;
@@ -492,7 +489,6 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         finalLinearClusterV.push_back(trk);
     }
 
-
     std::vector<SLinearCluster> NewTrackList;
     NewTrackList.clear();
     SLinearCluster mainDirection;
@@ -508,7 +504,8 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         // ------- Get the parallel tracks
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 15, fTPCLinesPset.Verbose);
         NewTrackList.clear();
-        std::cout<<" Tracks for origin finder: \n";
+
+        std::cout<<" Final tracks for origin finder: \n";
         for(size_t ix = 0; ix<parallelTracks.size(); ix++){ 
             std::cout<<"\n "<<parallelTracks[ix][0].GetId();
             std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
@@ -522,7 +519,6 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             newTrack.AssignId(ix);
             NewTrackList.push_back( newTrack );    
         }
-
 
         //Find secondary vertexes
         std::cout<<" We have "<<NewTrackList.size()<<" tracks\n";

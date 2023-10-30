@@ -213,14 +213,15 @@ SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
     fMeanX = 0;
     fMeanY = 0;
 
+    std::vector<double> yAtMinX;
+    std::vector<double> yAtMaxX;
+
     for (auto &hit : hitList) {
         if (hit.X() < fMinX) {
             fMinX = hit.X();
-            fYAtMinX = hit.Y();
         }
         if (hit.X() > fMaxX) {
             fMaxX = hit.X();
-            fYAtMaxX = hit.Y();
         }
         if (hit.Y() < fMinY) fMinY = hit.Y();
         if (hit.Y() > fMaxY) fMaxY = hit.Y();
@@ -233,6 +234,34 @@ SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
         fMeanY /= hitList.size();
         fCoMPoint = SPoint(fMeanX, fMeanY);
     }
+
+
+    for (auto &hit : hitList) {
+        if (hit.X() == fMinX) {
+            yAtMinX.push_back(hit.Y());
+        }
+        if (hit.X() == fMaxX) {
+            yAtMaxX.push_back(hit.Y());
+        }
+    }
+
+    if(yAtMinX.size()>0 && yAtMaxX.size()>0){
+
+        double meanYAtMinX = 0;
+        double meanYAtMaxX = 0;
+        meanYAtMinX = std::accumulate(yAtMinX.begin(), yAtMinX.end(), 0) / yAtMinX.size();
+        meanYAtMaxX = std::accumulate(yAtMaxX.begin(), yAtMaxX.end(), 0) / yAtMaxX.size();
+
+        if(meanYAtMaxX>meanYAtMinX){
+            fYAtMaxX = *std::max_element(yAtMaxX.begin(), yAtMaxX.end());
+            fYAtMinX = *std::min_element(yAtMinX.begin(), yAtMinX.end());
+        }
+        else{
+            fYAtMaxX = *std::min_element(yAtMaxX.begin(), yAtMaxX.end());
+            fYAtMinX = *std::max_element(yAtMinX.begin(), yAtMinX.end());
+        }
+    }
+    
 
     fStartPoint = SPoint(fMinX, fYAtMinX);
     fEndPoint = SPoint(fMaxX, fYAtMaxX);
