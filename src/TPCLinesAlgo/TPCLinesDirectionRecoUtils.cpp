@@ -30,10 +30,10 @@ namespace TPCLinesDirectionUtils{
                 if(verbose>=1) std::cout << "  " << mergedTrk.GetMinX() << " " << mergedTrk.GetMaxX() << '\n';
 
                 if (minXDist <= distTh) {
-                    double dC1C2 = TPCLinesDistanceUtils::GetClusterMinDistance(trk.GetHitCluster(), mergedTrk.GetHitCluster());
-                    if(verbose>=1) std::cout << "*** Merging  " << mergedTrk.GetMinX() << " " << mergedTrk.GetMaxX() << "  " << trk.GetMinX() << " " << trk.GetMaxX() << "   d=" << dC1C2 << "  MergedTrackComp " << mergedTrk.GetCompactness() << '\n';
+                    double dC1C2 = TPCLinesDistanceUtils::GetClusterConnectedness(trk.GetHitCluster(), mergedTrk.GetHitCluster());
+                    if(verbose>=1) std::cout << "*** Merging  " << mergedTrk.GetMinX() << " " << mergedTrk.GetMaxX() << "  " << trk.GetMinX() << " " << trk.GetMaxX() << "   d=" << dC1C2 << "  MergedTrackComp " << mergedTrk.GetConnectedness() << '\n';
 
-                    if (dC1C2 < distTh * mergedTrk.GetCompactness()) {
+                    if (dC1C2 < distTh * mergedTrk.GetConnectedness()) {
                         double m1 = 0.0;
                         double m2 = 100.0;
 
@@ -43,7 +43,6 @@ namespace TPCLinesDirectionUtils{
                         } else if (trk.GetMinX() >= mergedTrk.GetMaxX()) {
                             m1 = trk.GetTrackEquationStart().Slope();
                             m2 = mergedTrk.GetTrackEquationEnd().Slope();
-
                         }
 
                         double angle1 = std::atan(m1) * 180.0 / M_PI;

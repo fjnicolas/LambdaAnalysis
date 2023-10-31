@@ -187,6 +187,7 @@ VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename
     fPset.DecideMainTrack = pt.get<bool>("DecideMainTrack");
     fPset.AddCollinearLines = pt.get<bool>("AddCollinearLines");
     fPset.VertexDistanceROI = pt.get<float>("VertexDistanceROI");
+    fPset.MinWires = pt.get<int>("MinWires");
     fPset.AngleTolerance = pt.get<float>("AngleTolerance");
     fPset.TriangleInequalityTol = pt.get<float>("TriangleInequalityTol");
     fPset.VertexHitsTol = pt.get<float>("VertexHitsTol");

@@ -78,6 +78,7 @@ class SEvent {
         int GetNOrigins();
         int GetNOriginsMult(int mult);
         int GetNOriginsMultGt(int mult);
+        int GetNOriginsMultGt(int mult, int id1, int id2);
 
         int GetNAngles(){ return fAngleList.size();};
 

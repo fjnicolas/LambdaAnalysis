@@ -7,8 +7,10 @@
 
 std::vector<int> colors = {kBlue, kRed, kGreen, kOrange, kMagenta, kCyan, kYellow, kBlack};
 
-std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsNew2.root", "TMVAResultsFinal/TMTMVAResultsNew4.root", "TMVAResultsFinal/TMTMVAResultsOld.root", "TMVAResultsFinal/TMTMVAResultsNew4NoAlpha.root"}; std::vector<std::string> myLabels = {"New2", "New4", "Old", "New4 no alpha"};
+//std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsNew2.root", "TMVAResultsFinal/TMTMVAResultsNew4.root", "TMVAResultsFinal/TMTMVAResultsOld.root", "TMVAResultsFinal/TMTMVAResultsNew4NoAlpha.root"}; std::vector<std::string> myLabels = {"New2", "New4", "Old", "New4 no alpha"};
 
+std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsResNew4Alpha.root", "TMVAResultsFinal/TMTMVAResultsResNew4NoAlpha.root", "TMVAResultsFinal/TMTMVAResultsResOld.root"};
+std::vector<std::string> myLabels = {"Alpha", "NoAlpha", "Old"};
 
 //std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsFullNew2.root", "TMVAResultsFinal/TMTMVAResultsFullNew4.root", "TMVAResultsFinal/TMTMVAResultsFullOld.root"}; std::vector<std::string> myLabels = {"New2", "New4", "Old"};
 

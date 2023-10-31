@@ -30,6 +30,8 @@ class SPoint {
         SPoint(float x, float y);
         float X() const {return fX;}
         float Y() const {return fY;}
+        void AssignX(float x) { fX = x;}
+        void AssignY(float y) { fY = y;}
 
         friend std::ostream& operator<<(std::ostream& out, SPoint const& p);
 };

@@ -423,7 +423,6 @@ double SLinearCluster::GetOccupancy(){
 
         unsigned int binIndex = static_cast<unsigned int> (d / step );
         
-        std::cout<<h.X()<<" "<<h.Y()<<" "<<d<<" "<<binIndex<<std::endl;
         if(binIndex<bins.size()) bins[binIndex]++;
     }
 
@@ -438,30 +437,50 @@ double SLinearCluster::GetOccupancy(){
 }
 
 double SLinearCluster::GetOccupancy1D(){
-    int nX = fMaxX-fMinX;
-    
-    std::cout<<"  Getting occupancy for track "<<GetId()<<" with "<<NHits()<<" hits, minX="<<fMinX<<" maxX="<<fMaxX<<" nX="<<nX<<std::endl;
-    
+    int nX = fMaxX-fMinX;    
 
     if(nX<1) return 0;
 
     std::vector<int> bins(nX, 0);
 
     for (const SHit& h : GetHits()){
-        
         unsigned int binIndex = static_cast<unsigned int> (h.X()-fMinX);
-        std::cout<<h.X()<<" "<<h.Y()<<" "<<binIndex<<std::endl;
         if(binIndex<bins.size()) bins[binIndex]++;
     }
 
     int slotsFilled = 0;
     for (int count : bins) {
-        if (count > 0) {
-            slotsFilled++;
-        }
+        slotsFilled+=count;
     }
 
-    return (1.*slotsFilled)/nX;
+    return (1.*slotsFilled)/(nX+1);
+}
+
+SPoint SLinearCluster::GetEdgeHit(SPoint p){
+    
+    std::vector<SPoint> projectedHits;
+    double minX=1e4;
+    double maxX = -1e4;
+    SHit hitAtMinX;
+    SHit hitAtMaxX;
+   
+    for(SHit &h:GetHits()){
+        SPoint projP = fTrackEquation.GetLineClosestPoint(h);
+        if(projP.X()>maxX) {
+            maxX = projP.X();
+            hitAtMaxX = h;
+        }
+        if(projP.X()<minX){
+            minX = projP.X();
+            hitAtMinX = h;
+        }
+
+        projectedHits.push_back(projP);
+    }
+
+    SHit edgeHit = ( std::abs(hitAtMinX.X()-p.X()) < std::abs(hitAtMaxX.X()-p.X()) )? hitAtMinX:hitAtMaxX;
+
+    return SPoint(edgeHit.X(), edgeHit.Y());
 }
 
 // instances

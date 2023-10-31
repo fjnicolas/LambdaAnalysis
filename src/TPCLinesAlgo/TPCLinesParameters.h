@@ -110,6 +110,7 @@ struct VertexFinderAlgorithmPsetType {
     bool DecideMainTrack = false;
     bool AddCollinearLines = false;
     float VertexDistanceROI = 30;
+    int MinWires = 3;
     float AngleTolerance = 5;
     float TriangleInequalityTol = 1.;
     float VertexHitsTol = 1.5;
@@ -131,6 +132,7 @@ struct VertexFinderAlgorithmPsetType {
         bool _decideMainTrack,
         bool _addCollinearLines,
         float _vertexDistanceROI,
+        int _minWires,
         float _angleTolerance,
         float _triangleInequalityTol,
         float _vertexHitsTol,
@@ -147,6 +149,7 @@ struct VertexFinderAlgorithmPsetType {
         DecideMainTrack(_decideMainTrack),
         AddCollinearLines(_addCollinearLines),
         VertexDistanceROI(_vertexDistanceROI),
+        MinWires(_minWires),
         AngleTolerance(_angleTolerance),
         TriangleInequalityTol(_triangleInequalityTol),
         VertexHitsTol(_vertexHitsTol),
@@ -166,6 +169,7 @@ struct VertexFinderAlgorithmPsetType {
         std::cout << "DecideMainTrack: " << (DecideMainTrack ? "true" : "false") << std::endl;
         std::cout << "AddCollinearLines: " << (AddCollinearLines ? "true" : "false") << std::endl;
         std::cout << "VertexDistanceROI: " << VertexDistanceROI << std::endl;
+        std::cout << "MinWires: " << MinWires << std::endl;
         std::cout << "AngleTolerance: " << AngleTolerance << std::endl;
         std::cout << "TriangleInequalityTol: " << TriangleInequalityTol << std::endl;
         std::cout << "VertexHitsTol: " << VertexHitsTol << std::endl;

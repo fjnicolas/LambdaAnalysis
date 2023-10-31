@@ -173,6 +173,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             // FRANS part
             std::vector<STriangle> angleList = recoEvent.GetAngleList();
             std::vector<SOrigin> associatedOrigins = recoEvent.GetAssociatedOrigins();
+            int bestTriangleIx = -1;
             double bestFRANSScore = -1000;
             TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 600, 0, 800, 1200);
             
@@ -195,6 +196,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 double score = _FRAMSAlgo.Score();
                 if(score>bestFRANSScore){
                     bestFRANSScore = score;
+                    bestTriangleIx = orix;
                     _FRAMSAlgo.Display(cDisplay);
                 }    
             }
@@ -202,7 +204,10 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             int nAngles = recoEvent.GetNAngles();
 
             int nOrigins = recoEvent.GetNOrigins();
-            int nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
+            int nOriginsMultGT3;
+            if(bestTriangleIx!=-1) nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3, angleList[bestTriangleIx].GetTrack1().GetId(), angleList[bestTriangleIx].GetTrack2().GetId());
+            else nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
+            nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
 
             //bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
             bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;

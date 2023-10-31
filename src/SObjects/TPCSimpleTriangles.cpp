@@ -48,8 +48,9 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
 
     double fConFactor = (1 / 0.0201293) * 23.6e-6;
 
-    //std::cout << "Weights before conversion: " << weight_b << ", " << weight_c << std::endl;
-    //std::cout << "Weights after conversion: " << weight_b * fConFactor << ", " << weight_c * fConFactor << std::endl;
+    // Triangle directions
+    fDir1 = LineEquation(slopeB, fVertexB.Y() - slopeB * fVertexB.X());
+    fDir2 = LineEquation(slopeC, fVertexC.Y() - slopeC * fVertexC.X());
 
     // Hypothesis 1
     double slope1 = (MProton * slopeB + MPion * slopeC) / (MProton + MPion);
@@ -82,9 +83,7 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
     //std::cout << "Momentum weights hypo 2: " << Pb << ", " << Pc << std::endl;
 
     slope2 = (Pb * slopeB + Pc * slopeC) / (Pb + Pc);
-    intercept2 = fMainVertex.Y() - slope2 * fMainVertex.X(
-
-    );
+    intercept2 = fMainVertex.Y() - slope2 * fMainVertex.X();
     fMomentumHypo2 = LineEquation(slope2, intercept2);
 
 }
@@ -161,6 +160,12 @@ double fractionOfLineInTriangle(const std::vector<Point>& triangle, const Line& 
     return totalLength / line.yWidth;
 }
 
+int STriangle::GetNWires(){
+    int minX = std::min(fTrack1.GetMinX(), fTrack2.GetMinX());
+    int maxX = std::max(fTrack1.GetMaxX(), fTrack2.GetMaxX());
+    return maxX - minX +1;
+}
+
 
 double STriangle::ComputeCoveredArea(std::vector<SHit> triangleHits, double widthTol) {
    
@@ -176,4 +181,46 @@ double STriangle::ComputeCoveredArea(std::vector<SHit> triangleHits, double widt
     //sdouble coverageFraction = static_cast<double>(NCovered) / N;
 
     return fractionSum;
+}
+
+
+double distanceToLine(SHit hit, double slope, double intercept) {
+    // Calculate the distance using the formula |Ax + By + C| / sqrt(A^2 + B^2)
+    double A = slope;
+    double B = -1; // For a line in the form y = mx + c, B is -1
+    double C = intercept;
+    
+    double numerator = std::abs(A * hit.X() + B * hit.Y() + C);
+    double denominator = std::sqrt(A * A + B * B);
+    
+    return numerator / denominator;
+}
+
+// Function to calculate Mean Absolute Error (MAE) for a linear regression model
+double calculateSideMAE(const std::vector<SHit>& data, double slope, double intercept) {
+    double sum = 0.0;
+    for (const SHit& point : data) {
+        sum += distanceToLine( point, slope, intercept );
+    }
+    return sum;
+}
+
+double STriangle::GetTriangleMAE(){
+
+    std::vector<SHit> hits1 = fTrack1.GetHits();
+    std::vector<SHit> hits2 = fTrack2.GetHits();
+
+    double mae1 = calculateSideMAE(hits1, fDir1.Slope(), fDir1.Intercept());
+    double mae2 = calculateSideMAE(hits2, fDir2.Slope(), fDir2.Intercept());
+    double mae = (fTrack1.GetIntegral()*mae1+fTrack2.GetIntegral()*mae2) / (fTrack1.GetIntegral() + fTrack2.GetIntegral());
+
+    double meanY = (fTrack1.GetIntegral()*fTrack1.GetMeanY()+fTrack2.GetIntegral()*fTrack2.GetMeanY()) / (fTrack1.GetIntegral() + fTrack2.GetIntegral());
+    std::cout<<" MeanY: "<<meanY<<std::endl;
+    double mae1Cte = calculateSideMAE(hits1, 0, meanY);
+    double mae2Cte = calculateSideMAE(hits2, 0, meanY);
+    double maeCte = (fTrack1.GetIntegral()*mae1Cte+fTrack2.GetIntegral()*mae2Cte) / (fTrack1.GetIntegral() + fTrack2.GetIntegral());
+
+    std::cout<<" TriangleCTE "<<mae<<" cte="<<maeCte<<std::endl;
+
+    return 0.5*(mae1+mae2);
 }

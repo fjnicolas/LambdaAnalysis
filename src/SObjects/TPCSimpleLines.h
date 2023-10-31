@@ -30,6 +30,7 @@ class LineEquation {
 
         SPoint GetLineClosestPoint(double a, double b, double c, SPoint p);
         SPoint GetLineClosestPoint(SPoint P);
+        SPoint GetLineClosestPoint(SHit P);
         float GetDistance(SPoint P);
         float Evaluate(SPoint p);
         float EvaluateX(double x);

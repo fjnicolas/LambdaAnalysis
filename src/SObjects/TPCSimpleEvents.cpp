@@ -88,3 +88,15 @@ int SEvent::GetNOriginsMultGt(int mult){
     }
     return n;
 }
+
+int SEvent::GetNOriginsMultGt(int mult, int id1, int id2){
+    int n=0;
+    for(SOrigin & ori :fOriginList){
+        if(ori.Multiplicity()>=mult){
+            if( !(ori.HasTrackIndex(id1) || ori.HasTrackIndex(id2))){
+                n++;
+            }
+        }
+    }
+    return n;
+}

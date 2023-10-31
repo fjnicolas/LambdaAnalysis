@@ -30,6 +30,8 @@ class STriangle {
         SPoint fMidPoint;
         SPoint fDirectorVector;
         LineEquation fDirection;
+        LineEquation fDir1;
+        LineEquation fDir2;
         LineEquation fMomentumHypo1;
         LineEquation fMomentumHypo2;
 
@@ -105,11 +107,12 @@ class STriangle {
         double GetOppositeSideLenght() const {
             return std::hypot( fVertexB.X() - fVertexC.X(), fVertexB.Y() - fVertexC.Y() );
         }
-
         
+        int GetNWires();
 
         double ComputeCoveredArea(std::vector<SHit> triangleHits, double widthTol);
 
+        double GetTriangleMAE();
         
 };
 

@@ -97,7 +97,7 @@ int MacroFRAMSTraining(std::string fInputFileName="", std::string fTreeDirName =
     dataloader->AddVariable( "FitScore", "r", "", 'D' );
   }
   else{
-    //dataloader->AddVariable( "Alpha_C", "#alpha_{C}", "", 'D' );
+    dataloader->AddVariable( "Alpha_C", "#alpha_{C}", "", 'D' );
     dataloader->AddVariable( "Eta_C", "#eta_{C}", "", 'D' );
     dataloader->AddVariable( "Delta_C", "#Delta_{C}", "", 'D' );
     dataloader->AddVariable( "FitScore_C", "r_{C}", "", 'D' );

@@ -424,23 +424,19 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     }
     
     
+    //fDisplay.Show(eventLabel+"DEBUG1", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
     // Slope track merger
     // sort by minX
     std::sort(finalLinearClusterV.begin(), finalLinearClusterV.end(), [&](SLinearCluster& l1, SLinearCluster& l2) {return l1.GetMinX() < l2.GetMinX();} );    
     finalLinearClusterV = TPCLinesDirectionUtils::SlopeTrackMerger(finalLinearClusterV, 2, 15, fTPCLinesPset.Verbose); 
-
-
+    //fDisplay.Show(eventLabel+"DEBUG2", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
 
     // Isolated hit merger
-    std::vector<SHit> remainingHits = hitListForHough;
+    /*std::vector<SHit> remainingHits = hitListForHough;
     remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
-    //fsy.Show(eventLabel+"_BeforeIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
+    //fDisplay.Show(eventLabel+"_BeforeIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
     finalLinearClusterV = MergeIsolatedHits(finalLinearClusterV, remainingHits, 10);
-    //fsy.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
-
-
-
-    
+    //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);*/
     // Characterize the tracks
     for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
         finalLinearClusterV[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
@@ -518,6 +514,19 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             newTrack.FillResidualHits(fTPCLinesPset.CustomKinkPoint);
             newTrack.AssignId(ix);
             NewTrackList.push_back( newTrack );    
+        }
+
+
+        // Isolated hit merger
+        std::vector<SHit> remainingHits = hitListForHough;
+        remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
+        //fDisplay.Show(eventLabel+"_BeforeIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, NewTrackList);
+        NewTrackList = MergeIsolatedHits(NewTrackList, remainingHits, 10);
+        //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, NewTrackList);
+        // Characterize the tracks
+        for(size_t ix = 0; ix<NewTrackList.size(); ix++){
+            NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
+            NewTrackList[ix].AssignId(ix);
         }
 
         //Find secondary vertexes

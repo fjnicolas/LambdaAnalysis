@@ -37,6 +37,11 @@ SPoint LineEquation::GetLineClosestPoint(SPoint P) {
     return GetLineClosestPoint(-fM, 1, -fN, P);
 }
 
+SPoint LineEquation::GetLineClosestPoint(SHit P) {
+    
+    return GetLineClosestPoint(-fM, 1, -fN, SPoint(P.X(), P.Y()));
+}
+
 
 float LineEquation::GetDistance(SPoint p) {
     SPoint pProj = GetLineClosestPoint(-fM, 1, -fN, p);
