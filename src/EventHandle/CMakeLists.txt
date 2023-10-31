@@ -7,6 +7,8 @@ add_library(seventhandle_library
     SEventHandle.h
     STPCAnalyzerTreeReader.cpp
     STPCAnalyzerTreeReader.h
+    LambdaAnaTree.cpp
+    LambdaAnaTree.h
     SParserConfig.h
 )
 

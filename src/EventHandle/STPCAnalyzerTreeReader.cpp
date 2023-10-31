@@ -77,6 +77,9 @@ MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
     tree->SetBranchAddress("TrueVC", &nuvC);
     tree->SetBranchAddress("TrueVTimeTick", &nuvTimeTick);
 
+    tree->SetBranchAddress("IntMode", &intMode);
+    tree->SetBranchAddress("IntNLambda", &intNLambda);
+
     // Set branch addresses for reco vertex information
     tree->SetBranchAddress("RecoVx", &recnuvX);
     tree->SetBranchAddress("RecoVy", &recnuvY);

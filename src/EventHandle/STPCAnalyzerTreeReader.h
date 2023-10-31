@@ -50,6 +50,9 @@ public:
     // True Vertex information
     double nuvE, nuvT, nuvX, nuvY, nuvZ;
     int nuvU, nuvV, nuvC, nuvTimeTick;
+
+    int intMode;
+    int intNLambda;
     
     // Reco Vertex information
     double recnuvX;

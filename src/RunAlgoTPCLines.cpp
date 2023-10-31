@@ -7,6 +7,7 @@
 
 #include "CommandLineParser.h"
 #include "SEventHandle.h"
+#include "LambdaAnaTree.h"
 #include "SParserConfig.h"
 #include "STPCAnalyzerTreeReader.h"
 #include "TPCSimpleEvents.h"
@@ -32,6 +33,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string directory_path = parser.getDirectoryPath();
     std::string ext = parser.getExtension();
 
+    // Output ana tree
+    LambdaAnaTree *anaTree = new LambdaAnaTree("LambdaAnaTree");
 
     // Get input files
     std::vector<TString> fFilePaths = GetInputFileList(file_name, ext, directory_path);
@@ -177,6 +180,13 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             double bestFRANSScore = -1000;
             TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 600, 0, 800, 1200);
             
+
+            SVertex fVertexReco = SVertex( SPoint( RecoVertexUVYT[2], RecoVertexUVYT[3]), "");
+            SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");
+
+            _FRAMSAlgo.Fill(hitList, fVertexReco);
+            double FRANSScorePANDORA = _FRAMSAlgo.Score();
+
             for(size_t orix=0; orix<angleList.size(); orix++){
                 SVertex fVertex(associatedOrigins[orix].GetPoint(), std::to_string(view));
                 std::cout<<" LAMBDA CANDIDATE "<<fVertex<<std::endl;
@@ -186,7 +196,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                                                 fVertex.Y()+_TPCLinesAlgo.ShiftY())
                                             , "");
 
-                SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");                        
+                                        
 
                 std::cout<<" VertexTrue "<<fVertexTrue;
                 std::cout<<" VertexMine "<<fVertexMine;
@@ -257,6 +267,27 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
             std::cout<<_EfficiencyCalculator;
 
+            anaTree->fEventID = treeReader.eventID;
+            anaTree->fSubrunID = treeReader.subrunID;
+            anaTree->fRunID = treeReader.runID;
+            anaTree->fSliceID = 1;
+
+            anaTree->fIntMode = treeReader.intMode;
+            anaTree->fIntNLambda = treeReader.intNLambda;
+
+            anaTree->fFRANSScorePANDORA = FRANSScorePANDORA;
+
+            anaTree->fNOrigins = recoEvent.GetNOrigins();
+            anaTree->fNOriginsMult1 = recoEvent.GetNOriginsMult(1);
+            anaTree->fNOriginsMult2 = recoEvent.GetNOriginsMult(2);
+            anaTree->fNOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
+            anaTree->fNOriginsPairOneTwo = recoEvent.GetNOriginsMult(2) * recoEvent.GetNOriginsMult(1);
+
+            anaTree->fNAngles = recoEvent.GetNAngles(); 
+            anaTree->fAngleFRANSScore = bestFRANSScore;
+
+            anaTree->FillTree();
+
         }
     }
 
@@ -267,8 +298,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     originsAnaDirectory->cd();
     _EfficiencyCalculator.DrawHistograms(cOriginsAna);
     cOriginsAna->Write();
-
-
+    TDirectory *anaTreeDirectory = anaOutputFile->mkdir("LambdaAnaTree");
+    anaTreeDirectory->cd();
+    anaTree->WriteTree();
     anaOutputFile->Write();
     anaOutputFile->Close();
 
