@@ -34,7 +34,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string ext = parser.getExtension();
 
     // Output ana tree
-    LambdaAnaTree *anaTree = new LambdaAnaTree("LambdaAnaTree");
+    TTree *fTreeAna = new TTree("LambdaAnaTree", "LambdaAnaTree");
+    LambdaAnaTree anaTree(fTreeAna);
 
     // Get input files
     std::vector<TString> fFilePaths = GetInputFileList(file_name, ext, directory_path);
@@ -171,6 +172,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 recoEvent = _TPCLinesAlgo.GetRecoEvent();
             }
 
+            TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(), "FinalRecoTPCLines", 0, 0, 1000, 800);
+            _TPCLinesAlgo.Display("", cTPCDisplay);
 
             // FRANS part
             std::vector<STriangle> angleList = recoEvent.GetAngleList();
@@ -221,6 +224,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             //bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
             bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
 
+            
             // Update the efficiency calculator
             if(accepted){
                 _EfficiencyCalculator.UpdateSelected(ev);
@@ -237,11 +241,14 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
             
             std::string outNamePreffix = accepted? "Accepted":"Rejected";
-            _TPCLinesAlgo.Display("FinalReco" + outNamePreffix + ev.Label());
+            std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label();
+           
+           cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
             
-            std::string fransOutputLabel = "FinalReco" + outNamePreffix + ev.Label() + "FRANS";
+            
+            outputLabel+="FRANS";
             if(bestFRANSScore!=-1000){
-                cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+fransOutputLabel+".pdf").c_str() );
+                cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
             }
             delete cDisplay;
             
@@ -266,26 +273,26 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
             std::cout<<_EfficiencyCalculator;
 
-            anaTree->fEventID = treeReader.eventID;
-            anaTree->fSubrunID = treeReader.subrunID;
-            anaTree->fRunID = treeReader.runID;
-            anaTree->fSliceID = 1;
+            anaTree.fEventID = treeReader.eventID;
+            anaTree.fSubrunID = treeReader.subrunID;
+            anaTree.fRunID = treeReader.runID;
+            anaTree.fSliceID = 1;
 
-            anaTree->fIntMode = treeReader.intMode;
-            anaTree->fIntNLambda = treeReader.intNLambda;
+            anaTree.fIntMode = treeReader.intMode;
+            anaTree.fIntNLambda = treeReader.intNLambda;
 
-            anaTree->fFRANSScorePANDORA = FRANSScorePANDORA;
+            anaTree.fFRANSScorePANDORA = FRANSScorePANDORA;
 
-            anaTree->fNOrigins = recoEvent.GetNOrigins();
-            anaTree->fNOriginsMult1 = recoEvent.GetNOriginsMult(1);
-            anaTree->fNOriginsMult2 = recoEvent.GetNOriginsMult(2);
-            anaTree->fNOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
-            anaTree->fNOriginsPairOneTwo = recoEvent.GetNOriginsMult(2) * recoEvent.GetNOriginsMult(1);
+            anaTree.fNOrigins = recoEvent.GetNOrigins();
+            anaTree.fNOriginsMult1 = recoEvent.GetNOriginsMult(1);
+            anaTree.fNOriginsMult2 = recoEvent.GetNOriginsMult(2);
+            anaTree.fNOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
+            anaTree.fNOriginsPairOneTwo = recoEvent.GetNOriginsMult(2) * recoEvent.GetNOriginsMult(1);
 
-            anaTree->fNAngles = recoEvent.GetNAngles(); 
-            anaTree->fAngleFRANSScore = bestFRANSScore;
+            anaTree.fNAngles = recoEvent.GetNAngles(); 
+            anaTree.fAngleFRANSScore = bestFRANSScore;
 
-            anaTree->FillTree();
+            anaTree.FillTree();
 
         }
     }
@@ -299,7 +306,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     cOriginsAna->Write();
     TDirectory *anaTreeDirectory = anaOutputFile->mkdir("LambdaAnaTree");
     anaTreeDirectory->cd();
-    anaTree->WriteTree();
+    anaTree.WriteTree();
     anaOutputFile->Write();
     anaOutputFile->Close();
 

@@ -27,9 +27,9 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
 
 //----------------------------------------------------------------------
 // sy function
-void TPCLinesAlgo::Display(std::string name){
+void TPCLinesAlgo::Display(std::string name, TCanvas *canvas){
 
-    fDisplay.Show(name, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins);
+    fDisplay.Show(name, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins, canvas);
 
     return;
 }

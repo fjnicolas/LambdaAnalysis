@@ -11,60 +11,73 @@
 #include "LambdaAnaTree.h"
 
 
-// Class to read the TPCAnalyzer TTree
-LambdaAnaTree::~LambdaAnaTree(){
+
+LambdaAnaTree::LambdaAnaTree()
+: fTree(nullptr)
+{}
+
+LambdaAnaTree::LambdaAnaTree(TTree* tree)
+: fTree(tree)
+{
+    InitializeTree();
 }
 
-LambdaAnaTree::LambdaAnaTree(std::string treeName):
-    tree ( new TTree(treeName.c_str(), "Example ROOT Tree") ) { 
+void LambdaAnaTree::SetTree(TTree* tree)
+{
+    fTree = tree;
+    InitializeTree();
+}
+
+
+void LambdaAnaTree::InitializeTree(){
 
     // Set branch addresses for event information
-    tree->Branch("EventID", &fEventID);
-    tree->Branch("SubrunID", &fSubrunID);
-    tree->Branch("RunID", &fRunID);
-    tree->Branch("SliceID", &fSliceID);
+    fTree->Branch("EventID", &fEventID);
+    fTree->Branch("SubrunID", &fSubrunID);
+    fTree->Branch("RunID", &fRunID);
+    fTree->Branch("SliceID", &fSliceID);
 
     // Set branch addresses for true variables
-    tree->Branch("IntMode", &fIntMode);
-    tree->Branch("IntCCNC", &fIntCCNC);
-    tree->Branch("IntNProtons", &fIntNProtons);
-    tree->Branch("IntNNeutrons", &fIntNNeutrons);
-    tree->Branch("IntNPi0", &fIntNPi0);
-    tree->Branch("IntNPip", &fIntNPip);
-    tree->Branch("IntNPim", &fIntNPim);
-    tree->Branch("IntNMuonP", &fIntNMuonP);
-    tree->Branch("IntNMuonM", &fIntNMuonM);
-    tree->Branch("IntNElectronP", &fIntNElectronP);
-    tree->Branch("IntNElectronM", &fIntNElectronM);
-    tree->Branch("IntNLambda", &fIntNLambda);
+    fTree->Branch("IntMode", &fIntMode);
+    fTree->Branch("IntCCNC", &fIntCCNC);
+    fTree->Branch("IntNProtons", &fIntNProtons);
+    fTree->Branch("IntNNeutrons", &fIntNNeutrons);
+    fTree->Branch("IntNPi0", &fIntNPi0);
+    fTree->Branch("IntNPip", &fIntNPip);
+    fTree->Branch("IntNPim", &fIntNPim);
+    fTree->Branch("IntNMuonP", &fIntNMuonP);
+    fTree->Branch("IntNMuonM", &fIntNMuonM);
+    fTree->Branch("IntNElectronP", &fIntNElectronP);
+    fTree->Branch("IntNElectronM", &fIntNElectronM);
+    fTree->Branch("IntNLambda", &fIntNLambda);
 
     // Set branch addresses for true vertex information
-    tree->Branch("NuvE", &fNuvE);
-    tree->Branch("NuvT", &fNuvT);
-    tree->Branch("NuvX", &fNuvX);
-    tree->Branch("NuvY", &fNuvY);
-    tree->Branch("NuvZ", &fNuvZ);
+    fTree->Branch("NuvE", &fNuvE);
+    fTree->Branch("NuvT", &fNuvT);
+    fTree->Branch("NuvX", &fNuvX);
+    fTree->Branch("NuvY", &fNuvY);
+    fTree->Branch("NuvZ", &fNuvZ);
 
     // Set branch addresses for reco vertex information
-    tree->Branch("RecnuvX", &fRecnuvX);
-    tree->Branch("RecnuvY", &fRecnuvY);
-    tree->Branch("RecnuvZ", &fRecnuvZ);
+    fTree->Branch("RecnuvX", &fRecnuvX);
+    fTree->Branch("RecnuvY", &fRecnuvY);
+    fTree->Branch("RecnuvZ", &fRecnuvZ);
 
     // Set branch addresses for FRANS PANDORA information
-    tree->Branch("FRANSScorePANDORA", &fFRANSScorePANDORA);
+    fTree->Branch("FRANSScorePANDORA", &fFRANSScorePANDORA);
     
     // Set branch addresses for FRANS PANDORA information
-    tree->Branch("NOrigins", &fNOrigins);
-    tree->Branch("NOriginsMult1", &fNOriginsMult1);
-    tree->Branch("NOriginsMult2", &fNOriginsMult2);
-    tree->Branch("NOriginsMultGT3", &fNOriginsMultGT3);
-    tree->Branch("NOriginsPairOneTwo", &fNOriginsPairOneTwo);
+    fTree->Branch("NOrigins", &fNOrigins);
+    fTree->Branch("NOriginsMult1", &fNOriginsMult1);
+    fTree->Branch("NOriginsMult2", &fNOriginsMult2);
+    fTree->Branch("NOriginsMultGT3", &fNOriginsMultGT3);
+    fTree->Branch("NOriginsPairOneTwo", &fNOriginsPairOneTwo);
 
     // Set branch addresses for angle information
-    tree->Branch("NAngles", &fNAngles);
-    tree->Branch("AngleFRANSScore", &fAngleFRANSScore);
-    tree->Branch("AngleNHits", &fAngleNHits);
-    tree->Branch("AngleMainTrackNHits", &fAngleMainTrackNHits);
-    tree->Branch("AngleLongestIsMain", &fAngleLongestIsMain);
+    fTree->Branch("NAngles", &fNAngles);
+    fTree->Branch("AngleFRANSScore", &fAngleFRANSScore);
+    fTree->Branch("AngleNHits", &fAngleNHits);
+    fTree->Branch("AngleMainTrackNHits", &fAngleMainTrackNHits);
+    fTree->Branch("AngleLongestIsMain", &fAngleLongestIsMain);
 
 }

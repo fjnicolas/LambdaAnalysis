@@ -21,9 +21,18 @@
 // Class to read the TPCAnalyzer TTree
 class LambdaAnaTree {
 private:
-    TTree *tree;    // Pointer to the TTree object
+    TTree *fTree;    // Pointer to the TTree object
     
 public:
+
+    // Constructors
+    LambdaAnaTree();
+    LambdaAnaTree(TTree* tree);
+    void SetTree(TTree* tree);
+
+    void InitializeTree();
+
+
     // Event information
     int fEventID;
     int fSubrunID;
@@ -69,12 +78,9 @@ public:
     int fAngleMainTrackNHits;
     bool fAngleLongestIsMain;
 
-    LambdaAnaTree(std::string treeName);
 
-    ~LambdaAnaTree();
-
-    void FillTree() { tree->Fill(); }
-    void WriteTree() { tree->Write(); }
+    void FillTree() { fTree->Fill(); }
+    void WriteTree() { fTree->Write(); }
 
 };
 

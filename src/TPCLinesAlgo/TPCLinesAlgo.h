@@ -111,7 +111,7 @@ class TPCLinesAlgo {
         SEvent GetRecoEvent() { return fRecoEvent; };
         SPoint GetMainVertex() { return fMainVertex; };
         // Display
-        void Display(std::string name);
+        void Display(std::string name, TCanvas *canvas = nullptr);
 };
 
 #endif // TPC_SIMPLE_LINES_H

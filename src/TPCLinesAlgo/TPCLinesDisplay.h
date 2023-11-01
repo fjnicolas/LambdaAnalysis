@@ -41,12 +41,12 @@
 
 class TPCLinesDisplay {
     private:
-        void DrawHitScatter(std::vector<SHit> hitV, TLegend& leg, std::string label, int color, int style, double size, double errorAlpha);
-        void DrawLinearCluster(SLinearCluster cluster, TLegend& leg, std::string label, int color, double size=1.1, int style=4);
-        void DrawLine(LineEquation line, double xmin, double xmax, TLegend& leg, std::string label, int color, int style);
-        TH2F GetFrame(std::vector<SHit> hitsV, std::string label);
-        void DrawTriangle(STriangle tri, TLegend& leg, std::string label, int colorP, int color, double alpha);
-        void DrawVertex(SVertex vertex, TLegend& leg, std::string label, int color, int marker, double alpha);
+        void DrawHitScatter(std::vector<SHit> hitV, TLegend* leg, std::string label, int color, int style, double size, double errorAlpha);
+        void DrawLinearCluster(SLinearCluster cluster, TLegend* leg, std::string label, int color, double size=1.1, int style=4);
+        void DrawLine(LineEquation line, double xmin, double xmax, TLegend* leg, std::string label, int color, int style);
+        TH2F* GetFrame(std::vector<SHit> hitsV, std::string label);
+        void DrawTriangle(STriangle tri, TLegend* leg, std::string label, int colorP, int color, double alpha);
+        void DrawVertex(SVertex vertex, TLegend* leg, std::string label, int color, int marker, double alpha);
         void SetStyle();
 
         std::vector<int> fColors;
@@ -66,7 +66,8 @@ class TPCLinesDisplay {
             std::vector<STriangle> originAngles = {}, 
             SVertex recoVertex = SVertex(),
             SVertex trueVertex = SVertex(),
-            std::vector<SOrigin> origins = {} );
+            std::vector<SOrigin> origins = {},
+            TCanvas *canvas = nullptr);
 };
 
 #endif // TPC_SIMPLE_LINES_H

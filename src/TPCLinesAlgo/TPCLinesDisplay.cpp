@@ -50,7 +50,7 @@ void TPCLinesDisplay::SetStyle(){
 
 }
 
-void TPCLinesDisplay::DrawVertex(SVertex vertex, TLegend& leg, std::string label, int color, int marker, double alpha){
+void TPCLinesDisplay::DrawVertex(SVertex vertex, TLegend * leg, std::string label, int color, int marker, double alpha){
     TGraph *pointGraph = new TGraph();
     pointGraph->SetPoint(0, vertex.Point().X(), vertex.Point().Y()); // Set the point's coordinates
     // Set marker style and size for the point
@@ -59,13 +59,13 @@ void TPCLinesDisplay::DrawVertex(SVertex vertex, TLegend& leg, std::string label
     pointGraph->SetMarkerColorAlpha(color, alpha);
 
     if(label!="")
-        leg.AddEntry(pointGraph, label.c_str(), "p");
+        leg->AddEntry(pointGraph, label.c_str(), "p");
 
     // Draw the point
     pointGraph->Draw("P");
 }
 
-TH2F TPCLinesDisplay::GetFrame(std::vector<SHit> hitsV, std::string label){
+TH2F* TPCLinesDisplay::GetFrame(std::vector<SHit> hitsV, std::string label){
 
     std::vector<double> x, y, err;
     for(size_t ix=0; ix<hitsV.size(); ix++){
@@ -80,12 +80,12 @@ TH2F TPCLinesDisplay::GetFrame(std::vector<SHit> hitsV, std::string label){
     double overX = 0.1*(maxX-minX);
     double overY = 0.1*(maxY-minY);
 
-    TH2F hFrame("frame", (label+";WireId;TimeTick [0.5 #mu s]").c_str(), 200, minX-overX, maxX+overX, 200, minY-overY, maxY+overY);
-    hFrame.SetStats(0);
+    TH2F* hFrame = new TH2F("frame", (label+";WireId;TimeTick [0.5 #mu s]").c_str(), 200, minX-overX, maxX+overX, 200, minY-overY, maxY+overY);
+    hFrame->SetStats(0);
     return hFrame;
 }
 
-void TPCLinesDisplay::DrawLine(LineEquation line, double xmin, double xmax, TLegend& leg, std::string label, int color, int style){
+void TPCLinesDisplay::DrawLine(LineEquation line, double xmin, double xmax, TLegend * leg, std::string label, int color, int style){
     // Draw a horizontal line from x = 1 to x = 4 at y = 2
     double y1 = line.EvaluateX(xmin);
     double y2 = line.EvaluateX(xmax);
@@ -96,10 +96,10 @@ void TPCLinesDisplay::DrawLine(LineEquation line, double xmin, double xmax, TLeg
     horizontalLine->Draw();
 
     if(label!="")
-        leg.AddEntry(horizontalLine, label.c_str(), "l");
+        leg->AddEntry(horizontalLine, label.c_str(), "l");
 }
 
-void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend& leg, std::string label, int color, int style, double size, double errorAlpha){
+void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std::string label, int color, int style, double size, double errorAlpha){
 
     if(hitsV.size()>0){
         std::vector<double> x, y, err;
@@ -117,13 +117,13 @@ void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend& leg, std:
         g->Draw("p");
         
         if(label!="")
-            leg.AddEntry(g, label.c_str(), "p");
+            leg->AddEntry(g, label.c_str(), "p");
     }
 
     return;
 }
 
-void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend& leg, std::string label, int colorP, int color, double alpha){ 
+void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend * leg, std::string label, int colorP, int color, double alpha){ 
     // Define the triangle's vertices
     Double_t x[3] = {tri.GetMainVertex().X(), tri.GetVertexB().X(), tri.GetVertexC().X()};
     Double_t y[3] = {tri.GetMainVertex().Y(), tri.GetVertexB().Y(), tri.GetVertexC().Y()};
@@ -140,7 +140,7 @@ void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend& leg, std::string labe
     pointGraph->SetMarkerColor(colorP);
 
     if(label!="")
-        leg.AddEntry(pointGraph, label.c_str(), "p");
+        leg->AddEntry(pointGraph, label.c_str(), "p");
 
     // Draw the point
     pointGraph->Draw("P");
@@ -149,7 +149,7 @@ void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend& leg, std::string labe
     triangle->Draw("F");
 }
 
-void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend& leg, std::string label, int color, double size, int style){
+void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend * leg, std::string label, int color, double size, int style){
     if(cluster.NHits()>0){
         std::vector<SHit> hits = cluster.GetHits();
         std::vector<double> x, y;
@@ -170,7 +170,7 @@ void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend& leg, st
         DrawLine(cluster.GetTrackEquationStart(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
         DrawLine(cluster.GetTrackEquationEnd(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
 
-        leg.AddEntry(g, ( "Cluster  "+std::to_string(cluster.GetId())).c_str(), "p");
+        leg->AddEntry(g, ( "Cluster  "+std::to_string(cluster.GetId())).c_str(), "p");
     }
 
     
@@ -189,31 +189,30 @@ void TPCLinesDisplay::Show(
     std::vector<STriangle> originAngles,
     SVertex recoVertex,
     SVertex trueVertex,
-    std::vector<SOrigin> origins)
+    std::vector<SOrigin> origins,
+    TCanvas *canvas)
 {
     
     SetStyle();
 
-    
-
     if(allHitsV.size()==0){return;}
-    TCanvas c("c", eventLabel.c_str(), 0, 0, 1000, 800);
-
+    
+    canvas->cd();
+    
     TPad *pad1 = new TPad("pad1", "Graph Pad", 0.0, 0., .8, 1.0);
     TPad *pad2 = new TPad("pad2", "Legend Pad", 0.75, 0., 1.0, 1.);
-
     pad1->SetLeftMargin(0.15);
     pad2->SetLeftMargin(-0.2);
     pad1->Draw();
     pad2->Draw();
     
-    TLegend legend(0., 0.1, 0.99, 0.9); // (x1, y1, x2, y2)
+    TLegend * legend = new TLegend(0., 0.1, 0.99, 0.9); // (x1, y1, x2, y2)
 
     pad1->cd();
 
     // general frame
-    TH2F hFrame=GetFrame(allHitsV, eventLabel);
-    hFrame.Draw();
+    TH2F * hFrame=GetFrame(allHitsV, eventLabel);
+    hFrame->Draw();
 
     // Main direction
     if(mainDirection.NHits()>0){
@@ -230,7 +229,7 @@ void TPCLinesDisplay::Show(
         DrawHitScatter(selectedHitsV, legend, "HoughHits", kRed, 24, 1.1, 0);
 
         // hough line
-        DrawLine(houghLine, hFrame.GetXaxis()->GetXmin(), hFrame.GetXaxis()->GetXmax(), legend, "Hough line", kBlack, kDashed);
+        DrawLine(houghLine, hFrame->GetXaxis()->GetXmin(), hFrame->GetXaxis()->GetXmax(), legend, "Hough line", kBlack, kDashed);
     }
    
     // linear clusters
@@ -274,26 +273,17 @@ void TPCLinesDisplay::Show(
         DrawVertex(trueVertex, legend, "True vtx", kPink-12, 110, 1);
     }
     
-    
     // Create a legend
     pad2->cd();
-    legend.SetBorderSize(0);
-    legend.SetTextSize(fLegendFontSize); 
-    legend.Draw();
+    legend->SetBorderSize(0);
+    legend->SetTextSize(fLegendFontSize); 
+    legend->Draw();
 
-    TFile* rootFile = new TFile((fOutputPath + "/rootfiles/"+eventLabel).c_str(), "CREATE");
-    c.Write();
-    rootFile->Close();
-    rootFile->Delete();
-    delete rootFile;
-    c.SaveAs((fOutputPath + "/" + eventLabel+".pdf").c_str());
-
-    c.cd();
-
+    canvas->cd();    
+    canvas->Update();
+    canvas->WaitPrimitive(); 
     
-    c.Update();
-    c.WaitPrimitive(); 
+    
 
     return;
-
 }
