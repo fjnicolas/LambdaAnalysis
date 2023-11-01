@@ -25,11 +25,19 @@
 #include "TStyle.h"
 #include <TROOT.h>
 
+
+
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleClusters.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleTriangles.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleEvents.h"
+#else
 #include "TPCSimpleHits.h"
 #include "TPCSimpleClusters.h"
 #include "TPCSimpleTriangles.h"
 #include "TPCSimpleEvents.h"
-
+#endif
 
 class TPCLinesDisplay {
     private:

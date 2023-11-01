@@ -208,7 +208,7 @@ int TPCLinesVertexFinder::GetHitsContainedInLineEquation(LineEquation trackEq, s
 
 bool CompareHitsByMinX(SHit h1, SHit h2) {
     return h1.X() < h2.X();
-};
+}
 
 // GetHitsContainedInHypo
 // Input two tracks, get the NHits closer to a vertex
@@ -987,8 +987,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         // get the intersection attributes
         SLinearCluster track1 = ori.GetTrackEntry(0);
         SLinearCluster track2 = ori.GetTrackEntry(1);
-        SPoint intP = ori.GetPoint();
-        double intPYerror = ori.GetYError();
 
         std::cout<<"  Potnetial Intersection Kink "<<ori.GetPoint().X()<<" "<<ori.GetPoint().Y()<<" Tracks: "<<ori.GetTrackEntry(0).GetId()<<" "<<ori.GetTrackEntry(1).GetId()<<std::endl;
         // check if the kink origin is comaptible with other origins

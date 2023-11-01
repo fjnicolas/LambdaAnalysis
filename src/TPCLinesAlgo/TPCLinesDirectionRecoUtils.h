@@ -17,10 +17,21 @@
 #include <numeric>
 #include <map>
 
+
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleClusters.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleLines.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCLinesDistanceUtils.h"
+#else
 #include "TPCSimpleHits.h"
 #include "TPCSimpleClusters.h"
 #include "TPCSimpleLines.h"
 #include "TPCLinesDistanceUtils.h"
+#endif
+
+
+
 
 
 namespace TPCLinesDirectionUtils{

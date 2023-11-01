@@ -16,7 +16,13 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#else
 #include "TPCSimpleHits.h"
+#endif
+
 
 
 // Class to get the hits in a specific view
