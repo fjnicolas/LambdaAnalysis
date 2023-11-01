@@ -112,141 +112,141 @@ boost::property_tree::ptree GetPropertyTreeFromFileName(std::string filename, st
 FRAMSPsetType ReadFRANSPset(std::string filename, std::string blockName){
 
     // Create the parameter set
-    FRAMSPsetType fPset;
+    FRAMSPsetType fPsetFRANS;
     
     // Create the boost property and read all the parameter in the given file
     boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
     // Fill the parameter set
-    fPset.ApplyRawSmoothing = pt.get<bool>("ApplyRawSmoothing");
-    fPset.ApplySmoothing = pt.get<bool>("ApplySmoothing");
-    fPset.ApplyCumulativeSmoothing = pt.get<bool>("ApplyCumulativeSmoothing");
-    fPset.NDriftPack = pt.get<unsigned int>("NDriftPack");
-    fPset.NWirePack = pt.get<unsigned int>("NWirePack");
-    fPset.ExpoAvSmoothPar = pt.get<double>("ExpoAvSmoothPar");
-    fPset.UnAvNeighbours = pt.get<int>("UnAvNeighbours");
-    fPset.CumulativeCut = pt.get<double>("CumulativeCut");
-    fPset.SlidingWindowN = pt.get<int>("SlidingWindowN");
-    fPset.NSamplesBeginSlope = pt.get<int>("NSamplesBeginSlope");
-    fPset.MaxRadius = pt.get<int>("MaxRadius");
-    fPset.UseHitWidth = pt.get<bool>("UseHitWidth");
-    fPset.Verbose = pt.get<int>("Verbose");
-    fPset.CalculateScore = pt.get<bool>("CalculateScore");
-    fPset.UseAlpha = pt.get<bool>("UseAlpha");
-    fPset.TMVAFilename = pt.get<std::string>("TMVAFilename");
-    fPset.TMVAFilename = fPset.TMVAFilename.substr(1, fPset.TMVAFilename.size()-2);
-    fPset.OutputPath = pt.get<std::string>("OutputPath");
+    fPsetFRANS.ApplyRawSmoothing = pt.get<bool>("ApplyRawSmoothing");
+    fPsetFRANS.ApplySmoothing = pt.get<bool>("ApplySmoothing");
+    fPsetFRANS.ApplyCumulativeSmoothing = pt.get<bool>("ApplyCumulativeSmoothing");
+    fPsetFRANS.NDriftPack = pt.get<unsigned int>("NDriftPack");
+    fPsetFRANS.NWirePack = pt.get<unsigned int>("NWirePack");
+    fPsetFRANS.ExpoAvSmoothPar = pt.get<double>("ExpoAvSmoothPar");
+    fPsetFRANS.UnAvNeighbours = pt.get<int>("UnAvNeighbours");
+    fPsetFRANS.CumulativeCut = pt.get<double>("CumulativeCut");
+    fPsetFRANS.SlidingWindowN = pt.get<int>("SlidingWindowN");
+    fPsetFRANS.NSamplesBeginSlope = pt.get<int>("NSamplesBeginSlope");
+    fPsetFRANS.MaxRadius = pt.get<int>("MaxRadius");
+    fPsetFRANS.UseHitWidth = pt.get<bool>("UseHitWidth");
+    fPsetFRANS.Verbose = pt.get<int>("Verbose");
+    fPsetFRANS.CalculateScore = pt.get<bool>("CalculateScore");
+    fPsetFRANS.UseAlpha = pt.get<bool>("UseAlpha");
+    fPsetFRANS.TMVAFilename = pt.get<std::string>("TMVAFilename");
+    fPsetFRANS.TMVAFilename = fPsetFRANS.TMVAFilename.substr(1, fPsetFRANS.TMVAFilename.size()-2);
+    fPsetFRANS.OutputPath = pt.get<std::string>("OutputPath");
     
-    return fPset;
+    return fPsetFRANS;
 }
 
 
 TrackFinderAlgorithmPsetType ReadTrackFinderAlgorithmPset(std::string filename, std::string blockName){
 
     // Create the parameter set
-    TrackFinderAlgorithmPsetType fPset;
+    TrackFinderAlgorithmPsetType fPsetTrackFinder;
     
     // Create the boost property and read all the parameter in the given file
     boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
     // Fill the parameter set
-    fPset.MaxDTube = pt.get<int>("MaxDTube");
-    fPset.MaxDCluster = pt.get<double>("MaxDCluster");
-    fPset.SingleWireMode = pt.get<bool>("SingleWireMode");
-    fPset.MinClusterHits = pt.get<int>("MinClusterHits");
-    fPset.DCleaning = pt.get<double>("DCleaning");
-    fPset.ClusterCompletenessCut = pt.get<double>("ClusterCompletenessCut");
-    fPset.ClusterAngleCut = pt.get<double>("ClusterAngleCut");
-    fPset.CaptureMissingHits = pt.get<bool>("CaptureMissingHits");
-    fPset.MinTrackHits = pt.get<int>("MinTrackHits");
-    fPset.HitDensityThreshold = pt.get<float>("HitDensityThreshold");
-    fPset.UseCompactness = pt.get<bool>("UseCompactness");
-    fPset.ConnectednessTol = pt.get<double>("ConnectednessTol");
-    fPset.ConnectednessWidthTol = pt.get<double>("ConnectednessWidthTol");
-    fPset.CompactnessTol = pt.get<double>("CompactnessTol");
-    fPset.Verbose = pt.get<int>("Verbose");
+    fPsetTrackFinder.MaxDTube = pt.get<int>("MaxDTube");
+    fPsetTrackFinder.MaxDCluster = pt.get<double>("MaxDCluster");
+    fPsetTrackFinder.SingleWireMode = pt.get<bool>("SingleWireMode");
+    fPsetTrackFinder.MinClusterHits = pt.get<int>("MinClusterHits");
+    fPsetTrackFinder.DCleaning = pt.get<double>("DCleaning");
+    fPsetTrackFinder.ClusterCompletenessCut = pt.get<double>("ClusterCompletenessCut");
+    fPsetTrackFinder.ClusterAngleCut = pt.get<double>("ClusterAngleCut");
+    fPsetTrackFinder.CaptureMissingHits = pt.get<bool>("CaptureMissingHits");
+    fPsetTrackFinder.MinTrackHits = pt.get<int>("MinTrackHits");
+    fPsetTrackFinder.HitDensityThreshold = pt.get<float>("HitDensityThreshold");
+    fPsetTrackFinder.UseCompactness = pt.get<bool>("UseCompactness");
+    fPsetTrackFinder.ConnectednessTol = pt.get<double>("ConnectednessTol");
+    fPsetTrackFinder.ConnectednessWidthTol = pt.get<double>("ConnectednessWidthTol");
+    fPsetTrackFinder.CompactnessTol = pt.get<double>("CompactnessTol");
+    fPsetTrackFinder.Verbose = pt.get<int>("Verbose");
     
     
-    return fPset;
+    return fPsetTrackFinder;
 }
 
 
 VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename, std::string blockName){
 
     // Create the parameter set
-    VertexFinderAlgorithmPsetType fPset;
+    VertexFinderAlgorithmPsetType fPsetVertexFinder;
     
     // Create the boost property and read all the parameter in the given file
     boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
     // Fill the parameter set
-    fPset.MaxDistToEdge = pt.get<double>("MaxDistToEdge");
-    fPset.RefineVertexIntersection = pt.get<bool>("RefineVertexIntersection");
-    fPset.UseEdgesDiscard = pt.get<bool>("UseEdgesDiscard");
-    fPset.MaxTrackFractionInMain = pt.get<float>("MaxTrackFractionInMain");
-    fPset.DecideMainTrack = pt.get<bool>("DecideMainTrack");
-    fPset.AddCollinearLines = pt.get<bool>("AddCollinearLines");
-    fPset.VertexDistanceROI = pt.get<float>("VertexDistanceROI");
-    fPset.MinWires = pt.get<int>("MinWires");
-    fPset.AngleTolerance = pt.get<float>("AngleTolerance");
-    fPset.TriangleInequalityTol = pt.get<float>("TriangleInequalityTol");
-    fPset.VertexHitsTol = pt.get<float>("VertexHitsTol");
-    fPset.VertexHitsMinHits = pt.get<int>("VertexHitsMinHits");
-    fPset.VertexCompactnessTol = pt.get<float>("VertexCompactnessTol");
-    fPset.MinTrackOccupancy = pt.get<float>("MinTrackOccupancy");
-    fPset.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
-    fPset.MakeCalorimetry = pt.get<bool>("MakeCalorimetry");
-    fPset.Verbose = pt.get<int>("Verbose");
+    fPsetVertexFinder.MaxDistToEdge = pt.get<double>("MaxDistToEdge");
+    fPsetVertexFinder.RefineVertexIntersection = pt.get<bool>("RefineVertexIntersection");
+    fPsetVertexFinder.UseEdgesDiscard = pt.get<bool>("UseEdgesDiscard");
+    fPsetVertexFinder.MaxTrackFractionInMain = pt.get<float>("MaxTrackFractionInMain");
+    fPsetVertexFinder.DecideMainTrack = pt.get<bool>("DecideMainTrack");
+    fPsetVertexFinder.AddCollinearLines = pt.get<bool>("AddCollinearLines");
+    fPsetVertexFinder.VertexDistanceROI = pt.get<float>("VertexDistanceROI");
+    fPsetVertexFinder.MinWires = pt.get<int>("MinWires");
+    fPsetVertexFinder.AngleTolerance = pt.get<float>("AngleTolerance");
+    fPsetVertexFinder.TriangleInequalityTol = pt.get<float>("TriangleInequalityTol");
+    fPsetVertexFinder.VertexHitsTol = pt.get<float>("VertexHitsTol");
+    fPsetVertexFinder.VertexHitsMinHits = pt.get<int>("VertexHitsMinHits");
+    fPsetVertexFinder.VertexCompactnessTol = pt.get<float>("VertexCompactnessTol");
+    fPsetVertexFinder.MinTrackOccupancy = pt.get<float>("MinTrackOccupancy");
+    fPsetVertexFinder.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
+    fPsetVertexFinder.MakeCalorimetry = pt.get<bool>("MakeCalorimetry");
+    fPsetVertexFinder.Verbose = pt.get<int>("Verbose");
     
     
-    return fPset;
+    return fPsetVertexFinder;
 }
 
 HoughAlgorithmPsetType ReadHoughAlgorithmPset(std::string filename, std::string blockName){
 
     // Create the parameter set
-    HoughAlgorithmPsetType fPset;
+    HoughAlgorithmPsetType fPsetHough;
     
     // Create the boost property and read all the parameter in the given file
     boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
     // Fill the parameter set
-    fPset.MaxRadiusLineHypothesis = pt.get<double>("MaxRadiusLineHypothesis");
-    fPset.ThetaRes = pt.get<double>("ThetaRes");
-    fPset.MaxDistanceTube = pt.get<double>("MaxDistanceTube");
-    fPset.MinHoughHits = pt.get<int>("MinHoughHits");
-    fPset.Verbose = pt.get<int>("Verbose");
+    fPsetHough.MaxRadiusLineHypothesis = pt.get<double>("MaxRadiusLineHypothesis");
+    fPsetHough.ThetaRes = pt.get<double>("ThetaRes");
+    fPsetHough.MaxDistanceTube = pt.get<double>("MaxDistanceTube");
+    fPsetHough.MinHoughHits = pt.get<int>("MinHoughHits");
+    fPsetHough.Verbose = pt.get<int>("Verbose");
     
     
-    return fPset;
+    return fPsetHough;
 }
 
 TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string blockName){
 
     // Create the parameter set
-    TPCLinesAlgoPsetType fPset;
+    TPCLinesAlgoPsetType fPsetTPCLines;
     
     // Create the boost property and read all the parameter in the given file
     boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
 
     // Fill the parameter set
-    fPset.MaxRadius = pt.get<double>("MaxRadius");
-    fPset.DriftConversion = pt.get<double>("DriftConversion");
-    fPset.MaxHoughTracks = pt.get<int>("MaxHoughTracks");
-    fPset.MinTrackHits = pt.get<int>("MinTrackHits");
-    fPset.RemoveIsolatedHits = pt.get<bool>("RemoveIsolatedHits");
-    fPset.MaxNeighbourDistance = pt.get<double>("MaxNeighbourDistance");
-    fPset.MinNeighboursHits = pt.get<int>("MinNeighboursHits");
-    fPset.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
-    fPset.CustomKinkPoint = pt.get<bool>("CustomKinkPoint");
-    fPset.VertexAlgorithm = pt.get<int>("VertexAlgorithm");
-    fPset.View = pt.get<int>("View");
-    fPset.OutputPath = pt.get<std::string>("OutputPath");
-    fPset.Verbose = pt.get<int>("Verbose");
-    fPset.DebugMode = pt.get<int>("DebugMode");
+    fPsetTPCLines.MaxRadius = pt.get<double>("MaxRadius");
+    fPsetTPCLines.DriftConversion = pt.get<double>("DriftConversion");
+    fPsetTPCLines.MaxHoughTracks = pt.get<int>("MaxHoughTracks");
+    fPsetTPCLines.MinTrackHits = pt.get<int>("MinTrackHits");
+    fPsetTPCLines.RemoveIsolatedHits = pt.get<bool>("RemoveIsolatedHits");
+    fPsetTPCLines.MaxNeighbourDistance = pt.get<double>("MaxNeighbourDistance");
+    fPsetTPCLines.MinNeighboursHits = pt.get<int>("MinNeighboursHits");
+    fPsetTPCLines.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
+    fPsetTPCLines.CustomKinkPoint = pt.get<bool>("CustomKinkPoint");
+    fPsetTPCLines.VertexAlgorithm = pt.get<int>("VertexAlgorithm");
+    fPsetTPCLines.View = pt.get<int>("View");
+    fPsetTPCLines.OutputPath = pt.get<std::string>("OutputPath");
+    fPsetTPCLines.Verbose = pt.get<int>("Verbose");
+    fPsetTPCLines.DebugMode = pt.get<int>("DebugMode");
     
     
-    return fPset;
+    return fPsetTPCLines;
 }
 
 #endif // TPC_LINES_PARAMETERS_H
