@@ -24,7 +24,12 @@
 #include "TSystem.h"
 #include "TSystemDirectory.h"
 
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleEvents.h"
+#else
 #include "TPCSimpleEvents.h"
+#endif
+
 
 std::vector<TPad*> buildpadcanvas(int nx, int ny);
 

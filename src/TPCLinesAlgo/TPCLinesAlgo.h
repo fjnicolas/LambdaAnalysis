@@ -16,22 +16,35 @@
 #include <map>
 
 
-/*#include "SObjects/TPCLinesParameters.cpp"
-#include "SObjects/TPCSimpleHits.h"
-#include "SObjects/TPCSimpleClusters.h"
-#include "SObjects/TPCSimpleTriangles.h"
-#include "SObjects/TPCSimpleEvents.h"*/
-#include "TPCLinesParameters.h"
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleClusters.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleTriangles.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleEvents.h"
+
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesParameters.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesHough.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesTrackFinder.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesVertexFinder.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesDisplay.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesDirectionRecoUtils.h"
+
+#else
 #include "TPCSimpleHits.h"
 #include "TPCSimpleClusters.h"
 #include "TPCSimpleTriangles.h"
 #include "TPCSimpleEvents.h"
 
+#include "TPCLinesParameters.h"
 #include "TPCLinesHough.h"
 #include "TPCLinesTrackFinder.h"
 #include "TPCLinesVertexFinder.h"
 #include "TPCLinesDisplay.h"
 #include "TPCLinesDirectionRecoUtils.h"
+#endif
+
+
+
 
 
 class TPCLinesAlgo {

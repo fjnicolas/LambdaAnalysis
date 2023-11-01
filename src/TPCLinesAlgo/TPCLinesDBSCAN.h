@@ -14,7 +14,12 @@
 #include <vector>
 #include <cmath>
 
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#else
 #include "TPCSimpleHits.h"
+#endif
+
 
 class DBSCAN {
 public:

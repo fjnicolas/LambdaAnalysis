@@ -17,14 +17,21 @@
 #include <numeric>
 
 
-/*#include "SObjects/TPCLinesParameters.cpp"
-#include "SObjects/TPCSimpleHits.h"
-#include "SObjects/TPCSimpleLines.h"*/
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleLines.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesParameters.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesDisplay.h"
 
-#include "TPCLinesParameters.h"
+#else
 #include "TPCSimpleHits.h"
 #include "TPCSimpleLines.h"
+#include "TPCLinesParameters.h"
 #include "TPCLinesDisplay.h"
+#endif
+
+
+
 
 
 class TPCLinesHough {

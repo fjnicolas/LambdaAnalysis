@@ -16,15 +16,32 @@
 #include <cmath>
 #include <map>
 
+
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleClusters.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleLines.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleTriangles.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCLinesDistanceUtils.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleCalo.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleEvents.h"
+
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesParameters.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesDirectionRecoUtils.h"
+
+#else
 #include "TPCSimpleHits.h"
 #include "TPCSimpleClusters.h"
 #include "TPCSimpleLines.h"
 #include "TPCSimpleTriangles.h"
-#include "TPCSimpleCalo.h"
-#include "TPCLinesParameters.h"
 #include "TPCLinesDistanceUtils.h"
+#include "TPCSimpleCalo.h"
 #include "TPCSimpleEvents.h"
+
+#include "TPCLinesParameters.h"
 #include "TPCLinesDirectionRecoUtils.h"
+#endif
+
 
 
 class TPCLinesVertexFinder {

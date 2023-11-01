@@ -10,8 +10,13 @@
 #ifndef TPC_PARSERCONFIG_PARAMETERS_H
 #define TPC_PARSERCONFIG_PARAMETERS_H
 
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesParameters.h"
+#include "sbndcode/LambdaAnalysis/src/FRANS/ChargeDensityPset.h"
+#else
 #include "ChargeDensityPset.h"
 #include "TPCLinesParameters.h"
+#endif
 
 #include <boost/property_tree/info_parser.hpp>
 #include <filesystem>

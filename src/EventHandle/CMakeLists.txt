@@ -1,5 +1,27 @@
 message(status "Building " ${CMAKE_CURRENT_SOURCE_DIR})
 
+if(DEFINED ENV{LARSOFT_VERSION})
+    message(status " LARSOFT DEFINED SOBJECTS" )
+
+    art_make_library(
+        LIBRARY_NAME   sbndcode_SEventHandle
+        
+        SOURCE
+            CommandLineParser.cpp
+            SEventHandle.cpp
+            STPCAnalyzerTreeReader.cpp
+            LambdaAnaTree.cpp
+        LIBRARIES
+            ROOT::Tree
+            ROOT::Core
+
+            sbndcode_SObjects
+      )
+
+      install_headers()
+      install_source()
+endif()
+
 add_library(seventhandle_library
     CommandLineParser.cpp
     CommandLineParser.h
