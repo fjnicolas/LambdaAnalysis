@@ -47,7 +47,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
     FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
-    std::cout<<"  njvisfnvioanvownvr "<<fPsetFRANS.TMVAFilename<<" "<<fPsetFRANS.OutputPath<<std::endl;
     fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
 
     // ---- TPCLines parameters ----------------------------------------
