@@ -243,8 +243,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             std::string outNamePreffix = accepted? "Accepted":"Rejected";
             std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label();
            
-           cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
-            
+            cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
+            delete cTPCDisplay;
             
             outputLabel+="FRANS";
             if(bestFRANSScore!=-1000){
@@ -289,6 +289,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             anaTree.fNOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
             anaTree.fNOriginsPairOneTwo = recoEvent.GetNOriginsMult(2) * recoEvent.GetNOriginsMult(1);
 
+            anaTree.fTruthIsFiducial = true;
+            anaTree.fRecoIsFiducial = true;
             anaTree.fNAngles = recoEvent.GetNAngles(); 
             anaTree.fAngleFRANSScore = bestFRANSScore;
 
@@ -304,7 +306,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     originsAnaDirectory->cd();
     _EfficiencyCalculator.DrawHistograms(cOriginsAna);
     cOriginsAna->Write();
-    TDirectory *anaTreeDirectory = anaOutputFile->mkdir("LambdaAnaTree");
+    TDirectory *anaTreeDirectory = anaOutputFile->mkdir("originsAna");
     anaTreeDirectory->cd();
     anaTree.WriteTree();
     anaOutputFile->Write();

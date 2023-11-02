@@ -5,21 +5,72 @@
 #include <TString.h>
 #include <TMath.h>
 
+struct PlotDef {
+
+    std::string suffix;
+    std::string var;
+    std::string cut;
+    std::string varLabel;
+    std::string cutLabel;
+    std::string bins;
+    bool accumulateCut;
+
+    PlotDef(const std::string& _suffix = "",
+            const std::string& _var = "",
+            const std::string& _cut = "",
+            const std::string& _varLabel = "",
+            const std::string& _cutLabel = "",
+            const std::string& _bins = "",
+            bool _accumulateCut = true)
+        : suffix(_suffix),
+          var(_var),
+          cut(_cut),
+          varLabel(_varLabel),
+          cutLabel(_cutLabel),
+          bins(_bins),
+          accumulateCut(_accumulateCut) {
+    }
+};
+
+
+std::vector<PlotDef> cutDefs1 = {
+                                    {"", "TruthIsFiducial", "TruthIsFiducial>=0", "No \\ cut", "", "", true},
+                                    {"", "TruthIsFiducial", "TruthIsFiducial==1", "Truth \\ in \\ FV", "", "", true},
+                                    {"", "RecoIsFiducial", "RecoIsFiducial==1", "Reco \\ in \\ FV", "", "", true},
+                                    {"", "NOriginsPairOneTwo", "NOriginsPairOneTwo>0", "\\# \\ 2-1 \\ origin \\ pairs > 0", "", "", true},
+                                    {"", "NAngles", "NAngles>0", "\\# \\ V>0", "", "", true},
+                                    {"", "AngleFRANSScore", "AngleFRANSScore>0.1", "V \\ FRANS \\ score>0.1", "", "", true},
+                                    {"", "NOriginsMultGT3", "NOriginsMultGT3==0", "\\# \\ origins \\ mult \\ 3==0", "", "", true},
+                                    {"", "NOrigins", "NOrigins<=5", "\\# \\ origins <=5", "", "", true},
+                                    {"", "FRANSScorePANDORA", "FRANSScorePANDORA>0.15", "FRANS \\ score \\ PANDORA>0.15", "", "", true}
+                                };       
+
+std::vector<PlotDef> cutDefs2 = {
+                                    {"", "TruthIsFiducial", "TruthIsFiducial>=0", "No \\ cut", "", "", true},
+                                    {"", "TruthIsFiducial", "TruthIsFiducial==1", "Truth \\ in \\ FV", "", "", true},
+                                    {"", "RecoIsFiducial", "RecoIsFiducial==1", "Reco \\ in \\ FV", "", "", true},
+                                     {"", "FRANSScorePANDORA", "FRANSScorePANDORA>0.15", "FRANS \\ score \\ PANDORA>0.15", "", "", true},
+                                    {"", "NOriginsPairOneTwo", "NOriginsPairOneTwo>0", "\\# \\ 2-1 \\ origin \\ pairs > 0", "", "", true},
+                                    {"", "NAngles", "NAngles>0", "\\# \\ V>0", "", "", true},
+                                    {"", "AngleFRANSScore", "AngleFRANSScore>0.1", "V \\ FRANS \\ score>0.1", "", "", true},
+                                    {"", "NOriginsMultGT3", "NOriginsMultGT3==0", "\\# \\ origins \\ mult \\ 3==0", "", "", true},
+                                    {"", "NOrigins", "NOrigins<=5", "\\# \\ origins <=5", "", "", true}
+                                };                                     
+                                   
+
+
 std::vector<std::string> sampleDefs1 = { "IntNLambda>0 && IntMode==0", "IntNLambda==0 && IntMode==0", "IntNLambda==0 && IntMode==1" };
 std::vector<std::string> sampleDefNames1 = { "Signal", "QE", "RES" };
 
-std::vector<std::string> cutDefs1 = { "RunID>0", "NOriginsPairOneTwo>0", "NAngles>0", "AngleFRANSScore>0.1", "NOriginsMultGT3==0", "NOrigins<=6" };
 
-std::vector<std::string> cutDefs2 = { "RunID>0", "FRANSScorePANDORA>0.1", "NOriginsPairOneTwo>0", "NAngles>0", "AngleFRANSScore>0.1", "NOriginsMultGT3==0", "NOrigins<=6" };
-
-std::vector<std::string> cutDefs = cutDefs2; 
+std::vector<PlotDef> cutDefs = cutDefs2; 
 
 std::vector<std::string> sampleDefs = sampleDefs1;
 std::vector<std::string> sampleDefNames = sampleDefNames1;
 
 
 void generateAndCompileTeXTable(
-    const std::vector<std::string>& cutDefs,
+    const std::vector<PlotDef>& cutDefs,
     const std::vector<std::string>& sampleDefNames,
     const std::vector<std::vector<int>>& histogramCounts,
     const std::string& fileName,
@@ -35,9 +86,13 @@ void generateAndCompileTeXTable(
     }
 
     // Write the LaTeX document preamble
+    
     texFile << "\\documentclass{article}" << std::endl;
     texFile << "\\usepackage{graphicx}" << std::endl;
+    texFile << "\\usepackage{pdflscape}"<<std::endl;
     texFile << "\\begin{document}" << std::endl;
+    texFile << "\\begin{landscape}" << std::endl;
+
 
     // Write the LaTeX code for the table
     texFile << "\\begin{table}[h]" << std::endl;
@@ -57,10 +112,10 @@ void generateAndCompileTeXTable(
 
     // Write the data rows
     for (size_t i = 0; i < histogramCounts.size(); ++i) {
-        texFile << cutDefs[i] << " & ";
+        texFile << "$ {\\rm " << cutDefs[i].varLabel << "}$" << " & ";
         for (size_t j = 0; j < histogramCounts[i].size(); ++j) {
             std::ostringstream streamObjEff;
-            streamObjEff <<  std::fixed << std::setprecision(2) << 100.*histogramCounts[i][j]/histogramCounts[0][j];
+            streamObjEff <<  std::fixed << std::setprecision(2) << 100.*histogramCounts[i][j]/histogramCounts[1][j];
             std::cout<<"Efficiency: "<<streamObjEff.str()<<" %"<<std::endl;
             // Get string from out
             if(j==sampleDefNames.size()-1) texFile << histogramCounts[i][j] <<" ("<< streamObjEff.str() <<" \\%)" << std::endl;
@@ -72,6 +127,8 @@ void generateAndCompileTeXTable(
     texFile << "\\end{tabular}" << std::endl;
     texFile << "\\caption{" << tableCaption << "}" << std::endl;
     texFile << "\\end{table}" << std::endl;
+
+    texFile << "\\end{landscape}" << std::endl;
 
     // Close the LaTeX document
     texFile << "\\end{document}" << std::endl;
@@ -89,7 +146,7 @@ void generateAndCompileTeXTable(
 }
 
 
-void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "LambdaAnaTree/", std::string fTreeName = "LambdaAnaTree")
+void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
     // Set batch mode
     gROOT->SetBatch(batchMode);
@@ -107,11 +164,11 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     TCut currentCut("");
 
     for (size_t i = 0; i < cutDefs.size(); ++i) {
-        currentCut = currentCut && TCut(cutDefs[i].c_str()); 
+        currentCut = currentCut && TCut(cutDefs[i].cut.c_str()); 
         for (size_t j = 0; j < sampleDefs.size(); ++j) {
             TCut sampelCut(sampleDefs[j].c_str());
             sampelCut = sampelCut && currentCut;
-            TH1F *h1 = new TH1F("h1",cutDefs[i].c_str(),2,0,2);
+            TH1F *h1 = new TH1F("h1",cutDefs[i].cut.c_str(),2,0,2);
             fTree->Draw("RunID>>h1",sampelCut);
             h1->Draw();
 
@@ -126,7 +183,7 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     }
 
         for (size_t i = 0; i < cutDefs.size(); ++i) {
-        std::cout << cutDefs[i] << "\t";
+        std::cout << cutDefs[i].varLabel << "\t";
         for (size_t j = 0; j < sampleDefs.size(); ++j) {
             std::cout << histogramCounts[i][j] << "\t";
         }
