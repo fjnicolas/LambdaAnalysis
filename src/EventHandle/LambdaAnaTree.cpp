@@ -57,11 +57,13 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("NuvX", &fNuvX);
     fTree->Branch("NuvY", &fNuvY);
     fTree->Branch("NuvZ", &fNuvZ);
+    fTree->Branch("TruthIsFiducial", &fTruthIsFiducial);
 
     // Set branch addresses for reco vertex information
     fTree->Branch("RecnuvX", &fRecnuvX);
     fTree->Branch("RecnuvY", &fRecnuvY);
     fTree->Branch("RecnuvZ", &fRecnuvZ);
+    fTree->Branch("RecoIsFiducial", &fRecoIsFiducial);
 
     // Set branch addresses for FRANS PANDORA information
     fTree->Branch("FRANSScorePANDORA", &fFRANSScorePANDORA);
@@ -79,5 +81,52 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("AngleNHits", &fAngleNHits);
     fTree->Branch("AngleMainTrackNHits", &fAngleMainTrackNHits);
     fTree->Branch("AngleLongestIsMain", &fAngleLongestIsMain);
+
+}
+
+void LambdaAnaTree::ResetVars(){
+    fEventID = -999;
+    fSubrunID = -999;
+    fRunID = -999;
+    fSliceID = -999;
+
+    fIntMode = -999;
+    fIntCCNC = -999;
+    fIntNProtons = -999;
+    fIntNNeutrons = -999;
+    fIntNPi0 = -999;
+    fIntNPip = -999;
+    fIntNPim = -999;
+    fIntNMuonP = -999;
+    fIntNMuonM = -999;
+    fIntNElectronP = -999;
+    fIntNElectronM = -999;
+    fIntNLambda = -999;
+
+    fNuvE = -999;
+    fNuvT = -999;
+    fNuvX = -999;
+    fNuvY = -999;
+    fNuvZ = -999;
+    fTruthIsFiducial = false;
+
+    fRecnuvX = -999;
+    fRecnuvY = -999;
+    fRecnuvZ = -999;
+    fRecoIsFiducial = false;
+
+    fFRANSScorePANDORA = -999;
+
+    fNOrigins = -999;
+    fNOriginsMult1 = -999;
+    fNOriginsMult2 = -999;
+    fNOriginsMultGT3 = -999;
+    fNOriginsPairOneTwo = -999;
+
+    fNAngles = -999;
+    fAngleFRANSScore = -999;
+    fAngleNHits = -999;
+    fAngleMainTrackNHits = -999;
+    fAngleLongestIsMain = false;
 
 }

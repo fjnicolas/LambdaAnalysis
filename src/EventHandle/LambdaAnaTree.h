@@ -55,11 +55,13 @@ public:
 
     // True Vertex information
     double fNuvE, fNuvT, fNuvX, fNuvY, fNuvZ;
-    
+    bool fTruthIsFiducial;
+
     // Reco Vertex information
     double fRecnuvX;
     double fRecnuvY;
     double fRecnuvZ;
+    bool fRecoIsFiducial;
 
     // FRANS PANDORA information
     double fFRANSScorePANDORA;
@@ -81,6 +83,8 @@ public:
 
     void FillTree() { fTree->Fill(); }
     void WriteTree() { fTree->Write(); }
+
+    void ResetVars();
 
 };
 
