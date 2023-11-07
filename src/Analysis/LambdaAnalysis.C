@@ -5,8 +5,16 @@
 #include <TString.h>
 #include <TMath.h>
 
+#include "CutEfficienciesDefinitions.C"
 #include "CutEfficienciesLATeXInterface.C"
 
+std::vector<SampleDef> sampleDefs = {
+    {"IntNLambda>0 && IntMode==0", "Signal", true},
+    {"IntNLambda==0 && IntMode==0", "QE", false},
+    {"IntNLambda==0 && IntMode==1", "RES", false},
+    {"IntNLambda==0 && IntMode==2", "DIS", false},
+    {"IntNLambda==0 && (IntMode==3 || IntMode==10)", "COH and MEC", false}
+};
 
 std::string fCutFRANSPANDORA = "0.15";
 std::string fCutFRANS = "0.15 ";
@@ -14,206 +22,85 @@ std::string fCutNOrigins = "4";
 std::string fCutNOriginsM3 = "0";
 std::string fCutNShw = "1";
 
-std::vector<PlotDef> cutDefs1 = {
-                                    {"", "TruthIsFiducial", "TruthIsFiducial>=0", "Truth in FV", "No \\ cut", {0,2,2}, false},
-                                    {"", "TruthIsFiducial", "TruthIsFiducial==1", "Truth in FV", "Truth \\ in \\ FV", {0,2,2}, true},
-                                    {"", "RecoIsFiducial", "RecoIsFiducial==1", "Reco in FV", "Reco \\ in \\ FV", {0,2,2}, true},
+std::vector<PlotDef> cutDefs = {
+    {"", "TruthIsFiducial", "TruthIsFiducial>=0", 1, "Truth in FV",  "No \\ cut", CutType::kCenter, {0,2,2},  true},
+    {"", "TruthIsFiducial", "TruthIsFiducial==1", 1, "Truth in FV", "Truth \\ in \\ FV", CutType::kCenter, {0,2,2}, true},
+    {"", "RecoIsFiducial", "RecoIsFiducial==1", 1, "Reco in FV", "Reco \\ in \\ FV", CutType::kCenter, {0,2,2}, true},
 
-                                    //{"", "FRANSScorePANDORA", "FRANSScorePANDORA>"+fCutFRANSPANDORA, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA>"+fCutFRANSPANDORA, {-.5,.5,40}, true},
+    //{"", "FRANSScorePANDORA", "FRANSScorePANDORA>"+fCutFRANSPANDORA, 0.15, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA>"+fCutFRANSPANDORA, CutType::kRight,{-.5,.5,40}, true},
 
-                                    //{"", "NShwTh75", "!(NOrigins>4 && NShwTh75<="+fCutNShw+")", "# showers (>100MeV)", "NShower(>100MeV)<="+fCutNShw, {0,6, 6}, true},
-
-                                    {"", "NOriginsMult1", "0==0", "# origins mult 1",  "\\# \\ origins \\ mult \\ 1", {0, 6, 6}, false},
-                                    {"", "NOriginsMult2", "0==0", "# origins mult 2",  "\\# \\ origins \\ mult \\ 2", {0, 6, 6}, false},
-                                    {"", "NOriginsMultGT3", "0==0", "# origins mult >=3",  "\\# \\ origins \\ mult \\ >= 3", {0, 6, 6}, false},
-                                    
-                                    {"", "NShwTh100", "NShwTh100<="+fCutNShw, "# showers (>100MeV)", "NShower(>100MeV)<="+fCutNShw, {0, 6, 6}, false},
-                                    {"", "ShowerEnergy", "ShowerEnergy<=135", "Shower Energy [MeV]", "ShowerEnergy<=135 \\ [MeV]", {0, 300, 15}, false},
-                                    {"", "MainShowerEnergy", "0==0", "MainShowerEnergy [MeV]", "", {0, 500, 100}, false, false},
-                                    {"", "MainShowerScore", "0==0", "MainShowerScore", "", {0, 1, 20 }, false, false},
-
-                                    {"", "NOriginsPairOneTwo>0", "NOriginsPairOneTwo>0", "# origins mult 1>0, # origins mult2>0", "\\# \\ origins \\ mult \\ 1 >0, \\# \\ origins \\ mult \\ 2 > 0", {0,2,2}, true},
-                                    {"", "NAngles", "NAngles>0", "# V", "\\# \\ V>0", {0,5,5}, true},
-
-                                    {"", "AngleGap", "0==0", "Gap [cm]", "Gap \\ [cm]", {0, 30, 60}, false, true},
-                                    {"", "AngleDecayContainedDiff", "0==0", "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle", {-5, 20, 40}, false, true},
-                                    {"", "AngleNHits", "0==0", "Angle # hits", "Angle \\ \\# \\ hits", {0, 250, 25}, false, true},
-
-                                    
-                                    {"", "AngleFRANSScore", "AngleFRANSScore>"+fCutFRANS, "V FRANS score", "V \\ FRANS \\ score>"+fCutFRANS, {-.5,.5,40}, true},
-                                    {"", "NOriginsMultGT3", "NOriginsMultGT3<="+fCutNOriginsM3, "# origins mult 3",  "\\# \\ origins \\ mult \\ 3<="+fCutNOriginsM3, {0, 5, 5}, true},
-                                    {"", "NOrigins", "NOrigins<="+fCutNOrigins, "# origins", "\\#  \\ origins  <="+fCutNOrigins, {0,15,15}, true},
-                                    
-                                    {"", "NShwTh100", "NShwTh100<="+fCutNShw, "# showers (>100MeV)", "NShower(>100MeV)<="+fCutNShw, {0, 6, 6}, true},
-                                    {"", "ShowerEnergy", "ShowerEnergy<=135", "Shower Energy [MeV]", "ShowerEnergy<=135 \\ [MeV]", {0, 300, 15}, true},
-
-                                    {"", "FRANSScorePANDORA", "FRANSScorePANDORA>"+fCutFRANSPANDORA, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA>"+fCutFRANSPANDORA, {-.5,.5,40}, true},
-                                
-                                    //{"", "NShwTh75", "NShwTh75<="+fCutNShw, "# showers (>75MeV)", "NShower(>75MeV)<="+fCutNShw, {0,6, 6}, true},
-                                    //{"", "ShowerEnergy", "ShowerEnergy<=135", "Shower energy [MeV]", "Shower \\ energy < 135 \\ [MeV]", {0,500,25}, true},
-                                   
-                                    //{"", "NShwTh75", "NShwTh75<="+fCutNShw, "# showers (>75MeV)", "NShower(>75MeV)<="+fCutNShw, {0,6, 6}, true},
-                                                                
-                                    
-                                    
-                                };       
+    {"", "NShwTh100", "NShwTh100<="+fCutNShw, 1, "# showers (>100MeV)", "NShower(>100MeV)<="+fCutNShw, CutType::kLeft, {0, 6, 6}, false, true},
+    {"", "ShowerEnergy", "ShowerEnergy<=135", 135, "Shower Energy [MeV]", "ShowerEnergy<=135 \\ [MeV]", CutType::kLeft, {0, 300, 15}, false, true},
+    {"", "MainShowerEnergy", "0==0", 0, "MainShowerEnergy [MeV]", "", CutType::kLeft, {0, 500, 100}, false, true},
+    {"", "MainShowerScore", "0==0", 0, "MainShowerScore", "", CutType::kLeft, {0, 0.55, 20 }, false, true},
 
 
-std::vector<std::string> sampleDefs1 = { "IntNLambda>0 && IntMode==0", "IntNLambda==0 && IntMode==0", "IntNLambda==0 && IntMode==1" };
-std::vector<std::string> sampleDefNames1 = { "Signal", "QE", "RES" };
+    {"", "NOriginsMult1", "0==0",  1, "# origins mult 1",  "\\# \\ origins \\ mult \\ 1", CutType::kRight, {0, 6, 6}, false},
+    {"", "NOriginsMult2", "0==0", 1, "# origins mult 2",  "\\# \\ origins \\ mult \\ 2", CutType::kRight, {0, 6, 6}, false},
+    
+    {"", "NOriginsPairOneTwo>0", "NOriginsPairOneTwo>0", 1, "# origins mult 1>0, # origins mult2>0", "\\# \\ origins \\ mult \\ 1 >0, \\# \\ origins \\ mult \\ 2 > 0", CutType::kCenter, {0,2,2}, true},
+    {"", "NAngles", "NAngles>0", 1, "# V", "\\# \\ V>0", CutType::kRight,{0,5,5}, true},
 
-std::vector<PlotDef> cutDefs = cutDefs1; 
+    {"", "AngleGap", "0==0", 0, "Gap [cm]", "Gap \\ [cm]", CutType::kLeft,{0, 50, 100}, false, true},
+    {"", "AngleDecayContainedDiff", "0==0", 0, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle", CutType::kLeft, {0, 20, 40}, false, true},
+    {"", "AngleNHits", "0==0", 0, "Angle # hits", "Angle \\ \\# \\ hits", CutType::kRight,{0, 250, 25}, false, true},
 
-std::vector<std::string> sampleDefs = sampleDefs1;
-std::vector<std::string> sampleDefNames = sampleDefNames1;
+    
+    {"", "AngleFRANSScore", "AngleFRANSScore>"+fCutFRANS, 0.15, "V FRANS score", "V \\ FRANS \\ score>"+fCutFRANS, CutType::kRight, {-.5,.5,40}, true, true},
+    {"", "NOriginsMultGT3", "NOriginsMultGT3<="+fCutNOriginsM3, 1, "# origins mult 3",  "\\# \\ origins \\ mult \\ 3<="+fCutNOriginsM3, CutType::kLeft, {0, 5, 5}, true},
+    {"", "NOrigins", "NOrigins<="+fCutNOrigins, 4, "# origins", "\\#  \\ origins  <="+fCutNOrigins, CutType::kLeft, {0,15,15}, true},
+    
+    {"", "FRANSScorePANDORA", "FRANSScorePANDORA>"+fCutFRANSPANDORA, 0.15, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA>"+fCutFRANSPANDORA, CutType::kRight,{-.5,.5,40}, true, true},
 
-std::vector<int> fColors = {kRed+1, kBlue-4, kGreen+4, kOrange+5};
-std::vector<int> fLineStyle = {1, 2, 9, 3, 6, 10};
+    {"", "AngleGap", "0==0", 0, "Gap [cm]", "Gap \\ [cm]", CutType::kLeft,{0, 50, 100}, false, true},
+    {"", "AngleDecayContainedDiff", "0==0", 0, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle", CutType::kLeft, {0, 20, 40}, false, true},
+    {"", "AngleNHits", "0==0", 0, "Angle # hits", "Angle \\ \\# \\ hits", CutType::kRight,{0, 250, 50}, false, true},
+
+    //{"", "NShwTh75", "NShwTh75<="+fCutNShw, "# showers (>75MeV)", "NShower(>75MeV)<="+fCutNShw, CutType::kRight,{0,6, 6}, true},
+    //{"", "ShowerEnergy", "ShowerEnergy<=135", "Shower energy [MeV]", "Shower \\ energy < 135 \\ [MeV]", CutType::kRight,{0,500,25}, true},
+    
+    //{"", "NShwTh75", "NShwTh75<="+fCutNShw, "# showers (>75MeV)", "NShower(>75MeV)<="+fCutNShw, CutType::kRight,{0,6, 6}, true},
+                                                    
+}; 
+
+
+
+
 
 void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
-    // Set batch mode
-    gROOT->SetBatch(batchMode);
-    SetGStyle();
 
-    // shell command remove all *.pdf with gSystem
+    //---------  Remove all *.pdf with gSystem
     gSystem->Exec("rm *.pdf");
+    gSystem->Exec("rm OutputPlots.root");
 
-    //--------- Configuration Parameters
+    //--------- Input TTree
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
     fFile->ls();
     TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
 
-    std::vector<std::vector<int>> histogramCounts(cutDefs.size(), std::vector<int>(sampleDefs.size(), 0));
-    
-    std::vector<std::vector<TH1F*>> histograms;
-    std::vector<std::vector<TH1F*>> histogramCumulatives;
-    for (size_t i = 0; i < cutDefs.size(); ++i) {
-        std::vector<TH1F*> hVec;
-        std::vector<TH1F*> hVecCumulative;
-        for (size_t j = 0; j < sampleDefs.size(); ++j) {
-            std::string plotName = std::to_string(i)+"_"+std::to_string(j);
-            TH1F *hAux = new TH1F(plotName.c_str(), plotName.c_str(), cutDefs[i].bins.nBins, cutDefs[i].bins.x1, cutDefs[i].bins.x2);
-            hVec.push_back(hAux);
-            TH1F *hAuxCumulative = new TH1F((plotName+"C").c_str(), (plotName+"C").c_str(), cutDefs[i].bins.nBins, cutDefs[i].bins.x1, cutDefs[i].bins.x2);
-            hVecCumulative.push_back(hAuxCumulative);
-        }
-        histograms.push_back(hVec);
-        histogramCumulatives.push_back(hVecCumulative);
-    }
+    std::vector<AnaPlot> anaPlots;
 
     // Cut defitions
     TCut previousCut("");
 
     for (size_t i = 0; i < cutDefs.size(); ++i) {
 
-        TCut currentCut = TCut(cutDefs[i].cut.c_str()); 
-        
-        TCanvas *c1 = new TCanvas("c1","c1",800,600);
-        TCanvas *c2 = new TCanvas("c2"," c2",800,600);
-        TCanvas *c3 = new TCanvas("c3"," c3",800,600);
-        std::string plotAxisLabels=";"+cutDefs[i].varLabel+"; # events";
-        TH1F *hAux = new TH1F("hh", plotAxisLabels.c_str(), cutDefs[i].bins.nBins, cutDefs[i].bins.x1, cutDefs[i].bins.x2);
-        TH1F *hAuxEff = new TH1F("hhEff", plotAxisLabels.c_str(), cutDefs[i].bins.nBins, cutDefs[i].bins.x1, cutDefs[i].bins.x2);
-        hAux->Draw();
+        TCut currentCut = TCut(cutDefs[i].GetCut());
+        AnaPlot anaPlot(i, cutDefs[i], sampleDefs);
 
-        // Add legend
-        TLegend *legend = new TLegend(0.75, 0.75, 0.9, 0.9);
+        anaPlot.DrawHistograms(fTree, previousCut);
+        anaPlots.push_back(anaPlot);
 
-
-        int maxVal=0;
-        
-        for (size_t j = 0; j < sampleDefs.size(); ++j) {
-            
-            TCut sampelCut(sampleDefs[j].c_str());
-            sampelCut = sampelCut;
-            
-            std::string plotName = std::to_string(i)+"_"+std::to_string(j);
-            
-            c2->cd();
-            fTree->Draw( (cutDefs[i].var+">>"+plotName).c_str(), sampelCut && previousCut );
-            std::cout<<"Plotting: "<<cutDefs[i].var<<std::endl;
-
-            TH1F *hCount = new TH1F("hCount", "hCount", 2, 0, 2);
-            fTree->Draw( (cutDefs[i].var+">>hCount").c_str(), sampelCut && previousCut && currentCut );
-            
-            c1->cd();
-            histograms[i][j]->SetLineColor(fColors[j]);
-            histograms[i][j]->SetLineWidth(3);
-            histograms[i][j]->SetLineStyle(fLineStyle[j]);
-            histograms[i][j]->SetStats(0);
-            legend->AddEntry(histograms[i][j], sampleDefNames[j].c_str(), "l");
-
-            // add plot with ratio of histogram and cumulative of the histogram
-            c3->cd(); 
-            histogramCumulatives[i][j] = (TH1F*)histograms[i][j]->GetCumulative();
-            histogramCumulatives[i][j]->SetLineColor(fColors[j]);
-            histogramCumulatives[i][j]->SetLineWidth(3);
-            histogramCumulatives[i][j]->SetLineStyle(fLineStyle[j]);
-            histogramCumulatives[i][j]->SetMarkerColor(fColors[j]);
-            histogramCumulatives[i][j]->SetMarkerStyle(20);
-            histogramCumulatives[i][j]->SetStats(0);
-            histogramCumulatives[i][j]->Scale(100./histograms[i][j]->Integral());
-            
-
-            
-            histogramCounts[i][j] = hCount->GetEntries();
-            if(histograms[i][j]->GetMaximum()>maxVal) maxVal = histograms[i][j]->GetMaximum();
-        }
-
-
-        c1->cd();
-        hAux->GetYaxis()->SetRangeUser(0.5, maxVal*1.1);
-        hAux->SetStats(0);
-        hAux->Draw();
-        // set hAux scale to log
-        if(cutDefs[i].log==true){
-            hAux->SetMinimum(0.5);
-            gStyle->SetOptLogy(1);
-        }
-        else{
-            hAux->SetMinimum(0);
-            gStyle->SetOptLogy(0);
-        }
-        for (size_t j = 0; j < sampleDefs.size(); ++j) {
-            histograms[i][j]->Draw("hist same");
-        }
-
-        // add legent transparency
-        legend->SetFillColorAlpha(0, 0);
-        legend->Draw("same");
-        c1->Update();
-        c1->SaveAs(("plot"+std::to_string(i)+cutDefs[i].var+".pdf").c_str());
-        delete c1;
-
-
-        
-        c3->cd();
-        hAuxEff->GetYaxis()->SetRangeUser(0.1, 101);
-        hAuxEff->GetYaxis()->SetTitle("Efficiency [%]");
-        hAuxEff->SetStats(0);
-        hAuxEff->Draw();
-        gStyle->SetOptLogy(0);
-        for (size_t j = 0; j < sampleDefs.size(); ++j) {
-            histogramCumulatives[i][j]->Draw("p same");
-        }
-        c3->Update();
-        c3->SaveAs(("plot"+std::to_string(i)+cutDefs[i].var+"zEff.pdf").c_str());
-
-        if(cutDefs[i].accumulateCut)
+        if(cutDefs[i].GetAccumulateCut()){
             previousCut = previousCut && currentCut;
-    }
-
-    for (size_t i = 0; i < cutDefs.size(); ++i) {
-        std::cout << cutDefs[i].varLabel << "\t";
-        for (size_t j = 0; j < sampleDefs.size(); ++j) {
-            std::cout << histogramCounts[i][j] << "\t";
+            anaPlot.DrawHistograms(fTree, previousCut, 1);
         }
-        std::cout << std::endl;
     }
-    
 
-    generateAndCompileTeXTable(cutDefs, sampleDefNames, histogramCounts, "output.tex", "Cut efficiencies");
+
+
+    generateAndCompileTeXTable(sampleDefs, anaPlots, 1, "output.tex", "Cut efficiencies");
 
 
 
@@ -221,7 +108,7 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     std::cout<<" BAD BACKGROUNDS QE:\n";
     std::cout<<previousCut<<std::endl;
     TH2D* h2_all = new TH2D("h2_all", "2D Histogram", 1000, 1, 1001, 1000, 1, 1001);
-    TCut debugCut = previousCut && ( TCut(sampleDefs[1].c_str())  );
+    TCut debugCut = previousCut && ( TCut(sampleDefs[1].GetVar())  );
     fTree->Draw("EventID:SubrunID>>h2_all", debugCut);
 
     // Get the number of bins in the histogram
@@ -236,7 +123,7 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
         }
     }
 
-    debugCut = previousCut && ( TCut(sampleDefs[2].c_str()) );
+    debugCut = previousCut && ( TCut(sampleDefs[2].GetVar()) );
     fTree->Draw("EventID:SubrunID>>h2_all", debugCut);
     std::cout<<" BAD BACKGROUNDS RES:\n";
     // Get the number of bins in the histogram
