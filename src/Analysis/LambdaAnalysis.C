@@ -8,82 +8,89 @@
 #include "CutEfficienciesDefinitions.C"
 #include "CutEfficienciesLATeXInterface.C"
 
+
+//--------- Signal and BG definitions
 std::vector<SampleDef> sampleDefs = {
-    {"IntNLambda>0 && IntMode==0", "Signal", true},
-    {"IntNLambda==0 && IntMode==0", "QE", false},
-    {"IntNLambda==0 && IntMode==1", "RES", false},
-    {"IntNLambda==0 && IntMode==2", "DIS", false},
-    {"IntNLambda==0 && (IntMode==3 || IntMode==10)", "COH and MEC", false}
+     {"IntNLambda>0 && IntMode==0 && abs(IntNuPDG!=12)", "Signal", true}
+    ,{"IntNLambda==0 && IntMode==0 && abs(IntNuPDG!=12)", "QE", false}
+    ,{"IntNLambda==0 && IntMode==1 && abs(IntNuPDG!=12)", "RES", false}
+    ,{"IntNLambda==0 && IntMode==2 && abs(IntNuPDG!=12)", "DIS", false}
+    ,{"IntNLambda==0 && (IntMode==3 || IntMode==10) && abs(IntNuPDG!=12)", "COH and MEC", false}
+    ,{"abs(IntNuPDG==12)", "NuE", false}
 };
 
-std::string fCutFRANSPANDORA = "0.15";
-std::string fCutFRANS = "0.15 ";
-std::string fCutNOrigins = "4";
-std::string fCutNOriginsM3 = "0";
-std::string fCutNShw = "1";
+
+//--------- Cut definitions
+double fCutMinNAngles = 1;
+double fCutFRANS = 0.15;
+double fCutNOrigins = 4;
+double fCutNOriginsM3 = 0;
+double fCutFRANSPANDORA = 0.2;
+double fCutNShw = 1;
+double fCutShwEnergy = 135;
 
 std::vector<PlotDef> cutDefs = {
-    {"", "TruthIsFiducial", "TruthIsFiducial>=0", 1, "Truth in FV",  "No \\ cut", CutType::kCenter, {0,2,2},  true},
-    {"", "TruthIsFiducial", "TruthIsFiducial==1", 1, "Truth in FV", "Truth \\ in \\ FV", CutType::kCenter, {0,2,2}, true},
-    {"", "RecoIsFiducial", "RecoIsFiducial==1", 1, "Reco in FV", "Reco \\ in \\ FV", CutType::kCenter, {0,2,2}, true},
+     {"TruthIsFiducial",  "0==0",            CutType::kNone,   0, {0,2,2}, true, "Truth in FV",  "No \\ cut"}
+    ,{"TruthIsFiducial",  "TruthIsFiducial", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
+    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
 
-    //{"", "FRANSScorePANDORA", "FRANSScorePANDORA>"+fCutFRANSPANDORA, 0.15, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA>"+fCutFRANSPANDORA, CutType::kRight,{-.5,.5,40}, true},
+    ,{"NShwTh100", "NShwTh100",       CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>100MeV)", "NShower(>100MeV)"}
+    ,{"NShwTh75", "NShwTh75",         CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>75MeV)", "NShower(>75MeV)"}
+    ,{"ShowerEnergy", "ShowerEnergy", CutType::kLeft, fCutShwEnergy, {0, 300, 15}, false, "Shower Energy [MeV]", "ShowerEnergy [MeV]"}
+    ,{"MainShowerEnergy", "0==0",     CutType::kLeft, 0, {0, 500, 100},  false, "MainShowerEnergy [MeV]", "MainShowerEnergy"}
+    ,{"MainShowerScore", "0==0",      CutType::kLeft, 0, {0, 0.55, 20 }, false, "MainShowerScore", "MainShowerScore"}
 
-    {"", "NShwTh100", "NShwTh100<="+fCutNShw, 1, "# showers (>100MeV)", "NShower(>100MeV)<="+fCutNShw, CutType::kLeft, {0, 6, 6}, false, true},
-    {"", "ShowerEnergy", "ShowerEnergy<=135", 135, "Shower Energy [MeV]", "ShowerEnergy<=135 \\ [MeV]", CutType::kLeft, {0, 300, 15}, false, true},
-    {"", "MainShowerEnergy", "0==0", 0, "MainShowerEnergy [MeV]", "", CutType::kLeft, {0, 500, 100}, false, true},
-    {"", "MainShowerScore", "0==0", 0, "MainShowerScore", "", CutType::kLeft, {0, 0.55, 20 }, false, true},
-
-
-    {"", "NOriginsMult1", "0==0",  1, "# origins mult 1",  "\\# \\ origins \\ mult \\ 1", CutType::kRight, {0, 6, 6}, false},
-    {"", "NOriginsMult2", "0==0", 1, "# origins mult 2",  "\\# \\ origins \\ mult \\ 2", CutType::kRight, {0, 6, 6}, false},
+    ,{"NOriginsMult1", "0==0", CutType::kNone, 0, {0, 6, 6}, false, "# origins mult 1",  "\\# \\ origins \\ mult \\ 1"}
+    ,{"NOriginsMult2", "0==0", CutType::kNone, 0, {0, 6, 6}, false, "# origins mult 2",  "\\# \\ origins \\ mult \\ 2"}
     
-    {"", "NOriginsPairOneTwo>0", "NOriginsPairOneTwo>0", 1, "# origins mult 1>0, # origins mult2>0", "\\# \\ origins \\ mult \\ 1 >0, \\# \\ origins \\ mult \\ 2 > 0", CutType::kCenter, {0,2,2}, true},
-    {"", "NAngles", "NAngles>0", 1, "# V", "\\# \\ V>0", CutType::kRight,{0,5,5}, true},
+    ,{"NOriginsPairOneTwo>0", "NOriginsPairOneTwo>0", CutType::kCenter, 1, {0,2,2}, true, "# origins mult 1>0, # origins mult2>0", "\\#\\ origins\\ mult \\ 1>0, \\# \\ origins \\ mult \\ 2>0"}
+    ,{"NAngles",               "NAngles",             CutType::kRight, fCutMinNAngles , {0,5,5}, true, "# V", "\\# \\ V" }
 
-    {"", "AngleGap", "0==0", 0, "Gap [cm]", "Gap \\ [cm]", CutType::kLeft,{0, 50, 100}, false, true},
-    {"", "AngleDecayContainedDiff", "0==0", 0, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle", CutType::kLeft, {0, 20, 40}, false, true},
-    {"", "AngleNHits", "0==0", 0, "Angle # hits", "Angle \\ \\# \\ hits", CutType::kRight,{0, 250, 25}, false, true},
+    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
 
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS,      {-.5,.5,40}, true, "V FRANS score",   "V \\ FRANS \\ score"}
+    ,{"NOriginsMultGT3", "NOriginsMultGT3", CutType::kLeft,  fCutNOriginsM3, {0, 5, 5}  , true, "# origins mult 3", "\\# \\ origins \\ mult \\ 3"}
+    ,{"NOrigins",        "NOrigins",        CutType::kLeft,  fCutNOrigins,   {0, 15, 15}, true, "# origins",        "\\#  \\ origins"}
     
-    {"", "AngleFRANSScore", "AngleFRANSScore>"+fCutFRANS, 0.15, "V FRANS score", "V \\ FRANS \\ score>"+fCutFRANS, CutType::kRight, {-.5,.5,40}, true, true},
-    {"", "NOriginsMultGT3", "NOriginsMultGT3<="+fCutNOriginsM3, 1, "# origins mult 3",  "\\# \\ origins \\ mult \\ 3<="+fCutNOriginsM3, CutType::kLeft, {0, 5, 5}, true},
-    {"", "NOrigins", "NOrigins<="+fCutNOrigins, 4, "# origins", "\\#  \\ origins  <="+fCutNOrigins, CutType::kLeft, {0,15,15}, true},
-    
-    {"", "FRANSScorePANDORA", "FRANSScorePANDORA>"+fCutFRANSPANDORA, 0.15, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA>"+fCutFRANSPANDORA, CutType::kRight,{-.5,.5,40}, true, true},
+    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
 
-    {"", "AngleGap", "0==0", 0, "Gap [cm]", "Gap \\ [cm]", CutType::kLeft,{0, 50, 100}, false, true},
-    {"", "AngleDecayContainedDiff", "0==0", 0, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle", CutType::kLeft, {0, 20, 40}, false, true},
-    {"", "AngleNHits", "0==0", 0, "Angle # hits", "Angle \\ \\# \\ hits", CutType::kRight,{0, 250, 50}, false, true},
+    ,{"AngleGap",                "0==0", CutType::kLeft,  20, {0, 30, 40}, false, "Gap [cm]", "Gap \\ [cm]"}
+    ,{"AngleDecayContainedDiff", "0==0", CutType::kLeft,  10, {0, 20, 40}, false, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
+    ,{"AngleNHits",              "0==0", CutType::kRight, 10, {0, 200, 40}, false, "Angle # hits", "Angle \\ \\# \\ hits"}
 
-    //{"", "NShwTh75", "NShwTh75<="+fCutNShw, "# showers (>75MeV)", "NShower(>75MeV)<="+fCutNShw, CutType::kRight,{0,6, 6}, true},
-    //{"", "ShowerEnergy", "ShowerEnergy<=135", "Shower energy [MeV]", "Shower \\ energy < 135 \\ [MeV]", CutType::kRight,{0,500,25}, true},
-    
-    //{"", "NShwTh75", "NShwTh75<="+fCutNShw, "# showers (>75MeV)", "NShower(>75MeV)<="+fCutNShw, CutType::kRight,{0,6, 6}, true},
+    ,{"NShwTh100", "NShwTh100",       CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>100MeV)", "NShower(>100MeV)"}
+    ,{"NShwTh75", "NShwTh75",         CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>75MeV)", "NShower(>75MeV)"}
+    ,{"ShowerEnergy", "ShowerEnergy", CutType::kLeft, fCutShwEnergy, {0, 300, 15}, false, "Shower Energy [MeV]", "ShowerEnergy [MeV]"}
+    ,{"MainShowerEnergy", "0==0",     CutType::kLeft, 0, {0, 500, 100},  false, "MainShowerEnergy [MeV]", "MainShowerEnergy"}
+    ,{"MainShowerScore", "0==0",      CutType::kLeft, 0, {0, 0.55, 20 }, false, "MainShowerScore", "MainShowerScore"}
                                                     
 }; 
 
 
-
-
-
+//---------  Main function
 void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
 
+    //---------  LATeX output file
+    std::string fOutputFileName = "CutEfficiencies";
+
     //---------  Remove all *.pdf with gSystem
-    gSystem->Exec("rm *.pdf");
-    gSystem->Exec("rm OutputPlots.root");
+    gSystem->Exec("rm -rf OutputPlots");
+    gSystem->Exec("mkdir OutputPlots");
+
+    //Batch mode
+    batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
 
     //--------- Input TTree
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
-    fFile->ls();
     TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
+    // Read TreeHeader 
+    TTree *fTreeHeader = (TTree *)fFile->Get( (fTreeDirName+"TreeHeader").c_str() );
 
+
+    //--------- Loop over the cuts
     std::vector<AnaPlot> anaPlots;
-
-    // Cut defitions
     TCut previousCut("");
-
     for (size_t i = 0; i < cutDefs.size(); ++i) {
 
         TCut currentCut = TCut(cutDefs[i].GetCut());
@@ -99,43 +106,13 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     }
 
 
-
-    generateAndCompileTeXTable(sampleDefs, anaPlots, 1, "output.tex", "Cut efficiencies");
-
-
-
-    // Create a 2D histogram using TTree::Draw
-    std::cout<<" BAD BACKGROUNDS QE:\n";
-    std::cout<<previousCut<<std::endl;
-    TH2D* h2_all = new TH2D("h2_all", "2D Histogram", 1000, 1, 1001, 1000, 1, 1001);
-    TCut debugCut = previousCut && ( TCut(sampleDefs[1].GetVar())  );
-    fTree->Draw("EventID:SubrunID>>h2_all", debugCut);
-
-    // Get the number of bins in the histogram
-    int numBinsX = h2_all->GetNbinsX();
-    int numBinsY = h2_all->GetNbinsY();
-    for (int i = 1; i <= numBinsX; i++) {
-        for (int j = 1; j <= numBinsY; j++) {
-            double binValue = h2_all->GetBinContent(i, j);
-            if(binValue>0){
-                std::cout<<"Bin: "<<i<<", "<<j<<", value: "<<binValue<<std::endl;
-            }
-        }
-    }
-
-    debugCut = previousCut && ( TCut(sampleDefs[2].GetVar()) );
-    fTree->Draw("EventID:SubrunID>>h2_all", debugCut);
-    std::cout<<" BAD BACKGROUNDS RES:\n";
-    // Get the number of bins in the histogram
-    for (int i = 1; i <= numBinsX; i++) {
-        for (int j = 1; j <= numBinsY; j++) {
-            double binValue = h2_all->GetBinContent(i, j);
-            if(binValue>0){
-                std::cout<<"Bin: "<<i<<", "<<j<<", value: "<<binValue<<std::endl;
-            }
-        }
-    }
+    //--------- Create the LaTeX table
+    GenerateAndCompileTeXTable(sampleDefs, anaPlots, 1, fOutputFileName, "Cut efficiencies");
+   
+    //--------- Output hand scans
+    CreateHandScanList(fTree, fTreeHeader, previousCut, sampleDefs);
 
     return;
 }
+
 

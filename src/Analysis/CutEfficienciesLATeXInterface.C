@@ -1,4 +1,4 @@
-void generateAndCompileTeXTable(
+void GenerateAndCompileTeXTable(
     const std::vector<SampleDef>& sampleDefs,
     const std::vector<AnaPlot>& anaPlots,
     size_t denominatorIndex,
@@ -6,7 +6,7 @@ void generateAndCompileTeXTable(
     const std::string& tableCaption
 ) {
     // Open a file stream for writing the .tex file
-    std::ofstream texFile(fileName);
+    std::ofstream texFile(fileName+".tex");
 
     // Check if the file is open
     if (!texFile.is_open()) {
@@ -89,6 +89,10 @@ void generateAndCompileTeXTable(
     if (compileResult != 0) {
         std::cerr << "Failed to compile the .tex file." << std::endl;
     }
+
+    gSystem->Exec( ("mv "+fileName+".pdf OutputPlots").c_str() );
+    gSystem->Exec( ("rm "+fileName+".{aux,log,tex,pdf}").c_str() );
+
 }
 
 
