@@ -41,28 +41,7 @@ void TPCLinesDisplay::SetStyle(){
     gStyle->SetLabelSize(0.05, "XYZ");
 
     gStyle->SetTitleYOffset (1.4);
-    
-    //AXIS OFFSETS AND SIZES
-    /*gStyle->SetTitleXOffset (1.);
-    gStyle->SetTitleXSize (0.05);
-    gStyle->SetTitleYOffset (1.);
-    gStyle->SetTitleYSize (0.05);*/
 
-}
-
-void TPCLinesDisplay::DrawVertex(SVertex vertex, TLegend * leg, std::string label, int color, int marker, double alpha){
-    TGraph *pointGraph = new TGraph();
-    pointGraph->SetPoint(0, vertex.Point().X(), vertex.Point().Y()); // Set the point's coordinates
-    // Set marker style and size for the point
-    pointGraph->SetMarkerStyle(marker);
-    pointGraph->SetMarkerSize(2.);
-    pointGraph->SetMarkerColorAlpha(color, alpha);
-
-    if(label!="")
-        leg->AddEntry(pointGraph, label.c_str(), "p");
-
-    // Draw the point
-    pointGraph->Draw("P");
 }
 
 TH2F* TPCLinesDisplay::GetFrame(std::vector<SHit> hitsV, std::string label){
@@ -93,7 +72,7 @@ void TPCLinesDisplay::DrawLine(LineEquation line, double xmin, double xmax, TLeg
     horizontalLine->SetLineColor(color); // Set line color
     horizontalLine->SetLineStyle(style); // Set line color
     horizontalLine->SetLineWidth(2);     // Set line width
-    horizontalLine->Draw();
+    horizontalLine->Draw("same");
 
     if(label!="")
         leg->AddEntry(horizontalLine, label.c_str(), "l");
@@ -123,6 +102,23 @@ void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std
     return;
 }
 
+void TPCLinesDisplay::DrawVertex(SVertex vertex, TLegend * leg, std::string label, int color, int marker, double alpha){
+    TGraph *pointGraph = new TGraph();
+    pointGraph->SetPoint(0, vertex.Point().X(), vertex.Point().Y()); // Set the point's coordinates
+    
+    // Set marker style and size for the point
+    pointGraph->SetMarkerStyle(marker);
+    pointGraph->SetMarkerSize(2.);
+    //pointGraph->SetMarkerColorAlpha(color, alpha);
+    pointGraph->SetMarkerColor(color);
+
+    if(label!="")
+        leg->AddEntry(pointGraph, label.c_str(), "p");
+
+    // Draw the point
+    pointGraph->Draw("P same");
+}
+
 void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend * leg, std::string label, int colorP, int color, double alpha){ 
     // Define the triangle's vertices
     Double_t x[3] = {tri.GetMainVertex().X(), tri.GetVertexB().X(), tri.GetVertexC().X()};
@@ -143,10 +139,10 @@ void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend * leg, std::string lab
         leg->AddEntry(pointGraph, label.c_str(), "p");
 
     // Draw the point
-    pointGraph->Draw("P");
+    pointGraph->Draw("P same");
 
     // Draw the triangle
-    triangle->Draw("F");
+    triangle->Draw("F same");
 }
 
 void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend * leg, std::string label, int color, double size, int style){
@@ -159,12 +155,16 @@ void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend * leg, s
         }
 
         TGraph *g = new TGraph(x.size(),&x[0],&y[0]); 
-        g->SetMarkerColorAlpha(color, 0.5);
+        std::cout<<"Drawing cluster color: "<<color<<" ID"<<cluster.GetId()<<std::endl;
+        //g->SetMarkerColorAlpha(color, 0.5);
+        g->SetMarkerColor(color);
         g->SetMarkerStyle(style);;
         g->SetMarkerSize(size);
         g->SetLineWidth(20);
         //g->SetLineColorAlpha(kGray, errorAlpha);
-        g->Draw("p");
+        g->Draw("p same");
+
+
 
         DrawLine(cluster.GetTrackEquation(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kSolid);
         DrawLine(cluster.GetTrackEquationStart(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
@@ -251,8 +251,8 @@ void TPCLinesDisplay::Show(
     }
 
 
-    // origins
-    for(size_t oIx=0; oIx<origins.size(); oIx++){
+
+    for(size_t oIx=0; oIx<1; oIx++){
         std::cout<<"Drawing origin "<<oIx<<std::endl;
         std::string originLabel = "#omicron_{"+std::to_string(oIx)+"} (m="+std::to_string(origins[oIx].Multiplicity())+"),";
         for(SLinearCluster & trk:origins[oIx].GetTracks()){
@@ -277,11 +277,11 @@ void TPCLinesDisplay::Show(
     pad2->cd();
     legend->SetBorderSize(0);
     legend->SetTextSize(fLegendFontSize); 
-    legend->Draw();
+    legend->Draw("same");
 
-    canvas->cd();    
+    canvas->cd();
     canvas->Update();
-    canvas->WaitPrimitive(); 
+    canvas->WaitPrimitive();
     
     
 

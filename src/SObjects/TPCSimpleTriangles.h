@@ -18,7 +18,7 @@
 #include "TPCSimpleLines.h"
 #include "TPCSimpleClusters.h"
 #include "TPCSimpleHits.h"
-
+#include "TPCLinesHitDistanceUtils.h"
 
 
 class STriangle {
@@ -108,11 +108,17 @@ class STriangle {
             return std::hypot( fVertexB.X() - fVertexC.X(), fVertexB.Y() - fVertexC.Y() );
         }
         
+        int GetNTriangleHits();
+
+        double GetDecayAngleDifference();
+
         int GetNWires();
 
         double ComputeCoveredArea(std::vector<SHit> triangleHits, double widthTol);
 
         double GetTriangleMAE();
+
+        double GetGap();
         
 };
 
