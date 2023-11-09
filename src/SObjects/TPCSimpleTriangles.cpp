@@ -160,6 +160,92 @@ double fractionOfLineInTriangle(const std::vector<Point>& triangle, const Line& 
     return totalLength / line.yWidth;
 }
 
+
+int STriangle::GetNTriangleHits(){
+    return fTrack1.NHits() + fTrack2.NHits();
+}
+
+double GetAngle360(double x, double y) {
+    if(x == 0){
+        if(y>0) return 90;
+        else return 270;
+    }
+    else{
+        double a = std::atan(std::abs(y / x)) * 180.0 / M_PI;
+
+        if (x > 0 && y < 0) { // quadrant 4
+            a = 360 - a;
+        } else if (x < 0 && y < 0) { // quadrant 3
+            a = 180 + a;
+        } else if (x < 0 && y > 0) { // quadrant 2
+            a = 180 - a;
+        }
+        return a;
+    }   
+}
+
+double STriangle::GetDecayAngleDifference(){
+    
+    SPoint p1(fMainTrack.GetMinX(), fMainTrack.GetYatMinX());
+    double d1 = TPCLinesDistanceUtils::GetHitDistance(p1, fMainVertex);
+    SPoint p2(fMainTrack.GetMaxX(), fMainTrack.GetYatMaxX());
+    double d2 = TPCLinesDistanceUtils::GetHitDistance(p2, fMainVertex);
+    SPoint mainTrackVertex = (d1 < d2) ? p1 : p2;
+
+    double juntionDirection[] = {
+        fMainVertex.X() - mainTrackVertex.X(),
+        fMainVertex.Y() - mainTrackVertex.Y()
+    };
+
+    double VDir1[] = {
+        fVertexB.X() - fMainVertex.X(),
+        fVertexB.Y() - fMainVertex.Y()
+    };
+
+    double VDir2[] = {
+        fVertexC.X() - fMainVertex.X(),
+        fVertexC.Y() - fMainVertex.Y()
+    };
+
+    double juntionDirectionAngle = GetAngle360(juntionDirection[0], juntionDirection[1]);
+    double VDir1Angle = GetAngle360(VDir1[0], VDir1[1]);
+    double VDir2Angle = GetAngle360(VDir2[0], VDir2[1]);
+
+    double minAngle = std::min(VDir1Angle, VDir2Angle);
+    double maxAngle = std::max(VDir1Angle, VDir2Angle);
+
+    bool junctionContained = false;
+    
+    if (maxAngle - minAngle < 180) {
+        junctionContained = (minAngle<=juntionDirectionAngle) && (juntionDirectionAngle<=maxAngle);
+    }
+    else {
+        junctionContained = (juntionDirectionAngle<=minAngle) || (juntionDirectionAngle>=maxAngle);
+    }
+
+    if(junctionContained) return 0;
+    else{
+        double angle1 = std::min(360 - std::abs(juntionDirectionAngle - VDir1Angle), std::abs(juntionDirectionAngle - VDir1Angle));
+        double angle2 = std::min(360 - std::abs(juntionDirectionAngle - VDir2Angle), std::abs(juntionDirectionAngle - VDir2Angle));
+        return std::min(angle1, angle2);
+    }
+
+}
+
+
+double STriangle::GetGap(){
+
+    SPoint p1(fMainTrack.GetMinX(), fMainTrack.GetYatMinX());
+    double d1 = TPCLinesDistanceUtils::GetHitDistance(p1, fMainVertex);
+    SPoint p2(fMainTrack.GetMaxX(), fMainTrack.GetYatMaxX());
+    double d2 = TPCLinesDistanceUtils::GetHitDistance(p2, fMainVertex);
+    SPoint mainTrackVertex = (d1 < d2) ? p1 : p2;
+
+    return std::hypot( 0.3*(mainTrackVertex.X()-fMainVertex.X()), 0.075*(mainTrackVertex.Y()-fMainVertex.Y()) );
+
+}
+
+
 int STriangle::GetNWires(){
     int minX = std::min(fTrack1.GetMinX(), fTrack2.GetMinX());
     int maxX = std::max(fTrack1.GetMaxX(), fTrack2.GetMaxX());

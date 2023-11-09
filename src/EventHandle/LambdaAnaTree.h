@@ -37,11 +37,14 @@ public:
     int fEventID;
     int fSubrunID;
     int fRunID;
+    std::string fInputFileName;
     int fSliceID;
     
     // True variables
     int fIntMode;
+    int fIntType;
     int fIntCCNC;
+    int fIntNuPDG;
     int fIntNProtons;
     int fIntNNeutrons;
     int fIntNPi0;
@@ -65,6 +68,15 @@ public:
 
     // FRANS PANDORA information
     double fFRANSScorePANDORA;
+    double fShowerEnergy;
+    int fNShowers;
+    int fNShwTh75;
+    int fNShwTh100;
+    double fMainShowerEnergy;
+    double fMainShowerScore;
+    std::vector<double> fShowerEnergyVect;
+    std::vector<double> fShowerScoreVect;
+
 
     // Reco origins information
     int fNOrigins;
@@ -76,8 +88,10 @@ public:
     // Angle information
     int fNAngles;
     double fAngleFRANSScore;
+    double fAngleGap;
     int fAngleNHits;
     int fAngleMainTrackNHits;
+    double fAngleDecayContainedDiff;
     bool fAngleLongestIsMain;
 
 

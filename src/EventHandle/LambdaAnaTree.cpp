@@ -35,11 +35,14 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("EventID", &fEventID);
     fTree->Branch("SubrunID", &fSubrunID);
     fTree->Branch("RunID", &fRunID);
+    fTree->Branch("InputFileName", &fInputFileName);
     fTree->Branch("SliceID", &fSliceID);
 
     // Set branch addresses for true variables
     fTree->Branch("IntMode", &fIntMode);
+    fTree->Branch("IntType", &fIntType);
     fTree->Branch("IntCCNC", &fIntCCNC);
+    fTree->Branch("IntNuPDG", &fIntNuPDG);
     fTree->Branch("IntNProtons", &fIntNProtons);
     fTree->Branch("IntNNeutrons", &fIntNNeutrons);
     fTree->Branch("IntNPi0", &fIntNPi0);
@@ -67,6 +70,14 @@ void LambdaAnaTree::InitializeTree(){
 
     // Set branch addresses for FRANS PANDORA information
     fTree->Branch("FRANSScorePANDORA", &fFRANSScorePANDORA);
+    fTree->Branch("ShowerEnergy", &fShowerEnergy);
+    fTree->Branch("NShowers", &fNShowers);
+    fTree->Branch("NShwTh75", &fNShwTh75);
+    fTree->Branch("NShwTh100", &fNShwTh100);
+    fTree->Branch("MainShowerEnergy", &fMainShowerEnergy);
+    fTree->Branch("MainShowerScore", &fMainShowerScore);
+    fTree->Branch("ShowerEnergyVect", &fShowerEnergyVect);
+    fTree->Branch("ShowerScoreVect", &fShowerScoreVect);
     
     // Set branch addresses for FRANS PANDORA information
     fTree->Branch("NOrigins", &fNOrigins);
@@ -78,9 +89,11 @@ void LambdaAnaTree::InitializeTree(){
     // Set branch addresses for angle information
     fTree->Branch("NAngles", &fNAngles);
     fTree->Branch("AngleFRANSScore", &fAngleFRANSScore);
+    fTree->Branch("AngleGap", &fAngleGap);
     fTree->Branch("AngleNHits", &fAngleNHits);
     fTree->Branch("AngleMainTrackNHits", &fAngleMainTrackNHits);
     fTree->Branch("AngleLongestIsMain", &fAngleLongestIsMain);
+    fTree->Branch("AngleDecayContainedDiff", &fAngleDecayContainedDiff);
 
 }
 
@@ -88,10 +101,13 @@ void LambdaAnaTree::ResetVars(){
     fEventID = -999;
     fSubrunID = -999;
     fRunID = -999;
+    fInputFileName = "";
     fSliceID = -999;
 
     fIntMode = -999;
+    fIntType = -999;
     fIntCCNC = -999;
+    fIntNuPDG = -999;
     fIntNProtons = -999;
     fIntNNeutrons = -999;
     fIntNPi0 = -999;
@@ -116,6 +132,13 @@ void LambdaAnaTree::ResetVars(){
     fRecoIsFiducial = false;
 
     fFRANSScorePANDORA = -999;
+    fShowerEnergy = -999;
+    fNShwTh75 = -999;
+    fNShwTh100 = -999;
+    fMainShowerEnergy = -999;
+    fMainShowerScore = -999;
+    fShowerEnergyVect.clear();
+    fShowerScoreVect.clear();
 
     fNOrigins = -999;
     fNOriginsMult1 = -999;
@@ -125,8 +148,10 @@ void LambdaAnaTree::ResetVars(){
 
     fNAngles = -999;
     fAngleFRANSScore = -999;
+    fAngleGap = -999;
     fAngleNHits = -999;
     fAngleMainTrackNHits = -999;
     fAngleLongestIsMain = false;
+    fAngleDecayContainedDiff = -999;
 
 }
