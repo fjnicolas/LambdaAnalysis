@@ -11,12 +11,12 @@
 
 //--------- Signal and BG definitions
 std::vector<SampleDef> sampleDefs = {
-     {"IntNLambda>0 && IntMode==0 && abs(IntNuPDG!=12)", "Signal", true}
-    ,{"IntNLambda==0 && IntMode==0 && abs(IntNuPDG!=12)", "QE", false}
-    ,{"IntNLambda==0 && IntMode==1 && abs(IntNuPDG!=12)", "RES", false}
-    ,{"IntNLambda==0 && IntMode==2 && abs(IntNuPDG!=12)", "DIS", false}
-    ,{"IntNLambda==0 && (IntMode==3 || IntMode==10) && abs(IntNuPDG!=12)", "COH and MEC", false}
-    ,{"abs(IntNuPDG==12)", "NuE", false}
+     {"IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12", "Signal", true}
+    ,{"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
+    ,{"IntMode==1 && abs(IntNuPDG)!=12", "RES", false}
+    ,{"IntMode==2 && abs(IntNuPDG)!=12", "DIS", false}
+    ,{"(IntMode==3 || IntMode==10) && abs(IntNuPDG)!=12", "COH and MEC", false}
+    ,{"abs(IntNuPDG)==12", "NuE", false}
 };
 
 
@@ -34,12 +34,6 @@ std::vector<PlotDef> cutDefs = {
     ,{"TruthIsFiducial",  "TruthIsFiducial", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
 
-    ,{"NShwTh100", "NShwTh100",       CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>100MeV)", "NShower(>100MeV)"}
-    ,{"NShwTh75", "NShwTh75",         CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>75MeV)", "NShower(>75MeV)"}
-    ,{"ShowerEnergy", "ShowerEnergy", CutType::kLeft, fCutShwEnergy, {0, 300, 15}, false, "Shower Energy [MeV]", "ShowerEnergy [MeV]"}
-    ,{"MainShowerEnergy", "0==0",     CutType::kLeft, 0, {0, 500, 100},  false, "MainShowerEnergy [MeV]", "MainShowerEnergy"}
-    ,{"MainShowerScore", "0==0",      CutType::kLeft, 0, {0, 0.55, 20 }, false, "MainShowerScore", "MainShowerScore"}
-
     ,{"NOriginsMult1", "0==0", CutType::kNone, 0, {0, 6, 6}, false, "# origins mult 1",  "\\# \\ origins \\ mult \\ 1"}
     ,{"NOriginsMult2", "0==0", CutType::kNone, 0, {0, 6, 6}, false, "# origins mult 2",  "\\# \\ origins \\ mult \\ 2"}
     
@@ -52,6 +46,10 @@ std::vector<PlotDef> cutDefs = {
     ,{"NOriginsMultGT3", "NOriginsMultGT3", CutType::kLeft,  fCutNOriginsM3, {0, 5, 5}  , true, "# origins mult 3", "\\# \\ origins \\ mult \\ 3"}
     ,{"NOrigins",        "NOrigins",        CutType::kLeft,  fCutNOrigins,   {0, 15, 15}, true, "# origins",        "\\#  \\ origins"}
     
+    ,{"AngleGap",                "0==0", CutType::kLeft,  20, {0, 30, 40}, false, "Gap [cm]", "Gap \\ [cm]"}
+    ,{"AngleDecayContainedDiff", "0==0", CutType::kLeft,  10, {0, 20, 40}, false, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
+    ,{"AngleNHits",              "0==0", CutType::kRight, 10, {0, 200, 40}, false, "Angle # hits", "Angle \\ \\# \\ hits"}
+
     ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
 
     ,{"AngleGap",                "0==0", CutType::kLeft,  20, {0, 30, 40}, false, "Gap [cm]", "Gap \\ [cm]"}

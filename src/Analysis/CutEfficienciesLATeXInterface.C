@@ -96,3 +96,69 @@ void GenerateAndCompileTeXTable(
 }
 
 
+
+void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<SampleDef> sampleDefs){
+
+    //--------- Loop over the TreeHeader
+    unsigned int fSubRunId;
+    fTreeHeader->SetBranchAddress("SubRunID", &fSubRunId);
+    std::string *fLArInputFileName = new std::string;
+    fTreeHeader->SetBranchAddress("InputFileName", &fLArInputFileName);
+    // Create map of subrun filename
+    std::map<int, std::string> subrunFilenameMap;
+    for(size_t i=0; i<fTreeHeader->GetEntries(); ++i){
+        fTreeHeader->GetEntry(i);
+        
+        // check the string includes the substring "Inclusive"
+        if(fLArInputFileName->find("Inclusive") == std::string::npos){
+            continue;
+        }
+
+        subrunFilenameMap[fSubRunId] = *fLArInputFileName;
+    }
+
+    // Output 
+    std::ofstream handScanFilenames;
+    std::ofstream handScanEventIds;
+    handScanFilenames.open("OutputPlots/handScanFilenames.txt");
+    handScanEventIds.open("OutputPlots/handScanEventIds.txt");
+
+    // loop over signal types
+    for(size_t k=0; k<sampleDefs.size(); k++){
+        // Skip if it is the signal
+        if(sampleDefs[k].IsSignal()) continue;
+        
+        std::cout<<" Sample: "<<sampleDefs[k].GetLabel()<<std::endl;
+        
+        // Create the histogram
+        TH2D* h2_all = new TH2D("h2_all", "2D Histogram", 1000, 1, 1001, 1000, 1, 1001);
+        
+        // Create the cut
+        TCut debugCut = cut && ( TCut(sampleDefs[k].GetVar())  );
+        
+        // Draw the histogram
+        // Y axis is event ID
+        // X axis is subrun ID
+        fTree->Draw("EventID:SubrunID>>h2_all", debugCut);
+        // Get the number of bins in the histogram
+        int numBinsX = h2_all->GetNbinsX();
+        int numBinsY = h2_all->GetNbinsY();
+        for (int sr = 1; sr <= numBinsX; sr++) {
+            for (int e = 1; e <= numBinsY; e++) {
+                double binValue = h2_all->GetBinContent(sr, e);
+                if(binValue>0){
+                    std::cout<<"SubRunID: "<<sr<<" EventID: "<<e<<" BinValue: "<<binValue<<std::endl;
+                    std::cout<<"Filename: "<<subrunFilenameMap[sr]<<std::endl;
+                    handScanFilenames<<subrunFilenameMap[sr]<<std::endl;
+                    handScanEventIds<<"1:"<<sr<<":"<<e<<std::endl;
+                }
+            }
+        }        
+    }
+
+    handScanFilenames.close();
+    handScanEventIds.close();
+
+    return;
+
+}

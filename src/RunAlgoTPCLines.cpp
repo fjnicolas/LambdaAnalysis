@@ -119,6 +119,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             
             nEvents++;
             std::cout << "\n\n ************** Analyzing: " << ev;
+            std::cout << "   Interaction mode: "<<treeReader.intMode<<" NLambda: "<<treeReader.intNLambda<<std::endl;
             
             // True vertex
             std::vector<double> VertexXYZ = {treeReader.nuvX, treeReader.nuvY, treeReader.nuvZ};
@@ -273,6 +274,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
             std::cout<<_EfficiencyCalculator;
 
+            anaTree.ResetVars();
             anaTree.fEventID = treeReader.eventID;
             anaTree.fSubrunID = treeReader.subrunID;
             anaTree.fRunID = treeReader.runID;
@@ -294,7 +296,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             anaTree.fNAngles = recoEvent.GetNAngles(); 
             anaTree.fAngleFRANSScore = bestFRANSScore;
 
-            anaTree.FillTree();
+            
+            //anaTree.FillTree();
 
         }
     }
