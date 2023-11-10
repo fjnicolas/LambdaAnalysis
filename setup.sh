@@ -18,6 +18,7 @@ echo "Build directory: $LAMBDAANA_BUILD"
 
 alias runtpclines='$LAMBDAANA_BUILD/src/RunAlgoTPCLines'
 alias runfrans='$LAMBDAANA_BUILD/src/RunAlgoFRANS'
+alias runHandScan='sh $LAMBDAANA_DIR/scripts/runHandScanEvents.sh'
 #alias runLAMBDAANA='sh $LAMBDAANA_DIR/runLAMBDAANA.sh'
 #alias runFRANS='sh $LAMBDAANA_DIR/runFRANS.sh'
 
