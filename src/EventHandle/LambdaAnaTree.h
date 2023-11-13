@@ -60,6 +60,12 @@ public:
     double fNuvE, fNuvT, fNuvX, fNuvY, fNuvZ;
     bool fTruthIsFiducial;
 
+    // Lambda decay true information
+    double fGap;
+    double fLambdaKE;
+    double fProtonKE;
+    double fPionKE;
+
     // Reco Vertex information
     double fRecnuvX;
     double fRecnuvY;

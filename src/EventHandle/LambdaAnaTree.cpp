@@ -62,6 +62,12 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("NuvZ", &fNuvZ);
     fTree->Branch("TruthIsFiducial", &fTruthIsFiducial);
 
+    // Set branch addresses for lambda true information
+    fTree->Branch("Gap", &fGap);
+    fTree->Branch("LambdaKE", &fLambdaKE);
+    fTree->Branch("ProtonKE", &fProtonKE);
+    fTree->Branch("PionKE", &fPionKE);
+
     // Set branch addresses for reco vertex information
     fTree->Branch("RecnuvX", &fRecnuvX);
     fTree->Branch("RecnuvY", &fRecnuvY);
@@ -132,6 +138,11 @@ void LambdaAnaTree::ResetVars(){
     fNuvY = -999;
     fNuvZ = -999;
     fTruthIsFiducial = false;
+
+    fGap = -999;
+    fLambdaKE = -999;
+    fProtonKE = -999;
+    fPionKE = -999;
 
     fRecnuvX = -999;
     fRecnuvY = -999;
