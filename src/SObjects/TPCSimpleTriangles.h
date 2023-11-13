@@ -108,7 +108,16 @@ class STriangle {
             return std::hypot( fVertexB.X() - fVertexC.X(), fVertexB.Y() - fVertexC.Y() );
         }
         
-        int GetNTriangleHits();
+        // Get NHits functions
+        int GetNHitsTriangle();
+        int GetNHitsTrack1();
+        int GetNHitsTrack2();
+        int GetNHitsMainTrack();
+
+        // Get Length functions
+        double GetLengthTrack1();
+        double GetLengthTrack2();
+        double GetLengthMainTrack();
 
         double GetDecayAngleDifference();
 

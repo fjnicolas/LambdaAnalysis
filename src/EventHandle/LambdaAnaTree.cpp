@@ -91,9 +91,16 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("AngleFRANSScore", &fAngleFRANSScore);
     fTree->Branch("AngleGap", &fAngleGap);
     fTree->Branch("AngleNHits", &fAngleNHits);
-    fTree->Branch("AngleMainTrackNHits", &fAngleMainTrackNHits);
+    fTree->Branch("AngleNHitsTrack1", &fAngleNHitsTrack1);
+    fTree->Branch("AngleNHitsTrack2", &fAngleNHitsTrack2);
+    fTree->Branch("AngleNHitsMainTrack", &fAngleNHitsMainTrack);
+    fTree->Branch("AngleLengthTrack1", &fAngleLengthTrack1);
+    fTree->Branch("AngleLengthTrack2", &fAngleLengthTrack2);
+    fTree->Branch("AngleLengthMainTrack", &fAngleLengthMainTrack);
     fTree->Branch("AngleLongestIsMain", &fAngleLongestIsMain);
     fTree->Branch("AngleDecayContainedDiff", &fAngleDecayContainedDiff);
+    fTree->Branch("NUnassociatedHits", &fNUnassociatedHits);
+
 
 }
 
@@ -150,8 +157,14 @@ void LambdaAnaTree::ResetVars(){
     fAngleFRANSScore = -999;
     fAngleGap = -999;
     fAngleNHits = -999;
-    fAngleMainTrackNHits = -999;
+    fAngleNHitsTrack1 = -999;
+    fAngleNHitsTrack2 = -999;
+    fAngleNHitsMainTrack = -999;
+    fAngleLengthTrack1 = -999;
+    fAngleLengthTrack2 = -999;
+    fAngleLengthMainTrack = -999;
     fAngleLongestIsMain = false;
     fAngleDecayContainedDiff = -999;
+    fNUnassociatedHits = -999;
 
 }

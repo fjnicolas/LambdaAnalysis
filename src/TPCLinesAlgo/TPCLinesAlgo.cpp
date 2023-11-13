@@ -80,14 +80,6 @@ bool TPCLinesAlgo::SetHitList(int view,
                             std::vector<int>& vertex,
                             std::vector<int>& vertexTrue,
                             std::vector<SHit> hits)
-                            /*std::vector<int> *_X,
-                            std::vector<double> *_Y,
-                            std::vector<double> *_Int,
-                            std::vector<double> *_Wi,
-                            std::vector<double> *_ST,
-                            std::vector<double> *_ET,
-                            std::vector<int> *_View,
-                            std::vector<double> *_Chi2)*/
 {   
     // reset the class variables
     fHitList.clear();
@@ -119,12 +111,6 @@ bool TPCLinesAlgo::SetHitList(int view,
             
             if (d < fTPCLinesPset.MaxRadius) {
                 fHitList.push_back(hits[i]);
-                /*if(hits[i].Width()>3.5){
-                    SHit newHit1(hits.size()+i, hits[i].X(), hits[i].Y()+hits[i].Width(), hits[i].Width()/2, hits[i].StartT(), hits[i].EndT(), hits[i].Integral(), hits[i].Chi2());
-                    SHit newHit2(2*hits.size()+i, hits[i].X(), hits[i].Y()-hits[i].Width(), hits[i].Width()/2, hits[i].StartT(), hits[i].EndT(), hits[i].Integral(), hits[i].Chi2());
-                    fHitList.push_back(newHit1);
-                    fHitList.push_back(newHit2);
-                }*/
             }
         }
 
@@ -177,6 +163,12 @@ bool TPCLinesAlgo::SetHitList(int view,
     return false;
 }
 
+
+//----------------------------------------------------------------------
+// Get the number of input hits
+int TPCLinesAlgo::GetNInputHits(){
+    return fNTotalHits;
+}
 
 //----------------------------------------------------------------------
 // Function to get the average hit density
@@ -424,19 +416,11 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     }
     
     
-    //fDisplay.Show(eventLabel+"DEBUG1", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
     // Slope track merger
     // sort by minX
     std::sort(finalLinearClusterV.begin(), finalLinearClusterV.end(), [&](SLinearCluster& l1, SLinearCluster& l2) {return l1.GetMinX() < l2.GetMinX();} );    
     finalLinearClusterV = TPCLinesDirectionUtils::SlopeTrackMerger(finalLinearClusterV, 2, 15, fTPCLinesPset.Verbose); 
-    //fDisplay.Show(eventLabel+"DEBUG2", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
 
-    // Isolated hit merger
-    /*std::vector<SHit> remainingHits = hitListForHough;
-    remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
-    //fDisplay.Show(eventLabel+"_BeforeIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);
-    finalLinearClusterV = MergeIsolatedHits(finalLinearClusterV, remainingHits, 10);
-    //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, finalLinearClusterV);*/
     // Characterize the tracks
     for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
         finalLinearClusterV[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
@@ -520,9 +504,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         // Isolated hit merger
         std::vector<SHit> remainingHits = hitListForHough;
         remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
-        //fDisplay.Show(eventLabel+"_BeforeIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, NewTrackList);
         NewTrackList = MergeIsolatedHits(NewTrackList, remainingHits, 10);
-        //fDisplay.Show(eventLabel+"_AfterIsolatedMerger_TPCLines_", fHitList, LineEquation(0, 0), {}, NewTrackList);
         // Characterize the tracks
         for(size_t ix = 0; ix<NewTrackList.size(); ix++){
             NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
@@ -551,11 +533,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             std::cout<<ori;
         }
 
-    }
-
-
-
-    
+    }    
     
     double hitDensity = GetAverageHitDensity();
     std::cout<<"Hit density: "<<hitDensity<<std::endl;

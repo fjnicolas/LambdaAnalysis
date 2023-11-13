@@ -66,7 +66,7 @@ public:
     double fRecnuvZ;
     bool fRecoIsFiducial;
 
-    // FRANS PANDORA information
+    // PANDORA information
     double fFRANSScorePANDORA;
     double fShowerEnergy;
     int fNShowers;
@@ -90,9 +90,15 @@ public:
     double fAngleFRANSScore;
     double fAngleGap;
     int fAngleNHits;
-    int fAngleMainTrackNHits;
+    int fAngleNHitsTrack1;
+    int fAngleNHitsTrack2;
+    int fAngleNHitsMainTrack;
+    double fAngleLengthTrack1;
+    double fAngleLengthTrack2;
+    double fAngleLengthMainTrack;
     double fAngleDecayContainedDiff;
     bool fAngleLongestIsMain;
+    int fNUnassociatedHits;
 
 
     void FillTree() { fTree->Fill(); }

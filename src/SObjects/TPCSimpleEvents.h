@@ -30,9 +30,7 @@ class SOrigin {
         int fMultiplicity;
         int fNHits;
         bool fEdgeOrigin;
-        
-        
-        
+              
     public:
         SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge, double yError);
         
@@ -70,7 +68,6 @@ class SEvent {
         std::vector<SOrigin> fAssociatedOrigins;
         double fHitDensity;
     
-        
     public:
         SEvent(std::vector<SLinearCluster> tracks={}, std::vector<SOrigin> origins={}, std::vector<STriangle> angles = {}, std::vector<SOrigin> associatedOrigins = {}, double hitDensity=0);
 
@@ -86,6 +83,8 @@ class SEvent {
         std::vector<SOrigin> GetAssociatedOrigins(){return fAssociatedOrigins;};
 
         double HitDensity(){return fHitDensity;};
+
+        int NHits();
         
 };
 

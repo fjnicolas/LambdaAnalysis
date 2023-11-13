@@ -112,6 +112,8 @@ class TPCLinesAlgo {
         SPoint GetMainVertex() { return fMainVertex; };
         // Display
         void Display(std::string name, TCanvas *canvas = nullptr);
+
+        int GetNInputHits();
 };
 
 #endif // TPC_SIMPLE_LINES_H

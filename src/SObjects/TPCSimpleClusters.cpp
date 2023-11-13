@@ -483,6 +483,10 @@ SPoint SLinearCluster::GetEdgeHit(SPoint p){
     return SPoint(edgeHit.X(), edgeHit.Y());
 }
 
+double SLinearCluster::GetLength(){
+    return std::hypot( 0.3*(fMaxX-fMinX), 0.075*(fYAtMaxX-fYAtMinX) );
+} 
+
 // instances
 template double SCluster::GetMinDistanceToCluster(const SHit& h);
 template double SCluster::GetMinDistanceToCluster(const SPoint& h);

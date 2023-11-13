@@ -160,6 +160,8 @@ class SLinearCluster {
         double GetOccupancy1D();
 
         SPoint GetEdgeHit(SPoint p);
+
+        double GetLength();
 };
 
 

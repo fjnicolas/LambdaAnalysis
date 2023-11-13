@@ -34,8 +34,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string ext = parser.getExtension();
 
     // Output ana tree
-    TTree *fTreeAna = new TTree("LambdaAnaTree", "LambdaAnaTree");
-    LambdaAnaTree anaTree(fTreeAna);
+    TTree *fTreeAna = new TTree("LambdafAnaTreeHandle", "LambdafAnaTreeHandle");
+    LambdaAnaTree fAnaTreeHandle(fTreeAna);
 
     // Get input files
     std::vector<TString> fFilePaths = GetInputFileList(file_name, ext, directory_path);
@@ -173,9 +173,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 recoEvent = _TPCLinesAlgo.GetRecoEvent();
             }
 
-            TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(), "FinalRecoTPCLines", 0, 0, 1000, 800);
-            _TPCLinesAlgo.Display("", cTPCDisplay);
-
             // FRANS part
             std::vector<STriangle> angleList = recoEvent.GetAngleList();
             std::vector<SOrigin> associatedOrigins = recoEvent.GetAssociatedOrigins();
@@ -242,17 +239,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
             
             std::string outNamePreffix = accepted? "Accepted":"Rejected";
-            std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label();
-           
-            cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
-            delete cTPCDisplay;
-            
-            outputLabel+="FRANS";
-            if(bestFRANSScore!=-1000){
-                cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
-            }
-            delete cDisplay;
-            
+            std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label(); 
             
             if(recoEvent.GetNOrigins()>0){
                 _EfficiencyCalculator.UpdateHistograms(recoEvent);
@@ -274,30 +261,66 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
             std::cout<<_EfficiencyCalculator;
 
-            anaTree.ResetVars();
-            anaTree.fEventID = treeReader.eventID;
-            anaTree.fSubrunID = treeReader.subrunID;
-            anaTree.fRunID = treeReader.runID;
-            anaTree.fSliceID = 1;
+            fAnaTreeHandle.ResetVars();
+            fAnaTreeHandle.fEventID = treeReader.eventID;
+            fAnaTreeHandle.fSubrunID = treeReader.subrunID;
+            fAnaTreeHandle.fRunID = treeReader.runID;
+            fAnaTreeHandle.fSliceID = 1;
 
-            anaTree.fIntMode = treeReader.intMode;
-            anaTree.fIntNLambda = treeReader.intNLambda;
+            fAnaTreeHandle.fIntMode = treeReader.intMode;
+            fAnaTreeHandle.fIntNLambda = treeReader.intNLambda;
 
-            anaTree.fFRANSScorePANDORA = FRANSScorePANDORA;
+            fAnaTreeHandle.fFRANSScorePANDORA = FRANSScorePANDORA;
 
-            anaTree.fNOrigins = recoEvent.GetNOrigins();
-            anaTree.fNOriginsMult1 = recoEvent.GetNOriginsMult(1);
-            anaTree.fNOriginsMult2 = recoEvent.GetNOriginsMult(2);
-            anaTree.fNOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
-            anaTree.fNOriginsPairOneTwo = recoEvent.GetNOriginsMult(2) * recoEvent.GetNOriginsMult(1);
+            // Number of origins variables
+            fAnaTreeHandle.fNOrigins = recoEvent.GetNOrigins();
+            fAnaTreeHandle.fNOriginsMult1 = recoEvent.GetNOriginsMult(1);
+            fAnaTreeHandle.fNOriginsMult2 = recoEvent.GetNOriginsMult(2);
+            fAnaTreeHandle.fNOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
+            fAnaTreeHandle.fNOriginsPairOneTwo = recoEvent.GetNOriginsMult(2) * recoEvent.GetNOriginsMult(1);
 
-            anaTree.fTruthIsFiducial = true;
-            anaTree.fRecoIsFiducial = true;
-            anaTree.fNAngles = recoEvent.GetNAngles(); 
-            anaTree.fAngleFRANSScore = bestFRANSScore;
+            // Angle variables
+            fAnaTreeHandle.fNAngles = recoEvent.GetNAngles(); 
+            if(bestTriangleIx!=-1){
+                STriangle bestTriangle = angleList[bestTriangleIx];
 
+                fAnaTreeHandle.fAngleFRANSScore = bestFRANSScore;
+                fAnaTreeHandle.fAngleGap = bestTriangle.GetGap();
+                fAnaTreeHandle.fAngleDecayContainedDiff = bestTriangle.GetDecayAngleDifference();
+                fAnaTreeHandle.fAngleNHits = bestTriangle.GetNHitsTriangle();
+                fAnaTreeHandle.fAngleNHitsTrack1 = bestTriangle.GetNHitsTrack1();
+                fAnaTreeHandle.fAngleNHitsTrack2 = bestTriangle.GetNHitsTrack2();
+                fAnaTreeHandle.fAngleNHitsMainTrack = bestTriangle.GetNHitsMainTrack();
+                fAnaTreeHandle.fAngleLengthTrack1 = bestTriangle.GetLengthTrack1();
+                fAnaTreeHandle.fAngleLengthTrack2 = bestTriangle.GetLengthTrack2();
+                fAnaTreeHandle.fAngleLengthMainTrack = bestTriangle.GetLengthMainTrack();
+
+                std::cout<<"  - Best angle: "<<bestTriangleIx<<" FRANS: "<<bestFRANSScore<<" Gap: "<<bestTriangle.GetGap()<<" DecayContainedDiff: "<<bestTriangle.GetDecayAngleDifference()<<std::endl;
+                std::cout<<"  - NHits: "<<bestTriangle.GetNHitsTriangle()<<" NHitsTrack1: "<<bestTriangle.GetNHitsTrack1()<<" NHitsTrack2: "<<bestTriangle.GetNHitsTrack2()<<" NHitsMainTrack: "<<bestTriangle.GetNHitsMainTrack()<<std::endl;
+                std::cout<<"  - LengthTrack1: "<<bestTriangle.GetLengthTrack1()<<" LengthTrack2: "<<bestTriangle.GetLengthTrack2()<<" LengthMainTrack: "<<bestTriangle.GetLengthMainTrack()<<std::endl;
+            }
+
+            int associatedHits = recoEvent.NHits();
+            int totalHits = _TPCLinesAlgo.GetNInputHits();
+            int unassociatedHits = totalHits - associatedHits;
+            fAnaTreeHandle.fNUnassociatedHits = unassociatedHits;
+            std::cout<<"  - Associated hits: "<<associatedHits<<" Total hits: "<<totalHits<<" Unassociated hits: "<<unassociatedHits<<std::endl;
+
+            fAnaTreeHandle.fTruthIsFiducial = true;
+            fAnaTreeHandle.fRecoIsFiducial = true;
             
-            //anaTree.FillTree();
+            fAnaTreeHandle.FillTree();
+
+            TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(), "FinalRecoTPCLines", 0, 0, 1000, 800);
+            _TPCLinesAlgo.Display("", cTPCDisplay);
+            cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
+            delete cTPCDisplay;
+            
+            outputLabel+="FRANS";
+            if(bestFRANSScore!=-1000){
+                cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
+            }
+            delete cDisplay;
 
         }
     }
@@ -309,9 +332,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     originsAnaDirectory->cd();
     _EfficiencyCalculator.DrawHistograms(cOriginsAna);
     cOriginsAna->Write();
-    TDirectory *anaTreeDirectory = anaOutputFile->mkdir("originsAna");
-    anaTreeDirectory->cd();
-    anaTree.WriteTree();
+    TDirectory *fAnaTreeHandleDirectory = anaOutputFile->mkdir("originsAna");
+    fAnaTreeHandleDirectory->cd();
+    fAnaTreeHandle.WriteTree();
     anaOutputFile->Write();
     anaOutputFile->Close();
 

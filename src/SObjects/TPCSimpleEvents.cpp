@@ -100,3 +100,11 @@ int SEvent::GetNOriginsMultGt(int mult, int id1, int id2){
     }
     return n;
 }
+
+int SEvent::NHits(){
+    int n=0;
+    for(SLinearCluster & trk: fTrackList){
+        n+=trk.NHits();
+    }
+    return n;
+}

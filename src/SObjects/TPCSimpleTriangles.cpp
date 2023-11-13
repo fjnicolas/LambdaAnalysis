@@ -160,9 +160,35 @@ double fractionOfLineInTriangle(const std::vector<Point>& triangle, const Line& 
     return totalLength / line.yWidth;
 }
 
-
-int STriangle::GetNTriangleHits(){
+// Get NHits functions
+int STriangle::GetNHitsTriangle(){
     return fTrack1.NHits() + fTrack2.NHits();
+}
+
+int STriangle::GetNHitsTrack1(){
+    return fTrack1.NHits();
+}
+
+int STriangle::GetNHitsTrack2(){
+    return fTrack2.NHits();
+}
+
+int STriangle::GetNHitsMainTrack(){
+    return fMainTrack.NHits();
+}
+
+
+// Get Length functions
+double STriangle::GetLengthTrack1(){
+    return fTrack1.GetLength();
+}
+
+double STriangle::GetLengthTrack2(){
+    return fTrack2.GetLength();
+}
+
+double STriangle::GetLengthMainTrack(){
+    return fMainTrack.GetLength();
 }
 
 double GetAngle360(double x, double y) {
