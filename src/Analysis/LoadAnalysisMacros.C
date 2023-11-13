@@ -6,6 +6,7 @@
 #include <TMath.h>
 
 #include "LambdaAnalysis.C"
+#include "LambdaBDTAnalysis.C"
 
 void LoadAnalysisMacros(){
     std::cout<<" Loaded ana macros\n";

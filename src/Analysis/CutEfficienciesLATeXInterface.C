@@ -1,3 +1,6 @@
+#ifndef CUTEFFICIENCIES_LATEXINTERFACE_H
+#define CUTEFFICIENCIES_LATEXINTERFACE_H
+
 void GenerateAndCompileTeXTable(
     const std::vector<SampleDef>& sampleDefs,
     const std::vector<AnaPlot>& anaPlots,
@@ -118,10 +121,8 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
     }
 
     // Output 
-    std::ofstream handScanFilenames;
-    std::ofstream handScanEventIds;
-    handScanFilenames.open("OutputPlots/handScanFilenames.txt");
-    handScanEventIds.open("OutputPlots/handScanEventIds.txt");
+    std::ofstream handScanEvents;
+    handScanEvents.open("OutputPlots/handScanEvents.txt");
 
     // loop over signal types
     for(size_t k=0; k<sampleDefs.size(); k++){
@@ -149,16 +150,17 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
                 if(binValue>0){
                     std::cout<<"SubRunID: "<<sr<<" EventID: "<<e<<" BinValue: "<<binValue<<std::endl;
                     std::cout<<"Filename: "<<subrunFilenameMap[sr]<<std::endl;
-                    handScanFilenames<<subrunFilenameMap[sr]<<std::endl;
-                    handScanEventIds<<"1:"<<sr<<":"<<e<<std::endl;
+                    handScanEvents<<"1:"<<sr<<":"<<e<<" "<<subrunFilenameMap[sr]<<std::endl;
                 }
             }
         }        
     }
 
-    handScanFilenames.close();
-    handScanEventIds.close();
+    handScanEvents.close();
 
     return;
 
 }
+
+
+#endif

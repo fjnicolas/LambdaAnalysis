@@ -1,0 +1,143 @@
+#include <cstdlib>
+#include <iostream>
+#include <map>
+#include <string>
+
+#include "TChain.h"
+#include "TFile.h"
+#include "TTree.h"
+#include "TString.h"
+#include "TObjString.h"
+#include "TSystem.h"
+#include "TROOT.h"
+
+#include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
+#include "TMVA/Tools.h"
+#include "TMVA/TMVAGui.h"
+
+#include "CutEfficienciesDefinitions.C"
+#include "CutEfficienciesLATeXInterface.C"
+
+
+//---------  Main function
+void LambdaBDTAnalysis(std::string fInputFileName="", std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+{
+    // Number of events for training
+    int nTrain = 1000;
+
+    //--------- Output file
+    gSystem->Exec( "rm -rf TMVAResults" );
+    gSystem->Exec( "mkdir TMVAResults" );
+    std::string fOutputTMVAROOtFileName = "TMVAResults/TMTMVAResults.root";
+    TFile* outputFile = TFile::Open( fOutputTMVAROOtFileName.c_str(), "CREATE" );
+
+    // Input file
+    TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
+    TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
+
+    // This loads the library
+    TMVA::Tools::Instance();
+
+    // Default MVA methods to be trained
+    std::map<std::string,int> Use;
+    // Rectangular cut optimisation
+    Use["Cuts"]            = 0;
+    // 1-dimensional likelihood ("naive Bayes estimator")
+    Use["Likelihood"]      = 1;
+    // Linear Discriminant Analysis
+    Use["Fisher"]          = 1;
+    // Boosted Decision Trees
+    Use["BDT"]             = 1;
+    // Neural Networks (all are feed-forward Multilayer Perceptrons)
+    Use["MLP"]             = 0;
+
+    
+    // Define factory and data loader
+    TMVA::Factory *factory = new TMVA::Factory( "FRAMSSelectionTMVA", outputFile,
+                                                "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
+    TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+
+
+    //Add variables for MVA
+    //dataloader->AddVariable( "RecoIsFiducial", "RecoIsFiducial", "", 'I' );
+    //dataloader->AddVariable( "NOriginsPairOneTwo", "NOriginsPairOneTwo", "", 'I' );
+    //dataloader->AddVariable( "NAngles", "NAngles", "", 'I' );
+    
+
+    dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
+    dataloader->AddVariable( "NOriginsMultGT3", "N^{1}_{C}", "", 'I' );
+    dataloader->AddVariable( "NOrigins", "N^{2}_{C}", "", 'I' );
+
+    dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
+    
+    dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
+    dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
+    dataloader->AddVariable( "AngleNHits", "V # hits", "", 'I' );
+
+    dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
+    dataloader->AddVariable( "NShwTh100", "# showers > 100 MeV", "", 'D' );    
+    
+    //Add spectator variables
+    //dataloader->AddSpectator( "PionKE", "PionKE", "", 'D' );
+
+    // You can add an arbitrary number of signal or background trees
+    std::string fMinimalCut = "RecoIsFiducial && NOriginsPairOneTwo>0 && NAngles>=1";
+
+    Double_t signalWeight     = 1.0;
+    Double_t backgroundWeight = 1.0;
+    dataloader->AddSignalTree    ( fTree,     signalWeight );
+    dataloader->AddBackgroundTree( fTree, backgroundWeight );
+
+    dataloader->AddCut(TCut(fMinimalCut.c_str()));
+    // define signal and background cuts
+    TCut signalCut = "TruthIsFiducial==1 && IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12";//+TCut(fMinimalCut.c_str());
+    TCut bgCut = "TruthIsFiducial==1 && IntNLambda==0 && IntMode==1 && abs(IntNuPDG)!=12";//+TCut(fMinimalCut.c_str());
+
+    std::string tmva_options = "nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain);
+    tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";
+    dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, tmva_options );
+
+    std::cout<<"Training and test trees prepared\n";
+
+
+    // Cut optimisation
+    if (Use["Cuts"])
+        factory->BookMethod( dataloader, TMVA::Types::kCuts, "Cuts",
+                            "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" );
+    // Likelihood ("naive Bayes estimator")
+    if (Use["Likelihood"])
+        factory->BookMethod( dataloader, TMVA::Types::kLikelihood, "Likelihood",
+                            "H:!V:TransformOutput:PDFInterpol=Spline2:NSmoothSig[0]=20:NSmoothBkg[0]=20:NSmoothBkg[1]=10:NSmooth=1:NAvEvtPerBin=50" );
+    // Fisher discriminant (same as LD)
+    if (Use["Fisher"])
+        factory->BookMethod( dataloader, TMVA::Types::kFisher, "Fisher", "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10" );
+    // TMVA ANN: MLP (recommended ANN) -- all ANNs in TMVA are Multilayer Perceptrons
+    if (Use["MLP"])
+        factory->BookMethod( dataloader, TMVA::Types::kMLP, "MLP", "H:!V:NeuronType=tanh:VarTransform=N:NCycles=600:HiddenLayers=N+5:TestRate=5:!UseRegulator" );
+    // Boosted Decision Tree
+    if (Use["BDT"])  // Adaptive Boost
+        factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT",
+                            "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
+
+    // Train MVAs using the set of training events
+    factory->TrainAllMethods();
+
+    // Evaluate all MVAs using the set of test events
+    factory->TestAllMethods();
+
+    // Evaluate and compare performance of all configured MVAs
+    factory->EvaluateAllMethods();
+
+
+    // Save the output
+    outputFile->Close();
+
+    delete factory;
+    delete dataloader;
+
+    // Launch the GUI for the root macros
+    if (!gROOT->IsBatch()) TMVA::TMVAGui( fOutputTMVAROOtFileName.c_str() );
+}
+
+
