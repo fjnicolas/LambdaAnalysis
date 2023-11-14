@@ -239,10 +239,6 @@ std::vector<SHit> TPCLinesVertexFinder::GetMutualHitsContainedInHypo(SLinearClus
         track2Hits = std::vector<SHit>(std::prev(track2Hits_.end(), maxHits), track2Hits_.end());
     }
     SLinearCluster trk2(track2Hits); 
-
-    std::cout<<"JJUJU "<<trk1.GetHits()[0].X()<<" "<<trk2.GetHits()[0].X()<<std::endl;
-    std::cout<<"JJUJU "<<trk1.GetHits()[trk1.NHits()-1].X()<<" "<<trk2.GetHits()[trk2.NHits()-1].X()<<std::endl;
-
    
     LineEquation track1Eq = trk1.GetTrackEquation();
     
@@ -851,7 +847,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 }
                 if(vertexHits.size()>0){
                     SLinearCluster vertexHitCluster(vertexHits);
-                    std::cout<<"   Vertex hit clister connectedneess: "<<vertexHitCluster.GetConnectedness()<<std::endl;
+            
                     float connVertexHitsCluster1 = TPCLinesDistanceUtils::GetClusterConnectedness(track1.GetHitCluster(), vertexHits);
                     float connVertexHitsCluster2 = TPCLinesDistanceUtils::GetClusterConnectedness(track2.GetHitCluster(), vertexHits);
                     float connOvVertexHitsCluster1 = TPCLinesDistanceUtils::GetClusterConnectednessOverlap(track1.GetHitCluster(), vertexHits);
@@ -860,12 +856,15 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     float connXVertexHitsCluster1 = TPCLinesDistanceUtils::GetClusterMinDistanceX(track1.GetHitCluster(), vertexHits);
                     float connXVertexHitsCluster2 = TPCLinesDistanceUtils::GetClusterMinDistanceX(track2.GetHitCluster(), vertexHits);
 
-                    std::cout<<"   Connectedness HitsCluster 1/2: "<<connVertexHitsCluster1<<" "<<connVertexHitsCluster2<<std::endl;
-                    std::cout<<"   Connectedness Overlap HitsCluster 1/2: "<<connOvVertexHitsCluster1<<" "<<connOvVertexHitsCluster2<<std::endl;
-                    std::cout<<"   Connectedness X HitsCluster 1/2: "<<connXVertexHitsCluster1<<" "<<connXVertexHitsCluster2<<std::endl;
+                    if(fTPCLinesVertexFinderPset.Verbose>=1){
+                        std::cout<<"   Vertex hit clister connectedneess: "<<vertexHitCluster.GetConnectedness()<<std::endl;
+                        std::cout<<"   Connectedness HitsCluster 1/2: "<<connVertexHitsCluster1<<" "<<connVertexHitsCluster2<<std::endl;
+                        std::cout<<"   Connectedness Overlap HitsCluster 1/2: "<<connOvVertexHitsCluster1<<" "<<connOvVertexHitsCluster2<<std::endl;
+                        std::cout<<"   Connectedness X HitsCluster 1/2: "<<connXVertexHitsCluster1<<" "<<connXVertexHitsCluster2<<std::endl;
+                    }
                     // vertex hits must be connected to the tracks
                     if( connXVertexHitsCluster1>2 || connXVertexHitsCluster2>2){
-                        std::cout<<" VERTEX HITS NOT CONNECTED\n";
+                        if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" VERTEX HITS NOT CONNECTED\n";
                         continue;
                     }   
                 }

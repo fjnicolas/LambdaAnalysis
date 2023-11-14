@@ -41,6 +41,8 @@ public:
     int fSliceID;
     
     // True variables
+    int fIntOrigin;
+    bool fIntDirt;
     int fIntMode;
     int fIntType;
     int fIntCCNC;
@@ -65,6 +67,9 @@ public:
     double fLambdaKE;
     double fProtonKE;
     double fPionKE;
+
+    // Cosmic rejection
+    double fCRUMBSScore;
 
     // Reco Vertex information
     double fRecnuvX;

@@ -10,8 +10,6 @@
 
 #include "LambdaAnaTree.h"
 
-
-
 LambdaAnaTree::LambdaAnaTree()
 : fTree(nullptr)
 {}
@@ -39,7 +37,9 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("SliceID", &fSliceID);
 
     // Set branch addresses for true variables
+    fTree->Branch("IntOrigin", &fIntOrigin);
     fTree->Branch("IntMode", &fIntMode);
+    fTree->Branch("IntDirt", &fIntDirt);
     fTree->Branch("IntType", &fIntType);
     fTree->Branch("IntCCNC", &fIntCCNC);
     fTree->Branch("IntNuPDG", &fIntNuPDG);
@@ -67,6 +67,9 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("LambdaKE", &fLambdaKE);
     fTree->Branch("ProtonKE", &fProtonKE);
     fTree->Branch("PionKE", &fPionKE);
+
+    // Set branch addresses for cosmic rejection
+    fTree->Branch("CRUMBSScore", &fCRUMBSScore);
 
     // Set branch addresses for reco vertex information
     fTree->Branch("RecnuvX", &fRecnuvX);
@@ -117,6 +120,8 @@ void LambdaAnaTree::ResetVars(){
     fInputFileName = "";
     fSliceID = -999;
 
+    fIntOrigin = -999;
+    fIntDirt = false;
     fIntMode = -999;
     fIntType = -999;
     fIntCCNC = -999;
@@ -143,6 +148,8 @@ void LambdaAnaTree::ResetVars(){
     fLambdaKE = -999;
     fProtonKE = -999;
     fPionKE = -999;
+
+    fCRUMBSScore = -999;
 
     fRecnuvX = -999;
     fRecnuvY = -999;

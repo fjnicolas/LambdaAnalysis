@@ -435,9 +435,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     std::vector<SLinearCluster> newTrackList;
     for (SLinearCluster& track : finalLinearClusterV) {
     
-        std::cout<<"TRACK ID: "<<track.GetId()<<std::endl;
         if (shortToLongTrackDict.find(track.GetId()) == shortToLongTrackDict.end()) {
-            std::cout<<"   Merging Short for : "<<track.GetId()<<std::endl;
 
             SLinearCluster newTrack = track;
             

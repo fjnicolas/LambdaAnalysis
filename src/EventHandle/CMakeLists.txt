@@ -16,6 +16,7 @@ if(DEFINED ENV{LARSOFT_VERSION})
             ROOT::Core
 
             sbndcode_SObjects
+            sbnobj::Common_CRT
       )
 
       install_headers()
