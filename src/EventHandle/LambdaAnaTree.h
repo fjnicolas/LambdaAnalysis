@@ -62,6 +62,10 @@ public:
     double fNuvE, fNuvT, fNuvX, fNuvY, fNuvZ;
     bool fTruthIsFiducial;
 
+    // Slice truth quality
+    double fSliceCompleteness;
+    double fSlicePurity;
+
     // Lambda decay true information
     double fGap;
     double fLambdaKE;

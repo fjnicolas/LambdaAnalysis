@@ -62,6 +62,10 @@ void LambdaAnaTree::InitializeTree(){
     fTree->Branch("NuvZ", &fNuvZ);
     fTree->Branch("TruthIsFiducial", &fTruthIsFiducial);
 
+    // Set branch addresses for slice information
+    fTree->Branch("SliceCompleteness", &fSliceCompleteness);
+    fTree->Branch("SlicePurity", &fSlicePurity);
+
     // Set branch addresses for lambda true information
     fTree->Branch("Gap", &fGap);
     fTree->Branch("LambdaKE", &fLambdaKE);
@@ -143,6 +147,9 @@ void LambdaAnaTree::ResetVars(){
     fNuvY = -999;
     fNuvZ = -999;
     fTruthIsFiducial = false;
+
+    fSliceCompleteness = -999;
+    fSlicePurity = -999;
 
     fGap = -999;
     fLambdaKE = -999;

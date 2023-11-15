@@ -548,11 +548,9 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
                 double angle2 = std::atan(lCluster.GetTrackEquationEnd().Slope()) * 180.0 / M_PI;
                 double slope_angle_difference = std::abs(angle1 - angle2);
                 double hitDensity = lCluster.GetHitDensity();
-                std::cout<<"Hit density "<<hitDensity<<std::endl;
                 if(slope_angle_difference>fTPCLinesTrackFinderPset.ClusterAngleCut && hitDensity<fTPCLinesTrackFinderPset.HitDensityThreshold){
                     if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"Slope difference: "<<slope_angle_difference<<std::endl;
                     SHit kinkHit = lCluster.FindMaxVariationPointSlidingWindow(lCluster.GetHits(), 3);
-                    std::cout<<"KINK HIT "<<kinkHit;
                     if(kinkHit.X()!=-1){
                         // split the cluster
                         std::vector<SHit> startHits, endHits;
@@ -581,8 +579,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
                         double endCompactness = endCluster.GetCompactness();
                         double maxCompactness = std::max(startCompactness, endCompactness);
                         double minCompactness = std::min(startCompactness, endCompactness);
-                        std::cout<<"  Start/End compactness: "<<startCompactness<<" "<<endCompactness<<" Diff "<<std::abs(startCompactness-endCompactness)<<" epsilon "<<epsilon<<std::endl;
-                        //if(std::abs(startCompactness-endCompactness)>epsilon){
+
                         if(maxCompactness>minCompactness*fTPCLinesTrackFinderPset.CompactnessTol){
                             finalCompactLinearClustersV.push_back(startCluster);
                             finalCompactLinearClustersV.push_back(endCluster);

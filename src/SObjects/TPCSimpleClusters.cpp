@@ -166,18 +166,6 @@ SHit SLinearCluster::FindMaxVariationPointSlidingWindow(std::vector<SHit> data, 
     std::vector<double> slopesVector;
     for (size_t i = N; i < data.size() - N; ++i) {
 
-        /*double avgSlope = 0.0;
-        for (size_t j = i - N; j <= i + N; ++j) {
-            avgSlope += CalculateSlope(data[j], data[j + 1]);
-        }
-        avgSlope /= (2 * N + 1);
-
-        double slope = CalculateSlope(data[i - N], data[i + N]);
-
-        std::cout<<avgSlope<<std::endl
-        double slopeVariation = std::abs(slope - avgSlope);
-        ;*/
-
         std::vector<SHit> subset(data.begin() + (i - N), data.begin() + (i + N + 1));
         double subSlope = pcaAlgo.PerformPCA2D(subset).Slope();
 
@@ -187,7 +175,7 @@ SHit SLinearCluster::FindMaxVariationPointSlidingWindow(std::vector<SHit> data, 
     for (size_t j = 1; j < slopesVector.size(); j++) {
 
         double slopeVariation = std::abs(slopesVector[j]-slopesVector[j-1]);
-        std::cout<<j<<" "<<slopesVector[j]<<" "<<slopeVariation<<std::endl;
+        
         if (slopeVariation > maxVariation) {
             maxVariation = slopeVariation;
             maxVariationPoint = data[j+N];
