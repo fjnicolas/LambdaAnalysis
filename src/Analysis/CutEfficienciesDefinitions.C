@@ -5,8 +5,8 @@
 
 class SampleDef {
 public:
-    SampleDef(const std::string& var = "", const std::string& label = "", bool isSignal = false)
-        : fVar(var), fLabel(label), fIsSignal(isSignal) {
+    SampleDef(const std::string& var = "", const std::string& label = "", bool isSignal = false, const std::string& weight = "1")
+        : fVar(var), fLabel(label), fIsSignal(isSignal), fWeight(weight) {
     }
 
     // Getter methods
@@ -26,6 +26,14 @@ public:
         return fLabel.Data();
     }
 
+    TString GetWeight() const {
+        return fWeight;
+    }
+
+    std::string GetWeightS() const {
+        return fWeight.Data();
+    }
+
     bool IsSignal() const {
         return fIsSignal;
     }
@@ -43,10 +51,15 @@ public:
         fIsSignal = isSignal;
     }
 
+    void SetWeight(const TString& weight) {
+        fWeight = weight;
+    }
+
 private:
     TString fVar;
     TString fLabel;
     bool fIsSignal;
+    TString fWeight;
 };
 
 
@@ -92,7 +105,8 @@ enum class CutType {
     kNone=-1,
     kRight=0,
     kLeft,
-    kCenter
+    kCenter,
+    k2D
 };
 
 class PlotDef {
@@ -263,6 +277,9 @@ class AnaPlot{
         std::map<std::string, TH1F*> fHistCumulativeV;
         std::map<std::string, int> fCountsV;
 
+        std::map<std::string, TH2F*> fHist2DV;
+        std::map<std::string, TH2F*> fHist2DCumulativeV;
+
         TCanvas *fCanvas;
         CutStyler *fStyler;
 };
@@ -289,6 +306,16 @@ AnaPlot::AnaPlot(int cutIndex, PlotDef plotDef, std::vector<SampleDef> intTypes)
         fCountsV[intTypeLabel] = 0;
         fHistV[intTypeLabel] = hAux;
         fHistCumulativeV[intTypeLabel] = hAuxCumulative;
+
+        // if 2D Cut
+        if(fPlotDef.GetCutType()==CutType::k2D){
+            TH2F *hAux2D = new TH2F(plotLabel.c_str(), plotLabel.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
+            TH2F *hAux2DCumulative = new TH2F((plotLabel+"C").c_str(), plotLabel.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
+            
+            fHist2DV[intTypeLabel] = hAux2D;
+            fHist2DCumulativeV[intTypeLabel] = hAux2DCumulative;
+        }
+
         
     }
 
@@ -375,11 +402,64 @@ void DrawVerticalLineWithArrow(double x, double x1, double x2, double y1, double
 
 void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
 
-    std::cout<<"Making plot "<<fPlotIndex<<std::endl;
-    
-
     // --- Frame histograms and legend
     std::string plotIndex = std::to_string(fPlotIndex);
+    
+    if(fPlotDef.GetCutType()==CutType::k2D){
+        std::string plotLabel = "hAux2D"+plotIndex;
+        std::cout<<"2D plots not implemented yet"<<std::endl;
+        TCanvas *c3 = new TCanvas(("c3"+plotIndex).c_str(),"2DSelection",0, 0, 1000, 750);
+        c3->cd();
+
+        TPad *pad1 = new TPad("pad1","pad1",0,0.5,0.5,1);
+        pad1->Draw();
+        TPad *pad2 = new TPad("pad2","pad2",0.5,0.5,1,1);
+        pad2->Draw();
+        TPad *pad3 = new TPad("pad3","pad3",0,0,0.5,0.5);
+        pad3->Draw();
+        TPad *pad4 = new TPad("pad4","pad4",0.5,0,1,0.5);
+        pad4->Draw();
+        
+         
+        std::string plotAxisLabels="1;# hits track 1;# hits track 2";
+
+        plotLabel = "hAux2D";
+        TH2F *hAux2D = new TH2F(plotLabel.c_str(), plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
+
+        std::cout<<" Cut name " << fPlotDef.GetVarS() << std::endl; 
+        for (size_t j = 0; j < fIntTypes.size(); ++j) {
+        
+           
+            
+            TCut sampelCut(fIntTypes[j].GetVar());
+            std::string plotLabel = "hAux2D";
+
+             // --- Interaction type
+            std::cout<<j<<" "<<sampelCut<<std::endl;
+            // --- Draw distribution
+            pad1->cd();
+            fTree->Draw( (fPlotDef.GetVarS()+">>"+std::to_string(fPlotIndex)+"_"+std::to_string(j)).c_str(), sampelCut && currentCut );
+        }
+
+        hAux2D->Draw();
+        
+        for (size_t j = 0; j < fIntTypes.size(); ++j) {
+            std::string intTypeLabel = fIntTypes[j].GetLabelS();
+            fHist2DV[intTypeLabel]->Draw("same");
+            // set marker styles and colors
+            fHist2DV[intTypeLabel]->SetLineColor(fStyler->GetColor(j));
+            fHist2DV[intTypeLabel]->SetLineWidth(2);
+            fHist2DV[intTypeLabel]->SetMarkerStyle(fStyler->GetMarkerStyle(j));
+            fHist2DV[intTypeLabel]->SetMarkerSize(1);
+            fHist2DV[intTypeLabel]->SetMarkerColorAlpha(fStyler->GetColor(j), 0.6);
+        }
+
+        c3->Update();
+        c3->SaveAs( ("OutputPlots/test2D_"+std::to_string(fPlotIndex)+".pdf").c_str());
+        return;
+    }
+
+    std::cout<<"Making plot "<<fPlotIndex<<std::endl;
 
 
     TCanvas *c2 = new TCanvas(("c2"+plotIndex).c_str(),"Selection",0, 0, 1000, 750);
@@ -405,6 +485,9 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     plotLabel = "hAuxSignificance"+std::to_string(fPlotIndex);
     TH1F *hAuxSignificance = new TH1F(plotLabel.c_str(), plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
 
+    plotLabel = "hCounter"+std::to_string(fPlotIndex);
+    TH1F *hCounter = new TH1F( plotLabel.c_str(), plotAxisLabels.c_str(), 1, 0, 1);
+
     TLegend *legend = new TLegend(0.75, 0.75, 0.9, 0.9);
        
     pad1->cd();
@@ -416,12 +499,14 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
         // --- Interaction type
         fHistV[fIntTypes[j].GetLabelS()]->Draw();
         TCut sampelCut(fIntTypes[j].GetVar());
+       
         std::string intTypeLabel = fIntTypes[j].GetLabelS();
         std::string plotLabel = std::to_string(fPlotIndex)+"_"+std::to_string(j);
 
         // --- Draw distribution
         pad1->cd();
         fTree->Draw( (fPlotDef.GetVarS()+">>"+plotLabel).c_str(), sampelCut && currentCut );
+        
         
         // --- Draw cumulative distribution
         pad3->cd();
@@ -450,7 +535,12 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
 
         pad1->cd();
         // --- Get counts
-        fCountsV[intTypeLabel] = fTree->Draw( "", sampelCut && currentCut && fPlotDef.GetCut(), "goff");
+        plotLabel = "hCounter"+std::to_string(fPlotIndex);
+        fTree->Draw( ("0>>"+plotLabel).c_str(), fIntTypes[j].GetWeight()*TCut(sampelCut && currentCut && fPlotDef.GetCut()), "hist");
+        std::cout<<hCounter->Integral()<<std::endl;
+        fCountsV[intTypeLabel] = hCounter->Integral();
+        //fCountsV[intTypeLabel] = fTree->Draw( "", "4"*TCut(sampelCut && currentCut && fPlotDef.GetCut()), "hist").GetIntegral();
+        //fCountsV[intTypeLabel] = fTree->Draw( "", "4*RecoIsFiducial", "goff");
 
 
         // --- Set styles
@@ -595,7 +685,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     fFile->cd();
     c2->Write();
     fFile->Close();
-
+    
     return;
     
 }

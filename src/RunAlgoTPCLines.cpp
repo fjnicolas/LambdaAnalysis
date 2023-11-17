@@ -309,7 +309,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             fAnaTreeHandle.fTruthIsFiducial = true;
             fAnaTreeHandle.fRecoIsFiducial = true;
             
-            fAnaTreeHandle.FillTree();
+            //fAnaTreeHandle.FillTree();
 
             TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(), "FinalRecoTPCLines", 0, 0, 1000, 800);
             _TPCLinesAlgo.Display("", cTPCDisplay);

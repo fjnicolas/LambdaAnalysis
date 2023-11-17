@@ -105,19 +105,29 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
     //--------- Loop over the TreeHeader
     unsigned int fSubRunId;
     fTreeHeader->SetBranchAddress("SubRunID", &fSubRunId);
+    unsigned int fRunId;
+    fTreeHeader->SetBranchAddress("RunID", &fRunId);
     std::string *fLArInputFileName = new std::string;
     fTreeHeader->SetBranchAddress("InputFileName", &fLArInputFileName);
-    // Create map of subrun filename
-    std::map<int, std::string> subrunFilenameMap;
+    // Create map of run-subrun filename
+    std::map<std::string, std::vector<std::string>> subrunFilenameMap;
     for(size_t i=0; i<fTreeHeader->GetEntries(); ++i){
         fTreeHeader->GetEntry(i);
         
         // check the string includes the substring "Inclusive"
-        if(fLArInputFileName->find("Inclusive") == std::string::npos){
+        if(fLArInputFileName->find("V0Lambda") != std::string::npos || fLArInputFileName->find("V0Overlay") != std::string::npos){
             continue;
         }
+        
+        std::string runSubrunLabel = std::to_string(fRunId) + ":" + std::to_string(fSubRunId);
 
-        subrunFilenameMap[fSubRunId] = *fLArInputFileName;
+        // if the subrun is not in the map, add it
+        if(subrunFilenameMap.find(runSubrunLabel) == subrunFilenameMap.end()){
+            subrunFilenameMap[runSubrunLabel] = std::vector<std::string>();
+        }
+
+        // add the filename to the vector
+        subrunFilenameMap[runSubrunLabel].push_back(*fLArInputFileName);
     }
 
     // Output 
@@ -125,36 +135,44 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
     handScanEvents.open("OutputPlots/handScanEvents.txt");
 
     // loop over signal types
-    for(size_t k=0; k<sampleDefs.size(); k++){
+    for (size_t k = 0; k < sampleDefs.size(); k++) {
         // Skip if it is the signal
-        if(sampleDefs[k].IsSignal()) continue;
-        
-        std::cout<<" Sample: "<<sampleDefs[k].GetLabel()<<std::endl;
-        
+        if (sampleDefs[k].IsSignal()) continue;
+
+        std::cout << " Sample: " << sampleDefs[k].GetLabel() << std::endl;
+
         // Create the histogram
-        TH2D* h2_all = new TH2D("h2_all", "2D Histogram", 1000, 1, 1001, 1000, 1, 1001);
-        
+        TH3D* h3_all = new TH3D("h3_all", "3D Histogram", 100, 1, 101, 1000, 1, 1001, 1000, 1, 1001);
+
         // Create the cut
-        TCut debugCut = cut && ( TCut(sampleDefs[k].GetVar())  );
-        
+        TCut debugCut = cut && (TCut(sampleDefs[k].GetVar()));
+
         // Draw the histogram
-        // Y axis is event ID
-        // X axis is subrun ID
-        fTree->Draw("EventID:SubrunID>>h2_all", debugCut);
+        // Z axis is the run number, Y axis is event ID, and X axis is subrun ID
+        fTree->Draw("EventID:SubrunID:RunID>>h3_all", debugCut);
+
         // Get the number of bins in the histogram
-        int numBinsX = h2_all->GetNbinsX();
-        int numBinsY = h2_all->GetNbinsY();
-        for (int sr = 1; sr <= numBinsX; sr++) {
-            for (int e = 1; e <= numBinsY; e++) {
-                double binValue = h2_all->GetBinContent(sr, e);
-                if(binValue>0){
-                    std::cout<<"SubRunID: "<<sr<<" EventID: "<<e<<" BinValue: "<<binValue<<std::endl;
-                    std::cout<<"Filename: "<<subrunFilenameMap[sr]<<std::endl;
-                    handScanEvents<<"1:"<<sr<<":"<<e<<" "<<subrunFilenameMap[sr]<<std::endl;
+        int numBinsX = h3_all->GetNbinsX();
+        int numBinsY = h3_all->GetNbinsY();
+        int numBinsZ = h3_all->GetNbinsZ();
+
+        for (int run = 1; run <= numBinsX; run++) {
+            for (int sr = 1; sr <= numBinsY; sr++) {
+                for (int e = 1; e <= numBinsZ; e++) {
+                    double binValue = h3_all->GetBinContent(run, sr, e);
+                    if (binValue > 0) {
+                        std::cout << "RunNumber: " << run << " SubRunID: " << sr << " EventID: " << e << " BinValue: " << binValue << std::endl;
+                        std::string runSubrunLabel = std::to_string(run) + ":" + std::to_string(sr);
+                        for (size_t i = 0; i < subrunFilenameMap[runSubrunLabel].size(); i++){
+                            std::cout << "   Filename: " << subrunFilenameMap[runSubrunLabel][i] << std::endl;
+                            handScanEvents << run << ":" << sr << ":" << e << " " << subrunFilenameMap[runSubrunLabel][i] << std::endl;
+                        }
+                    }
                 }
             }
-        }        
+        }
     }
+
 
     handScanEvents.close();
 
