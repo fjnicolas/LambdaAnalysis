@@ -252,7 +252,7 @@ void TPCLinesDisplay::Show(
 
 
 
-    for(size_t oIx=0; oIx<1; oIx++){
+    for(size_t oIx=0; oIx<origins.size(); oIx++){
         std::cout<<"Drawing origin "<<oIx<<std::endl;
         std::string originLabel = "#omicron_{"+std::to_string(oIx)+"} (m="+std::to_string(origins[oIx].Multiplicity())+"),";
         for(SLinearCluster & trk:origins[oIx].GetTracks()){

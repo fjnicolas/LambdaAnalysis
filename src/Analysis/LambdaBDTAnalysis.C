@@ -21,14 +21,18 @@
 
 
 //---------  Main function
-void LambdaBDTAnalysis(std::string fInputFileName="", std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
     // Number of events for training
     int nTrain = 1000;
 
+    // Batch mode
+    useBatchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
+
     //--------- Output file
-    gSystem->Exec( "rm -rf TMVAResults" );
-    gSystem->Exec( "mkdir TMVAResults" );
+    gSystem->
+    
+    
     std::string fOutputTMVAROOtFileName = "TMVAResults/TMTMVAResults.root";
     TFile* outputFile = TFile::Open( fOutputTMVAROOtFileName.c_str(), "CREATE" );
 
@@ -42,7 +46,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", std::string fTreeDirName =
     // Default MVA methods to be trained
     std::map<std::string,int> Use;
     // Rectangular cut optimisation
-    Use["Cuts"]            = 0;
+    Use["Cuts"]            = 1;
     // 1-dimensional likelihood ("naive Bayes estimator")
     Use["Likelihood"]      = 1;
     // Linear Discriminant Analysis

@@ -83,6 +83,7 @@ public:
 
     // PANDORA information
     double fFRANSScorePANDORA;
+    int fNVertexTracks;
     double fShowerEnergy;
     int fNShowers;
     int fNShwTh75;

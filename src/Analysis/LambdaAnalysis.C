@@ -9,11 +9,12 @@
 #include "CutEfficienciesLATeXInterface.C"
 
 std::string fTruthInFV = "TruthIsFiducial==1 &&";
+std::string fTruthInAV = "abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500 && ";
 
 //--------- Signal and BG definitions
 std::vector<SampleDef> sampleDefs = {
-    {fTruthInFV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true}
-    ,{fTruthInFV+"IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Background Nu", false}
+    {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true}
+    ,{fTruthInAV+"IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Background Nu", false}
     ,{"IntOrigin==1 && IntDirt==1", "Dirt", false}
     ,{"IntOrigin==2", "Cosmic", false}
     /*,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
@@ -23,6 +24,12 @@ std::vector<SampleDef> sampleDefs = {
     ,{fTruthInFV+"abs(IntNuPDG)==12", "NuE", false} */
 };
 
+//-------- POT normalization
+double fPOTTotalNorm = 3.3e20;
+
+//---------  LATeX output file
+std::string fOutputFileName = "CutEfficiencies";
+std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 
 //--------- Cut definitions
 double fCutCRUMBS = -0.2;
@@ -33,6 +40,8 @@ double fCutNOriginsM3 = 0;
 double fCutFRANSPANDORA = 0.2;
 double fCutNShw = 1;
 double fCutShwEnergy = 135;
+
+TCut fCounterCut = "SliceID==0";
 
 std::vector<PlotDef> cutDefs = {
     {"TruthIsFiducial",  "0==0",            CutType::kNone,   0, {0,2,2}, true, "Truth in FV",  "No \\ cut"}
@@ -88,12 +97,11 @@ std::vector<PlotDef> cutDefs = {
 }; 
 
 
+
+
 //---------  Main function
 void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
-
-    //---------  LATeX output file
-    std::string fOutputFileName = "CutEfficiencies";
 
     //---------  Remove all *.pdf with gSystem
     gSystem->Exec("rm -rf OutputPlots");
@@ -107,6 +115,12 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
     // Read TreeHeader 
     TTree *fTreeHeader = (TTree *)fFile->Get( (fTreeDirName+"TreeHeader").c_str() );
+    
+
+    //----------------- POT normalization
+    double potScaling = 1;
+    double potScalingSignal = 1;
+    ReadPOT(fFile, fPOTTotalNorm, potScaling, potScalingSignal);
 
 
     //--------- Loop over the cuts
@@ -127,8 +141,19 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     }
 
 
+    //loop over the samples and set NEvents
+    for(auto& sample : sampleDefs){
+        int nEvents = fTree->Draw( "", TCut(sample.GetVar())+fCounterCut, "goff");
+        sample.SetNEvents(nEvents);
+        std::cout<<"Sample: "<<sample.GetLabelS()<<" NEvents: "<<nEvents<<std::endl;
+    }
+    
+
     //--------- Create the LaTeX table
     GenerateAndCompileTeXTable(sampleDefs, anaPlots, 0, fOutputFileName, "Cut efficiencies");
+
+    //--------- Create the LaTeX table (POT normalized)
+    GenerateAndCompileTeXTable(sampleDefs, anaPlots, 0, fOutputFileNameNormalized, "Cut efficiencies", potScaling, potScalingSignal, fPOTTotalNorm);
    
     //--------- Output hand scans
     CreateHandScanList(fTree, fTreeHeader, previousCut, sampleDefs);
