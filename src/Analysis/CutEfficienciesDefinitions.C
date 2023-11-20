@@ -6,7 +6,7 @@
 class SampleDef {
 public:
     SampleDef(const std::string& var = "", const std::string& label = "", bool isSignal = false, const std::string& weight = "1")
-        : fVar(var), fLabel(label), fIsSignal(isSignal), fWeight(weight) {
+        : fVar(var), fLabel(label), fIsSignal(isSignal), fWeight(weight), fNEvents(0) {
     }
 
     // Getter methods
@@ -55,11 +55,20 @@ public:
         fWeight = weight;
     }
 
+    void SetNEvents(int nEvents) {
+        fNEvents = nEvents;
+    }
+
+    int GetNEvents() const {
+        return fNEvents;
+    }
+
 private:
     TString fVar;
     TString fLabel;
     bool fIsSignal;
     TString fWeight;
+    int fNEvents;
 };
 
 

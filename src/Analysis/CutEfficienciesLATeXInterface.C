@@ -1,12 +1,17 @@
 #ifndef CUTEFFICIENCIES_LATEXINTERFACE_H
 #define CUTEFFICIENCIES_LATEXINTERFACE_H
 
+
+//--------- Create the LaTeX table (POT normalized)
 void GenerateAndCompileTeXTable(
     const std::vector<SampleDef>& sampleDefs,
     const std::vector<AnaPlot>& anaPlots,
     size_t denominatorIndex,
     const std::string& fileName,
-    const std::string& tableCaption
+    const std::string& tableCaption,
+    double potNorm=1,
+    double potNormSignal=1,
+    double totalPOTNorm=1
 ) {
     // Open a file stream for writing the .tex file
     std::ofstream texFile(fileName+".tex");
@@ -52,7 +57,17 @@ void GenerateAndCompileTeXTable(
 
     texFile << "\\\\ \\hline" << std::endl;
 
+    std::map<std::string, double> potScalingMap;
+    for(auto& sampleName : histogramCounts0){
+        if(sampleName.first.find("Signal") != std::string::npos)
+            potScalingMap[sampleName.first] = potNormSignal;
+        else
+            potScalingMap[sampleName.first] = potNorm;
+    }
+
     // Write the data rows
+    // last stored index
+    size_t lastStoredIndex = 0;
     for (size_t i = 0; i < anaPlots.size(); ++i) {
         if(anaPlots[i].GetPlotDef().GetAccumulateCut() == false) continue;
         texFile << "$ {\\rm " << anaPlots[i].GetPlotDef().GetCutLabel() << "}$" << " & ";
@@ -60,21 +75,63 @@ void GenerateAndCompileTeXTable(
         
         cont=0;
         for(auto& sampleName : histogramCounts){
+
+            double potScaling = potScalingMap[sampleName.first];
+            
             std::ostringstream streamObjEff;
             streamObjEff <<  std::fixed << std::setprecision(2) << 100.*sampleName.second/histogramCounts0[sampleName.first];
             // Get string from out
             if(  cont == sampleDefs.size()-1 )
-                texFile << sampleName.second <<" ("<< streamObjEff.str() <<" \\%)";
+                texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)";
             else
-                texFile << sampleName.second <<" ("<< streamObjEff.str() <<" \\%)"  << " & ";
+                texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)"  << " & ";
             cont++;
         }
 
         texFile << "\\\\ \\hline" << std::endl;
+
+        lastStoredIndex = i;
     }
- 
+
+
+    texFile << "$ {\\rm " << "Final eff" << "}$" << " & ";
+    
+    cont=0;
+    std::map<std::string, int> histogramCounts = anaPlots[ lastStoredIndex].GetCountsV();
+    std::map<std::string, int> initialCounts;
+    for(auto& sample:sampleDefs){
+        initialCounts[sample.GetLabelS()] = sample.GetNEvents();
+    }
+
+    for(auto& sampleName : histogramCounts){
+
+        double potScaling = potScalingMap[sampleName.first];
+
+        std::ostringstream streamObjEff;
+        streamObjEff <<  std::fixed << std::setprecision(2) << 100.*sampleName.second/initialCounts[sampleName.first];
+        // Get string from out
+        if(  cont == sampleDefs.size()-1 )
+            texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)";
+        else
+            texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)"  << " & ";
+        cont++;
+    }
+
+
+    texFile << "\\\\ \\hline" << std::endl;
+
+    
+    std::string newTableCaption = tableCaption;
+    if(totalPOTNorm!=1){
+        // total pot in scientific notation
+        std::ostringstream streamObj;
+        streamObj <<  std::scientific << std::setprecision(2) << totalPOTNorm;
+        // Get string from out
+        std::string totalPOTNormStr = streamObj.str();
+        newTableCaption += " (Normalized to "+totalPOTNormStr+" POT)";
+    }
     texFile << "\\end{tabular}" << std::endl;
-    texFile << "\\caption{" << tableCaption << "}" << std::endl;
+    texFile << "\\caption{" << newTableCaption << "}" << std::endl;
     texFile << "\\end{table}" << std::endl;
 
     texFile << "\\end{landscape}" << std::endl;
@@ -99,7 +156,40 @@ void GenerateAndCompileTeXTable(
 }
 
 
+//--------- Read the POT normalization
+void ReadPOT(TFile *fFile, double totalPOTNorm, double& potScaling, double& potScalingSignal, std::string fTreeName = "originsAna/pottree"){
+    
+    // Read TreePOT
+    TTree *fTreePOT = (TTree *)fFile->Get( fTreeName.c_str() );
 
+
+    // -------- Get the accumulated POT
+    double pot = 0;
+    double averageintmode;
+    bool inclusive;
+    fTreePOT->SetBranchAddress("pot",&pot);
+    fTreePOT->SetBranchAddress("averageintmode",&averageintmode);
+    fTreePOT->SetBranchAddress("inclusive",&inclusive);
+    double totalPOT = 0;
+    double totalPOTSignal = 0;
+    for (int i = 0; i < fTreePOT->GetEntries(); ++i) {
+        fTreePOT->GetEntry(i);
+        //std::cout<<"averageintmode: "<<averageintmode<<" inclusive: "<<inclusive<<" POT: "<<pot<<std::endl;
+        if(averageintmode==0 && inclusive==0) totalPOTSignal+=pot;
+        else if(pot<1e17) totalPOT+=pot;
+    }
+    
+    potScaling = totalPOTNorm/totalPOT;
+    potScalingSignal = totalPOTNorm/totalPOTSignal;
+    std::cout<<" Accumulated POT: "<<totalPOT<<std::endl;
+    std::cout<<" Accumulated POT Signal: "<<totalPOTSignal<<std::endl;
+    std::cout<<" POT scaling factors: "<<potScaling<<" "<<potScalingSignal<<std::endl;
+
+    return;   
+}
+
+
+// --------- Create output list with events that pass the cuts
 void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<SampleDef> sampleDefs){
 
     //--------- Loop over the TreeHeader
@@ -111,6 +201,9 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
     fTreeHeader->SetBranchAddress("InputFileName", &fLArInputFileName);
     // Create map of run-subrun filename
     std::map<std::string, std::vector<std::string>> subrunFilenameMap;
+
+    std::map<std::string, int> fileCounterMap;
+
     for(size_t i=0; i<fTreeHeader->GetEntries(); ++i){
         fTreeHeader->GetEntry(i);
         
@@ -118,6 +211,7 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
         if(fLArInputFileName->find("V0Lambda") != std::string::npos || fLArInputFileName->find("V0Overlay") != std::string::npos){
             continue;
         }
+        
         
         std::string runSubrunLabel = std::to_string(fRunId) + ":" + std::to_string(fSubRunId);
 
@@ -128,7 +222,24 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
 
         // add the filename to the vector
         subrunFilenameMap[runSubrunLabel].push_back(*fLArInputFileName);
+
+
+        // if the file is not in the map, add it
+        if(fileCounterMap.find(*fLArInputFileName) == fileCounterMap.end()){
+            fileCounterMap[*fLArInputFileName] = 1;
+        }
+        else{
+            fileCounterMap[*fLArInputFileName]++;
+        }
+          
     }
+
+    // print counter map
+    for(auto& fileCounter : fileCounterMap){
+        std::cout << "File: " << fileCounter.first << " Count: " << fileCounter.second << std::endl;
+    }
+    // cout map size
+    std::cout << "Map size: " << fileCounterMap.size() << std::endl;
 
     // Output 
     std::ofstream handScanEvents;

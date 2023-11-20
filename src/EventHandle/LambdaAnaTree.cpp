@@ -83,6 +83,7 @@ void LambdaAnaTree::InitializeTree(){
 
     // Set branch addresses for FRANS PANDORA information
     fTree->Branch("FRANSScorePANDORA", &fFRANSScorePANDORA);
+    fTree->Branch("NVertexTracks", &fNVertexTracks);
     fTree->Branch("ShowerEnergy", &fShowerEnergy);
     fTree->Branch("NShowers", &fNShowers);
     fTree->Branch("NShwTh75", &fNShwTh75);
@@ -164,6 +165,7 @@ void LambdaAnaTree::ResetVars(){
     fRecoIsFiducial = false;
 
     fFRANSScorePANDORA = -999;
+    fNVertexTracks = -999;
     fShowerEnergy = -999;
     fNShwTh75 = -999;
     fNShwTh100 = -999;
