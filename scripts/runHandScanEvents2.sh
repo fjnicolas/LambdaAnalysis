@@ -20,6 +20,9 @@ fi
 mkdir -p $OutDir
 rm -f $OutDir/crtEventDisplay_*.root
 
+# Initialize counter
+counter=1
+
 echo "Input file $EventFileList"
 
 # Use a while loop to process the file
@@ -38,7 +41,10 @@ while IFS=' ' read -r line1 line2; do
     # Process lines from the second file
     echo "lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1"
     lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1
-    mv analyze*.root $OutDir/analyzeTPC_$line1.root
+    mv analyze*.root "$OutDir/analyzeTPC_${counter}_${line1}.root"
+
+    # Increment counter
+    ((counter++))
 done < "$EventFileList"
 
 # Calculate and display elapsed time
