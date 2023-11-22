@@ -30,9 +30,8 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
     useBatchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
 
     //--------- Output file
-    gSystem->
-    
-    
+    gSystem->Exec( "rm -rf TMVAResults" );
+    gSystem->Exec( "mkdir TMVAResults" );
     std::string fOutputTMVAROOtFileName = "TMVAResults/TMTMVAResults.root";
     TFile* outputFile = TFile::Open( fOutputTMVAROOtFileName.c_str(), "CREATE" );
 

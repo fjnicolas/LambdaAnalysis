@@ -123,11 +123,17 @@ class STriangle {
 
         int GetNWires();
 
-        double ComputeCoveredArea(std::vector<SHit> triangleHits, double widthTol);
+        double ComputeCoveredArea();
 
         double GetTriangleMAE();
 
         double GetGap();
+
+        double GetMinX();
+        double GetMaxX();
+        double GetMinY();
+        double GetMaxY();
+        
         
 };
 

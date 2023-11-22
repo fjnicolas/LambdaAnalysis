@@ -13,11 +13,11 @@ ChargeDensityAlg:
     SlidingWindowN: 3
     NSamplesBeginSlope: 3
     MaxRadius: 90
-    UseHitWidth: true
+    UseHitWidth: false
     DebugMode: false
     CalculateScore: true
     UseAlpha: true
-    TMVAFilename: "ResAlphaFRAMSSelectionTMVA_BDT.weights.xml"
+    TMVAFilename: "FRAMSSelectionTMVA_BDT.weights.xml"
     OutputPath: "OutputLambdaAna"
     Verbose: 0
 }

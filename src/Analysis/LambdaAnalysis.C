@@ -45,6 +45,8 @@ TCut fCounterCut = "SliceID==0";
 
 std::vector<PlotDef> cutDefs = {
     {"TruthIsFiducial",  "0==0",            CutType::kNone,   0, {0,2,2}, true, "Truth in FV",  "No \\ cut"}
+    ,{"NVertexTracks", "NVertexTracks", CutType::kCenter, 3,      {0, 8, 8},    false, "# tracks", "NTracks"}
+    
     ,{"CRUMBSScore",  "0==0",                CutType::kNone,   0, {-1,1,20}, false, "CRUMBSScore",  "CRUMBSScore"}
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
 
@@ -84,6 +86,7 @@ std::vector<PlotDef> cutDefs = {
     ,{"ShowerEnergy", "ShowerEnergy", CutType::kLeft, fCutShwEnergy, {0, 300, 15}, false, "Shower Energy [MeV]", "ShowerEnergy [MeV]"}
 
 
+    ,{"NVertexTracks", "NVertexTracks", CutType::kCenter, 3,      {0, 8, 8},    false, "# tracks", "NTracks"}
     ,{"NShwTh100", "NShwTh100",       CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>100MeV)", "NShower(>100MeV)"}
     ,{"NShwTh75", "NShwTh75",         CutType::kLeft, fCutNShw,      {0, 6, 6},    false, "# showers (>75MeV)", "NShower(>75MeV)"}
     ,{"ShowerEnergy", "ShowerEnergy", CutType::kLeft, fCutShwEnergy, {0, 300, 15}, false, "Shower Energy [MeV]", "ShowerEnergy [MeV]"}

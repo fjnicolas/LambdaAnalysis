@@ -191,6 +191,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 SVertex fVertex(associatedOrigins[orix].GetPoint(), std::to_string(view));
                 std::cout<<" LAMBDA CANDIDATE "<<fVertex<<std::endl;
 
+                std::cout<<" COVERED AREA: "<<angleList[orix].ComputeCoveredArea();
 
                 SVertex fVertexMine = SVertex( SPoint( fVertex.X()+_TPCLinesAlgo.ShiftX(),
                                                 fVertex.Y()+_TPCLinesAlgo.ShiftY())
@@ -208,7 +209,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                     bestFRANSScore = score;
                     bestTriangleIx = orix;
                     _FRAMSAlgo.Display(cDisplay);
-                }    
+                }
             }
             
             int nAngles = recoEvent.GetNAngles();
@@ -219,9 +220,69 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             else nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
             nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
 
+            // Print the track associations
+            recoEvent.PrintTrackConnections();
+
+            /*// Get origins not associated to the V+single track
+            std::vector<SOrigin> origins = recoEvent.GetOrigins();
+            std::vector<SOrigin> notAssociatedOrigins;
+            if(bestTriangleIx!=-1){
+                int track1ID = angleList[bestTriangleIx].GetTrack1().GetId();
+                int track2ID = angleList[bestTriangleIx].GetTrack2().GetId();
+                int mainTrackID = angleList[bestTriangleIx].GetMainTrack().GetId();
+                for(SOrigin &ori:origins){
+                    if(!recoEvent.IsOriginAssociatedToTrack(ori, track1ID)
+                        && !recoEvent.IsOriginAssociatedToTrack(ori, track2ID)
+                        && !recoEvent.IsOriginAssociatedToTrack(ori, mainTrackID)){
+                        notAssociatedOrigins.push_back(ori);
+                    }
+                }
+            }
+            else{
+                notAssociatedOrigins = origins;
+            }
+
+            // Print origins not associated to the V+single track
+            std::cout<<"  - Not associated origins: "<<notAssociatedOrigins.size()<<std::endl;
+            for(SOrigin &ori:notAssociatedOrigins){
+                std::cout<<ori;
+            }
+
+            SEvent notAssociatedRecoEvent({}, notAssociatedOrigins, {}, {}, 0, {});*/
+            SEvent notAssociatedRecoEvent ({}, {}, {}, {}, 0, {});
+            if(bestTriangleIx!=-1){
+                notAssociatedRecoEvent = recoEvent.UnassociatedOrigins(angleList[bestTriangleIx]);
+            }
+
+            std::cout<<"  - Not associated reco event: \n";
+            std::cout<<" NOrigins: "<<notAssociatedRecoEvent.GetNOrigins()<<std::endl;
+            std::cout<<" NOrigins mult 2: "<<notAssociatedRecoEvent.GetNOriginsMult(2)<<std::endl;
+            std::cout<<" NOrigins mult 1: "<<notAssociatedRecoEvent.GetNOriginsMult(1)<<std::endl;
+            std::cout<<" NOrigins mult GT 3: "<<notAssociatedRecoEvent.GetNOriginsMultGt(3)<<std::endl;
+
+
+            int nDirtHitsInTriangle = 0;
+            double nFractionDirtHitsInTriangle = 0;
+            int nDirtHitsInTriangleWires = 0;
+            double nFractionDirtHitsInTriangleWires = 0;
+            if(bestTriangleIx!=-1){
+                recoEvent.FreeHitsAroundTriangle(angleList[bestTriangleIx],
+                                                nDirtHitsInTriangle,
+                                                nFractionDirtHitsInTriangle,
+                                                nDirtHitsInTriangleWires,
+                                                nFractionDirtHitsInTriangleWires);
+            }
+
+            
+            int nFreeHits = 0;
+            int fNUnassociatedHits = 0;
+            if(bestTriangleIx!=-1){
+                recoEvent.GetUnassociatedHits(angleList[bestTriangleIx], nFreeHits, fNUnassociatedHits);
+            }
+
             //bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
             bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
-
+    
             
             // Update the efficiency calculator
             if(accepted){

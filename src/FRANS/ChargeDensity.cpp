@@ -46,6 +46,20 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
 }
 
 
+// ----------- Distance function -----------
+double ChargeDensity::GetDistance(int x, double y, int x0, double y0) {
+    const double deltaX = static_cast<double>(x - x0) / fFRANSPset.NWirePack;
+    const double deltaY = (y - y0) / fFRANSPset.NDriftPack;
+    return std::hypot(deltaX, deltaY);
+}
+
+
+// ----------- Distance function wires -----------
+int ChargeDensity::GetDistanceWires(int x, int x0) {
+    return static_cast<int> ( std::abs(x - x0) / fFRANSPset.NWirePack );
+}
+
+
 void ChargeDensity::Rescale(std::vector<double>& wf, double kappa){
   std::transform(wf.begin(), wf.end(), wf.begin(), [&kappa](double& z){return z*kappa;});
 }
@@ -58,7 +72,7 @@ void ChargeDensity::ApplyExpoAvSmoothing(std::vector<double>& wf){
 }
 
 
-//---- Unweighted aveerage smoothing
+//---- Unweighted average smoothing
 void ChargeDensity::ApplyUnAvSmoothing(std::vector<double>& wf){
   std::vector<double> wf_aux(wf.begin(), wf.end());
   for(size_t bin=fFRANSPset.UnAvNeighbours; bin<wf.size()-fFRANSPset.UnAvNeighbours; bin++){
@@ -261,14 +275,6 @@ void ChargeDensity::UpdateMetrics(){
 }
 
 
-// ----------- Distance function -----------
-double ChargeDensity::GetDistance(int x, double y, int x0, double y0) {
-    const double deltaX = static_cast<double>(x - x0) / fFRANSPset.NWirePack;
-    const double deltaY = (y - y0) / fFRANSPset.NDriftPack;
-    return std::hypot(deltaX, deltaY);
-}
-
-
 // ----------- Gauss function -----------
 double gaussian(double x, double mu, double sig) {
     return exp(-0.5 * pow((x - mu) / sig, 2)) / (sig * sqrt(2 * M_PI));
@@ -280,6 +286,8 @@ void ChargeDensity::Reset() {
     // Reset vectors
     fZ.clear();
     fZ.resize(DefaultMaxZSize, 0);
+    fZCounter.clear();
+    fZCounter.resize(DefaultMaxZSize, 0);
     fRho.clear();
     fZCum.clear();
     fZCumStart.clear();
@@ -335,6 +343,7 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
     int dMax = 0;
     for (auto &hit : Hits) {
         double d = GetDistance(hit.X(), hit.Y(), vCh, vTimeTick);
+        int dWires = GetDistanceWires(hit.X(), vCh);
         if (d < DefaultMaxZSize) {
             if(fFRANSPset.UseHitWidth){
 
@@ -357,12 +366,15 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
                 double dBin = GetDistance(hit.X(), hitY[k], vCh, vTimeTick);
                 fZ[static_cast<int>(dBin)] += normFactor * hitWeights[k] * hit.Integral();
               }
+
+              fZCounter[dWires] += 1;
             
             }
             else{
               fZ[static_cast<int>(d)] += hit.Integral();
+              fZCounter[dWires] += 1;
             }
-
+            
             fNHits++;
             fAverageHitChi2 += hit.Chi2();
             if (d > dMax) dMax = static_cast<int>(d);
@@ -398,14 +410,20 @@ void ChargeDensity::Display(TCanvas *c){
   
   c->cd();
 
-  TPad *pad1 = new TPad("pad1", "pad1", 0., 0., .98, 0.33);
+  TPad *pad1 = new TPad("pad1", "pad1", 0., 0.66, .98, 0.99);
   pad1->Draw();
+  
   TPad *pad2A = new TPad("pad2A", "pad2A", 0., .33, .49, .66);
   pad2A->Draw();
   TPad *pad2B = new TPad("pad2B", "pad2B", 0.49, .33, .98, .66);
   pad2B->Draw();
-  TPad *pad3 = new TPad("pad3", "pad3", 0., .66, .98, 1.0);
-  pad3->Draw();
+
+  TPad *pad3A = new TPad("pad3A", "pad3A", 0., 0., .49, 0.33);
+  pad3A->Draw();
+  TPad *pad3B = new TPad("pad3B", "pad3B", 0.49, 0., .98, 0.33);
+  pad3B->Draw();
+
+ 
 
   pad1->SetBottomMargin(0.15);
   pad1->SetLeftMargin(0.12);
@@ -413,8 +431,10 @@ void ChargeDensity::Display(TCanvas *c){
   pad2A->SetLeftMargin(0.2);
   pad2A->SetRightMargin(0.);
   pad2B->SetBottomMargin(0.15);
-  pad3->SetBottomMargin(0.15);
-  pad3->SetLeftMargin(0.12);
+  pad3A->SetBottomMargin(0.15);
+  pad3A->SetLeftMargin(0.2);
+  pad3B->SetBottomMargin(0.15);
+  pad3B->SetRightMargin(0.);
 
 
   gStyle->SetTitleFont(52, "TXYZ");
@@ -429,7 +449,7 @@ void ChargeDensity::Display(TCanvas *c){
   gStyle->SetTitleYSize (0.08);
 
 
-  pad3->cd();
+  pad1->cd();
   TGraph *gr = new TGraph(fRho.size(), &fRho[0], &fZ[0]);
   gr->SetTitle("");
   gr->GetHistogram()->GetYaxis()->SetTitle("#zeta(#rho) [ADCxTT]");
@@ -484,7 +504,7 @@ void ChargeDensity::Display(TCanvas *c){
   leg2->Draw("same");
 
 
-  pad1->cd();
+  pad3A->cd();
   TGraph *grDer = new TGraphErrors(fZCumDer.size(), &fRho[0], &fZCumDer[0], 0, &fZCumDerErr[0]);
   grDer->SetTitle("");
   grDer->GetHistogram()->GetYaxis()->SetTitle("Z'(#rho) [ADCxTT]");
@@ -504,6 +524,13 @@ void ChargeDensity::Display(TCanvas *c){
   legLabel3 << " #alpha="<<fAlpha;
   leg3->AddEntry(grDer, legLabel3.str().c_str(), "");
   leg3->Draw("same");
+
+  pad3B->cd();
+  TGraph *grCounter = new TGraph(fRho.size(), &fRho[0], &fZCounter[0]);
+  grCounter->SetTitle("");
+  grCounter->GetHistogram()->GetYaxis()->SetTitle("# hits(#rho)");
+  grCounter->GetHistogram()->GetXaxis()->SetTitle("#rho");
+  grCounter->Draw("ALP");
 
 
   c->cd();

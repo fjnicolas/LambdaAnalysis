@@ -639,14 +639,8 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(STriangle Triangle, SLinear
         std::cout << " - - - Check 6: Opening angle - - - \n";
         std::cout << " Opening Angle " << Triangle.GetOpeningAngle() << "\n";
     }
-
-    std::vector<SHit> triangleHits;
-    std::vector<SHit> hitsAux =  track1.GetHits();
-    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end());
-    hitsAux.clear();
-    hitsAux =  track2.GetHits();
-    triangleHits.insert(triangleHits.end(), hitsAux.begin(), hitsAux.end());
-    double coveredArea = Triangle.ComputeCoveredArea(triangleHits, 1);
+    
+    double coveredArea = Triangle.ComputeCoveredArea();
 
     if (fTPCLinesVertexFinderPset.Verbose >= 1) {
         std::cout << "  Covered area: " << coveredArea << std::endl;
@@ -990,43 +984,26 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         std::cout<<"  Potnetial Intersection Kink "<<ori.GetPoint().X()<<" "<<ori.GetPoint().Y()<<" Tracks: "<<ori.GetTrackEntry(0).GetId()<<" "<<ori.GetTrackEntry(1).GetId()<<std::endl;
         // check if the kink origin is comaptible with other origins
         bool merged=false;
-        /*
-        for(SOrigin & oriAux:originList){
-            bool intersectionCompatible = std::abs(ori.GetPoint().X() - oriAux.GetPoint().X())<=2;
-            intersectionCompatible = intersectionCompatible && std::abs(ori.GetPoint().Y() - oriAux.GetPoint().Y())<2*oriAux.GetYError();
-
-            std::cout<<" Compaticle? "<<intersectionCompatible<<std::endl;
-            if(intersectionCompatible){
-                if(!oriAux.HasTrackIndex(track1.GetId())){
-                    oriAux.AddTrack(track1, intP, intPYerror);
-                    std::cout<<"   END = Adding new track to origin \n";
-                }
-                if(!oriAux.HasTrackIndex(track2.GetId())){
-                    oriAux.AddTrack(track2, intP, intPYerror);
-                    std::cout<<"   END = Adding new track to origin \n";
-                }
-                usedTrack[track1.GetId()]=true;
-                usedTrack[track2.GetId()]=true;
-                merged=true;
-            }
-        }*/
 
         // if not merged, add the kink track to the shorter one
         if(!merged){
             // set the kink track to the shorter one
             int kinkTrackIx;
+            int parentKinkTrackIx;
             SLinearCluster kinkTrack;
             if( track1.NHits()>track2.NHits() ){
                 kinkTrackIx = track2.GetId();
                 kinkTrack = track2;
+                parentKinkTrackIx = track1.GetId();
             }
             else{
                 kinkTrackIx = track1.GetId();
                 kinkTrack = track1; 
+                parentKinkTrackIx = track2.GetId();
             }
 
             if(usedTrack[kinkTrackIx]==false){
-                SOrigin newOr(ori.GetPoint(), {kinkTrack}, false, ori.GetYError());
+                SOrigin newOr(ori.GetPoint(), {kinkTrack}, false, ori.GetYError(), parentKinkTrackIx);
                 originList.push_back( newOr );
                 usedTrack[kinkTrackIx]=true;
                 std::cout<<"  Adding kink track "<<kinkTrack.GetId()<<" at "<<ori.GetPoint();

@@ -88,78 +88,6 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
 
 }
 
-/*double ComputeCoveredArea2(std::vector<SHit> triangleHits, double widthTol) {
-    // Determine the line equation of the opposite side
-    SPoint P1 = (fVertexB.X() < fVertexC.X()) ? fVertexB : fVertexC;
-    SPoint P2 = (fVertexB.X() > fVertexC.X()) ? fVertexB : fVertexC;
-
-    double m = (P2.Y() - P1.Y()) / (P2.X() - P1.X());
-    double n = P1.Y() - m * P1.X();
-
-    int N = 0;
-    int NCovered = 0;
-
-    for (int x = static_cast<int>(P1.X()); x < static_cast<int>(P2.X()); x++) {
-        int y = static_cast<int>(m * x + n);
-        N++;
-
-        for (const SHit &hit : triangleHits) {
-            if (x == static_cast<int>(hit.X()) &&
-                y >= hit.Y() - widthTol*hit.Width() && y <= hit.Y() + widthTol*hit.Width()) {
-                NCovered++;
-                break; // No need to continue checking this x coordinate.
-            }
-        }
-    }
-
-    double coverageFraction = static_cast<double>(NCovered) / N;
-
-    return coverageFraction;
-}*/
-
-struct Point {
-    double x, y;
-};
-
-struct Line {
-    double x, y, yWidth;
-};
-
-double interpolateX(const Point& p1, const Point& p2, double y) {
-    double x1 = p1.x, y1 = p1.y;
-    double x2 = p2.x, y2 = p2.y;
-
-    if (y1 == y2) {
-        return std::min(x1, x2);
-    }
-
-    return x1 + (y - y1) * (x2 - x1) / (y2 - y1);
-}
-
-double fractionOfLineInTriangle(const std::vector<Point>& triangle, const Line& line) {
-    double topY = line.y - line.yWidth / 2;
-    double bottomY = line.y + line.yWidth / 2;
-    double totalLength = 0;
-
-    for (double y = topY; y <= bottomY; y += 1.0) {
-        double x1 = interpolateX(triangle[0], triangle[1], y);
-        double x2 = interpolateX(triangle[1], triangle[2], y);
-        double x3 = interpolateX(triangle[2], triangle[0], y);
-
-        double min_x = std::min(std::min(x1, x2), x3);
-        double max_x = std::max(std::max(x1, x2), x3);
-
-        // Check if the line segment overlaps with the triangle for the given y-coordinate.
-        if (min_x <= line.x && max_x >= line.x) {
-            // Calculate the length of the line segment within the triangle.
-            double segmentLength = std::min(max_x, line.x + line.yWidth / 2) - std::max(min_x, line.x - line.yWidth / 2);
-            totalLength += segmentLength;
-        }
-    }
-
-    return totalLength / line.yWidth;
-}
-
 // Get NHits functions
 int STriangle::GetNHitsTriangle(){
     return fTrack1.NHits() + fTrack2.NHits();
@@ -279,23 +207,6 @@ int STriangle::GetNWires(){
 }
 
 
-double STriangle::ComputeCoveredArea(std::vector<SHit> triangleHits, double widthTol) {
-   
-    std::vector<Point> triangle = { {fMainVertex.X(), fMainVertex.Y()}, {fVertexB.X(), fVertexB.Y()}, {fVertexC.X(), fVertexC.Y()} };
-    std::vector<Line> verticalLines = {{1.0, 3.0}, {2.0, 2.0}, {3.0, 2.0}};
-    double fractionSum = 0;
-    for (SHit &hit : triangleHits){
-        Line line = {hit.X(), hit.Y(), hit.Width()};
-        double fraction = fractionOfLineInTriangle(triangle, line);
-        fractionSum+=fraction;
-    }
-
-    //sdouble coverageFraction = static_cast<double>(NCovered) / N;
-
-    return fractionSum;
-}
-
-
 double distanceToLine(SHit hit, double slope, double intercept) {
     // Calculate the distance using the formula |Ax + By + C| / sqrt(A^2 + B^2)
     double A = slope;
@@ -336,3 +247,136 @@ double STriangle::GetTriangleMAE(){
 
     return 0.5*(mae1+mae2);
 }
+
+
+// Bresenham's line drawing algorithm for steps in X
+void drawLine(int x0, double y0, int x1, double y1, std::vector<SPoint>& pointList) {
+
+    // slope and intercept
+    double slope = (y1 - y0) / (x1 - x0);
+    double intercept = y0 - slope * x0;
+
+    // min and max x
+    int minX = std::min(x0, x1);
+    int maxX = std::max(x0, x1);
+
+    // loop over x
+    for (int x = minX; x <= maxX; x++) {
+        double y = slope * x + intercept;
+        pointList.push_back(SPoint((double)x, y));
+    }
+}
+
+std::vector<SPoint> getPointsInTriangle(int x0, int y0, int x1, int y1, int x2, int y2) {
+    std::vector<SPoint> trianglePoints;
+
+    // Sort vertices in ascending order based on y-coordinate
+    if (y0 > y1) std::swap(x0, x1), std::swap(y0, y1);
+    if (y0 > y2) std::swap(x0, x2), std::swap(y0, y2);
+    if (y1 > y2) std::swap(x1, x2), std::swap(y1, y2);
+
+    // Draw lines for the three edges of the triangle
+    drawLine(x0, y0, x1, y1, trianglePoints);
+    drawLine(x1, y1, x2, y2, trianglePoints);
+    drawLine(x2, y2, x0, y0, trianglePoints);
+
+    return trianglePoints;
+}
+
+double getSegmentOverlap(double a1, double a2, double b1, double b2) {
+    double overlapEnd=0;
+    double overlapStart=0;
+    
+    bool overlap = false;
+    //if ((a1 <= b1 && b1 <= a2) || (a1 <= b2 && b2 <= a2)) {
+    if( (a1 <= b1 && b1 <= a2) || (b1 <= a1 && a1 <= b2)) {
+        double overlap_start = std::max(a1, b1);
+        double overlap_end = std::min(a2, b2);
+        
+        if (overlap_start < overlap_end) {
+            overlapStart = overlap_start;
+            overlapEnd = overlap_end;
+            overlap = true;
+        }
+    }
+    
+    double overlapLength = (overlap)? std::abs(overlapEnd - overlapStart):0;
+
+    //std::cout << "        Checking overlap: "<<a1<<" "<<a2<<" - "<<b1<<" "<<b2<<" LengthOverelap: "<<overlapLength<<std::endl; 
+
+    return overlapLength;
+}
+
+double STriangle::ComputeCoveredArea() {
+   
+    // get all the points that define the triangle
+    std::vector<SPoint> pointsInTriangle = getPointsInTriangle(fMainVertex.X(), fMainVertex.Y(), fVertexB.X(), fVertexB.Y(), fVertexC.X(), fVertexC.Y());
+
+    // get min and max X
+    int minX = std::min(fMainVertex.X(), std::min(fVertexB.X(), fVertexC.X()));
+    int maxX = std::max(fMainVertex.X(), std::max(fVertexB.X(), fVertexC.X()));
+
+    // create map with min/max Y value for each X step
+    std::map<int, double> minY;
+    std::map<int, double> maxY;
+
+    // initialize min/max Y values for each X step
+    for (int i = minX; i <= maxX; i++) {
+        minY[i] = 1e9;
+        maxY[i] = -1e9;
+    }
+
+    // loop over the points in the triangle
+    for (int i = 0; i < pointsInTriangle.size(); i++) {
+        int x = pointsInTriangle[i].X();
+        double y = pointsInTriangle[i].Y();
+
+        // update min/max Y values for each X step
+        if (y < minY[x]) minY[x] = y;
+        if (y > maxY[x]) maxY[x] = y;
+    }
+
+    // area of the triangle
+    double totalArea = 0;
+    for (int i = minX; i <= maxX; i++) {
+        //std::cout << "X = " << i << ", minY = " << minY[i] << ", maxY = " << maxY[i] << std::endl;
+        totalArea+= maxY[i] - minY[i];
+    }
+
+
+    // Get hits from the triangle tracks
+    std::vector<SHit> hitList;
+    std::vector<SHit> hitListAux = fTrack1.GetHits();
+    hitList.insert(hitList.end(), hitListAux.begin(), hitListAux.end());
+    hitListAux.clear();
+    hitListAux = fTrack2.GetHits();
+    hitList.insert(hitList.end(), hitListAux.begin(), hitListAux.end());
+
+    // loop over the hits
+    double totalOverlap = 0;
+    for(SHit& h:hitList){
+        double overlap = getSegmentOverlap(h.Y()-h.Width(), h.Y()+h.Width(), minY[h.X()], maxY[h.X()]);
+        totalOverlap+=overlap;
+    }
+
+
+    return totalOverlap/totalArea;
+}
+
+double STriangle::GetMinX(){
+    return std::min(fMainVertex.X(), std::min(fVertexB.X(), fVertexC.X())  );
+}
+
+double STriangle::GetMaxX(){
+    return std::max(fMainVertex.X(), std::max(fVertexB.X(), fVertexC.X())  );
+}
+
+double STriangle::GetMinY(){
+    return std::min(fMainVertex.Y(), std::min(fVertexB.Y(), fVertexC.Y())  );
+}
+
+double STriangle::GetMaxY(){
+    return std::max(fMainVertex.Y(), std::max(fVertexB.Y(), fVertexC.Y())  );
+}
+
+

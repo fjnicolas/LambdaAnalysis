@@ -232,7 +232,8 @@ std::vector<SHit> TPCLinesAlgo::RemoveIsolatedHits(std::vector<SHit> hitListForH
 
 //----------------------------------------------------------------------
 // Merge isolated hits
-std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, double dCleaning1D, double dTh){
+std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, double dCleaning1D, std::vector<SHit> & discardedHits, double dTh)
+{
     if(fTPCLinesPset.Verbose>=2) std::cout << "\n\n +-+-+-+-+-+-+- Isolated hit merger +-+-+-+-+-+-+-" << std::endl;
     std::vector<SLinearCluster> newRecoTrackList;
 
@@ -335,6 +336,13 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 
         newRecoTrackList.push_back(SLinearCluster(newHitList));
     
+    }
+
+    // add non merged hits to the discarded vector
+    for (size_t hitix = 0; hitix < hitList.size(); ++hitix) {
+        if (!mergedHitsCounter[hitix]) {
+            discardedHits.push_back(hitList[hitix]);
+        }
     }
 
     return newRecoTrackList;
@@ -502,7 +510,8 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         // Isolated hit merger
         std::vector<SHit> remainingHits = hitListForHough;
         remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
-        NewTrackList = MergeIsolatedHits(NewTrackList, remainingHits, 10);
+        discardedHits.clear();
+        NewTrackList = MergeIsolatedHits(NewTrackList, remainingHits, 10, discardedHits);
         // Characterize the tracks
         for(size_t ix = 0; ix<NewTrackList.size(); ix++){
             NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
@@ -536,7 +545,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     double hitDensity = GetAverageHitDensity();
     std::cout<<"Hit density: "<<hitDensity<<std::endl;
 
-    SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, associatedOrigins, hitDensity);
+    SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, associatedOrigins, hitDensity, discardedHits);
     fRecoEvent = recoEvent;
 
     return;

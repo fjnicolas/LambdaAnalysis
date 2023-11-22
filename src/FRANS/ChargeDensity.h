@@ -84,6 +84,7 @@ class ChargeDensity{
 
     // vectors storing the charge profile
     std::vector<double> fZ;
+    std::vector<double> fZCounter;
     std::vector<double> fRho;
     std::vector<double> fZCum;
     std::vector<double> fZCumStart;
@@ -115,6 +116,7 @@ class ChargeDensity{
 
     void Reset();
     double GetDistance(int x, double y, int x0, double y0);
+    int GetDistanceWires(int x, int x0);
     void UpdateMetrics();
     void ApplyExpoAvSmoothing(std::vector<double>& wf);
     void ApplyUnAvSmoothing(std::vector<double>& wf);

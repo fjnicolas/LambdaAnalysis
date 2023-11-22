@@ -10,7 +10,7 @@
 
 #include "TPCSimpleEvents.h"
 
-SOrigin::SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge, double yError) :
+SOrigin::SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge, double yError, int kinkParentId) :
     fVertex(p),
     fYError(yError),
     fTrackList(tracks),
@@ -18,9 +18,33 @@ SOrigin::SOrigin(SPoint p, std::vector<SLinearCluster> tracks, bool isEdge, doub
     fNHits(0),
     fEdgeOrigin(isEdge)
 {
+
+    for(SLinearCluster & trk:tracks){
+        fTrackConnectionIDs.insert(trk.GetId());
+    }
+    if(kinkParentId!=-1){
+        fTrackConnectionIDs.insert(kinkParentId);
+    }
+    
     for(SLinearCluster & trk:tracks){
         fNHits+=trk.NHits();
     }
+}
+
+std::vector<int> SOrigin::GetTracksIDs(){
+    std::vector<int> ids;
+    for(const int &id: fTrackConnectionIDs){
+        ids.push_back(id);
+    }
+    return ids;
+}
+
+std::vector<int> SOrigin::GetTracksConnectionsIDs(){
+    std::vector<int> ids;
+    for(const int &id: fTrackConnectionIDs){
+        ids.push_back(id);
+    }
+    return ids;
 }
 
 void SOrigin::AddTrack(SLinearCluster track, SPoint p, double yError){
@@ -40,6 +64,14 @@ bool SOrigin::HasTrackIndex(int ix){
     return hasIx;
 }
 
+bool SOrigin::IsConnectedToTrackIndex(int ix){
+    bool isConnected=false;
+    for(const int &id:fTrackConnectionIDs){
+        if(id==ix) isConnected=true;
+    }
+    return isConnected;
+}
+
 double SOrigin::TotalCharge(){
     double totalCharge = 0;
     for(SLinearCluster &trk: fTrackList){
@@ -50,14 +82,29 @@ double SOrigin::TotalCharge(){
     return totalCharge;
 }
 
-
-SEvent::SEvent(std::vector<SLinearCluster> tracks, std::vector<SOrigin> origins, std::vector<STriangle> angles,  std::vector<SOrigin> associatedOrigins, double hitDensity):
+SEvent::SEvent(std::vector<SLinearCluster> tracks, std::vector<SOrigin> origins, std::vector<STriangle> angles,  std::vector<SOrigin> associatedOrigins, double hitDensity, std::vector<SHit> freeHits):
     fTrackList(tracks),
     fOriginList(origins),
     fAngleList(angles),
     fAssociatedOrigins(associatedOrigins),
-    fHitDensity(hitDensity)
-{}
+    fHitDensity(hitDensity),
+    fFreeHits(freeHits)
+{
+    // Fill the track connections
+    for(SLinearCluster &track:fTrackList){
+        fTrackConnections[track.GetId()] = {};
+    }
+    // Loop over origins
+    for(SOrigin & ori:fOriginList){
+        // track ids associated to the origin
+        std::vector<int> trackIDs = ori.GetTracksIDs();
+        for(int & id1:trackIDs){
+            for(int & id2:trackIDs){
+                fTrackConnections[std::abs(id1)].push_back( std::abs(id2) );
+            }
+        }
+    }
+}
 
 int SEvent::GetNOrigins(){
     int n=0;
@@ -107,4 +154,189 @@ int SEvent::NHits(){
         n+=trk.NHits();
     }
     return n;
+}
+
+void SEvent::PrintTrackConnections(){
+    for(auto & it:fTrackConnections){
+        std::cout<<"Track "<<it.first<<" is connected to tracks: ";
+        for(int & id:it.second){
+            std::cout<<id<<" ";
+        }
+        std::cout<<std::endl;
+    }
+}
+
+bool SEvent::IsOriginAssociatedToTrack(SOrigin ori, int trackId){
+    bool isAssociated=false;
+    // get the connections for trackID
+    std::vector<int> connections = fTrackConnections[trackId];
+
+    // loop over the connections
+    for(int & id:ori.GetTracksConnectionsIDs()){
+        for(int & id2:connections){
+            if(id==id2) isAssociated=true;
+        }
+    }
+   
+    return isAssociated;
+}
+
+bool SEvent::IsTrackAssociatedToTrack(int trackId, int trackId2){
+    bool isAssociated=false;
+    // get the connections for trackID
+    std::vector<int> connections = fTrackConnections[trackId];
+
+    // loop over the connections
+    for(int & id:connections){
+        if(id==trackId2) isAssociated=true;
+    }
+
+    return isAssociated;
+}
+
+
+// Get origins not associated to the V+single track
+SEvent SEvent::UnassociatedOrigins(STriangle triangle){
+
+    std::vector<SOrigin> origins = GetOrigins();
+    std::vector<SOrigin> notAssociatedOrigins;
+
+    int track1ID = triangle.GetTrack1().GetId();
+    int track2ID = triangle.GetTrack2().GetId();
+    int mainTrackID = triangle.GetMainTrack().GetId();
+    for(SOrigin &ori:origins){
+        if(!IsOriginAssociatedToTrack(ori, track1ID)
+            && !IsOriginAssociatedToTrack(ori, track2ID)
+            && !IsOriginAssociatedToTrack(ori, mainTrackID)){
+            notAssociatedOrigins.push_back(ori);
+        }
+    }
+
+    // Print origins not associated to the V+single track
+    std::cout<<"  - Not associated origins: "<<notAssociatedOrigins.size()<<std::endl;
+    for(SOrigin &ori:notAssociatedOrigins){
+        std::cout<<ori;
+    }
+
+    SEvent notAddociatedRecoEvent({}, notAssociatedOrigins, {}, {}, 0, {});
+
+    return notAddociatedRecoEvent;
+}
+
+
+void SEvent::FreeHitsAroundTriangle(STriangle triangle,
+                                    int & nDirtHitsInTriangle,
+                                    double & nFractionDirtHitsInTriangle,
+                                    int & nDirtHitsInTriangleWires,
+                                    double & nFractionDirtHitsInTriangleWires){
+    // get the number of hits around the triangle
+    nDirtHitsInTriangle = 0;
+    nFractionDirtHitsInTriangle = 0;
+    nDirtHitsInTriangleWires = 0;
+    nFractionDirtHitsInTriangleWires = 0;
+   
+    int track1ID = triangle.GetTrack1().GetId();
+    int track2ID = triangle.GetTrack2().GetId();
+    int mainTrackID = triangle.GetMainTrack().GetId();
+
+
+    std::cout<<"Best triangle limits: \n";
+    std::cout<<"Min/Max X"<<triangle.GetMinX()<<" "<<triangle.GetMaxX()<<std::endl;
+    std::cout<<"Min/Max Y"<<triangle.GetMinY()<<" "<<triangle.GetMaxY()<<std::endl;
+    
+    // vector with the hits not assocaited t the V+main track
+    std::vector<SHit> otherHits;
+    std::vector<SHit> auxHits = GetFreeHits();
+    otherHits.insert(otherHits.end(), auxHits.begin(), auxHits.end()); 
+    for(SLinearCluster & track:GetTracks()){
+        if(track.GetId()==track1ID) continue;
+        if(track.GetId()==track2ID) continue;
+        if(track.GetId()==mainTrackID) continue;
+
+        // check the track is not associated to the V
+        if(IsTrackAssociatedToTrack(track.GetId(), track1ID)) continue;
+        if(IsTrackAssociatedToTrack(track.GetId(), track2ID)) continue;
+
+        std::cout<<"    Adding hits from track "<<track.GetId()<<std::endl;
+        auxHits.clear();
+        auxHits = track.GetHits();
+        otherHits.insert(otherHits.end(), auxHits.begin(), auxHits.end());
+    }
+    std::cout<< " OTHER HITS "<<otherHits.size()<<std::endl;
+
+    
+    // loop over hits, get the ones inside the triangle limits
+    for(SHit & h:otherHits){
+        if(h.X()>triangle.GetMinX() && h.X()<triangle.GetMaxX() 
+            && h.Y()>triangle.GetMinY() && h.Y()<triangle.GetMaxY() ){
+            nDirtHitsInTriangle++;
+        }
+
+        double triangleYLength = triangle.GetMaxY() -  triangle.GetMinY();
+
+        if(h.X()>triangle.GetMinX() && h.X()<triangle.GetMaxX() 
+            && h.Y()>triangle.GetMinY()-triangleYLength/2. && h.Y()<triangle.GetMaxY() + +triangleYLength/2. ){
+            nDirtHitsInTriangleWires++;
+        }
+        
+    }
+
+    nFractionDirtHitsInTriangle = 1.*nDirtHitsInTriangle/triangle.GetNHitsTriangle();
+    nFractionDirtHitsInTriangleWires = 1.*nDirtHitsInTriangleWires/triangle.GetNHitsTriangle();
+
+    
+    std::cout<<" NDirt hits in triangle: "<<nDirtHitsInTriangle<<" Fraction: "<<nFractionDirtHitsInTriangle<<std::endl;
+    std::cout<<" NDirt hits in triangle wires: "<<nDirtHitsInTriangleWires<<" Fraction: "<<nFractionDirtHitsInTriangleWires<<std::endl;
+   
+}
+
+
+// Function to get free and unassociated hits in the range of the V+line
+void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnassociatedHits){
+
+    nFreeHits = 0;
+    nUnassociatedHits = 0;
+
+    int track1ID = triangle.GetTrack1().GetId();
+    int track2ID = triangle.GetTrack2().GetId();
+    int mainTrackID = triangle.GetMainTrack().GetId();
+
+
+    // Get the limits of the V+line
+    int minX = std::min((float)triangle.GetMinX(), triangle.GetMainTrack().GetMinX());
+    int maxX = std::max((float)triangle.GetMaxX(), triangle.GetMainTrack().GetMaxX());
+    double minY = std::min((float)triangle.GetMinY(), triangle.GetMainTrack().GetMinY());
+    double maxY = std::max((float)triangle.GetMaxY(), triangle.GetMainTrack().GetMaxY());
+
+    // Print limits
+    std::cout<<"Limits: "<<minX<<" "<<maxX<<" "<<minY<<" "<<maxY<<std::endl;
+
+    // Get the free hits
+    for(SHit & h:GetFreeHits()){
+        if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY) nFreeHits++;
+    }
+
+    nUnassociatedHits+=nFreeHits;
+    for(SLinearCluster & track:GetTracks()){
+        if(track.GetId()==track1ID) continue;
+        if(track.GetId()==track2ID) continue;
+        if(track.GetId()==mainTrackID) continue;
+
+        // check the track is not associated to the V
+        if(IsTrackAssociatedToTrack(track.GetId(), track1ID)) continue;
+        if(IsTrackAssociatedToTrack(track.GetId(), track2ID)) continue;
+
+        std::vector<SHit> auxHits;
+        auxHits = track.GetHits();
+        for(SHit & h:auxHits){
+            if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY) nUnassociatedHits++;
+        }
+    }
+
+    // Pintout
+    std::cout<<"NFree Hits "<<nFreeHits<<"  NUnassociatedHits "<<nUnassociatedHits<<std::endl;
+
+
+    return;
+
 }
