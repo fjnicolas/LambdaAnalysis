@@ -327,7 +327,7 @@ double STriangle::ComputeCoveredArea() {
     }
 
     // loop over the points in the triangle
-    for (int i = 0; i < pointsInTriangle.size(); i++) {
+    for (size_t i = 0; i < pointsInTriangle.size(); i++) {
         int x = pointsInTriangle[i].X();
         double y = pointsInTriangle[i].Y();
 

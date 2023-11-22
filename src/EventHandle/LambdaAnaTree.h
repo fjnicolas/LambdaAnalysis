@@ -101,6 +101,12 @@ public:
     int fNOriginsMultGT3;
     int fNOriginsPairOneTwo;
 
+    // Reco origins information (after V selection)
+    int fNUnOrigins;
+    int fNUnOriginsMult1;
+    int fNUnOriginsMult2;
+    int fNUnOriginsMultGT3;
+
     // Angle information
     int fNAngles;
     double fAngleFRANSScore;
