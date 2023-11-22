@@ -223,32 +223,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             // Print the track associations
             recoEvent.PrintTrackConnections();
 
-            /*// Get origins not associated to the V+single track
-            std::vector<SOrigin> origins = recoEvent.GetOrigins();
-            std::vector<SOrigin> notAssociatedOrigins;
-            if(bestTriangleIx!=-1){
-                int track1ID = angleList[bestTriangleIx].GetTrack1().GetId();
-                int track2ID = angleList[bestTriangleIx].GetTrack2().GetId();
-                int mainTrackID = angleList[bestTriangleIx].GetMainTrack().GetId();
-                for(SOrigin &ori:origins){
-                    if(!recoEvent.IsOriginAssociatedToTrack(ori, track1ID)
-                        && !recoEvent.IsOriginAssociatedToTrack(ori, track2ID)
-                        && !recoEvent.IsOriginAssociatedToTrack(ori, mainTrackID)){
-                        notAssociatedOrigins.push_back(ori);
-                    }
-                }
-            }
-            else{
-                notAssociatedOrigins = origins;
-            }
-
-            // Print origins not associated to the V+single track
-            std::cout<<"  - Not associated origins: "<<notAssociatedOrigins.size()<<std::endl;
-            for(SOrigin &ori:notAssociatedOrigins){
-                std::cout<<ori;
-            }
-
-            SEvent notAssociatedRecoEvent({}, notAssociatedOrigins, {}, {}, 0, {});*/
+    
             SEvent notAssociatedRecoEvent ({}, {}, {}, {}, 0, {});
             if(bestTriangleIx!=-1){
                 notAssociatedRecoEvent = recoEvent.UnassociatedOrigins(angleList[bestTriangleIx]);

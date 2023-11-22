@@ -14,107 +14,140 @@ LambdaAnaTree::LambdaAnaTree()
 : fTree(nullptr)
 {}
 
-LambdaAnaTree::LambdaAnaTree(TTree* tree)
+LambdaAnaTree::LambdaAnaTree(TTree* tree, bool readMode)
 : fTree(tree)
 {
-    InitializeTree();
+    InitializeTree(readMode);
 }
 
-void LambdaAnaTree::SetTree(TTree* tree)
+void LambdaAnaTree::SetTree(TTree* tree, bool readMode)
 {
     fTree = tree;
-    InitializeTree();
+    InitializeTree(readMode);
 }
 
+template <typename T>
+void LambdaAnaTree::SetBranch(const char* name, T* variable, bool setAddress) {
+    if (setAddress) {
+        fTree->SetBranchAddress(name, variable);
+        std::cout << "Setting branch address for " << name << std::endl;
+    } else {
+        fTree->Branch(name, variable);
+    }
+}
 
-void LambdaAnaTree::InitializeTree(){
+// instance types
+template void LambdaAnaTree::SetBranch(const char* name, int* variable, bool setAddress);
+template void LambdaAnaTree::SetBranch(const char* name, float* variable, bool setAddress);
+template void LambdaAnaTree::SetBranch(const char* name, double* variable, bool setAddress);
+template void LambdaAnaTree::SetBranch(const char* name, bool* variable, bool setAddress);
+template void LambdaAnaTree::SetBranch(const char* name, std::string* variable, bool setAddress);
+template void LambdaAnaTree::SetBranch(const char* name, std::vector<float>* variable, bool setAddress);
+template void LambdaAnaTree::SetBranch(const char* name, std::vector<double>* variable, bool setAddress);
 
+
+void LambdaAnaTree::InitializeTree(bool readMode){
     // Set branch addresses for event information
-    fTree->Branch("EventID", &fEventID);
-    fTree->Branch("SubrunID", &fSubrunID);
-    fTree->Branch("RunID", &fRunID);
-    fTree->Branch("InputFileName", &fInputFileName);
-    fTree->Branch("SliceID", &fSliceID);
-
+    SetBranch("EventID", &fEventID, readMode);
+    SetBranch("SubrunID", &fSubrunID, readMode);
+    SetBranch("RunID", &fRunID, readMode);
+    SetBranch("InputFileName", &fInputFileName, readMode);
+    SetBranch("SliceID", &fSliceID, readMode);
+   
+    
     // Set branch addresses for true variables
-    fTree->Branch("IntOrigin", &fIntOrigin);
-    fTree->Branch("IntMode", &fIntMode);
-    fTree->Branch("IntDirt", &fIntDirt);
-    fTree->Branch("IntType", &fIntType);
-    fTree->Branch("IntCCNC", &fIntCCNC);
-    fTree->Branch("IntNuPDG", &fIntNuPDG);
-    fTree->Branch("IntNProtons", &fIntNProtons);
-    fTree->Branch("IntNNeutrons", &fIntNNeutrons);
-    fTree->Branch("IntNPi0", &fIntNPi0);
-    fTree->Branch("IntNPip", &fIntNPip);
-    fTree->Branch("IntNPim", &fIntNPim);
-    fTree->Branch("IntNMuonP", &fIntNMuonP);
-    fTree->Branch("IntNMuonM", &fIntNMuonM);
-    fTree->Branch("IntNElectronP", &fIntNElectronP);
-    fTree->Branch("IntNElectronM", &fIntNElectronM);
-    fTree->Branch("IntNLambda", &fIntNLambda);
+    SetBranch("IntOrigin", &fIntOrigin, readMode);
+    SetBranch("IntMode", &fIntMode, readMode);
+    SetBranch("IntDirt", &fIntDirt, readMode);
+    SetBranch("IntType", &fIntType, readMode);
+    SetBranch("IntCCNC", &fIntCCNC, readMode);
+    SetBranch("IntNuPDG", &fIntNuPDG, readMode);
+    SetBranch("IntNProtons", &fIntNProtons, readMode);
+    SetBranch("IntNNeutrons", &fIntNNeutrons, readMode);
+    SetBranch("IntNPi0", &fIntNPi0, readMode);
+    SetBranch("IntNPip", &fIntNPip, readMode);
+    SetBranch("IntNPim", &fIntNPim, readMode);
+    SetBranch("IntNMuonP", &fIntNMuonP, readMode);
+    SetBranch("IntNMuonM", &fIntNMuonM, readMode);
+    SetBranch("IntNElectronP", &fIntNElectronP, readMode);
+    SetBranch("IntNElectronM", &fIntNElectronM, readMode);
+    SetBranch("IntNLambda", &fIntNLambda, readMode);
 
     // Set branch addresses for true vertex information
-    fTree->Branch("NuvE", &fNuvE);
-    fTree->Branch("NuvT", &fNuvT);
-    fTree->Branch("NuvX", &fNuvX);
-    fTree->Branch("NuvY", &fNuvY);
-    fTree->Branch("NuvZ", &fNuvZ);
-    fTree->Branch("TruthIsFiducial", &fTruthIsFiducial);
+    SetBranch("NuvE", &fNuvE, readMode);
+    SetBranch("NuvT", &fNuvT, readMode);
+    SetBranch("NuvX", &fNuvX, readMode);
+    SetBranch("NuvY", &fNuvY, readMode);
+    SetBranch("NuvZ", &fNuvZ, readMode);
+    SetBranch("TruthIsFiducial", &fTruthIsFiducial, readMode);
+    SetBranch("TruthIsAV", &fTruthIsAV, readMode);
 
     // Set branch addresses for slice information
-    fTree->Branch("SliceCompleteness", &fSliceCompleteness);
-    fTree->Branch("SlicePurity", &fSlicePurity);
+    SetBranch("SliceCompleteness", &fSliceCompleteness, readMode);
+    SetBranch("SlicePurity", &fSlicePurity, readMode);
 
     // Set branch addresses for lambda true information
-    fTree->Branch("Gap", &fGap);
-    fTree->Branch("LambdaKE", &fLambdaKE);
-    fTree->Branch("ProtonKE", &fProtonKE);
-    fTree->Branch("PionKE", &fPionKE);
+    SetBranch("Gap", &fGap, readMode);
+    SetBranch("LambdaKE", &fLambdaKE, readMode);
+    SetBranch("ProtonKE", &fProtonKE, readMode);
+    SetBranch("PionKE", &fPionKE, readMode);
 
     // Set branch addresses for cosmic rejection
-    fTree->Branch("CRUMBSScore", &fCRUMBSScore);
+    SetBranch("CRUMBSScore", &fCRUMBSScore, readMode);
 
     // Set branch addresses for reco vertex information
-    fTree->Branch("RecnuvX", &fRecnuvX);
-    fTree->Branch("RecnuvY", &fRecnuvY);
-    fTree->Branch("RecnuvZ", &fRecnuvZ);
-    fTree->Branch("RecoIsFiducial", &fRecoIsFiducial);
+    SetBranch("RecnuvX", &fRecnuvX, readMode);
+    SetBranch("RecnuvY", &fRecnuvY, readMode);
+    SetBranch("RecnuvZ", &fRecnuvZ, readMode);
+    SetBranch("RecoIsFiducial", &fRecoIsFiducial, readMode);
 
     // Set branch addresses for FRANS PANDORA information
-    fTree->Branch("FRANSScorePANDORA", &fFRANSScorePANDORA);
-    fTree->Branch("NVertexTracks", &fNVertexTracks);
-    fTree->Branch("ShowerEnergy", &fShowerEnergy);
-    fTree->Branch("NShowers", &fNShowers);
-    fTree->Branch("NShwTh75", &fNShwTh75);
-    fTree->Branch("NShwTh100", &fNShwTh100);
-    fTree->Branch("MainShowerEnergy", &fMainShowerEnergy);
-    fTree->Branch("MainShowerScore", &fMainShowerScore);
-    fTree->Branch("ShowerEnergyVect", &fShowerEnergyVect);
-    fTree->Branch("ShowerScoreVect", &fShowerScoreVect);
+    SetBranch("FRANSScorePANDORA", &fFRANSScorePANDORA, readMode);
+    SetBranch("NVertexTracks", &fNVertexTracks, readMode);
+    SetBranch("ShowerEnergy", &fShowerEnergy, readMode);
+    SetBranch("NShowers", &fNShowers, readMode);
+    SetBranch("NShwTh75", &fNShwTh75, readMode);
+    SetBranch("NShwTh100", &fNShwTh100, readMode);
+    SetBranch("MainShowerEnergy", &fMainShowerEnergy, readMode);
+    SetBranch("MainShowerScore", &fMainShowerScore, readMode);
+    SetBranch("ShowerEnergyVect", &fShowerEnergyVect, readMode);
+    SetBranch("ShowerScoreVect", &fShowerScoreVect, readMode);
     
-    // Set branch addresses for FRANS PANDORA information
-    fTree->Branch("NOrigins", &fNOrigins);
-    fTree->Branch("NOriginsMult1", &fNOriginsMult1);
-    fTree->Branch("NOriginsMult2", &fNOriginsMult2);
-    fTree->Branch("NOriginsMultGT3", &fNOriginsMultGT3);
-    fTree->Branch("NOriginsPairOneTwo", &fNOriginsPairOneTwo);
+    // Set branch addresses for # origins information
+    SetBranch("NOrigins", &fNOrigins, readMode);
+    SetBranch("NOriginsMult1", &fNOriginsMult1, readMode);
+    SetBranch("NOriginsMult2", &fNOriginsMult2, readMode);
+    SetBranch("NOriginsMultGT3", &fNOriginsMultGT3, readMode);
+    SetBranch("NOriginsPairOneTwo", &fNOriginsPairOneTwo, readMode);
+
+    // Set branch addresses for # unassociated origins information
+    SetBranch("NUnOrigins", &fNUnOrigins, readMode);
+    SetBranch("NUnOriginsMult1", &fNUnOriginsMult1, readMode);
+    SetBranch("NUnOriginsMult2", &fNUnOriginsMult2, readMode);
+    SetBranch("NUnOriginsMultGT3", &fNUnOriginsMultGT3, readMode);
 
     // Set branch addresses for angle information
-    fTree->Branch("NAngles", &fNAngles);
-    fTree->Branch("AngleFRANSScore", &fAngleFRANSScore);
-    fTree->Branch("AngleGap", &fAngleGap);
-    fTree->Branch("AngleNHits", &fAngleNHits);
-    fTree->Branch("AngleNHitsTrack1", &fAngleNHitsTrack1);
-    fTree->Branch("AngleNHitsTrack2", &fAngleNHitsTrack2);
-    fTree->Branch("AngleNHitsMainTrack", &fAngleNHitsMainTrack);
-    fTree->Branch("AngleLengthTrack1", &fAngleLengthTrack1);
-    fTree->Branch("AngleLengthTrack2", &fAngleLengthTrack2);
-    fTree->Branch("AngleLengthMainTrack", &fAngleLengthMainTrack);
-    fTree->Branch("AngleLongestIsMain", &fAngleLongestIsMain);
-    fTree->Branch("AngleDecayContainedDiff", &fAngleDecayContainedDiff);
-    fTree->Branch("NUnassociatedHits", &fNUnassociatedHits);
+    SetBranch("NAngles", &fNAngles, readMode);
+    SetBranch("AngleFRANSScore", &fAngleFRANSScore, readMode);
+    SetBranch("AngleGap", &fAngleGap, readMode);
+    SetBranch("AngleNHits", &fAngleNHits, readMode);
+    SetBranch("AngleNHitsTrack1", &fAngleNHitsTrack1, readMode);
+    SetBranch("AngleNHitsTrack2", &fAngleNHitsTrack2, readMode);
+    SetBranch("AngleNHitsMainTrack", &fAngleNHitsMainTrack, readMode);
+    SetBranch("AngleLengthTrack1", &fAngleLengthTrack1, readMode);
+    SetBranch("AngleLengthTrack2", &fAngleLengthTrack2, readMode);
+    SetBranch("AngleLengthMainTrack", &fAngleLengthMainTrack, readMode);
+    SetBranch("AngleLongestIsMain", &fAngleLongestIsMain, readMode);
+    SetBranch("AngleDecayContainedDiff", &fAngleDecayContainedDiff, readMode);
+    SetBranch("AngleCoveredArea", &fAngleCoveredArea, readMode);
+    SetBranch("AngleDirtHits", &fAngleDirtHits, readMode);
+    SetBranch("AngleDirtHitsRatio", &fAngleDirtHitsRatio, readMode);
+    SetBranch("AngleDirtHitsWires", &fAngleDirtHitsWires, readMode);
+    SetBranch("AngleDirtHitsWiresRatio", &fAngleDirtHitsWiresRatio, readMode);
 
+    SetBranch("NFreeHits", &fNFreeHits, readMode);
+    SetBranch("NUnassociatedHits", &fNUnassociatedHits, readMode);
+    
 
 }
 
@@ -148,6 +181,7 @@ void LambdaAnaTree::ResetVars(){
     fNuvY = -999;
     fNuvZ = -999;
     fTruthIsFiducial = false;
+    fTruthIsAV = false;
 
     fSliceCompleteness = -999;
     fSlicePurity = -999;
@@ -180,6 +214,11 @@ void LambdaAnaTree::ResetVars(){
     fNOriginsMultGT3 = -999;
     fNOriginsPairOneTwo = -999;
 
+    fNUnOrigins = -999;
+    fNUnOriginsMult1 = -999;
+    fNUnOriginsMult2 = -999;
+    fNUnOriginsMultGT3 = -999;
+
     fNAngles = -999;
     fAngleFRANSScore = -999;
     fAngleGap = -999;
@@ -192,6 +231,14 @@ void LambdaAnaTree::ResetVars(){
     fAngleLengthMainTrack = -999;
     fAngleLongestIsMain = false;
     fAngleDecayContainedDiff = -999;
+    fAngleCoveredArea = -999;
+    fAngleDirtHits = -999;
+    fAngleDirtHitsRatio = -999;
+    fAngleDirtHitsWires = -999;
+    fAngleDirtHitsWiresRatio = -999;
+
+
+    fNFreeHits = -999;
     fNUnassociatedHits = -999;
 
 }

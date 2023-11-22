@@ -10,6 +10,8 @@
 #ifndef TPC_LAMBDAANATREE_H
 #define TPC_LAMBDAANATREE_H
 
+// C++ includes
+#include <iostream>
 #include <vector>
 
 // ROOT includess
@@ -27,11 +29,12 @@ public:
 
     // Constructors
     LambdaAnaTree();
-    LambdaAnaTree(TTree* tree);
-    void SetTree(TTree* tree);
+    LambdaAnaTree(TTree* tree, bool readMode=0);
+    void SetTree(TTree* tree, bool readMode=0);
 
-    void InitializeTree();
+    template <typename T> void SetBranch(const char* name, T* variable, bool setAddress);
 
+    void InitializeTree(bool readMode);
 
     // Event information
     int fEventID;
@@ -61,6 +64,7 @@ public:
     // True Vertex information
     double fNuvE, fNuvT, fNuvX, fNuvY, fNuvZ;
     bool fTruthIsFiducial;
+    bool fTruthIsAV;
 
     // Slice truth quality
     double fSliceCompleteness;
@@ -120,11 +124,23 @@ public:
     double fAngleLengthMainTrack;
     double fAngleDecayContainedDiff;
     bool fAngleLongestIsMain;
+    double fAngleCoveredArea;
+    int fAngleDirtHits;
+    double fAngleDirtHitsRatio;
+    int fAngleDirtHitsWires;
+    double fAngleDirtHitsWiresRatio;
+
+    int fNFreeHits;
     int fNUnassociatedHits;
+
 
 
     void FillTree() { fTree->Fill(); }
     void WriteTree() { fTree->Write(); }
+    void PrintTree() { fTree->Print();}
+
+    int GetEntries() { return fTree->GetEntries(); }
+    void GetEntry(int i) { fTree->GetEntry(i); }
 
     void ResetVars();
 
