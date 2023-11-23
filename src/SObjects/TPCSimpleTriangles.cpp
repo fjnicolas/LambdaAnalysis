@@ -14,6 +14,28 @@ double get_momentum(double ke, double m) {
     return ke * std::sqrt(1 + 2. * m / ke);
 }
 
+
+double GetAngle360(double x, double y) {
+    if(x == 0){
+        if(y>0) return 90;
+        else return 270;
+    }
+    else{
+        double a = std::atan(std::abs(y / x)) * 180.0 / M_PI;
+
+        if (x > 0 && y < 0) { // quadrant 4
+            a = 360 - a;
+        } else if (x < 0 && y < 0) { // quadrant 3
+            a = 180 + a;
+        } else if (x < 0 && y > 0) { // quadrant 2
+            a = 180 - a;
+        }
+        return a;
+    }   
+}
+
+
+
 STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track2, SLinearCluster track1, SLinearCluster mainTrack, double weight_b, double weight_c)
 {
     fTrack1 = track1;
@@ -63,7 +85,19 @@ STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit 
     fMomentumHypo2 = LineEquation(slope2, intercept2);
 
     // Calculate the opening angle in radians
-    fOpeningAngle = std::abs(180 * ( std::atan((slope2 - slope1) / (1 + slope1 * slope2)) ) / M_PI);
+    double VDir1[] = {
+        GetVertexB().X() - GetMainVertex().X(),
+        GetVertexB().Y() - GetMainVertex().Y()
+    };
+
+    double VDir2[] = {
+        GetVertexC().X() - GetMainVertex().X(),
+        GetVertexC().Y() - GetMainVertex().Y()
+    };
+
+    double VDir1Angle = GetAngle360(VDir1[0], VDir1[1]);
+    double VDir2Angle = GetAngle360(VDir2[0], VDir2[1]);
+    fOpeningAngle = std::min(360 - std::abs(VDir1Angle - VDir2Angle), std::abs(VDir1Angle - VDir2Angle));
 
     // Calculate momenta
     weight_b *= fConFactor;
@@ -119,24 +153,9 @@ double STriangle::GetLengthMainTrack(){
     return fMainTrack.GetLength();
 }
 
-double GetAngle360(double x, double y) {
-    if(x == 0){
-        if(y>0) return 90;
-        else return 270;
-    }
-    else{
-        double a = std::atan(std::abs(y / x)) * 180.0 / M_PI;
 
-        if (x > 0 && y < 0) { // quadrant 4
-            a = 360 - a;
-        } else if (x < 0 && y < 0) { // quadrant 3
-            a = 180 + a;
-        } else if (x < 0 && y > 0) { // quadrant 2
-            a = 180 - a;
-        }
-        return a;
-    }   
-}
+
+
 
 double STriangle::GetDecayAngleDifference(){
     

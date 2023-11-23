@@ -5,8 +5,9 @@
 #include <TString.h>
 #include <TMath.h>
 
-#include "LambdaAnalysis.C"
 #include "LambdaBDTAnalysis.C"
+#include "LambdaAnalysis.C"
+
 
 void LoadAnalysisMacros(){
     std::cout<<" Loaded ana macros\n";

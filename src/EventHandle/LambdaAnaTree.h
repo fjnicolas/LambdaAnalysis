@@ -41,6 +41,7 @@ public:
     int fSubrunID;
     int fRunID;
     std::string fInputFileName;
+    std::string *fInputFileNameRead;
     int fSliceID;
     
     // True variables
@@ -118,6 +119,7 @@ public:
     int fAngleNHits;
     int fAngleNHitsTrack1;
     int fAngleNHitsTrack2;
+    int fAngleMinNHits;
     int fAngleNHitsMainTrack;
     double fAngleLengthTrack1;
     double fAngleLengthTrack2;
@@ -129,6 +131,7 @@ public:
     double fAngleDirtHitsRatio;
     int fAngleDirtHitsWires;
     double fAngleDirtHitsWiresRatio;
+    double fAngleOpeningAngle;
 
     int fNFreeHits;
     int fNUnassociatedHits;

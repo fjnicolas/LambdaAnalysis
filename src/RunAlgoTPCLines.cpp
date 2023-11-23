@@ -178,13 +178,15 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             std::vector<SOrigin> associatedOrigins = recoEvent.GetAssociatedOrigins();
             int bestTriangleIx = -1;
             double bestFRANSScore = -1000;
-            TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 600, 0, 800, 1200);
+            TCanvas *cDisplayPANDORA = new TCanvas( "FinalRecoFRANSPANDORA", "FinalRecoFRANS", 600, 0, 800, 1200);
+            TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 700, 0, 900, 1200);
             
 
             SVertex fVertexReco = SVertex( SPoint( RecoVertexUVYT[2], RecoVertexUVYT[3]), "");
             SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");
 
             _FRAMSAlgo.Fill(hitList, fVertexReco);
+            _FRAMSAlgo.Display(cDisplayPANDORA);
             double FRANSScorePANDORA = _FRAMSAlgo.Score();
 
             for(size_t orix=0; orix<angleList.size(); orix++){
@@ -275,7 +277,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
             
             std::string outNamePreffix = accepted? "Accepted":"Rejected";
-            std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label(); 
+            std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label() + "_" + std::to_string(_EfficiencyCalculator.NEvents()); 
             
             if(recoEvent.GetNOrigins()>0){
                 _EfficiencyCalculator.UpdateHistograms(recoEvent);
@@ -334,6 +336,10 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 std::cout<<"  - Best angle: "<<bestTriangleIx<<" FRANS: "<<bestFRANSScore<<" Gap: "<<bestTriangle.GetGap()<<" DecayContainedDiff: "<<bestTriangle.GetDecayAngleDifference()<<std::endl;
                 std::cout<<"  - NHits: "<<bestTriangle.GetNHitsTriangle()<<" NHitsTrack1: "<<bestTriangle.GetNHitsTrack1()<<" NHitsTrack2: "<<bestTriangle.GetNHitsTrack2()<<" NHitsMainTrack: "<<bestTriangle.GetNHitsMainTrack()<<std::endl;
                 std::cout<<"  - LengthTrack1: "<<bestTriangle.GetLengthTrack1()<<" LengthTrack2: "<<bestTriangle.GetLengthTrack2()<<" LengthMainTrack: "<<bestTriangle.GetLengthMainTrack()<<std::endl;
+                // cout minimum hits
+                std::cout<<"  - Minimum hits: "<<std::min(bestTriangle.GetNHitsTrack1(), bestTriangle.GetNHitsTrack2())<<std::endl;
+                //cout opening angle
+                std::cout<<"  - Opening angle: "<<bestTriangle.GetOpeningAngle()<<std::endl;
             }
 
             int associatedHits = recoEvent.NHits();
@@ -356,6 +362,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             if(bestFRANSScore!=-1000){
                 cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
             }
+
+            outputLabel+="FRANSPANDORA";
+            cDisplayPANDORA->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
             delete cDisplay;
 
         }

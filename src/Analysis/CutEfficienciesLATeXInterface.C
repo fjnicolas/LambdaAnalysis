@@ -35,9 +35,11 @@ void GenerateAndCompileTeXTable(
     texFile << "\\begin{table}[h]" << std::endl;
     texFile << "\\centering" << std::endl;
     texFile << "\\begin{tabular}{|c|";
-    for(size_t k = 0; k<sampleDefs.size(); k++) texFile<<"c|";
+    for(size_t k = 0; k<sampleDefs.size(); k++)
+        texFile<<"c|";
     texFile << "}" << std::endl;
     texFile << "\\hline" << std::endl;
+
 
 
     std::map<std::string, int> histogramCounts0 = anaPlots[denominatorIndex].GetCountsV();
@@ -73,18 +75,21 @@ void GenerateAndCompileTeXTable(
         texFile << "$ {\\rm " << anaPlots[i].GetPlotDef().GetCutLabel() << "}$" << " & ";
         std::map<std::string, int> histogramCounts = anaPlots[i].GetCountsV();
         
+        std::map<std::string, int> histogramCountsPre = anaPlots[lastStoredIndex].GetCountsV();
+
         cont=0;
         for(auto& sampleName : histogramCounts){
 
             double potScaling = potScalingMap[sampleName.first];
             
             std::ostringstream streamObjEff;
-            streamObjEff <<  std::fixed << std::setprecision(2) << 100.*sampleName.second/histogramCounts0[sampleName.first];
+            streamObjEff << " (" << std::fixed << std::setprecision(2) << 100.*sampleName.second/histogramCounts0[sampleName.first];
+            streamObjEff << " \\%) \\ $\\epsilon_{r}$= " << std::setprecision(0) << 100.*sampleName.second/histogramCountsPre[sampleName.first] << "\\%";
             // Get string from out
             if(  cont == sampleDefs.size()-1 )
-                texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)";
+                texFile << potScaling*sampleName.second << streamObjEff.str();
             else
-                texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)"  << " & ";
+                texFile << potScaling*sampleName.second << streamObjEff.str() << " & ";
             cont++;
         }
 
@@ -92,6 +97,8 @@ void GenerateAndCompileTeXTable(
 
         lastStoredIndex = i;
     }
+    
+
 
 
     texFile << "$ {\\rm " << "Final eff" << "}$" << " & ";

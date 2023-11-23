@@ -51,7 +51,11 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("EventID", &fEventID, readMode);
     SetBranch("SubrunID", &fSubrunID, readMode);
     SetBranch("RunID", &fRunID, readMode);
-    SetBranch("InputFileName", &fInputFileName, readMode);
+    if(!readMode)
+        SetBranch("InputFileName", &fInputFileName, readMode);
+    else
+        SetBranch("InputFileName", &fInputFileNameRead, readMode);
+
     SetBranch("SliceID", &fSliceID, readMode);
    
     
@@ -133,6 +137,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleNHits", &fAngleNHits, readMode);
     SetBranch("AngleNHitsTrack1", &fAngleNHitsTrack1, readMode);
     SetBranch("AngleNHitsTrack2", &fAngleNHitsTrack2, readMode);
+    SetBranch("AngleMinNHits", &fAngleMinNHits, readMode);
     SetBranch("AngleNHitsMainTrack", &fAngleNHitsMainTrack, readMode);
     SetBranch("AngleLengthTrack1", &fAngleLengthTrack1, readMode);
     SetBranch("AngleLengthTrack2", &fAngleLengthTrack2, readMode);
@@ -144,6 +149,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleDirtHitsRatio", &fAngleDirtHitsRatio, readMode);
     SetBranch("AngleDirtHitsWires", &fAngleDirtHitsWires, readMode);
     SetBranch("AngleDirtHitsWiresRatio", &fAngleDirtHitsWiresRatio, readMode);
+    SetBranch("AngleOpeningAngle", &fAngleOpeningAngle, readMode);
 
     SetBranch("NFreeHits", &fNFreeHits, readMode);
     SetBranch("NUnassociatedHits", &fNUnassociatedHits, readMode);
@@ -225,6 +231,7 @@ void LambdaAnaTree::ResetVars(){
     fAngleNHits = -999;
     fAngleNHitsTrack1 = -999;
     fAngleNHitsTrack2 = -999;
+    fAngleMinNHits = -999;
     fAngleNHitsMainTrack = -999;
     fAngleLengthTrack1 = -999;
     fAngleLengthTrack2 = -999;
@@ -236,6 +243,7 @@ void LambdaAnaTree::ResetVars(){
     fAngleDirtHitsRatio = -999;
     fAngleDirtHitsWires = -999;
     fAngleDirtHitsWiresRatio = -999;
+    fAngleOpeningAngle = -999;
 
 
     fNFreeHits = -999;

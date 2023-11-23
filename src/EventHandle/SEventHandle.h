@@ -140,6 +140,12 @@ public:
 
     }
 
+    // return NProcessed events
+    int NProcessedEvents(){return nProcessedEvents;};
+    // return NSelected events
+    int NSelectedEvents(){return nEventsSelected;};
+    // return NEvents
+    int NEvents(){return nEvents;};
 
 
     void UpdateHistograms(SEvent recoEv);
