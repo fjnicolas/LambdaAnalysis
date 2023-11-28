@@ -431,8 +431,11 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     double hitDensity = GetHitLinearDensity(hitHoughTubeList);
     if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"    Hit density:"<<hitDensity<<std::endl;
     
+    
+
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
+        fDisplay.Show("Pre-hough direction", hitList, LineEquation(0, -1));
         fDisplay.Show("Hough direction", hitList, houghLine, hitHoughTubeList);
     }
     

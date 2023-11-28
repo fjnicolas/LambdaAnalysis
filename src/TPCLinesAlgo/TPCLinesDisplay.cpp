@@ -192,11 +192,14 @@ void TPCLinesDisplay::Show(
     std::vector<SOrigin> origins,
     TCanvas *canvas)
 {
-    
+
     SetStyle();
 
     if(allHitsV.size()==0){return;}
     
+    if(canvas==nullptr)
+        canvas = new TCanvas("c", "c",  0, 0, 1000, 800);
+
     canvas->cd();
     
     TPad *pad1 = new TPad("pad1", "Graph Pad", 0.0, 0., .8, 1.0);
@@ -205,8 +208,8 @@ void TPCLinesDisplay::Show(
     pad2->SetLeftMargin(-0.2);
     pad1->Draw();
     pad2->Draw();
-    
-    TLegend * legend = new TLegend(0., 0.1, 0.99, 0.9); // (x1, y1, x2, y2)
+
+    TLegend * legend = new TLegend(0., 0.1, 0.99, 0.9);
 
     pad1->cd();
 
@@ -223,7 +226,6 @@ void TPCLinesDisplay::Show(
 
     // all hits scatter
     DrawHitScatter(allHitsV, legend, "AllHits", 65, 8, 1, 0.6);
-
     if(selectedHitsV.size()!=0){
         // selected hits scatter
         DrawHitScatter(selectedHitsV, legend, "HoughHits", kRed, 24, 1.1, 0);
@@ -241,25 +243,28 @@ void TPCLinesDisplay::Show(
     }
 
     // triangles
-    for(size_t oIx=0; oIx<originAngles.size(); oIx++){
-        std::cout<<"Drawing origin angle "<<oIx<<std::endl;
-        std::string VLabel = "V_{"+std::to_string(oIx)+"} ";
-        VLabel = VLabel + originAngles[oIx].GetTrack1().GetId()+"-"+originAngles[oIx].GetTrack2().GetId()+"#rightarrow";
-        VLabel = VLabel + originAngles[oIx].GetMainTrack().GetId();
+    if(originAngles.size()>0){
+        for(size_t oIx=0; oIx<originAngles.size(); oIx++){
+            std::cout<<"Drawing origin angle "<<oIx<<std::endl;
+            std::string VLabel = "V_{"+std::to_string(oIx)+"} ";
+            VLabel = VLabel + originAngles[oIx].GetTrack1().GetId()+"-"+originAngles[oIx].GetTrack2().GetId()+"#rightarrow";
+            VLabel = VLabel + originAngles[oIx].GetMainTrack().GetId();
 
-        DrawTriangle(originAngles[oIx], legend, VLabel, fColorsOrigins[oIx], 90, 0.5);
+            DrawTriangle(originAngles[oIx], legend, VLabel, fColorsOrigins[oIx], 90, 0.5);
+        }
     }
 
 
-
-    for(size_t oIx=0; oIx<origins.size(); oIx++){
-        std::cout<<"Drawing origin "<<oIx<<std::endl;
-        std::string originLabel = "#omicron_{"+std::to_string(oIx)+"} (m="+std::to_string(origins[oIx].Multiplicity())+"),";
-        for(SLinearCluster & trk:origins[oIx].GetTracks()){
-            int sign = (origins[oIx].IsEdgeOrigin())? 1:-1;
-            originLabel += " "+std::to_string(sign*trk.GetId());
+    if(origins.size()>0){
+        for(size_t oIx=0; oIx<origins.size(); oIx++){
+            std::cout<<"Drawing origin "<<oIx<<std::endl;
+            std::string originLabel = "#omicron_{"+std::to_string(oIx)+"} (m="+std::to_string(origins[oIx].Multiplicity())+"),";
+            for(SLinearCluster & trk:origins[oIx].GetTracks()){
+                int sign = (origins[oIx].IsEdgeOrigin())? 1:-1;
+                originLabel += " "+std::to_string(sign*trk.GetId());
+            }
+            DrawVertex(origins[oIx].GetPoint(), legend, originLabel.c_str(), fColorsOrigins[oIx], 90, 0.5);
         }
-        DrawVertex(origins[oIx].GetPoint(), legend, originLabel.c_str(), fColorsOrigins[oIx], 90, 0.5);
     }
 
 

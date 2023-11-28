@@ -507,6 +507,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         }
 
 
+
         // Isolated hit merger
         std::vector<SHit> remainingHits = hitListForHough;
         remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
@@ -518,6 +519,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList[ix].AssignId(ix);
         }
 
+        fDisplay.Show("Tracks", fHitList, LineEquation(0, -1), {}, NewTrackList);
         //Find secondary vertexes
         std::cout<<" We have "<<NewTrackList.size()<<" tracks\n";
         if(NewTrackList.size()>0){

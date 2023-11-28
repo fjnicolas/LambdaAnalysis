@@ -99,7 +99,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // TTree loop
     std::vector<int> fNVertex;
     int nEntries = 0;
+    int fileCounter = 0;
     for (const auto& filepath : fFilePaths) {
+        fileCounter++;
 
         std::cout<<" ANALYZING THE FILE: "<<filepath<<std::endl;
         MyTPCTreeReader treeReader(filepath, "ana/AnaTPCTree");
@@ -186,7 +188,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");
 
             _FRAMSAlgo.Fill(hitList, fVertexReco);
-            _FRAMSAlgo.Display(cDisplayPANDORA);
+            //_FRAMSAlgo.Display(cDisplayPANDORA);
             double FRANSScorePANDORA = _FRAMSAlgo.Score();
 
             for(size_t orix=0; orix<angleList.size(); orix++){
@@ -383,6 +385,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     anaOutputFile->Write();
     anaOutputFile->Close();
 
+
+    std::cout<<" Processed files "<<fileCounter<<std::endl;
     return;
 
 }

@@ -16,8 +16,8 @@ std::string fTruthInAV = "abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500 &
 //--------- Signal and BG definitions
 std::vector<SampleDef> sampleDefs = {
     {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true}
-    ,{fTruthInAV+"IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Background Nu", false}
-    ,{"IntOrigin==2 || IntDirt==1", "DirtCosmic", false}
+    ,{fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Background  Nu", false}
+    //,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false}
     //,{"IntOrigin==1 && IntDirt==1", "Dirt", false}
     //,{"IntOrigin==2", "Cosmic", false}
     /*,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
@@ -25,6 +25,8 @@ std::vector<SampleDef> sampleDefs = {
     ,{fTruthInFV+"IntMode==2 && abs(IntNuPDG)!=12", "DIS", false}
     ,{fTruthInFV+"(IntMode==3 || IntMode==10) && abs(IntNuPDG)!=12", "COH and MEC", false}
     ,{fTruthInFV+"abs(IntNuPDG)==12", "NuE", false} */
+    //,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
+    //,{fTruthInFV+"IntMode==1 && abs(IntNuPDG)!=12", "RES", false}
 };
 
 //-------- POT normalization
@@ -36,7 +38,7 @@ std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 
 TCut fCounterCut = "SliceID==0";
 
-std::vector<PlotDef> cutDefs = cutDefs2;
+std::vector<PlotDef> cutDefs = cutDefsTalk;
 
 //---------  Main function
 void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")

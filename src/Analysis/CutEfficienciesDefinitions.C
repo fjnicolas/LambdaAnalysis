@@ -128,6 +128,7 @@ public:
             bool accumulateCut = true,
             const TString& varLabel = "",
             const TString& cutLabel = "",
+            bool norm = false,
             bool log = false,
             const TString& suffix = "")
         : fVar(var),
@@ -138,6 +139,7 @@ public:
           fAccumulateCut(accumulateCut),
           fVarLabel(varLabel),
           fCutLabel(cutLabel),
+          fNormalize(norm),
           fLog(log),
           fSuffix(suffix)
     {
@@ -210,6 +212,10 @@ public:
         return fLog;
     }
 
+    bool GetNormalize() const {
+        return fNormalize;
+    }
+
     // Setter methods
     void SetSuffix(const TString& suffix) {
         fSuffix = suffix;
@@ -252,6 +258,7 @@ private:
     bool fAccumulateCut;
     TString fVarLabel;
     TString fCutLabel;
+    bool fNormalize;
     bool fLog;
     TString fSuffix;
 };
@@ -497,11 +504,12 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     plotLabel = "hCounter"+std::to_string(fPlotIndex);
     TH1F *hCounter = new TH1F( plotLabel.c_str(), plotAxisLabels.c_str(), 1, 0, 1);
 
-    TLegend *legend = new TLegend(0.75, 0.75, 0.9, 0.9);
+    TLegend *legend = new TLegend(0.7, 0.7, 0.9, 0.9);
        
     pad1->cd();
     hAux->Draw();
     int maxVal=0;
+    int maxValInt=0;
 
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         
@@ -574,7 +582,10 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
         
 
         // --- Set maximum
-        if(fHistV[intTypeLabel]->GetMaximum()>maxVal) maxVal = fHistV[intTypeLabel]->GetMaximum();
+        if(fHistV[intTypeLabel]->GetMaximum()>maxVal){
+            maxVal = fHistV[intTypeLabel]->GetMaximum();
+            maxValInt = fHistV[intTypeLabel]->Integral();
+        }
 
     }
 
@@ -586,21 +597,33 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     legend->SetFillColorAlpha(0, 0);
     
     pad1->cd();
+   
+
+    bool fNormalize = fPlotDef.GetNormalize();
+    if(fNormalize)
+        hAux->GetYaxis()->SetRangeUser(0.,  1.1*(1.*maxVal/maxValInt));
+    else
+        hAux->GetYaxis()->SetRangeUser(0., maxVal*1.1);
     hAux->Draw();
-    hAux->GetYaxis()->SetRangeUser(0., maxVal*1.1);
+
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
+        if(fNormalize){
+            fHistV[fIntTypes[j].GetLabelS()]->Scale(1./fHistV[fIntTypes[j].GetLabelS()]->Integral());
+        }
+        std::cout<<"Integral "<<fHistV[fIntTypes[j].GetLabelS()]->Integral()<<std::endl;
         fHistV[fIntTypes[j].GetLabelS()]->Draw("same hist");
     }
     
-    
-
 
     DrawVerticalLineWithArrow( fPlotDef.GetCutValue(), hAux->GetXaxis()->GetXmin(),  hAux->GetXaxis()->GetXmax(), 0, maxVal*1.1, fPlotDef.GetCutType() );
     legend->Draw("same");
    
     pad3->cd();
     hAux->Draw();
-    hAux->GetYaxis()->SetRangeUser(0.5, maxVal*1.1);
+    if(fNormalize)
+        hAux->GetYaxis()->SetRangeUser(0.005, 1.1*(1.*maxVal/maxValInt));
+    else
+        hAux->GetYaxis()->SetRangeUser(0.5, maxVal*1.1);
     pad3->SetLogy();
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         fHistV[fIntTypes[j].GetLabelS()]->Draw("same hist");

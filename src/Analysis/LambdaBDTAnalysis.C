@@ -74,14 +74,19 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
     //dataloader->AddVariable( "AngleLengthTrack1", "Track 1 Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleLengthTrack2", "Track 2 Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleNHitsMainTrack", "Main track # hits", "", 'I' );
-    dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
-    dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
+    //dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
+    //dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
+    dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
     dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
 
     //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
     dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    //dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
+    dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
+    dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
+    
 
 
     //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
@@ -102,7 +107,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
     TCut signalCut = fTruthInAV + TCut("IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
     TCut bgCut = fTruthInAV && TCut("IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
 
-    std::string tmva_options = "nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain);
+    std::string tmva_options = "";//"nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain);
     tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";
     dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, tmva_options );
 
