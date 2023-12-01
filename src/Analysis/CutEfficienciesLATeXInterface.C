@@ -1,6 +1,7 @@
 #ifndef CUTEFFICIENCIES_LATEXINTERFACE_H
 #define CUTEFFICIENCIES_LATEXINTERFACE_H
 
+#define WriteRelativeEfficiencies 0
 
 //--------- Create the LaTeX table (POT normalized)
 void GenerateAndCompileTeXTable(
@@ -84,7 +85,12 @@ void GenerateAndCompileTeXTable(
             
             std::ostringstream streamObjEff;
             streamObjEff << " (" << std::fixed << std::setprecision(2) << 100.*sampleName.second/histogramCounts0[sampleName.first];
-            streamObjEff << " \\%) \\ $\\epsilon_{r}$= " << std::setprecision(0) << 100.*sampleName.second/histogramCountsPre[sampleName.first] << "\\%";
+            if(WriteRelativeEfficiencies==1){
+                streamObjEff << " \\%) \\ $\\epsilon_{r}$= " << std::setprecision(0) << 100.*sampleName.second/histogramCountsPre[sampleName.first] << "\\%";
+            }
+            else{
+                streamObjEff << " \\%)";
+            }
             // Get string from out
             if(  cont == sampleDefs.size()-1 )
                 texFile << potScaling*sampleName.second << streamObjEff.str();

@@ -188,7 +188,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");
 
             _FRAMSAlgo.Fill(hitList, fVertexReco);
-            //_FRAMSAlgo.Display(cDisplayPANDORA);
+            _FRAMSAlgo.Display(cDisplayPANDORA);
             double FRANSScorePANDORA = _FRAMSAlgo.Score();
 
             for(size_t orix=0; orix<angleList.size(); orix++){

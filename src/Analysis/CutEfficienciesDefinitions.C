@@ -114,6 +114,8 @@ enum class CutType {
     kNone=-1,
     kRight=0,
     kLeft,
+    kRightInt,
+    kLeftInt,
     kCenter,
     k2D
 };
@@ -155,7 +157,7 @@ public:
             streamObj <<  std::fixed << std::setprecision(2) << cutValue;
             fCutLabel = fCutLabel + ("\\ >= " + streamObj.str()).c_str();
         }
-        else if(cutType == CutType::kLeft){
+        else if(cutType == CutType::kLeft || cutType == CutType::kLeftInt){
             fCut =  fCut + ("<=" + std::to_string(cutValue)).c_str();
             std::ostringstream streamObj;
             streamObj <<  std::fixed << std::setprecision(2) << cutValue;
@@ -295,6 +297,9 @@ class AnaPlot{
 
         std::map<std::string, TH2F*> fHist2DV;
         std::map<std::string, TH2F*> fHist2DCumulativeV;
+        
+        TH1F *fHistoPhaseSpace0;
+        TH1F *fHistoPhaseSpace1;
 
         TCanvas *fCanvas;
         CutStyler *fStyler;
@@ -306,6 +311,8 @@ AnaPlot::AnaPlot(int cutIndex, PlotDef plotDef, std::vector<SampleDef> intTypes)
     fPlotDef(plotDef),
     fIntTypes(intTypes),
     fNTypes(intTypes.size()),
+    fHistoPhaseSpace0(new TH1F("hPhaseSpace0", ";#Lambda KE [MeV];# events", 30, 0, 0.300)),
+    fHistoPhaseSpace1(new TH1F("hPhaseSpace1", ";#Lambda KE [MeV];# events", 30, 0, 0.300)),
     fCanvas(new TCanvas( ("c_"+std::to_string(fPlotIndex)).c_str(), "Selection", 800,600)),
     fStyler(new CutStyler(0))
 {
@@ -331,7 +338,6 @@ AnaPlot::AnaPlot(int cutIndex, PlotDef plotDef, std::vector<SampleDef> intTypes)
             fHist2DV[intTypeLabel] = hAux2D;
             fHist2DCumulativeV[intTypeLabel] = hAux2DCumulative;
         }
-
         
     }
 
@@ -349,19 +355,21 @@ void DrawVerticalLineWithArrow(double x, double x1, double x2, double y1, double
     double x_min = std::min(x1, x2);
     double x_max = std::max(x1, x2);    
 
+    
     double minX = x;
     double maxX = x;
     if(cutType == CutType::kRight ){
         maxX = x_max;
     }
-    else if(cutType == CutType::kLeft ){
+    else if(cutType == CutType::kLeft || cutType == CutType::kLeftInt ){
         minX = x_min;
     }
-    else{
-        maxX = x+1;
-    }
     
-   
+    if(cutType == CutType::kLeftInt || cutType == CutType::kCenter ){
+        maxX = maxX+1;
+    }
+
+
     if(cutType == CutType::kCenter ){
         // Create a TLine object for the vertical line
         TLine *line1 = new TLine(minX, minY, minX, maxY);
@@ -391,7 +399,7 @@ void DrawVerticalLineWithArrow(double x, double x1, double x2, double y1, double
     }
     else{
         // Create a TLine object for the vertical line
-        if(cutType==CutType::kLeft) x+=1;
+        if(cutType==CutType::kLeftInt) x+=1;
         TLine *line = new TLine(x, minY, x, maxY);
         line->SetLineColor(40);
         line->SetLineWidth(2);
@@ -407,7 +415,7 @@ void DrawVerticalLineWithArrow(double x, double x1, double x2, double y1, double
     }
     
     // Create a TBox object for the highlight box
-    if(cutType==CutType::kLeft) maxX+=1;
+    std::cout<<"minX "<<minX<<" maxX "<<maxX<<" minY "<<minY<<" maxY "<<maxY<<std::endl;
     TBox *highlightBox = new TBox(minX, minY, maxX, maxY);
     highlightBox->SetFillColorAlpha(40, 0.2); // Set transparent green color
     highlightBox->SetFillStyle(1001); // Set the fill style
@@ -415,6 +423,7 @@ void DrawVerticalLineWithArrow(double x, double x1, double x2, double y1, double
 
     return;
 }
+
 
 void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
 
@@ -478,17 +487,21 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     std::cout<<"Making plot "<<fPlotIndex<<std::endl;
 
 
-    TCanvas *c2 = new TCanvas(("c2"+plotIndex).c_str(),"Selection",0, 0, 1000, 750);
+    TCanvas *c2 = new TCanvas(("c2"+plotIndex).c_str(),"Selection",0, 0, 1500, 750);
     c2->cd();
 
-    TPad *pad1 = new TPad("pad1","pad1",0,0.5,0.5,1);
+    TPad *pad1 = new TPad("pad1","pad1", 0, 0.5, 0.33, 1);
     pad1->Draw();
-    TPad *pad2 = new TPad("pad2","pad2",0.5,0.5,1,1);
+    TPad *pad2 = new TPad("pad2","pad2", 0, 0, 0.33,0.5);
     pad2->Draw();
-    TPad *pad3 = new TPad("pad3","pad3",0,0,0.5,0.5);
+    TPad *pad3 = new TPad("pad3","pad3", 0.33, 0.5, 0.66, 1);
     pad3->Draw();
-    TPad *pad4 = new TPad("pad4","pad4",0.5,0,1,0.5);
+    TPad *pad4 = new TPad("pad4","pad4", 0.33, 0, 0.66, 0.5);
     pad4->Draw();
+    TPad *pad5 = new TPad("pad5","pad5", 0.66, 0.5, 1, 1);
+    pad5->Draw();
+    TPad *pad6 = new TPad("pad6","pad6", 0.66, 0, 1, 0.5);
+    pad6->Draw();
     
     std::string plotAxisLabels=";"+fPlotDef.GetVarLabelS()+"; # events";
 
@@ -587,7 +600,16 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
             maxValInt = fHistV[intTypeLabel]->Integral();
         }
 
+        // --- Draw phase space
+        if(fIntTypes[j].IsSignal()){
+            fTree->Draw( "LambdaKE>>hPhaseSpace0", fIntTypes[j].GetWeight()*TCut(sampelCut), "hist");
+            fTree->Draw( "LambdaKE>>hPhaseSpace1", fIntTypes[j].GetWeight()*TCut(sampelCut && currentCut && fPlotDef.GetCut()), "hist");
+        }
+
     }
+
+    // ------ Draw histograms ------ 
+    pad1->cd();
 
     hAux->SetStats(0);
     // check hAux number of bins is the same as the range of the plot
@@ -596,9 +618,6 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     }
     legend->SetFillColorAlpha(0, 0);
     
-    pad1->cd();
-   
-
     bool fNormalize = fPlotDef.GetNormalize();
     if(fNormalize)
         hAux->GetYaxis()->SetRangeUser(0.,  1.1*(1.*maxVal/maxValInt));
@@ -618,13 +637,13 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     DrawVerticalLineWithArrow( fPlotDef.GetCutValue(), hAux->GetXaxis()->GetXmin(),  hAux->GetXaxis()->GetXmax(), 0, maxVal*1.1, fPlotDef.GetCutType() );
     legend->Draw("same");
    
-    pad3->cd();
+    pad2->cd();
     hAux->Draw();
     if(fNormalize)
         hAux->GetYaxis()->SetRangeUser(0.005, 1.1*(1.*maxVal/maxValInt));
     else
         hAux->GetYaxis()->SetRangeUser(0.5, maxVal*1.1);
-    pad3->SetLogy();
+    pad2->SetLogy();
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         fHistV[fIntTypes[j].GetLabelS()]->Draw("same hist");
     }
@@ -632,21 +651,28 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     legend->Draw("same"); 
     
 
-    pad2->cd();
+    // ------ Draw efficiency curves ------ 
+    pad3->cd();
     hAuxEff->GetYaxis()->SetRangeUser(-0.1, 101);
     hAuxEff->GetYaxis()->SetTitle("Efficiency [%]");
     hAuxEff->SetStats(0);
     hAuxEff->Draw();
 
+
     gStyle->SetOptLogy(0);
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         fHistCumulativeV[fIntTypes[j].GetLabelS()]->Draw("same p lhist");
     }
-    legend->Draw("same");
-    pad2->Update();
 
-    // pad4 with signal over background
+    legend->Draw("same");
+    pad3->Update();
+
+
+    // ------ Draw Significance ------ 
     pad4->cd();
+    hAuxSignificance->SetStats(0);
+    
+
     hAuxSignificance->SetStats(0);
     hAuxSignificance->GetYaxis()->SetTitle("S/#sqrt{BG}");
     hAuxSignificance->Draw();
@@ -699,8 +725,6 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
         }
     }
 
-    // now draw all the other backgrounds
-
     hAuxSignificance->GetYaxis()->SetRangeUser(minY*0.9, maxY*1.1);
     for (size_t j = 0; j < grV.size(); ++j) {
         grV[j]->Draw("same lp");
@@ -709,8 +733,91 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     legend->Draw("same");
     pad4->Update();
 
+    // ------ Draw ROC curve ------ 
+    pad5->cd();
+
+    // TH1 to sotre the signal
+    TH1F *hAuxEffSignal = new TH1F("hAuxEffSignal", plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
+    for (size_t j = 0; j < fIntTypes.size(); ++j) {
+        if(fIntTypes[j].IsSignal()){
+            hAuxEffSignal->Add(fHistCumulativeV[fIntTypes[j].GetLabelS()]);
+        }
+    }
+
+    TH1F *hAuxROC = new TH1F("hAuxROC", "ROC;;", 200, 0, 100);
+    hAuxROC->SetStats(0);
+    hAuxROC->GetXaxis()->SetTitle("Signal efficiency [%]");
+    hAuxROC->GetYaxis()->SetTitle("BG rejection [%]");
+    hAuxROC->GetYaxis()->SetRangeUser(-0.1, 101);
+    hAuxROC->Draw();
+
+    std::vector<TGraph*> grVROC;
+    for (size_t j = 0; j < fIntTypes.size(); ++j) {
+
+        if(!fIntTypes[j].IsSignal()){
+            //create x and y vectors and loop over bins, add signal/sqrt(bg)
+            std::vector<double> x;
+            std::vector<double> y;
+            for (int i = 1; i <= fPlotDef.GetBins().GetNBins(); i++) {
+                double binValueBG = (fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i));
+                double binValueSignal = hAuxEffSignal->GetBinContent(i);
+                
+                if(binValueBG>0){
+                    x.push_back(binValueSignal);
+                    y.push_back(binValueBG);
+                }
+            }
+
+            // create TGraph
+            TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
+            gr->SetLineColor(fStyler->GetColor(j));
+            gr->SetLineWidth(2);
+            gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
+            gr->SetMarkerColor(fStyler->GetColor(j));
+            gr->SetMarkerSize(1);
+            gr->SetLineStyle(fStyler->GetLineStyle(j));
+
+            grVROC.push_back(gr);   
+        }
+    }
+    hAuxROC->Draw();
+    legend->Draw("same");
+
+    for (size_t j = 0; j < grVROC.size(); ++j) {
+        grVROC[j]->Draw("same l");
+    }
+    pad5->Update();
+
+
+    // ------ Draw phase space ------ 
+    pad6->cd();
+    //stats 0
+    fHistoPhaseSpace0->SetStats(0);
+    fHistoPhaseSpace1->SetStats(0);
+    // draw phase space histograms and efficiency ratio
+    TRatioPlot * rp = new TRatioPlot(fHistoPhaseSpace1, fHistoPhaseSpace0);
+  
+    rp->Draw();
+    rp->GetLowYaxis()->SetNdivisions(505);
+    rp->GetUpperRefYaxis()->SetRangeUser(0., fHistoPhaseSpace0->GetMaximum()*1.1);
+ 
+    // Add a legend to the ratio plot
+    rp->GetUpperPad()->cd();
+    TLegend *legendRP = new TLegend(0.3,0.7,0.7,0.85);
+    legendRP->AddEntry("hPhaseSpace0" ,"All","l");
+    legendRP->AddEntry("hPhaseSpace1","After cut","le");
+    legendRP->Draw("hist");
+    
+
+
+    pad6->Update();
+
+    
+
+
     // --- Save canvas
     c2->Update();
+    //c2->WaitPrimitive();
     std::string stageLabel = afterCut ? "1after" : "0before";
     c2->SaveAs(("OutputPlots/plot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+".pdf").c_str());
     TFile *fFile = new TFile("OutputPlots/OutputPlots.root","UPDATE");
