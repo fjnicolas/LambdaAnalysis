@@ -91,12 +91,16 @@ public:
     int fNVertexTracks;
     double fShowerEnergy;
     int fNShowers;
+    int fNShowerHits;
     int fNShwTh75;
     int fNShwTh100;
+    int fNShowersOutROI;
     double fMainShowerEnergy;
     double fMainShowerScore;
     std::vector<double> fShowerEnergyVect;
     std::vector<double> fShowerScoreVect;
+    std::vector<int> fShowerNHitsVect;
+    std::vector<int> fShowerOutROINHitsVect;
 
 
     // Reco origins information

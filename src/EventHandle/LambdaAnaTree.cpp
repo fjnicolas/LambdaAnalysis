@@ -110,12 +110,16 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("NVertexTracks", &fNVertexTracks, readMode);
     SetBranch("ShowerEnergy", &fShowerEnergy, readMode);
     SetBranch("NShowers", &fNShowers, readMode);
+    SetBranch("NShowerHits", &fNShowerHits, readMode);
     SetBranch("NShwTh75", &fNShwTh75, readMode);
     SetBranch("NShwTh100", &fNShwTh100, readMode);
+    SetBranch("NShowersOutROI", &fNShowersOutROI, readMode);
     SetBranch("MainShowerEnergy", &fMainShowerEnergy, readMode);
     SetBranch("MainShowerScore", &fMainShowerScore, readMode);
     SetBranch("ShowerEnergyVect", &fShowerEnergyVect, readMode);
     SetBranch("ShowerScoreVect", &fShowerScoreVect, readMode);
+    SetBranch("ShowerNHitsVect", &fShowerNHitsVect, readMode);
+    SetBranch("ShowerOutROINHitsVect", &fShowerOutROINHitsVect, readMode);
     
     // Set branch addresses for # origins information
     SetBranch("NOrigins", &fNOrigins, readMode);
@@ -209,10 +213,15 @@ void LambdaAnaTree::ResetVars(){
     fShowerEnergy = -999;
     fNShwTh75 = -999;
     fNShwTh100 = -999;
+    fNShowers = -999;
+    fNShowerHits = -999;
+    fNShowersOutROI = -999;
     fMainShowerEnergy = -999;
     fMainShowerScore = -999;
     fShowerEnergyVect.clear();
     fShowerScoreVect.clear();
+    fShowerNHitsVect.clear();
+    fShowerOutROINHitsVect.clear();
 
     fNOrigins = -999;
     fNOriginsMult1 = -999;
