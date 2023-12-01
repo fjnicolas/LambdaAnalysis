@@ -17,7 +17,7 @@ std::string fTruthInAV = "abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500 &
 std::vector<SampleDef> sampleDefs = {
     {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true}
     ,{fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Background  Nu", false}
-    //,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false}
+    ,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false}
     //,{"IntOrigin==1 && IntDirt==1", "Dirt", false}
     //,{"IntOrigin==2", "Cosmic", false}
     /*,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}

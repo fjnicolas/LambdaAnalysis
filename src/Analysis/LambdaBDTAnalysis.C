@@ -66,9 +66,9 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
 
 
     dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
-    dataloader->AddVariable( "NUnOriginsMultGT3", "N^{1}_{C}", "", 'I' );
+    //dataloader->AddVariable( "NUnOriginsMultGT3", "N^{1}_{C}", "", 'I' );
     dataloader->AddVariable( "NUnOrigins", "N^{2}_{C}", "", 'I' );
-    dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
+    //dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
     dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
     dataloader->AddVariable( "AngleLengthMainTrack", "Main track Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleLengthTrack1", "Track 1 Length [cm]", "", 'I' );
@@ -78,14 +78,14 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
     //dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
     dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
-    //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
     dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-
-    //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
-    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    //dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
+    dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
+    //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
+    //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
     //dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
-    dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
-    dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
+    //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
     
 
 
