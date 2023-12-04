@@ -17,7 +17,7 @@
 #include "TPCLinesAlgo.h"
 #include "ChargeDensity.h"
 #include "ChargeDensityPset.h"
-#include "FRANSTTreeHandle.h"
+#include "FRANSTree.h"
 
 
 void RunAlgoFRANS(const CommandLineParser& parser)
@@ -89,7 +89,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     std::string tree_name = "FRAMSTree";
     TTree* fTree = new TTree((tree_name).c_str(), "FRAMS Output Tree");
     //FRANSTTree myTree(fTree);
-    FRANSTTree myTree(fTree);
+    FRANSTree myTree(fTree, false);
 
 
 
@@ -121,13 +121,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             if (treeReader.subrunID != fSubRun && fSubRun != -1) continue;
             nEntries++;
             if (nEntries <= fNEvSkip) continue;
-            
-            // Check if it's signal
-            bool isSignal=false;
-            std::cout<<"Perl\n";
-            for(size_t k=0; k<treeReader.truePrimeriesPDG->size();k++){
-                if(treeReader.truePrimeriesPDG->at(k)==3122) isSignal=true;
-            }
+        
 
             nEvents++;
             std::cout << "\n\n ************** Analyzing: " << ev;
@@ -229,12 +223,19 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             _FRAMSAlgoPANDORA.Fill(hitList, fVertexReco);
             _FRAMSAlgo.Fill(hitList, fVertex);
 
+            /*
+            // Check if it's signal
+            bool isSignal=false;
+            std::cout<<"Perl\n";
+            for(size_t k=0; k<treeReader.truePrimeriesPDG->size();k++){
+                if(treeReader.truePrimeriesPDG->at(k)==3122) isSignal=true;
+            }
             myTree.FillDataMC(treeReader.runID, treeReader.subrunID, treeReader.eventID, 0, 0, 0, 0, isSignal, 0, 0, 0);
             myTree.FillData(2,
                             _FRAMSAlgo.Delta(), _FRAMSAlgo.Eta(), _FRAMSAlgo.FitScore(), _FRAMSAlgo.Alpha(),
                             _FRAMSAlgo.Omega(), _FRAMSAlgo.Tau(), _FRAMSAlgo.Iota(),
                             recoEvent.GetNOrigins(), recoEvent.GetNOriginsMult(1), recoEvent.GetNOriginsMult(2), recoEvent.GetNOriginsMultGt(3), recoEvent.HitDensity() );
-            myTree.FillTree();
+            myTree.FillTree();*/
   
 
 

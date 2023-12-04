@@ -38,8 +38,10 @@
 
 #if LAMBDAANA_LARSOFT == 1
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#include "sbndcode/LambdaAnalysis/src/FRANS/FRANSObj.h"
 #else
 #include "TPCSimpleHits.h"
+#include "FRANSObj.h"
 #endif
 
 #define DefaultMaxZSize 2000
@@ -56,6 +58,7 @@ class ChargeDensity{
 
     //void Fill(std::vector<art::Ptr<recob::Hit>> hitsVect, VertexView vertex);
     void Fill(std::vector<SHit> hitsVect, SVertex vertex);
+    FRANSObj GetFRANSResult();
     void Display(TCanvas *c);
 
     // Access class members
@@ -67,7 +70,8 @@ class ChargeDensity{
     double Tau(){return fTau;}
     double Iota(){return fIota;}
     double Score(){return fScore;}
-    double AverageHitChi2(){return fAverageHitChi2;}
+    double AverageHitChi2(){return fMeanChi2;}
+    double HitDensity(){return fHitDensity;}
     double NHits(){return fNHits;}
 
   private:
@@ -106,7 +110,8 @@ class ChargeDensity{
     float fScore;
 
     int fNHits;
-    float fAverageHitChi2;
+    float fHitDensity;
+    float fMeanChi2;
 
     float fGap;
     float fProtonKE;

@@ -17,7 +17,7 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
   fScore = -1e4;
 
   fNHits = 0;
-  fAverageHitChi2 = 0;
+  fMeanChi2 = 0;
 
   // Right now we only use the collection view
   if(fFRANSPset.CalculateScore){
@@ -294,7 +294,8 @@ void ChargeDensity::Reset() {
     fZCumDer.clear();
     fZCumDerErr.clear();
     fNHits = 0;
-    fAverageHitChi2 = 0;
+    fHitDensity = 0;
+    fMeanChi2 = 0;
 
     // default values
     fDelta = 0.5;
@@ -376,12 +377,14 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
             }
             
             fNHits++;
-            fAverageHitChi2 += hit.Chi2();
+            fHitDensity++;
+            fMeanChi2 += hit.Chi2();
             if (d > dMax) dMax = static_cast<int>(d);
         }
     }
 
-    fAverageHitChi2 /= fNHits;
+    fHitDensity /= dMax;
+    fMeanChi2 /= fNHits;
     fZ.resize(dMax);
 
 
@@ -538,4 +541,12 @@ void ChargeDensity::Display(TCanvas *c){
   c->WaitPrimitive();
 
   return;
+}
+
+FRANSObj ChargeDensity::GetFRANSResult(){
+  FRANSObj FRANSResult(fView, fScore, fHitDensity, fMeanChi2,
+                        fDelta, fEta, fFitScore,
+                        fAlpha, fOmega, fTau, fIota, 
+                        0, 0, 0, 0);
+  return FRANSResult;                       
 }
