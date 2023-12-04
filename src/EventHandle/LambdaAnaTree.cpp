@@ -15,7 +15,8 @@ LambdaAnaTree::LambdaAnaTree()
 {}
 
 LambdaAnaTree::LambdaAnaTree(TTree* tree, bool readMode)
-: fTree(tree)
+: fTree(tree),
+  fInputFileNameRead(new std::string)
 {
     InitializeTree(readMode);
 }
@@ -51,14 +52,8 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("EventID", &fEventID, readMode);
     SetBranch("SubrunID", &fSubrunID, readMode);
     SetBranch("RunID", &fRunID, readMode);
-    if(!readMode)
-        SetBranch("InputFileName", &fInputFileName, readMode);
-    else
-        SetBranch("InputFileName", &fInputFileNameRead, readMode);
-
     SetBranch("SliceID", &fSliceID, readMode);
-   
-    
+
     // Set branch addresses for true variables
     SetBranch("IntOrigin", &fIntOrigin, readMode);
     SetBranch("IntMode", &fIntMode, readMode);
@@ -113,13 +108,14 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("NShowerHits", &fNShowerHits, readMode);
     SetBranch("NShwTh75", &fNShwTh75, readMode);
     SetBranch("NShwTh100", &fNShwTh100, readMode);
-    SetBranch("NShowersOutROI", &fNShowersOutROI, readMode);
     SetBranch("MainShowerEnergy", &fMainShowerEnergy, readMode);
     SetBranch("MainShowerScore", &fMainShowerScore, readMode);
-    SetBranch("ShowerEnergyVect", &fShowerEnergyVect, readMode);
-    SetBranch("ShowerScoreVect", &fShowerScoreVect, readMode);
-    SetBranch("ShowerNHitsVect", &fShowerNHitsVect, readMode);
-    SetBranch("ShowerOutROINHitsVect", &fShowerOutROINHitsVect, readMode);
+    if(!readMode){
+        SetBranch("ShowerEnergyVect", &fShowerEnergyVect, readMode);
+        SetBranch("ShowerScoreVect", &fShowerScoreVect, readMode);
+        SetBranch("ShowerNHitsVect", &fShowerNHitsVect, readMode);
+        SetBranch("ShowerOutROINHitsVect", &fShowerOutROINHitsVect, readMode);
+    }
     
     // Set branch addresses for # origins information
     SetBranch("NOrigins", &fNOrigins, readMode);
@@ -157,7 +153,12 @@ void LambdaAnaTree::InitializeTree(bool readMode){
 
     SetBranch("NFreeHits", &fNFreeHits, readMode);
     SetBranch("NUnassociatedHits", &fNUnassociatedHits, readMode);
-    
+
+    if(readMode==false)
+        SetBranch("InputFileName", &fInputFileName, readMode);
+    else{
+        SetBranch("InputFileName", &fInputFileNameRead, readMode);
+    }
 
 }
 
@@ -258,4 +259,9 @@ void LambdaAnaTree::ResetVars(){
     fNFreeHits = -999;
     fNUnassociatedHits = -999;
 
+}
+
+
+void LambdaAnaTree::GetEntry(int i){
+    fTree->GetEntry(i);
 }

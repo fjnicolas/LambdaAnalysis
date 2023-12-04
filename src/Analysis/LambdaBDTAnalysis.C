@@ -27,7 +27,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
     int nTrain = 4000;
 
     TCut fTruthInFV("TruthIsFiducial==1");
-    TCut fTruthInAV("abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500");
+    TCut fTruthInAV("TruthIsAV==1");
 
     // Batch mode
     useBatchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
@@ -80,17 +80,16 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
     dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
     //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
-    //dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
-    dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
+    dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
+    //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
     //dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
     //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
     
 
-
     //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
-    //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
+    dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
     
 
@@ -104,8 +103,8 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
 
     dataloader->AddCut(TCut(fMinimalCut.c_str()));
     // define signal and background cuts
-    TCut signalCut = fTruthInAV + TCut("IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
-    TCut bgCut = fTruthInAV && TCut("IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
+    TCut signalCut = fTruthInFV + TCut("IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
+    TCut bgCut = fTruthInFV && TCut("IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
 
     std::string tmva_options = "";//"nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain);
     tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";

@@ -12,8 +12,9 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
   fEta = 1.;
   fFitScore = 1.;
   fAlpha = 10e3;
-  fOmega = 1.;
+  fOmega = -1e4;
   fTau = 0.;
+  fIota = 10e3;
   fScore = -1e4;
 
   fNHits = 0;
@@ -212,20 +213,24 @@ void ChargeDensity::UpdateMetrics(){
 
     if(fFRANSPset.Verbose>0) std::cout<<"\n\nFirtJump @ "<<ix_firstJump<<" MaxSlope @ "<<ix_maxSlope<<std::endl;
     double startSlope = 1.;
+    double startNHits = 1e4;
     if(fFRANSPset.Verbose>0) std::cout<<"\nStart Slope: ";
     if(ix_firstJump>0){
       startSlope = std::accumulate(Slopes.cbegin(), std::next(Slopes.cbegin(), ix_firstJump), 0.)/(ix_firstJump);
       for(int k=0; k<ix_firstJump+1; k++) std::cout<<k<<":"<<Slopes[k]<<"  ";
+      startNHits = std::accumulate(fZCounter.cbegin(), std::next(fZCounter.cbegin(), ix_firstJump), 0.)/(ix_firstJump);
     }
     else{
       startSlope = std::accumulate(Slopes.cbegin(), std::next(Slopes.cbegin(), fFRANSPset.NSamplesBeginSlope), 0.)/(fFRANSPset.NSamplesBeginSlope);
       for(int k=0; k<fFRANSPset.NSamplesBeginSlope; k++) std::cout<<k<<":"<<Slopes[k]<<"  ";
+      startNHits = std::accumulate(fZCounter.cbegin(), std::next(fZCounter.cbegin(), fFRANSPset.NSamplesBeginSlope), 0.)/(fFRANSPset.NSamplesBeginSlope);
     }
 
     if(fFRANSPset.Verbose>0) std::cout<<"\nMax Slope Index "<<ix_maxSlope<<" "<<maxSlope<<" "<<ix_firstJump<<" "<<startSlope<<std::endl;
 
     if(startSlope!=0) fEta = maxSlope/startSlope;
     if(fEta>100) fEta=100;
+    fIota = startNHits;
     fOmega = startSlope;
     fAlpha = fOmega * fZetaNorm;
 
@@ -271,7 +276,7 @@ void ChargeDensity::UpdateMetrics(){
   if(fFRANSPset.CalculateScore)
     fScore = fTMVAReader.EvaluateMVA( "FRAMS BDT" );
 
-  std::cout<<"Alpha: "<<fAlpha<<" Omega: "<<fOmega<<" Eta: "<<fEta<<" Delta: "<<fDelta<<" FitScore: "<<fFitScore<<" BDTScore:"<<fScore<<std::endl;
+  std::cout<<"Alpha: "<<fAlpha<<" Omega: "<<fOmega<<" Iota: "<<fIota<<" Eta: "<<fEta<<" Delta: "<<fDelta<<" FitScore: "<<fFitScore<<" BDTScore:"<<fScore<<std::endl;
 }
 
 
@@ -534,6 +539,17 @@ void ChargeDensity::Display(TCanvas *c){
   grCounter->GetHistogram()->GetYaxis()->SetTitle("# hits(#rho)");
   grCounter->GetHistogram()->GetXaxis()->SetTitle("#rho");
   grCounter->Draw("ALP");
+
+  TLegend* leg4 = new TLegend(0.5, 0.60, 0.85, 0.85);
+  leg4->SetBorderSize(0);
+  leg4->SetFillStyle(0);
+  leg4->SetTextFont(62);
+  leg4->SetTextSize(0.075);
+  std::ostringstream legLabel4;
+  legLabel4 << std::setprecision(3);
+  legLabel4 << "#iota=" << fIota;
+  leg4->AddEntry(grDer, legLabel4.str().c_str(), "");
+  leg4->Draw("same");
 
 
   c->cd();

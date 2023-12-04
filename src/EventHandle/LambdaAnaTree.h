@@ -147,7 +147,7 @@ public:
     void PrintTree() { fTree->Print();}
 
     int GetEntries() { return fTree->GetEntries(); }
-    void GetEntry(int i) { fTree->GetEntry(i); }
+    void GetEntry(int i);
 
     void ResetVars();
 

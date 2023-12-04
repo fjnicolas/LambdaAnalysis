@@ -83,31 +83,25 @@ int MacroFRAMSTraining(std::string fInputFileName="", std::string fTreeDirName =
   //Add variables for MVA
 
   if(fUseMultiplicityVars){
-    dataloader->AddVariable( "NOrigins_C", "N_{C}", "", 'I' );
-    dataloader->AddVariable( "NOriginsM1_C", "N^{1}_{C}", "", 'I' );
-    dataloader->AddVariable( "NOriginsM2_C", "N^{2}_{C}", "", 'I' );
-    //dataloader->AddVariable( "NOriginsM3_C", "N^{>3}_C", "", 'I' );
-    dataloader->AddVariable( "HitDensity_C", "d", "", 'D' );
+    dataloader->AddVariable( "FRANSObj2.fNOrigins_C", "N_{C}", "", 'I' );
+    dataloader->AddVariable( "FRANSObj2.fNOriginsM1_C", "N^{1}_{C}", "", 'I' );
+    dataloader->AddVariable( "FRANSObj2.fNOriginsM2_C", "N^{2}_{C}", "", 'I' );
+    //dataloader->AddVariable( "FRANSObj2.NOriginsM3_C", "N^{>3}_C", "", 'I' );
+    dataloader->AddVariable( "FRANSObj2.fHitDensity_C", "d", "", 'D' );
   }
 
-  if(fUseBestView){
-    dataloader->AddVariable( "Alpha", "#alpha", "", 'D' );
-    dataloader->AddVariable( "Eta", "#eta", "", 'D' );
-    dataloader->AddVariable( "Delta", "#Delta", "", 'D' );
-    dataloader->AddVariable( "FitScore", "r", "", 'D' );
-  }
-  else{
-    dataloader->AddVariable( "Alpha_C", "#alpha_{C}", "", 'D' );
-    dataloader->AddVariable( "Eta_C", "#eta_{C}", "", 'D' );
-    dataloader->AddVariable( "Delta_C", "#Delta_{C}", "", 'D' );
-    dataloader->AddVariable( "FitScore_C", "r_{C}", "", 'D' );
-  }
+
+  dataloader->AddVariable( "FRANSObj2.fAlpha", "#alpha_{C}", "", 'D' );
+  dataloader->AddVariable( "FRANSObj2.fEta", "#eta_{C}", "", 'D' );
+  dataloader->AddVariable( "FRANSObj2.fDelta", "#Delta_{C}", "", 'D' );
+  dataloader->AddVariable( "FRANSObj2.fFitScore", "r_{C}", "", 'D' );
+  
   
 
   //Add spectator variables
-  dataloader->AddSpectator( "Gap", "Gap", "", 'D' );
-  dataloader->AddSpectator( "ProtonKE", "ProtonKE", "", 'D' );
-  dataloader->AddSpectator( "PionKE", "PionKE", "", 'D' );
+  dataloader->AddSpectator( "FRANSObj2.fGap", "Gap", "", 'D' );
+  dataloader->AddSpectator( "FRANSObj2.fProtonKE", "ProtonKE", "", 'D' );
+  dataloader->AddSpectator( "FRANSObj2.fPionKE", "PionKE", "", 'D' );
 
   // You can add an arbitrary number of signal or background trees
   Double_t signalWeight     = 0.1;
