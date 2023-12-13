@@ -1,6 +1,7 @@
 #include "MacroCompareROCs.C"
-#include "MacroFRAMSTraining.C"
-#include "MacroFRAMSEvaluate.C"
+#include "MacroFRANSTraining.C"
+#include "MacroFRANSEvaluate.C"
+#include "MacroCombineViews.C"
 
 void LoadFRANSAna(){
     std::cout<<" Loaded FRAMS ana libraries!\n";

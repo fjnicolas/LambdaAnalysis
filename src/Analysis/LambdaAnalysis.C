@@ -17,7 +17,7 @@ std::string fTruthInAV = "abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500 &
 std::vector<SampleDef> sampleDefs = {
     {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true}
     ,{fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Background  Nu", false}
-    ,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false}
+    //,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false}
     //,{"IntOrigin==1 && IntDirt==1", "Dirt", false}
     //,{"IntOrigin==2", "Cosmic", false}
     /*,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
@@ -32,13 +32,20 @@ std::vector<SampleDef> sampleDefs = {
 //-------- POT normalization
 double fPOTTotalNorm = 3.3e20;
 
+//---------  Phase space cuts
+std::vector<PlotDef> phaseSpaceDefs = phaseSpaceVars;
+
 //---------  LATeX output file
 std::string fOutputFileName = "CutEfficiencies";
 std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 
 TCut fCounterCut = "SliceID==0";
 
-std::vector<PlotDef> cutDefs = cutDefsTalk;
+std::vector<PlotDef> cutDefs = cutDefs2;
+
+
+
+
 
 //---------  Main function
 void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
@@ -70,7 +77,7 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     for (size_t i = 0; i < cutDefs.size(); ++i) {
 
         TCut currentCut = TCut(cutDefs[i].GetCut());
-        AnaPlot anaPlot(i, cutDefs[i], sampleDefs);
+        AnaPlot anaPlot(i, cutDefs[i], sampleDefs, phaseSpaceDefs);
 
         anaPlot.DrawHistograms(fTree, previousCut);
         anaPlots.push_back(anaPlot);

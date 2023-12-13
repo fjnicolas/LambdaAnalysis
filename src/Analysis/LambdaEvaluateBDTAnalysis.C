@@ -66,32 +66,36 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
 
 
     // Add variables to the reader
-
-    fTMVAReader->AddVariable( "AngleFRANSScore", &AngleFRANSScore );
-    //fTMVAReader->AddVariable( "NUnOriginsMultGT3", &NUnOriginsMultGT3 );
-    fTMVAReader->AddVariable( "NUnOrigins", &NUnOrigins );
-    //fTMVAReader->AddVariable( "CRUMBSScore", &CRUMBSScore );
-    fTMVAReader->AddVariable( "AngleDecayContainedDiff", &AngleDecayContainedDiff );
-    //fTMVAReader->AddVariable( "AngleNHitsMainTrack", &AngleNHitsMainTrack );
-    fTMVAReader->AddVariable( "AngleLengthMainTrack", &AngleLengthMainTrack );
-    //fTMVAReader->AddVariable( "AngleNHitsTrack1", &AngleNHitsTrack1 );
-    //fTMVAReader->AddVariable( "AngleNHitsTrack2", &AngleNHitsTrack2 );
-    fTMVAReader->AddVariable( "AngleMinNHits", &AngleMinNHits );
-    fTMVAReader->AddVariable( "NUnassociatedHits", &NUnassociatedHits );
-    fTMVAReader->AddVariable( "FRANSScorePANDORA", &FRANSScorePANDORA );
-    //fTMVAReader->AddVariable( "AngleDirtHits", &AngleDirtHits );
-    fTMVAReader->AddVariable( "NShowers", &NShowers );
-    //fTMVAReader->AddVariable( "NShowerHits", &NShowerHits );
-    //fTMVAReader->AddVariable( "AngleLongestIsMain", &AngleLongestIsMain );
-    fTMVAReader->AddVariable( "ShowerEnergy", &ShowerEnergy );
-    //fTMVAReader->AddVariable( "AngleCoveredArea", &AngleCoveredArea );
-    //fTMVAReader->AddVariable( "AngleOpeningAngle", &AngleOpeningAngle );
+    std::map<std::string, bool> fVarLabels = extractLabels(fWeightFilePath);
+    std::cout << "Variables to use:" << std::endl;
+    for (auto const& x : fVarLabels) {
+        std::cout << x.first << std::endl;
+    }
+    if(fVarLabels["AngleFRANSScore"]==true) fTMVAReader->AddVariable( "AngleFRANSScore", &AngleFRANSScore );
+    if(fVarLabels["NUnOriginsMultGT3"]==true) fTMVAReader->AddVariable( "NUnOriginsMultGT3", &NUnOriginsMultGT3 );
+    if(fVarLabels["NUnOrigins"]==true) fTMVAReader->AddVariable( "NUnOrigins", &NUnOrigins );
+    if(fVarLabels["CRUMBSScore"]==true) fTMVAReader->AddVariable( "CRUMBSScore", &CRUMBSScore );
+    if(fVarLabels["AngleDecayContainedDiff"]==true) fTMVAReader->AddVariable( "AngleDecayContainedDiff", &AngleDecayContainedDiff );
+    if(fVarLabels["AngleLengthMainTrack"]==true) fTMVAReader->AddVariable( "AngleLengthMainTrack", &AngleLengthMainTrack );
+    if(fVarLabels["AngleLengthTrack1"]==true) fTMVAReader->AddVariable( "AngleLengthTrack1", &AngleLengthTrack1 );
+    if(fVarLabels["AngleLengthTrack2"]==true) fTMVAReader->AddVariable( "AngleLengthTrack2", &AngleLengthTrack2 );
+    if(fVarLabels["AngleNHitsMainTrack"]==true) fTMVAReader->AddVariable( "AngleNHitsMainTrack", &AngleNHitsMainTrack );
+    if(fVarLabels["AngleNHitsTrack1"]==true) fTMVAReader->AddVariable( "AngleNHitsTrack1", &AngleNHitsTrack1 );
+    if(fVarLabels["AngleNHitsTrack2"]==true) fTMVAReader->AddVariable( "AngleNHitsTrack2", &AngleNHitsTrack2 );
+    if(fVarLabels["AngleMinNHits"]==true) fTMVAReader->AddVariable( "AngleMinNHits", &AngleMinNHits );
+    if(fVarLabels["NUnassociatedHits"]==true) fTMVAReader->AddVariable( "NUnassociatedHits", &NUnassociatedHits );
+    if(fVarLabels["ShowerEnergy"]==true) fTMVAReader->AddVariable( "ShowerEnergy", &ShowerEnergy );
+    if(fVarLabels["FRANSScorePANDORA"]==true) fTMVAReader->AddVariable( "FRANSScorePANDORA", &FRANSScorePANDORA );
+    if(fVarLabels["AngleCoveredArea"]==true) fTMVAReader->AddVariable( "AngleCoveredArea", &AngleCoveredArea );
+    if(fVarLabels["AngleDirtHits"]==true) fTMVAReader->AddVariable( "AngleDirtHits", &AngleDirtHits );
+    if(fVarLabels["NShowers"]==true) fTMVAReader->AddVariable( "NShowers", &NShowers );
+    if(fVarLabels["NShowerHits"]==true) fTMVAReader->AddVariable( "NShowerHits", &NShowerHits );
+    if(fVarLabels["AngleOpeningAngle"]==true) fTMVAReader->AddVariable( "AngleOpeningAngle", &AngleOpeningAngle );
+    if(fVarLabels["AngleLongestIsMain"]==true) fTMVAReader->AddVariable( "AngleLongestIsMain", &AngleLongestIsMain );
 
 
     // Load the BDT
     fTMVAReader->BookMVA( "FRAMS BDT", fWeightFilePath.c_str() );
-    std::cout<<"BDT loaded"<<std::endl;
-
 
     // Score histogram
     TH1F *hScoreS = new TH1F("hScoreS", "hScore", 100, -1, 1);
@@ -109,7 +113,6 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         
         fAnaTreeHandle.GetEntry(ievt);
 
-    
         // assign variables
         AngleFRANSScore = fAnaTreeHandle.fAngleFRANSScore;
         FRANSScorePANDORA = fAnaTreeHandle.fFRANSScorePANDORA;
@@ -155,14 +158,9 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
             hScoreCosmic->Fill(score);
         }
 
-        /*if(score>0.27 and !isSignal) {
-            std::string label = std::to_string(fAnaTreeHandle.fRunID)+":"+std::to_string(fAnaTreeHandle.fSubrunID);
-            std::cout<<"Pass cuts BG Event "<<label<<" score: "<<score<<" FRANSPANDORA:"<<FRANSScorePANDORA<<std::endl;
-            passCutEventID.push_back(fAnaTreeHandle.fEventID);
-            passCutEventLabels.push_back(label);
-        }*/
 
-        if(passCut && isSignal && NShowers>=2) {
+        //sif(passCut && isSignal && NShowers>=2) {
+        if(passCut && !isSignal && score>0.2){
             std::string label = std::to_string(fAnaTreeHandle.fRunID)+":"+std::to_string(fAnaTreeHandle.fSubrunID);
             std::cout<<"Pass cuts BG Event "<<label<<" score: "<<score<<" FRANSPANDORA:"<<FRANSScorePANDORA<<std::endl;
             passCutEventID.push_back(fAnaTreeHandle.fEventID);
@@ -302,17 +300,12 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     std::map<std::string, int> fileCounterMap;
     for(size_t i=0; i<fTreeHeader->GetEntries(); ++i){
         fTreeHeader->GetEntry(i);
+            
+        //if(fLArInputFileName->find("V0Lambda") != std::string::npos || fLArInputFileName->find("V0Overlay") != std::string::npos) continue;
         
         // check the string includes the substring "Inclusive"
-        if(fLArInputFileName->find("V0Lambda") != std::string::npos || fLArInputFileName->find("V0Overlay") != std::string::npos){
-            continue;
-        }
-
-        if(fLArInputFileName->find("Inclusive") != std::string::npos){
-            continue;
-        }
-        
-        
+        if(fLArInputFileName->find("Inclusive") == std::string::npos) continue;
+    
         std::string runSubrunLabel = std::to_string(fRunId) + ":" + std::to_string(fSubRunId);
 
         // if the subrun is not in the map, add it
@@ -329,8 +322,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         }
         else{
             fileCounterMap[*fLArInputFileName]++;
-        }
-          
+        } 
     }
     
     std::cout<<"Number of files: "<<fileCounterMap.size()<<std::endl;

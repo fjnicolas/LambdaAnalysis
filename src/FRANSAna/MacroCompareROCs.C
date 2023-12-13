@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-std::vector<int> colors = {kBlue, kRed, kGreen, kOrange, kMagenta, kCyan, kYellow, kBlack};
+std::vector<int> colors = {kAzure-3, kOrange+7, kRed, kGreen+4, kMagenta, kBlack, kBlue, kOrange, kRed+2, kGreen+2, kMagenta+2, kBlack+2, kBlue+2, kOrange-3, kRed-3, kGreen-3, kMagenta-3, kBlack-3, kBlue-3, kOrange-6, kRed-6, kGreen-6, kMagenta-6, kBlack-6, kBlue-6, kOrange-9, kRed-9, kGreen-9, kMagenta-9, kBlack-9, kBlue-9};
 
 //std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsNew2.root", "TMVAResultsFinal/TMTMVAResultsNew4.root", "TMVAResultsFinal/TMTMVAResultsOld.root", "TMVAResultsFinal/TMTMVAResultsNew4NoAlpha.root"}; std::vector<std::string> myLabels = {"New2", "New4", "Old", "New4 no alpha"};
 
@@ -14,29 +14,57 @@ std::vector<int> colors = {kBlue, kRed, kGreen, kOrange, kMagenta, kCyan, kYello
 
 //std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsFullNew2.root", "TMVAResultsFinal/TMTMVAResultsFullNew4.root", "TMVAResultsFinal/TMTMVAResultsFullOld.root"}; std::vector<std::string> myLabels = {"New2", "New4", "Old"};
 
-std::vector<std::string> myFiles = {"TMVAResultsFinal/TMVAResultsStd/TMVAResults_reco.root"};
-std::vector<std::string> myLabels = {"Old"};
+//std::vector<std::string> myFiles = {"TMVAResultsFinal/TMVAResultsStd/TMVAResults_reco.root"};
 
-void CompareROCCurves(const std::vector<std::string>& fileNames = myFiles, const std::vector<std::string>& labels = myLabels) {
+
+/*std::vector<std::string> myFiles = {"TMTMVAResults_C.root", "TMTMVAResults_C_Reco.root", "TMTMVAResults_C_WithWidth.root", "TMTMVAResults_C_Iota.root", "TMTMVAResults_C_NoAlpha.root", "TMTMVAResults_C_WithWidthIota.root", "TMTMVAResults_C_WithWidthIota_Inclusive.root"};
+std::vector<std::string> myLabels = {"C", "C Reco", "C wWidth", "C Iota", "C NoAlpha", "C wWidthIota", "C wWidthIota Inclusive"};*/
+
+
+void CompareROCCurves(std::string path="./") {
+
+    
+    // map with label and file name
+    std::map<std::string, std::string> fileMap;
+
+    TSystemDirectory dir(path.c_str(), path.c_str());
+    TList* files = dir.GetListOfFiles();
+    if (files) {
+        TSystemFile* file;
+        TString fname;
+        TIter next(files);
+        while ((file=(TSystemFile*)next())) {
+            
+            fname = file->GetName();
+            if (!file->IsDirectory() && fname.EndsWith(".root") && fname.BeginsWith("TMVAResults")) { 
+                std:string label = fname.Data();
+                label.erase(0, 11);
+                label.erase(label.size()-5, label.size());
+                fileMap[label] = fname.Data();
+                std::cout<<label<<" "<<fname.Data()<<std::endl;
+            }
+        }
+    }
+
+
     TCanvas* c = new TCanvas("c", "ROC Comparison", 800, 600);
     c->Divide(1,1);
-
 
     c->cd(1);
     gPad->SetBottomMargin(0.15);
     gPad->SetLeftMargin(0.15);
 
+    std::map<std::string, TH1F*> rocs;
+    // loop over the file map
+    for (auto it = fileMap.begin(); it != fileMap.end(); ++it) {
+        std::cout<<it->first<<" "<<it->second<<std::endl;
 
-    std::vector<TH1F*> rocs;
-    for (size_t i = 0; i < fileNames.size(); i += 1) {
-        std::string path = "/Users/franciscojaviernicolas/Work/HyperonsAna/SampleLines/AnaNewFRANS/";
-        TFile* file1 = TFile::Open((path + fileNames[i]).c_str());
+        TFile* file1 = TFile::Open((path + it->second).c_str());
        
         std::string fPlotName = "dataset/Method_BDT/BDT/MVA_BDT_rejBvsS";
 
         TH1F* roc = (TH1F*)file1->Get(fPlotName.c_str());
-        rocs.push_back(roc);
-        std::cout<<i<<std::endl;
+        rocs[it->first] = roc;
     }
 
     TH2F hFrame("hFrame", "ROC Comparison;Signal efficiency; BG rejection", 500, 0, 1, 500, 0, 1);
@@ -46,17 +74,18 @@ void CompareROCCurves(const std::vector<std::string>& fileNames = myFiles, const
     hFrame.GetYaxis()->SetTitleOffset(1.2);
 
     TLegend* legend = new TLegend(0.2, 0.2, 0.5, 0.4);
-    
-    for (size_t i = 0; i < fileNames.size(); i += 1) {
 
-        std::cout<<i<<std::endl;
+    int rocCounter = 0;
+    for (auto it = rocs.begin(); it != rocs.end(); ++it) {
 
-        rocs.at(i)->SetLineColor(colors.at(i));
-        rocs.at(i)->SetLineWidth(2);
-        rocs.at(i)->Draw("L SAME");        
+        rocs[it->first]->SetLineColor(colors.at(rocCounter));
+        rocs[it->first]->SetLineWidth(3);
+        rocs[it->first]->Draw("L SAME");        
 
-        legend->AddEntry(rocs.at(i), labels[i].c_str(), "l");
+        std::cout<<it->first<<" "<<it->second->Integral()<<std::endl;
+        legend->AddEntry(it->second, it->first.c_str(), "l");
         legend->Draw();
+        rocCounter++;
     }
 
     c->cd();

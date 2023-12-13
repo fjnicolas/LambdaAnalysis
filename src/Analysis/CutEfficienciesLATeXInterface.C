@@ -304,5 +304,4 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
 
 }
 
-
 #endif

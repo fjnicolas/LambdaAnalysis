@@ -269,7 +269,7 @@ private:
 
 class AnaPlot{
     public:
-        AnaPlot(int plotIndex, PlotDef plotDef, std::vector<SampleDef> intTypes);
+        AnaPlot(int plotIndex, PlotDef plotDef, std::vector<SampleDef> intTypes, std::vector<PlotDef> phaseSpaceVaribles={});
 
         void DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut=0);
 
@@ -298,21 +298,21 @@ class AnaPlot{
         std::map<std::string, TH2F*> fHist2DV;
         std::map<std::string, TH2F*> fHist2DCumulativeV;
         
-        TH1F *fHistoPhaseSpace0;
-        TH1F *fHistoPhaseSpace1;
+        std::vector<PlotDef> fPhaseSpaceVars;
+        std::vector<TH1F*> fHistVPhaseSpace0;
+        std::vector<TH1F*> fHistVPhaseSpace1;
 
         TCanvas *fCanvas;
         CutStyler *fStyler;
 };
 
 
-AnaPlot::AnaPlot(int cutIndex, PlotDef plotDef, std::vector<SampleDef> intTypes)
+AnaPlot::AnaPlot(int cutIndex, PlotDef plotDef, std::vector<SampleDef> intTypes,  std::vector<PlotDef> phaseSpaceVaribles)
     : fPlotIndex(cutIndex),
     fPlotDef(plotDef),
     fIntTypes(intTypes),
     fNTypes(intTypes.size()),
-    fHistoPhaseSpace0(new TH1F("hPhaseSpace0", ";#Lambda KE [MeV];# events", 30, 0, 0.300)),
-    fHistoPhaseSpace1(new TH1F("hPhaseSpace1", ";#Lambda KE [MeV];# events", 30, 0, 0.300)),
+    fPhaseSpaceVars(phaseSpaceVaribles),
     fCanvas(new TCanvas( ("c_"+std::to_string(fPlotIndex)).c_str(), "Selection", 800,600)),
     fStyler(new CutStyler(0))
 {
@@ -339,6 +339,27 @@ AnaPlot::AnaPlot(int cutIndex, PlotDef plotDef, std::vector<SampleDef> intTypes)
             fHist2DCumulativeV[intTypeLabel] = hAux2DCumulative;
         }
         
+    }
+
+    //--------- Phase space initializations
+    for (size_t j = 0; j < fPhaseSpaceVars.size(); ++j){
+        std::string plotLabel0 = std::to_string(fPlotIndex)+"_"+std::to_string(j)+"_PS0";
+        TH1F *hAux0 = new TH1F(plotLabel0.c_str(), (";"+fPhaseSpaceVars[j].GetVarLabelS()+";# events").c_str(), fPhaseSpaceVars[j].GetBins().GetNBins(), fPhaseSpaceVars[j].GetBins().GetX1(), fPhaseSpaceVars[j].GetBins().GetX2());
+        
+        std::string plotLabel1 = std::to_string(fPlotIndex)+"_"+std::to_string(j)+"_PS1";
+        TH1F *hAux1 = new TH1F(plotLabel1.c_str(), (";"+fPhaseSpaceVars[j].GetVarLabelS()+";# events").c_str(), fPhaseSpaceVars[j].GetBins().GetNBins(), fPhaseSpaceVars[j].GetBins().GetX1(), fPhaseSpaceVars[j].GetBins().GetX2());
+        
+        hAux0->SetStats(0);
+        hAux1->SetStats(0);
+        hAux0->SetLineColor(kOrange-3);
+        hAux1->SetLineColor(kAzure+2);
+        hAux0->SetLineWidth(2);
+        hAux1->SetLineWidth(2);
+        hAux0->SetLineStyle(kSolid);
+        hAux1->SetLineStyle(kDashed);
+
+        fHistVPhaseSpace0.push_back(hAux0);
+        fHistVPhaseSpace1.push_back(hAux1);    
     }
 
 }
@@ -487,7 +508,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     std::cout<<"Making plot "<<fPlotIndex<<std::endl;
 
 
-    TCanvas *c2 = new TCanvas(("c2"+plotIndex).c_str(),"Selection",0, 0, 1500, 750);
+    TCanvas *c2 = new TCanvas(("c2"+plotIndex).c_str(),"Selection",0, 0, 1200, 750);
     c2->cd();
 
     TPad *pad1 = new TPad("pad1","pad1", 0, 0.5, 0.33, 1);
@@ -502,7 +523,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     pad5->Draw();
     TPad *pad6 = new TPad("pad6","pad6", 0.66, 0, 1, 0.5);
     pad6->Draw();
-    
+
     std::string plotAxisLabels=";"+fPlotDef.GetVarLabelS()+"; # events";
 
     std::string plotLabel = "hAux"+std::to_string(fPlotIndex);
@@ -602,8 +623,14 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
 
         // --- Draw phase space
         if(fIntTypes[j].IsSignal()){
-            fTree->Draw( "LambdaKE>>hPhaseSpace0", fIntTypes[j].GetWeight()*TCut(sampelCut), "hist");
-            fTree->Draw( "LambdaKE>>hPhaseSpace1", fIntTypes[j].GetWeight()*TCut(sampelCut && currentCut && fPlotDef.GetCut()), "hist");
+
+
+            for(int i=0; i<fPhaseSpaceVars.size(); i++){
+                std::string plotLabel0 = std::to_string(fPlotIndex)+"_"+std::to_string(i)+"_PS0";
+                fTree->Draw( (fPhaseSpaceVars[i].GetVarS()+">>"+plotLabel0).c_str(), sampelCut, "hist");
+                std::string plotLabel1 = std::to_string(fPlotIndex)+"_"+std::to_string(i)+"_PS1";
+                fTree->Draw( (fPhaseSpaceVars[i].GetVarS()+">>"+plotLabel1).c_str(), sampelCut && currentCut && fPlotDef.GetCut(), "hist");
+            }
         }
 
     }
@@ -684,7 +711,9 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
         }
     }
 
-    
+    // Legend for significance
+    TLegend *legendSig = new TLegend(0.7, 0.7, 0.9, 0.9);
+
     // now draw all the other backgrounds
     // vector to store TGrapsh
     std::vector<TGraph*> grV;
@@ -718,6 +747,9 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
 
             grV.push_back(gr);
 
+            // add to legend
+            legendSig->AddEntry(gr, fIntTypes[j].GetLabelS().c_str(), "lp");
+
             double min = gr->GetYaxis()->GetXmin();
             double max = gr->GetYaxis()->GetXmax();
             if(min<minY) minY = min;
@@ -730,7 +762,9 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
         grV[j]->Draw("same lp");
     }
     
-    legend->Draw("same");
+    if(grV.size()>1){
+        legendSig->Draw("same");
+    }
     pad4->Update();
 
     // ------ Draw ROC curve ------ 
@@ -790,36 +824,38 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
 
 
     // ------ Draw phase space ------ 
-    pad6->cd();
-    //stats 0
-    fHistoPhaseSpace0->SetStats(0);
-    fHistoPhaseSpace1->SetStats(0);
-    // draw phase space histograms and efficiency ratio
-    TRatioPlot * rp = new TRatioPlot(fHistoPhaseSpace1, fHistoPhaseSpace0);
-  
-    rp->Draw();
-    rp->GetLowYaxis()->SetNdivisions(505);
-    rp->GetUpperRefYaxis()->SetRangeUser(0., fHistoPhaseSpace0->GetMaximum()*1.1);
- 
-    // Add a legend to the ratio plot
-    rp->GetUpperPad()->cd();
-    TLegend *legendRP = new TLegend(0.3,0.7,0.7,0.85);
-    legendRP->AddEntry("hPhaseSpace0" ,"All","l");
-    legendRP->AddEntry("hPhaseSpace1","After cut","le");
-    legendRP->Draw("hist");
-    
+    // Canvas
+    TCanvas *cPhaseSpace = new TCanvas(("cPhaseSpace"+plotIndex).c_str(),"Phase Space",0, 0, 1200, 750);
+    cPhaseSpace->cd();
 
+    // vector of Pads
+    std::vector<TPad*> padV = buildpadcanvas( (int) fPhaseSpaceVars.size()/2, (int) fPhaseSpaceVars.size()/2);
 
-    pad6->Update();
+    TLegend *legendRP = new TLegend(0.7,0.7,0.9,0.9);
 
-    
-
+    // Draw each plot
+    for(int i=0; i<fPhaseSpaceVars.size(); i++){
+        padV[i+1]->cd();
+        TRatioPlot * rp = new TRatioPlot(fHistVPhaseSpace1[i], fHistVPhaseSpace0[i]);
+        rp->SetH1DrawOpt("HIST");
+        rp->SetH2DrawOpt("HIST SAME");
+        rp->Draw();
+        if(i==0){
+            legendRP->AddEntry(fHistVPhaseSpace0[i],"All","l");
+            legendRP->AddEntry(fHistVPhaseSpace1[i],"After cut","l");
+        }
+        rp->GetLowYaxis()->SetNdivisions(1005);
+        rp->GetUpperRefYaxis()->SetRangeUser(0., fHistVPhaseSpace0[i]->GetMaximum()*1.1);
+        legendRP->Draw("same");
+    }
 
     // --- Save canvas
     c2->Update();
+    cPhaseSpace->Update();
     //c2->WaitPrimitive();
     std::string stageLabel = afterCut ? "1after" : "0before";
     c2->SaveAs(("OutputPlots/plot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+".pdf").c_str());
+    cPhaseSpace->SaveAs(("OutputPlots/zphaseSpacePlot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+"PhaseSpace.pdf").c_str());
     TFile *fFile = new TFile("OutputPlots/OutputPlots.root","UPDATE");
     fFile->cd();
     c2->Write();

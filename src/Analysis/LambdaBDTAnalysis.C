@@ -20,12 +20,47 @@
 
 using namespace TMVA::Experimental;
 
-//---------  Main function
-void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
-{
-    // Number of events for training
-    int nTrain = 4000;
+std::map<std::string, bool> extractLabels(const std::string& xmlDataFile) {
+    std::map<std::string, bool> labelVector;
 
+    std::ifstream file(xmlDataFile);
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening the file." << std::endl;
+        return labelVector;
+    }
+
+    std::string xmlData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    size_t pos = 0;
+
+    // Search for the beginning of the <Variable> tags
+    while ((pos = xmlData.find("<Variable", pos)) != std::string::npos) {
+        // Find the Label attribute within the current <Variable> tag
+        size_t labelPos = xmlData.find("Label=\"", pos);
+        if (labelPos != std::string::npos) {
+            labelPos += 7; // Move past the "Label=\"" part
+            // Find the closing quote of the Label attribute
+            size_t endQuotePos = xmlData.find("\"", labelPos);
+            if (endQuotePos != std::string::npos) {
+                // Extract the Label value and add it to the vector
+                std::string label = xmlData.substr(labelPos, endQuotePos - labelPos);
+                labelVector[label] = true;
+            }
+        }
+
+        // Move to the next position after the current <Variable> tag
+        pos += 1;
+    }
+
+    return labelVector;
+}
+
+//---------  Main function
+void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+{
+   
     TCut fTruthInFV("TruthIsFiducial==1");
     TCut fTruthInAV("TruthIsAV==1");
 
@@ -48,7 +83,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
     // Default MVA methods to be trained
     std::map<std::string,int> Use;
     // Rectangular cut optimisation
-    Use["Cuts"]            = 1;
+    Use["Cuts"]            = 0;
     // 1-dimensional likelihood ("naive Bayes estimator")
     Use["Likelihood"]      = 0;
     // Linear Discriminant Analysis
@@ -66,47 +101,50 @@ void LambdaBDTAnalysis(std::string fInputFileName="", bool useBatchMode=false, s
 
 
     dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
-    //dataloader->AddVariable( "NUnOriginsMultGT3", "N^{1}_{C}", "", 'I' );
-    dataloader->AddVariable( "NUnOrigins", "N^{2}_{C}", "", 'I' );
+    dataloader->AddVariable( "NUnOriginsMultGT3", "N^{2}", "", 'I' );
+    dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
     //dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
     dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
     dataloader->AddVariable( "AngleLengthMainTrack", "Main track Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleLengthTrack1", "Track 1 Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleLengthTrack2", "Track 2 Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleNHitsMainTrack", "Main track # hits", "", 'I' );
-    //dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
-    //dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
+    dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
+    dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
     dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
-    dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
+    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
-    //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
+    dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
-    //dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
+    dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
     //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
-    
-
     //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
-    dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
-    //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
+    //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
+
     
 
-    // You can add an arbitrary number of signal or background trees
-    std::string fMinimalCut = "RecoIsFiducial && NOriginsPairOneTwo>0 && NAngles>=1";
+    // ---- Minimal cut
+    TCut fMinimalCut("RecoIsFiducial && NAngles>=1");
 
     Double_t signalWeight     = 1.0;
     Double_t backgroundWeight = 1.0;
     dataloader->AddSignalTree    ( fTree,     signalWeight );
     dataloader->AddBackgroundTree( fTree, backgroundWeight );
+    dataloader->AddCut(fMinimalCut);
 
-    dataloader->AddCut(TCut(fMinimalCut.c_str()));
     // define signal and background cuts
-    TCut signalCut = fTruthInFV + TCut("IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
-    TCut bgCut = fTruthInFV && TCut("IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");//+TCut(fMinimalCut.c_str());
+    TCut signalCut = fTruthInFV + TCut("IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");
+    TCut bgCut = fTruthInFV && TCut("IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");
+    int nMaxSignal = fTree->Draw(">>selectedEntries", signalCut + fMinimalCut, "entrylist")-1;
+    int nMaxBg = fTree->Draw(">>selectedEntries", bgCut + fMinimalCut, "entrylist")-1;
+    std::cout<<"nMaxSignal: "<<nMaxSignal<<std::endl;
+    std::cout<<"nMaxBg: "<<nMaxBg<<std::endl;
 
-    std::string tmva_options = "";//"nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain);
+    std::string tmva_options = "";
+    if(nTrain==-1) tmva_options = "nTrain_Signal="+std::to_string(nMaxSignal)+":nTrain_Background="+to_string(nMaxBg);
     tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";
     dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, tmva_options );
 
