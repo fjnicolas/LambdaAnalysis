@@ -1,8 +1,9 @@
 #include "ChargeDensity.h"
 
 
-ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
-  : fFRANSPset(config)
+ChargeDensity::ChargeDensity(FRAMSPsetType const& config, int view)
+  : fFRANSPset(config),
+    fView(view)
 {
 
   fNormUnAvSmooth=1./(2*fFRANSPset.UnAvNeighbours+1);
@@ -23,23 +24,14 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config)
   // Right now we only use the collection view
   if(fFRANSPset.CalculateScore){
     if(fFRANSPset.UseAlpha)
-      fTMVAReader.AddVariable( "Alpha_C", &fAlpha );
-    fTMVAReader.AddVariable( "Eta_C", &fEta );
-    fTMVAReader.AddVariable( "Delta_C", &fDelta);
-    fTMVAReader.AddVariable( "FitScore_C", &fFitScore );
-
+      fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fAlpha", &fAlpha );
+    fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fEta", &fEta );
+    fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fDelta", &fDelta);
+    fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fFitScore", &fFitScore );
 
     fTMVAReader.AddSpectator( "Gap", &fGap );
     fTMVAReader.AddSpectator( "ProtonKE", &fProtonKE );
     fTMVAReader.AddSpectator( "PionKE", &fPionKE );
-
-    
-    /*std::string file_name;
-    cet::search_path sp("FW_SEARCH_PATH");
-    if ( !sp.find_file(fTMVAFilename, file_name) )
-     throw cet::exception("FRMASFilter module") << "BDT file " <<
-         fTMVAFilename << " not found in FW_SEARCH_PATH\n";
-    std::cout<<" BDT weights file name: "<<file_name<<std::endl;*/
 
     fTMVAReader.BookMVA( "FRAMS BDT",  fFRANSPset.TMVAFilename.c_str()  );
 

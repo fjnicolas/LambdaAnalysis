@@ -51,6 +51,7 @@ public:
     int fIntType;
     int fIntCCNC;
     int fIntNuPDG;
+    double fIntNuEnergy;
     int fIntNProtons;
     int fIntNNeutrons;
     int fIntNPi0;

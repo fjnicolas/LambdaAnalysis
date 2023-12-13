@@ -61,6 +61,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("IntType", &fIntType, readMode);
     SetBranch("IntCCNC", &fIntCCNC, readMode);
     SetBranch("IntNuPDG", &fIntNuPDG, readMode);
+    SetBranch("IntNuEnergy", &fIntNuEnergy, readMode);
     SetBranch("IntNProtons", &fIntNProtons, readMode);
     SetBranch("IntNNeutrons", &fIntNNeutrons, readMode);
     SetBranch("IntNPi0", &fIntNPi0, readMode);
@@ -175,6 +176,7 @@ void LambdaAnaTree::ResetVars(){
     fIntType = -999;
     fIntCCNC = -999;
     fIntNuPDG = -999;
+    fIntNuEnergy = -999;
     fIntNProtons = -999;
     fIntNNeutrons = -999;
     fIntNPi0 = -999;

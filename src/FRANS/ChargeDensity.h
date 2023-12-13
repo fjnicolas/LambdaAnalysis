@@ -54,7 +54,7 @@ class ChargeDensity{
     ChargeDensity & operator=(ChargeDensity const&) = delete;
     ChargeDensity & operator=(ChargeDensity &&) = delete;
 
-    ChargeDensity(FRAMSPsetType const& config);
+    ChargeDensity(FRAMSPsetType const& config, int view=-1);
 
     //void Fill(std::vector<art::Ptr<recob::Hit>> hitsVect, VertexView vertex);
     void Fill(std::vector<SHit> hitsVect, SVertex vertex);
