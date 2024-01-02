@@ -141,6 +141,20 @@ public:
     int fNFreeHits;
     int fNUnassociatedHits;
 
+    // Calorimetry
+    double fAngleChargeRatioAverage;
+    double fAngleChargeDifferenceAverage;
+    double fAngleChargeRelativeDifferenceAverage;
+    double fAngleChargeRatioFit;
+    double fAngleChargeDifferenceFit;
+    double fAngleChargeRelativeDifferenceFit;
+    double fAngleVertexHitIntegralRatio;
+    double fAngleVertexHitIntegralDifference;
+    double fAngleVertexHitIntegralRelativeDifference;
+    bool fAnglePassFit;
+    double fAngleTwoLinesChi2;
+
+
 
 
     void FillTree() { fTree->Fill(); }

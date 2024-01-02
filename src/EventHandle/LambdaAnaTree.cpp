@@ -155,6 +155,19 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("NFreeHits", &fNFreeHits, readMode);
     SetBranch("NUnassociatedHits", &fNUnassociatedHits, readMode);
 
+    // Set branch addresses for charge ratio information
+    SetBranch("AngleChargeRatioAverage", &fAngleChargeRatioAverage, readMode);
+    SetBranch("AngleChargeDifferenceAverage", &fAngleChargeDifferenceAverage, readMode);
+    SetBranch("AngleChargeRelativeDifferenceAverage", &fAngleChargeRelativeDifferenceAverage, readMode);
+    SetBranch("AngleChargeRatioFit", &fAngleChargeRatioFit, readMode);
+    SetBranch("AngleChargeDifferenceFit", &fAngleChargeDifferenceFit, readMode);
+    SetBranch("AngleChargeRelativeDifferenceFit", &fAngleChargeRelativeDifferenceFit, readMode);
+    SetBranch("AngleVertexHitIntegralRatio", &fAngleVertexHitIntegralRatio, readMode);
+    SetBranch("AngleVertexHitIntegralDifference", &fAngleVertexHitIntegralDifference, readMode);
+    SetBranch("AngleVertexHitIntegralRelativeDifference", &fAngleVertexHitIntegralRelativeDifference, readMode);
+    SetBranch("AnglePassFit", &fAnglePassFit, readMode);
+    SetBranch("AngleTwoLinesChi2", &fAngleTwoLinesChi2, readMode);
+
     if(readMode==false)
         SetBranch("InputFileName", &fInputFileName, readMode);
     else{
@@ -257,6 +270,17 @@ void LambdaAnaTree::ResetVars(){
     fAngleDirtHitsWiresRatio = -999;
     fAngleOpeningAngle = -999;
 
+    fAngleChargeRatioAverage = -999;
+    fAngleChargeDifferenceAverage = -999;
+    fAngleChargeRelativeDifferenceAverage = -999;
+    fAngleChargeDifferenceFit = -999;
+    fAngleChargeRatioFit = -999;
+    fAngleChargeRelativeDifferenceFit = -999;
+    fAngleVertexHitIntegralRatio = -999;
+    fAngleVertexHitIntegralDifference = -999;
+    fAngleVertexHitIntegralRelativeDifference = -999;
+    fAnglePassFit = false;
+    fAngleTwoLinesChi2 = -999;
 
     fNFreeHits = -999;
     fNUnassociatedHits = -999;
