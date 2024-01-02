@@ -1,9 +1,11 @@
 #include <string>
 #include <iostream>
+#include <cmath>
 
 #include "TString.h"
 #include <TApplication.h>
 #include "TImage.h"
+#include "TF1.h"
 
 #include "CommandLineParser.h"
 #include "SEventHandle.h"
@@ -15,6 +17,7 @@
 #include "TPCLinesAlgo.h"
 #include "ChargeDensity.h"
 #include "ChargeDensityPset.h"
+#include "TPCSimpleCalo.h"
 
 void RunAlgoTPCLines(const CommandLineParser& parser)
 {
@@ -43,10 +46,10 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // Set batch mode
     if(Debug==0) gROOT->SetBatch(true);
 
-    // ---- FRAMS parameters ----------------------------------------
+    // ---- FRANS parameters ----------------------------------------
     double fFRANSScoreCut = 0.1;
 
-    FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
+    FRANSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
     fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
 
@@ -64,7 +67,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
     fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
 
-
     fPsetAnaView.Print();
     fPsetFRANS.Print();
 
@@ -78,7 +80,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     // output ROOT files with analysis results
     TFile* anaOutputFile = new TFile("LambdaAnaOutput.root", "RECREATE");
 
-
     // ------------------------------------------------------------------ 
     // Define the program control variables
     int fNEv = n;
@@ -87,12 +88,10 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     int fNEvSkip = nskip;
     int nEvents=0;
 
-
-
     // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
     // Define FRANS LINES ALGORITHM
-    ChargeDensity _FRAMSAlgo(fPsetFRANS);
+    ChargeDensity _FRANSAlgo(fPsetFRANS, 2);
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
 
@@ -104,7 +103,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
         fileCounter++;
 
         std::cout<<" ANALYZING THE FILE: "<<filepath<<std::endl;
-        MyTPCTreeReader treeReader(filepath, "ana/AnaTPCTree");
+        MyTPCTreeReader treeReader(filepath, (parser.getTreeName()+"/AnaTPCTree").c_str());
         
         for (int entry = 0; entry < treeReader.NEntries(); entry++) {
             std::cout<<"Entry "<<entry<<std::endl;
@@ -182,14 +181,19 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             double bestFRANSScore = -1000;
             TCanvas *cDisplayPANDORA = new TCanvas( "FinalRecoFRANSPANDORA", "FinalRecoFRANS", 600, 0, 800, 1200);
             TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 700, 0, 900, 1200);
-            
+            if(parser.getPlotFRANS()==false){
+                delete cDisplay;
+                delete cDisplayPANDORA;
+            }
+
 
             SVertex fVertexReco = SVertex( SPoint( RecoVertexUVYT[2], RecoVertexUVYT[3]), "");
             SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");
 
-            _FRAMSAlgo.Fill(hitList, fVertexReco);
-            _FRAMSAlgo.Display(cDisplayPANDORA);
-            double FRANSScorePANDORA = _FRAMSAlgo.Score();
+            _FRANSAlgo.Fill(hitList, fVertexReco);
+            if(parser.getPlotFRANS())
+                _FRANSAlgo.Display(cDisplayPANDORA);
+            double FRANSScorePANDORA = _FRANSAlgo.Score();
 
             for(size_t orix=0; orix<angleList.size(); orix++){
                 SVertex fVertex(associatedOrigins[orix].GetPoint(), std::to_string(view));
@@ -206,13 +210,31 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 std::cout<<" VertexTrue "<<fVertexTrue;
                 std::cout<<" VertexMine "<<fVertexMine;
                 
-                _FRAMSAlgo.Fill(hitList, fVertexMine);
+                _FRANSAlgo.Fill(hitList, fVertexMine);
+                double score = _FRANSAlgo.Score();
 
-                double score = _FRAMSAlgo.Score();
                 if(score>bestFRANSScore){
                     bestFRANSScore = score;
                     bestTriangleIx = orix;
-                    _FRAMSAlgo.Display(cDisplay);
+
+                    double fitSlope1=1, fitSlope2=1;
+                    STriangleCalo triangleCalo(angleList[orix]);
+                    triangleCalo.JointFitAnalysis(50, 1.5, true, fitSlope1, fitSlope2, _FRANSAlgo);
+                    
+                    // cout calorimetry attributes
+                    std::cout<<"  - ChargeRatioAverage: "<<triangleCalo.ChargeRatioAverage()<<std::endl;
+                    std::cout<<"  - ChargeDifferenceAverage: "<<triangleCalo.ChargeDifferenceAverage()<<std::endl;
+                    std::cout<<"  - ChargeRelativeDifferenceAverage: "<<triangleCalo.ChargeRelativeDifferenceAverage()<<std::endl;
+                    
+                    std::cout<<"  - ChargeRatioFit: "<<triangleCalo.ChargeRatioFit()<<std::endl;
+                    std::cout<<"  - ChargeDifferenceFit: "<<triangleCalo.ChargeDifferenceFit()<<std::endl;
+                    std::cout<<"  - ChargeRelativeDifferenceFit: "<<triangleCalo.ChargeRelativeDifferenceFit()<<std::endl;
+                   
+                    std::cout<<"  - VertexHitIntegralRatio: "<<triangleCalo.VertexHitIntegralRatio()<<std::endl;
+                    std::cout<<"  - VertexHitIntegralDifference: "<<triangleCalo.VertexHitIntegralDifference()<<std::endl;
+                    std::cout<<"  - VertexHitIntegralRelativeDifference: "<<triangleCalo.VertexHitIntegralRelativeDifference()<<std::endl;
+                    std::cout<<"  - PassFit: "<<triangleCalo.PassFit()<<std::endl;
+                    std::cout<<"  - TwoLinesChi2: "<<triangleCalo.TwoLinesChi2()<<std::endl;
                 }
             }
             
@@ -361,13 +383,15 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             delete cTPCDisplay;
             
             outputLabel+="FRANS";
-            if(bestFRANSScore!=-1000){
+            if(bestFRANSScore!=-1000 && parser.getPlotFRANS()){
                 cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
             }
 
-            outputLabel+="FRANSPANDORA";
-            cDisplayPANDORA->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
-            delete cDisplay;
+            if(parser.getPlotFRANS()){
+                outputLabel+="FRANSPANDORA";
+                cDisplayPANDORA->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
+                delete cDisplay;
+            }
 
         }
     }
@@ -404,6 +428,8 @@ int main(int argc, char* argv[]){
     std::cout << "file_name: " << parser.getFileName() << std::endl;
     std::cout << "directory_path: " << parser.getDirectoryPath() << std::endl;
     std::cout << "ext: " << parser.getExtension() << std::endl;
+    std::cout << "treeName: " << parser.getTreeName() << std::endl;
+    std::cout << "plotFRANS: " << parser.getPlotFRANS() << std::endl;
 
     // Create a ROOT application object
     TApplication *myApp = new TApplication("myApp", &argc, argv);

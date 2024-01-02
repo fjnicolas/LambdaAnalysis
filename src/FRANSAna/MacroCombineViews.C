@@ -239,12 +239,12 @@ void MacroCompareViews(std::string path="./",
     //--------- Score histograms for the different views
     double binLow = -0.5;
     double binHigh = 0.5;
-    TH1F hScore0Signal("hScore0Signal", "U plane;FRANS Score;# entries", 100, -0.5, 0.5);
-    TH1F hScore1Signal("hScore1Signal", "V plane;FRANS Score;# entries", 100, -0.5, 0.5);
-    TH1F hScore2Signal("hScore2Signal", "C pane;FRANS Score;# entries", 100, -0.5, 0.5);
-    TH1F hScore0Background("hScore0Background", "U plane;FRANS Score;# entries", 100, -0.5, 0.5);
-    TH1F hScore1Background("hScore1Background", "V plane;FRANS Score;# entries", 100, -0.5, 0.5);
-    TH1F hScore2Background("hScore2Background", "C plane;FRANS Score;# entries", 100, -0.5, 0.5);
+    TH1F hScore0Signal("hScore0Signal", "U plane;FRANS Score;# entries", 50, -0.5, 0.5);
+    TH1F hScore1Signal("hScore1Signal", "V plane;FRANS Score;# entries", 50, -0.5, 0.5);
+    TH1F hScore2Signal("hScore2Signal", "C pane;FRANS Score;# entries", 50, -0.5, 0.5);
+    TH1F hScore0Background("hScore0Background", "U plane;FRANS Score;# entries", 50, -0.5, 0.5);
+    TH1F hScore1Background("hScore1Background", "V plane;FRANS Score;# entries", 50, -0.5, 0.5);
+    TH1F hScore2Background("hScore2Background", "C plane;FRANS Score;# entries", 50, -0.5, 0.5);
     // Set stats
     hScore0Signal.SetStats(0);
     hScore1Signal.SetStats(0);
@@ -254,6 +254,9 @@ void MacroCompareViews(std::string path="./",
     hScore2Background.SetStats(0);
 
     // Output canvas
+    // Set bottom margin
+    gStyle->SetPadBottomMargin(0.15);
+
     TCanvas* c = new TCanvas("c", "Score comparison", 800, 600);
     c->Divide(2, 2);
 
@@ -312,6 +315,7 @@ void MacroCompareViews(std::string path="./",
     // Draw signal and background efficiency curves for each ROOT file
     TCanvas* c1 = new TCanvas("c1", "Efficiency comparison", 800, 600);
     c1->Divide(2, 2);
+    // bottom margins
     
     // Store map ROC for each cut
     std::map<std::string, std::vector<double>> signalEfficiencies;
@@ -329,7 +333,7 @@ void MacroCompareViews(std::string path="./",
         , { "C | V | U", "score2>%.2f || score1>%.2f || score0>%.2f"}
     };
 
-    std::vector<int> colors = {kRed, kBlue, kGreen, kOrange, kMagenta, kCyan, kBlack};
+    std::vector<int> colors = {kRed, kBlue, kGreen+3, kViolet+2, kMagenta, kOrange+7, kBlack};
 
     // initialize vector maps
     for (std::pair<std::string, TString> cutIt : cutsMap) {
@@ -340,7 +344,7 @@ void MacroCompareViews(std::string path="./",
 
     // Score scan
     double scoreStep = 0.01;
-    double scoreShift = 0;
+    double scoreShift = 0.;
     double nSignal = t->GetEntries(signalCut);
     double nBackground = t->GetEntries(bgCut);
     // Vector to store the score
@@ -537,8 +541,11 @@ void MacroCompareViews(std::string path="./",
 
 
     c->WaitPrimitive();
+    c->SaveAs("ScoreComparison.pdf");
     c1->WaitPrimitive();
+    c1->SaveAs("EfficiencyComparison.pdf");
     c2->WaitPrimitive();
+    c2->SaveAs("2DScatterPlots.pdf");
 
 
 

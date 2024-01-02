@@ -42,10 +42,9 @@ add_library(frans_library
 )
 
 # Include directories for header files
-target_include_directories(frans_library PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(frans_library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Link the libraries
 target_link_libraries(frans_library PRIVATE sobjects_library)
 target_link_libraries(frans_library PRIVATE ROOT::Hist ROOT::Gpad)
 target_link_libraries(frans_library PUBLIC ROOT::TMVA)
-
-#ROOT_GENERATE_DICTIONARY(fransobj_dict FRANSObj.h LINKDEF classes.h)

@@ -14,9 +14,9 @@ double fCutShwEnergy = 135;
 
 std::vector<PlotDef> phaseSpaceVars = {
     {"NuvZ",  "0==0", CutType::kNone,  0, {-10,510,50}, false, "Z_{#nu} [cm]"}
-    ,{"LambdaKE", "0==0", CutType::kNone,  0, {0, 0.4, 40}, false, "KE_{#Lambda} [GeV]"}
+    ,{"LambdaKE", "0==0", CutType::kNone,  0, {0, 0.4, 30}, false, "KE_{#Lambda} [GeV]"}
     ,{"NuvE", "0==0", CutType::kNone,  0, {0,3, 30}, false, "E_{#nu} [GeV]"}
-    ,{"Gap", "0==0", CutType::kNone, 0, {0, 20, 40}, false, "Gap [cm]"}
+    ,{"Gap", "0==0", CutType::kNone, 0, {0, 20, 30}, false, "Gap [cm]"}
 };
 
 

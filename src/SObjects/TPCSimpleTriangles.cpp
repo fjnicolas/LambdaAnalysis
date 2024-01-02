@@ -139,6 +139,22 @@ int STriangle::GetNHitsMainTrack(){
     return fMainTrack.NHits();
 }
 
+// Get all hits function
+std::vector<SHit> STriangle::GetAllHits(){
+    
+    std::vector<SHit> hitList;
+    
+    for(SHit &h:GetTrack1().GetHits()){
+        hitList.push_back(h);
+    }
+
+    for(SHit &h:GetTrack2().GetHits()){
+        hitList.push_back(h);
+    }
+
+    return hitList; 
+}
+
 
 // Get Length functions
 double STriangle::GetLengthTrack1(){

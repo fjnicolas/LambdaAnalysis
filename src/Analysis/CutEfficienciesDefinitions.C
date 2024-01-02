@@ -825,7 +825,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
 
     // ------ Draw phase space ------ 
     // Canvas
-    TCanvas *cPhaseSpace = new TCanvas(("cPhaseSpace"+plotIndex).c_str(),"Phase Space",0, 0, 1200, 750);
+    TCanvas *cPhaseSpace = new TCanvas(("cPhaseSpace"+plotIndex).c_str(),"Phase Space",0, 0, 1200, 850);
     cPhaseSpace->cd();
 
     // vector of Pads
@@ -836,18 +836,36 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     // Draw each plot
     for(int i=0; i<fPhaseSpaceVars.size(); i++){
         padV[i+1]->cd();
+        //fHistVPhaseSpace1[i]->GetXaxis()->SetTitle("x");
+        fHistVPhaseSpace1[i]->GetYaxis()->SetTitle("y");
+        fHistVPhaseSpace0[i]->GetYaxis()->SetTitle("y");
         TRatioPlot * rp = new TRatioPlot(fHistVPhaseSpace1[i], fHistVPhaseSpace0[i]);
         rp->SetH1DrawOpt("HIST");
         rp->SetH2DrawOpt("HIST SAME");
+        rp->SetGraphDrawOpt("lp");
+        
         rp->Draw();
+        rp->SetLowBottomMargin(0.3);
+        rp->SetLeftMargin(0.15);
+        rp->SetSplitFraction(0.35);
+        rp->SetSeparationMargin(0.);
+        rp->GetLowerRefYaxis()->SetTitle("#epsilon");
+        rp->GetUpperRefYaxis()->SetTitle("# entries");
+        rp->GetLowerRefYaxis()->SetTitleOffset(1.);
+        rp->GetUpperRefYaxis()->SetTitleOffset(1.);
+        rp->GetLowYaxis()->SetNdivisions(1005);
+        rp->GetUpperRefYaxis()->SetRangeUser(0., fHistVPhaseSpace0[i]->GetMaximum()*1.1);
+        rp->GetLowerRefGraph()->SetMarkerStyle(20);
+        rp->GetLowerRefGraph()->SetMarkerSize(1);
+        rp->GetLowerRefGraph()->SetLineColor(kBlack);
         if(i==0){
             legendRP->AddEntry(fHistVPhaseSpace0[i],"All","l");
             legendRP->AddEntry(fHistVPhaseSpace1[i],"After cut","l");
         }
-        rp->GetLowYaxis()->SetNdivisions(1005);
-        rp->GetUpperRefYaxis()->SetRangeUser(0., fHistVPhaseSpace0[i]->GetMaximum()*1.1);
+       
         legendRP->Draw("same");
     }
+    cPhaseSpace->WaitPrimitive();
 
     // --- Save canvas
     c2->Update();

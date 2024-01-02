@@ -29,7 +29,6 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     double potNorm=1,
     double potNormSignal=1,
     double totalPOTNorm=1){
-        
 
     TCut fTruthInFV("TruthIsFiducial==1");
     TCut fTruthInAV("TruthIsAV==1");
@@ -97,10 +96,21 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     // Load the BDT
     fTMVAReader->BookMVA( "FRAMS BDT", fWeightFilePath.c_str() );
 
+    // --- Set style
+    // bottom margin
+    gStyle->SetPadBottomMargin(0.15);
+    // stats 0
+    gStyle->SetOptStat(0);
+    // plot line widths
+    gStyle->SetLineWidth(2);
+    // graph line width
+    gStyle->SetHistLineWidth(2);
+    
+
     // Score histogram
-    TH1F *hScoreS = new TH1F("hScoreS", "hScore", 100, -1, 1);
-    TH1F *hScoreBG = new TH1F("hScoreBG", "hScore", 100, -1, 1);
-    TH1F *hScoreCosmic = new TH1F("hScoreCosmic", "hScoreCosmic", 100, -1, 1);
+    TH1F *hScoreS = new TH1F("hScoreS", "; Classifier score; # entries", 100, -1, 1);
+    TH1F *hScoreBG = new TH1F("hScoreBG", "; Classifier score; # entries", 100, -1, 1);
+    TH1F *hScoreCosmic = new TH1F("hScoreCosmic", "; Classifier score; # entries", 100, -1, 1);
 
     // Save entries that pass cuts
     std::vector<int> passCutEventID;
@@ -264,11 +274,12 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     legNorm->Draw();
 
     // axis labels
-    gNBg->GetXaxis()->SetTitle("BDT score");
+    gNBg->GetXaxis()->SetTitle("Classifier score");
     gNBg->GetYaxis()->SetTitle("# events");
 
     // range user
-    gNBg->GetYaxis()->SetRangeUser(0.1, 100);
+    gNBg->GetYaxis()->SetRangeUser(0.1, 70);
+    gNBg->GetXaxis()->SetRangeUser(0.1, 0.35);
 
     // Wait
     cScoreNorm->Update();

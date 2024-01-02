@@ -47,8 +47,6 @@ add_library(tpclines_library
     TPCLinesParameters.h
 )
 
-# Include directories for header files
-#target_include_directories(sobjects_library PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Link math_library to string_library
 target_link_libraries(tpclines_library PRIVATE ROOT::Hist ROOT::Graf ROOT::Gpad)

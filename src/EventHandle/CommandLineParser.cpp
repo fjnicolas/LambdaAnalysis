@@ -15,6 +15,8 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
     directory_path = ".";
     ext = ".root";
     vertexOption = 0;
+    treeName = "ana";
+    plotFRANS = false;
     
     // Loop through command-line arguments
     for (int i = 1; i < argc; ++i) {
@@ -76,6 +78,17 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
                 vertexOption = std::stoi(argv[i + 1]);
                 i++;
             }
+        } else if (argument == "-t") {
+            if (i + 1 < argc) {
+                treeName = argv[i + 1];
+                i++;
+            }
+        } else if (argument == "-frans") {
+            if (i + 1 < argc) {
+                plotFRANS = true;
+                i++;
+            }
         }
+
     }
 }

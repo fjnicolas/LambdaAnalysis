@@ -77,8 +77,6 @@ class TPCLinesVertexFinder {
 
         bool LambdaDecayKinematicCheck(STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList);
 
-        bool CalorimetryCheck(STriangle Triangle);
-
 
     public:
         // constructor

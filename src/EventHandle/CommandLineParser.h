@@ -18,6 +18,8 @@ class CommandLineParser {
         std::string getDirectoryPath() const { return directory_path; }
         std::string getExtension() const { return ext; }
         int getVertexOption() const { return vertexOption; }
+        std::string getTreeName() const { return treeName; }
+        bool getPlotFRANS() const { return plotFRANS; }
 
     private:
         int Debug;
@@ -31,5 +33,7 @@ class CommandLineParser {
         std::string directory_path;
         std::string ext;
         int vertexOption;
+        std::string treeName;
+        bool plotFRANS;
 
 };

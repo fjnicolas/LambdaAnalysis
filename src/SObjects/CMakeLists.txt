@@ -48,8 +48,9 @@ add_library(sobjects_library
     TPCLinesPCA.h
 )
 
-
 # Include directories for header files
 target_include_directories(sobjects_library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Link the libraries
 target_link_libraries(sobjects_library PUBLIC ROOT::Hist ROOT::Gpad)
+target_link_libraries(sobjects_library PUBLIC frans_library)

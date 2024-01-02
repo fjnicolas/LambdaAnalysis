@@ -114,6 +114,9 @@ class STriangle {
         int GetNHitsTrack2();
         int GetNHitsMainTrack();
 
+        // Get all hits function
+        std::vector<SHit> GetAllHits();
+
         // Get Length functions
         double GetLengthTrack1();
         double GetLengthTrack2();

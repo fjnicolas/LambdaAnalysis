@@ -114,10 +114,10 @@ boost::property_tree::ptree GetPropertyTreeFromFileName(std::string filename, st
 }
 
 
-FRAMSPsetType ReadFRANSPset(std::string filename, std::string blockName){
+FRANSPsetType ReadFRANSPset(std::string filename, std::string blockName){
 
     // Create the parameter set
-    FRAMSPsetType fPsetFRANS;
+    FRANSPsetType fPsetFRANS;
     
     // Create the boost property and read all the parameter in the given file
     boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);

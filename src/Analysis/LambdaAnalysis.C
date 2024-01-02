@@ -41,7 +41,7 @@ std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 
 TCut fCounterCut = "SliceID==0";
 
-std::vector<PlotDef> cutDefs = cutDefs2;
+std::vector<PlotDef> cutDefs = cutDefsTalk;
 
 
 

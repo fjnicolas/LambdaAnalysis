@@ -7,7 +7,7 @@
 #ifndef SBND_CHARGEDENSITYPSET_H
 #define SBND_CHARGEDENSITYPSET_H
 
-struct FRAMSPsetType {
+struct FRANSPsetType {
   bool ApplyRawSmoothing;
   bool ApplySmoothing;
   bool ApplyCumulativeSmoothing;
@@ -27,7 +27,7 @@ struct FRAMSPsetType {
   std::string OutputPath;
 
   // Constructor to initialize the members
-  FRAMSPsetType(bool rawSmoothing=false,
+  FRANSPsetType(bool rawSmoothing=false,
                 bool smoothing=false,
                 bool cumulativeSmoothing=false,
                 unsigned int driftPack=4,

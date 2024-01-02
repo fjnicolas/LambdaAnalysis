@@ -51,8 +51,8 @@ void RunAlgoFRANS(const CommandLineParser& parser)
 
     // ----------- ALGORITHM PARAMETERS --------------------------------- 
 
-    // ---- FRAMS parameters ----------------------------------------
-    FRAMSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
+    // ---- FRANS parameters ----------------------------------------
+    FRANSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
     fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
     
@@ -86,16 +86,16 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     std::string tree_dirname = "framsReco/";
     if(vertexOption==1) tree_dirname = "framsTrue/";
     if(vertexOption==2) tree_dirname = "framsMine/";
-    std::string tree_name = "FRAMSTree";
-    TTree* fTree = new TTree((tree_name).c_str(), "FRAMS Output Tree");
+    std::string tree_name = "FRANSTree";
+    TTree* fTree = new TTree((tree_name).c_str(), "FRANS Output Tree");
     //FRANSTTree myTree(fTree);
     FRANSTree myTree(fTree, false);
 
 
 
     // Define FRANS LINES ALGORITHM
-    ChargeDensity _FRAMSAlgo(fPsetFRANS);
-    ChargeDensity _FRAMSAlgoPANDORA(fPsetFRANS);
+    ChargeDensity _FRANSAlgo(fPsetFRANS);
+    ChargeDensity _FRANSAlgoPANDORA(fPsetFRANS);
     // Define TPC LINES ALGORITHM
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
     // Effiency status
@@ -220,8 +220,8 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             else if(vertexOption==2) fVertex = fVertexMine;
 
             
-            _FRAMSAlgoPANDORA.Fill(hitList, fVertexReco);
-            _FRAMSAlgo.Fill(hitList, fVertex);
+            _FRANSAlgoPANDORA.Fill(hitList, fVertexReco);
+            _FRANSAlgo.Fill(hitList, fVertex);
 
             /*
             // Check if it's signal
@@ -232,21 +232,21 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             }
             myTree.FillDataMC(treeReader.runID, treeReader.subrunID, treeReader.eventID, 0, 0, 0, 0, isSignal, 0, 0, 0);
             myTree.FillData(2,
-                            _FRAMSAlgo.Delta(), _FRAMSAlgo.Eta(), _FRAMSAlgo.FitScore(), _FRAMSAlgo.Alpha(),
-                            _FRAMSAlgo.Omega(), _FRAMSAlgo.Tau(), _FRAMSAlgo.Iota(),
+                            _FRANSAlgo.Delta(), _FRANSAlgo.Eta(), _FRANSAlgo.FitScore(), _FRANSAlgo.Alpha(),
+                            _FRANSAlgo.Omega(), _FRANSAlgo.Tau(), _FRANSAlgo.Iota(),
                             recoEvent.GetNOrigins(), recoEvent.GetNOriginsMult(1), recoEvent.GetNOriginsMult(2), recoEvent.GetNOriginsMultGt(3), recoEvent.HitDensity() );
             myTree.FillTree();*/
   
 
 
-            _FRAMSAlgo.Score()>=fFRANSScoreCut ? _EfficiencyCalculator.UpdateSelected(ev):_EfficiencyCalculator.UpdateNotSelected(ev);
-            std::string outputLabel = (_FRAMSAlgo.Score()>=fFRANSScoreCut)? "plot_Accepted":"plot_Rejected";
-            std::string outputLabel2 = (_FRAMSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
+            _FRANSAlgo.Score()>=fFRANSScoreCut ? _EfficiencyCalculator.UpdateSelected(ev):_EfficiencyCalculator.UpdateNotSelected(ev);
+            std::string outputLabel = (_FRANSAlgo.Score()>=fFRANSScoreCut)? "plot_Accepted":"plot_Rejected";
+            std::string outputLabel2 = (_FRANSAlgoPANDORA.Score()>=fFRANSScoreCut)? "Accepted":"Rejected";
 
                         
             if(Debug>=0){
                 TCanvas *cDisplay = new TCanvas( (outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)).c_str(), outputLabel.c_str(), 600, 0, 800, 1200);
-                _FRAMSAlgo.Display(cDisplay);
+                _FRANSAlgo.Display(cDisplay);
 
                 // Save TCanvas and pdf
                 TImage *img = TImage::Create();

@@ -92,6 +92,8 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     Use["BDT"]             = 1;
     // Neural Networks (all are feed-forward Multilayer Perceptrons)
     Use["MLP"]             = 0;
+    // Random Forest
+    Use["RandomForest"]    = 0;
 
     
     // Define factory and data loader
@@ -109,14 +111,14 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     //dataloader->AddVariable( "AngleLengthTrack1", "Track 1 Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleLengthTrack2", "Track 2 Length [cm]", "", 'I' );
     //dataloader->AddVariable( "AngleNHitsMainTrack", "Main track # hits", "", 'I' );
-    dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
-    dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
+    //dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
+    //dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
     dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
-    dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
+    //dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
     dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
-    dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
+    //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
     dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
@@ -169,6 +171,9 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     if (Use["BDT"])  // Adaptive Boost
         factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT",
                             "!H:!V:NTrees=850:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
+    if (Use["RandomForest"])  // Adaptive Boost
+        factory->BookMethod( dataloader, TMVA::Types::kBDT, "RandomForest",
+                             "!H:!V:NTrees=2500:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
 
     // Train MVAs using the set of training events
     factory->TrainAllMethods();

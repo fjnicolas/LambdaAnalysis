@@ -687,25 +687,6 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(STriangle Triangle, SLinear
 }
 
 
-bool TPCLinesVertexFinder::CalorimetryCheck(STriangle Triangle){
-
-    std::cout<<"  MAKING CALORIMETRY TEST\n";
-    SLinearCluster track1 = Triangle.GetTrack1();
-
-    SLinearCluster track2 = Triangle.GetTrack2();
-
-    SCalo calo1 (track1.GetHits());
-    SCalo calo2 (track2.GetHits());
-
-    calo1.Display();
-    calo2.Display();
-
-    CreateEnergyLossVsResidualRangePlot( {calo1, calo2} );
-
-    return true;
-}
-
-
 std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearCluster> trackList, SPoint ballVertex, std::vector<STriangle>& vertexList,  std::vector<SOrigin>& associatedOrigins,  SLinearCluster &mainDirection){
 
     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In Origin finder\n";

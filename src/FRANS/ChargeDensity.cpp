@@ -1,7 +1,7 @@
 #include "ChargeDensity.h"
 
 
-ChargeDensity::ChargeDensity(FRAMSPsetType const& config, int view)
+ChargeDensity::ChargeDensity(FRANSPsetType const& config, int view)
   : fFRANSPset(config),
     fView(view)
 {
@@ -33,7 +33,7 @@ ChargeDensity::ChargeDensity(FRAMSPsetType const& config, int view)
     fTMVAReader.AddSpectator( "ProtonKE", &fProtonKE );
     fTMVAReader.AddSpectator( "PionKE", &fPionKE );
 
-    fTMVAReader.BookMVA( "FRAMS BDT",  fFRANSPset.TMVAFilename.c_str()  );
+    fTMVAReader.BookMVA( "FRANS BDT",  fFRANSPset.TMVAFilename.c_str()  );
 
   }
 }
@@ -266,7 +266,7 @@ void ChargeDensity::UpdateMetrics(){
   }
 
   if(fFRANSPset.CalculateScore)
-    fScore = fTMVAReader.EvaluateMVA( "FRAMS BDT" );
+    fScore = fTMVAReader.EvaluateMVA( "FRANS BDT" );
 
   std::cout<<"Alpha: "<<fAlpha<<" Omega: "<<fOmega<<" Iota: "<<fIota<<" Eta: "<<fEta<<" Delta: "<<fDelta<<" FitScore: "<<fFitScore<<" BDTScore:"<<fScore<<std::endl;
 }
@@ -456,7 +456,7 @@ void ChargeDensity::Display(TCanvas *c){
   gr->GetHistogram()->GetXaxis()->SetTitle("#rho");
   gr->Draw("ALP");
 
-  double score = fTMVAReader.EvaluateMVA( "FRAMS BDT" );
+  double score = fTMVAReader.EvaluateMVA( "FRANS BDT" );
   TLegend* leg1 = new TLegend(0.5, 0.60, 0.85, 0.85);
   leg1->SetBorderSize(1); leg1->SetTextFont(62); leg1->SetTextSize(0.1);
   std::ostringstream legLabel1; legLabel1 << std::setprecision(2);

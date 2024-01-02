@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-std::vector<int> colors = {kAzure-3, kOrange+7, kRed, kGreen+4, kMagenta, kBlack, kBlue, kOrange, kRed+2, kGreen+2, kMagenta+2, kBlack+2, kBlue+2, kOrange-3, kRed-3, kGreen-3, kMagenta-3, kBlack-3, kBlue-3, kOrange-6, kRed-6, kGreen-6, kMagenta-6, kBlack-6, kBlue-6, kOrange-9, kRed-9, kGreen-9, kMagenta-9, kBlack-9, kBlue-9};
+std::vector<int> colors = {kAzure-3, kOrange+7, kRed, kGreen+3, kMagenta, kBlack, kBlue, kOrange, kRed+2, kGreen+2, kMagenta+2, kBlack+2, kBlue+2, kOrange-3, kRed-3, kGreen-3, kMagenta-3, kBlack-3, kBlue-3, kOrange-6, kRed-6, kGreen-6, kMagenta-6, kBlack-6, kBlue-6, kOrange-9, kRed-9, kGreen-9, kMagenta-9, kBlack-9, kBlue-9};
 
 //std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsNew2.root", "TMVAResultsFinal/TMTMVAResultsNew4.root", "TMVAResultsFinal/TMTMVAResultsOld.root", "TMVAResultsFinal/TMTMVAResultsNew4NoAlpha.root"}; std::vector<std::string> myLabels = {"New2", "New4", "Old", "New4 no alpha"};
 
@@ -21,7 +21,7 @@ std::vector<int> colors = {kAzure-3, kOrange+7, kRed, kGreen+4, kMagenta, kBlack
 std::vector<std::string> myLabels = {"C", "C Reco", "C wWidth", "C Iota", "C NoAlpha", "C wWidthIota", "C wWidthIota Inclusive"};*/
 
 
-void CompareROCCurves(std::string path="./") {
+void CompareROCCurves(std::string path="./", std::string keyLabel="") {
 
     
     // map with label and file name
@@ -36,7 +36,9 @@ void CompareROCCurves(std::string path="./") {
         while ((file=(TSystemFile*)next())) {
             
             fname = file->GetName();
-            if (!file->IsDirectory() && fname.EndsWith(".root") && fname.BeginsWith("TMVAResults")) { 
+            if (!file->IsDirectory() && fname.EndsWith(".root") && fname.BeginsWith("TMVAResults")) {
+                // check fname contains keyLabel
+                if (keyLabel != "" && !fname.Contains(keyLabel.c_str())) continue;
                 std:string label = fname.Data();
                 label.erase(0, 11);
                 label.erase(label.size()-5, label.size());
@@ -57,14 +59,26 @@ void CompareROCCurves(std::string path="./") {
     std::map<std::string, TH1F*> rocs;
     // loop over the file map
     for (auto it = fileMap.begin(); it != fileMap.end(); ++it) {
+
         std::cout<<it->first<<" "<<it->second<<std::endl;
 
         TFile* file1 = TFile::Open((path + it->second).c_str());
-       
-        std::string fPlotName = "dataset/Method_BDT/BDT/MVA_BDT_rejBvsS";
-
-        TH1F* roc = (TH1F*)file1->Get(fPlotName.c_str());
-        rocs[it->first] = roc;
+        std::string fPlotName;
+        TH1F* roc;
+        
+        // check if the name contains Fisher
+        if (it->first.find("Fisher") != std::string::npos) {
+            std::cout<<"Fisher"<<std::endl;
+            fPlotName = "dataset/Method_Fisher/Fisher/MVA_Fisher_rejBvsS";
+            roc = (TH1F*)file1->Get(fPlotName.c_str());
+            rocs[it->first] = roc;
+        }
+        else{
+            std::cout<<"BDT"<<std::endl;
+            fPlotName = "dataset/Method_BDT/BDT/MVA_BDT_rejBvsS";
+            roc = (TH1F*)file1->Get(fPlotName.c_str());
+            rocs[it->first] = roc;
+        }
     }
 
     TH2F hFrame("hFrame", "ROC Comparison;Signal efficiency; BG rejection", 500, 0, 1, 500, 0, 1);
