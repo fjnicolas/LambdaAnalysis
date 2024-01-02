@@ -27,7 +27,7 @@ endif()
 
 message(status "Building " ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(sobjects_library
+add_library(sobjects_library STATIC
     TPCSimpleHits.cpp
     TPCSimpleHits.h
     TPCLinesHitDistanceUtils.cpp

@@ -28,12 +28,18 @@
 #include <TVectorD.h>
 #include <TMatrixD.h>
 
+
+#if LAMBDAANA_LARSOFT == 1
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleTriangles.h"
+#include "sbndcode/LambdaAnalysis/src/FRANS/ChargeDensity.h"
+#include "sbndcode/LambdaAnalysis/src/FRANS/ChargeDensityPset.h"
+#else
 #include "TPCSimpleHits.h"
 #include "TPCSimpleTriangles.h"
-
 #include "ChargeDensity.h"
 #include "ChargeDensityPset.h"
-
+#endif
 
 // --- Drawing options ---
 const double fMaxMarkerSize = 5;
@@ -63,8 +69,8 @@ private:
     // Track legnth
     double fTrackLength;
     // TrackOrientationAngle
-    double fTrackAngle;
     double fCosTrackAngle;
+    double fTrackAngle;
     // Define the hit points and path lengths as private members
     std::vector<SHit> fHitList;
     std::vector<double> fPathLengths;
@@ -113,7 +119,7 @@ class STriangleCalo {
         // Function to display dEdx
         void CreateEnergyLossVsResidualRangePlot();
         // Triangle joint fit analysis
-        void JointFitAnalysis(int maxHits, double widthTol, bool useHitError, double& fitSlope1, double &fitSlope2, ChargeDensity & chargeDensityAlgo);
+        void JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError, double& fitSlope1, double &fitSlope2, ChargeDensity & chargeDensityAlgo);
         void JointFitAnalysisFisher();
 
         // Return functions

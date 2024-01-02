@@ -187,6 +187,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo fCalo1, SCalo fCalo2
 
 void STriangleCalo::CreateEnergyLossVsResidualRangePlot() {
     TCanvas *c1 = new TCanvas("canvasCalo","Calorimetry", 600,1200);
+    c1->cd();
     TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.98,0.98);
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, pad1);
 }
@@ -349,7 +350,7 @@ void STriangleCalo::JointFitAnalysisFisher(){
     y.insert(y.end(), yV2.begin(), yV2.end());
 
     // project the points
-    for(int i=0; i<x.size(); i++){
+    for(size_t i=0; i<x.size(); i++){
         x[i] = x[i]-xVertex;
         y[i] = y[i]-yVertex;
     }
@@ -390,16 +391,6 @@ void STriangleCalo::JointFitAnalysisFisher(){
     double d1 = std::hypot( x1, y1);
     double d2 = std::hypot( x2, y2);
 
-    double pX, pY;
-    if(d1<d2){
-        pX = x1;
-        pY = y1;
-    }
-    else{
-        pX = x2;
-        pY = y2;
-    }
-
     // min track angle
     double minTrackAngle1 = std::acos( x1/std::hypot(x1, y1) );
     double minTrackAngle2 = std::acos( x2/std::hypot(x2, y2) );
@@ -416,7 +407,7 @@ void STriangleCalo::JointFitAnalysisFisher(){
     angle  = fWVector(1)/fWVector(0);
 
     // project the points
-    for(int i=0; i<x.size(); i++){
+    for(size_t i=0; i<x.size(); i++){
         double x0 = x[i];
         double y0 = y[i];
         double xproj = x0*cos(angle) + y0*sin(angle);
@@ -536,7 +527,7 @@ void SortSHitVectorByDistance(std::vector<SHit>& hits, double externalX, double 
 
 
 // --- JointFit analysis---
-void STriangleCalo::JointFitAnalysis(int maxHits, double widthTol, bool useHitError, double& fitSlope1, double& fitSlope2, ChargeDensity & chargeDensityAlgo){
+void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError, double& fitSlope1, double& fitSlope2, ChargeDensity & chargeDensityAlgo){
 
     // --- Create the canvas ---
     TCanvas *c1 = new TCanvas("canvasCalo","Calorimetry", 600,1200);
