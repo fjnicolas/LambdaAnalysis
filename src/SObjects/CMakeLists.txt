@@ -27,7 +27,7 @@ endif()
 
 message(status "Building " ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(sobjects_library STATIC
+add_library(sobjects_library
     TPCSimpleHits.cpp
     TPCSimpleHits.h
     TPCLinesHitDistanceUtils.cpp
@@ -53,4 +53,4 @@ target_include_directories(sobjects_library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Link the libraries
 target_link_libraries(sobjects_library PUBLIC ROOT::Hist ROOT::Gpad)
-target_link_libraries(sobjects_library PUBLIC frans_library)
+#target_link_libraries(sobjects_library PUBLIC frans_library)

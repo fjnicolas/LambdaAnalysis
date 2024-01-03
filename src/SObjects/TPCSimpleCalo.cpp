@@ -161,6 +161,8 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo fCalo1, SCalo fCalo2
     fit2->SetLineWidth(2);
     graph2->Fit(fit2, "R");
 
+    std::cout<<" dEdX fit done!\n";
+
     // Draw the fitted functions
     fit1->Draw("same");
     fit2->Draw("same");
@@ -190,6 +192,8 @@ void STriangleCalo::CreateEnergyLossVsResidualRangePlot() {
     c1->cd();
     TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.98,0.98);
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, pad1);
+    delete c1;
+    delete pad1;
 }
 
 // --- Broken line fit ---
@@ -787,6 +791,7 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
             nBulkHits++;
         }
     }
+    std::cout<<"CHECK 1\n";
 
     double vertexCharge = vertexHitsIntegral/nVertexHits;
     double bulkCharge = bulkHitsIntegral/nBulkHits;
@@ -801,8 +806,11 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     chargeDensityAlgo.Display(cDisplay);
     double eta = chargeDensityAlgo.Eta();
     std::cout<<"Eta: "<<eta<<std::endl;*/
-
-
+    std::cout<<"CHECK 1\n";
+    delete c1;
+    //delete pad1;
+    //delete pad2;
+    std::cout<<"CHECK 1\n";
     return;
 
 }

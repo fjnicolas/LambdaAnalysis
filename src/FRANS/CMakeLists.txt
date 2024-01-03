@@ -29,7 +29,7 @@ if(DEFINED ENV{LARSOFT_VERSION})
       install_source()
 endif()
 
-add_library(frans_library STATIC
+add_library(frans_library
   LeastSquares.h
   FRANSObj.cpp
   FRANSObj.h
