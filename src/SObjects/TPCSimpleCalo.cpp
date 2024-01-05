@@ -837,10 +837,8 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
 // --- Display function ---
 void STriangleCalo::Display(TCanvas *c1){
     // --- Create the canvas ---
-    bool deleteCanvas = false;
     if(c1==nullptr) {
         c1 = new TCanvas("canvasCalo","Calorimetry", 600,1200);
-        deleteCanvas = true;
     }
     c1->cd();
     TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.98,0.98);
