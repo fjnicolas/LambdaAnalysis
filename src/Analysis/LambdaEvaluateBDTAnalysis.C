@@ -62,6 +62,10 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     float NShowers;
     float NShowerHits;
     float AngleLongestIsMain;
+    float AngleChargeRatioFit;
+    float AngleChargeDifferenceFit;
+    float AngleVertexHitIntegralRatio;
+    float AngleTwoLinesChi2;
 
 
     // Add variables to the reader
@@ -91,6 +95,10 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     if(fVarLabels["NShowerHits"]==true) fTMVAReader->AddVariable( "NShowerHits", &NShowerHits );
     if(fVarLabels["AngleOpeningAngle"]==true) fTMVAReader->AddVariable( "AngleOpeningAngle", &AngleOpeningAngle );
     if(fVarLabels["AngleLongestIsMain"]==true) fTMVAReader->AddVariable( "AngleLongestIsMain", &AngleLongestIsMain );
+    if(fVarLabels["AngleChargeRatioFit"]==true) fTMVAReader->AddVariable( "AngleChargeRatioFit", &AngleChargeRatioFit );
+    if(fVarLabels["AngleChargeDifferenceFit"]==true) fTMVAReader->AddVariable( "AngleChargeDifferenceFit", &AngleChargeDifferenceFit );
+    if(fVarLabels["AngleVertexHitIntegralRatio"]==true) fTMVAReader->AddVariable( "AngleVertexHitIntegralRatio", &AngleVertexHitIntegralRatio );
+    if(fVarLabels["AngleTwoLinesChi2"]==true) fTMVAReader->AddVariable( "AngleTwoLinesChi2", &AngleTwoLinesChi2 );
 
 
     // Load the BDT
@@ -143,6 +151,10 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         NShowers = fAnaTreeHandle.fNShowers;
         NShowerHits = fAnaTreeHandle.fNShowerHits;
         AngleLongestIsMain = fAnaTreeHandle.fAngleLongestIsMain;
+        AngleChargeRatioFit = fAnaTreeHandle.fAngleChargeRatioFit;
+        AngleChargeDifferenceFit = fAnaTreeHandle.fAngleChargeDifferenceFit;
+        AngleVertexHitIntegralRatio = fAnaTreeHandle.fAngleVertexHitIntegralRatio;
+        AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
         
         // check active volume
         bool fTruthIsActive = 1;// fAnaTreeHandle.fTruthIsAV;

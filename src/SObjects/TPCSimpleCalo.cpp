@@ -37,6 +37,7 @@ SCalo::SCalo(const std::vector<SHit>& hits, double trackAngle)
     fTrackAngle(trackAngle),
     fHitList(hits)
 {
+    std::cout<<"HEY";
     CalculateResidualRange();
 }
 
@@ -52,19 +53,24 @@ double SCalo::CalculateDistance(const SHit& p1, const SHit& p2) {
 void SCalo::CalculatePathLengths() {
     fPathLengths.clear();
 
-    // first hit
-    fPathLengths.push_back( CalculateDistance(fHitList[0], fHitList[1]) );
+    if(fHitList.size()>1){
+        // first hit
+        fPathLengths.push_back( CalculateDistance(fHitList[0], fHitList[1]) );
 
-    for (size_t i = 1; i < fHitList.size()-1; ++i) {
-        double distance1 = CalculateDistance(fHitList[i - 1], fHitList[i]);
-        double distance2 = CalculateDistance(fHitList[i], fHitList[i + 1]);
-        double halfDistance = 0.5 * (distance1 + distance2);
-        
-        fPathLengths.push_back(halfDistance);
+        for (size_t i = 1; i < fHitList.size()-1; ++i) {
+            double distance1 = CalculateDistance(fHitList[i - 1], fHitList[i]);
+            double distance2 = CalculateDistance(fHitList[i], fHitList[i + 1]);
+            double halfDistance = 0.5 * (distance1 + distance2);
+            
+            fPathLengths.push_back(halfDistance);
+        }
+
+        // last hit
+        fPathLengths.push_back( CalculateDistance(fHitList[fHitList.size()-1], fHitList[fHitList.size()-2]) );
     }
-
-    // last hit
-    fPathLengths.push_back( CalculateDistance(fHitList[fHitList.size()-1], fHitList[fHitList.size()-2]) );
+    else{
+        fPathLengths.push_back(0);
+    }
 
 }
 
@@ -76,13 +82,16 @@ void SCalo::CalculateResidualRange() {
     fResidualRange.clear();
 
     fTrackLength = 0;
-    fTrackLength = std::accumulate(fPathLengths.begin(), fPathLengths.end(), fTrackLength);
+    if(fPathLengths.size()>0){
+        fTrackLength = std::accumulate(fPathLengths.begin(), fPathLengths.end(), fTrackLength);
 
-    double pathLength = 0;
-    for (size_t i = 0; i < fHitList.size(); ++i) {
-        fResidualRange.push_back( fTrackLength - pathLength);
-        fDepositedEnergy.push_back( (fHitList[i].Integral() * fHitIntegralToEnergy) * fCosTrackAngle ); // / fPathLengths[i]);
-        pathLength+=fPathLengths[i];
+        double pathLength = 0;
+        for (size_t i = 0; i < fHitList.size(); ++i) {
+            fResidualRange.push_back( fTrackLength - pathLength);
+            fDepositedEnergy.push_back( (fHitList[i].Integral() * fHitIntegralToEnergy) / fPathLengths[i]);
+            //fDepositedEnergy.push_back( (fHitList[i].Integral() * fHitIntegralToEnergy) * fCosTrackAngle );
+            pathLength+=fPathLengths[i];
+        }
     }
 
 }
@@ -98,103 +107,7 @@ void SCalo::Display(){
 }
 
 
-
 // ------ STriangleCalo class ------
-
-// --- Constructor ---
-STriangleCalo::STriangleCalo(STriangle triangle):
-    fTriangle(triangle),
-    fCalo1(triangle.GetTrack1().GetHits()),
-    fCalo2(triangle.GetTrack2().GetHits())
-{
-}
-
-
-// --- Function to display dEdx ---
-void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo fCalo1, SCalo fCalo2, TPad *pad) {
-    pad->cd();
-
-    // Get vectors
-    const std::vector<double> residualRange1 = fCalo1.GetResidualRange();
-    const std::vector<double> depositedEnergy1 = fCalo1.GetDepositedEnergy();
-    const std::vector<double> residualRange2 = fCalo2.GetResidualRange();
-    const std::vector<double> depositedEnergy2 = fCalo2.GetDepositedEnergy();
-
-    // Define graph 1
-    TGraph* graph1 = new TGraph(residualRange1.size(), &residualRange1[0], &depositedEnergy1[0]);
-    graph1->SetTitle("Track 1");
-    graph1->SetLineColor(fColor1);
-    graph1->SetMarkerColor(fColor1);
-    graph1->SetMarkerStyle(20);
-
-    // Define graph 2
-    TGraph* graph2 = new TGraph(residualRange2.size(), &residualRange2[0], &depositedEnergy2[0]);
-    graph2->SetTitle("Track 2");
-    graph2->SetLineColor(fColor2);
-    graph2->SetMarkerColor(fColor2);
-    graph2->SetMarkerStyle(20);
-
-    // Frame
-    double maxX = std::max(fCalo1.GetTrackLength(), fCalo2.GetTrackLength());
-    double maxY = std::max(*std::max_element(depositedEnergy1.begin(), depositedEnergy1.end()), *std::max_element(depositedEnergy2.begin(), depositedEnergy2.end()));
-    TH2F *hFrame = new TH2F("hFrame", ";Residual range [cm];Charge [AU]", 200, 0, maxX, 100, 0, maxY);
-    hFrame->GetYaxis()->SetTitleOffset(.8);
-    hFrame->GetXaxis()->SetTitleOffset(.8);
-    hFrame->SetStats(0);
-    hFrame->Draw();
-    graph1->Draw("lp same");
-    graph2->Draw("lp same");
-
-    // TLegend
-    TLegend *leg = new TLegend(0.7, 0.5, 0.85, 0.65);
-    leg->AddEntry(graph1, "Track1", "lp");
-    leg->AddEntry(graph2, "Track2", "lp");
-    leg->Draw("same");
-
-    // Fit the two graphs to two constants
-    TF1 *fit1 = new TF1("fit1", "[0]", 0, maxX);
-    fit1->SetLineColor(fColor1);
-    fit1->SetLineWidth(2);
-    graph1->Fit(fit1, "R");
-    TF1 *fit2 = new TF1("fit2", "[0]", 0, maxX);
-    fit2->SetLineColor(fColor2);
-    fit2->SetLineWidth(2);
-    graph2->Fit(fit2, "R");
-
-    std::cout<<" dEdX fit done!\n";
-
-    // Draw the fitted functions
-    fit1->Draw("same");
-    fit2->Draw("same");
-
-    double charge1Fit = std::min(fit1->GetParameter(0), fit2->GetParameter(0));
-    double charge2Fit = std::max(fit1->GetParameter(0), fit2->GetParameter(0));
-
-    fChargeRatioFit = charge1Fit / charge2Fit;
-    fChargeDifferenceFit = charge2Fit - charge1Fit;
-    fChargeRelativeDifferenceFit = fChargeDifferenceFit / charge1Fit;
-
-    double charge1 = std::accumulate(depositedEnergy1.begin(), depositedEnergy1.end(), 0.0) / depositedEnergy1.size();
-    double charge2 = std::accumulate(depositedEnergy2.begin(), depositedEnergy2.end(), 0.0) / depositedEnergy2.size();
-
-    double charge1Average = std::min(charge1, charge2);
-    double charge2Average = std::max(charge1, charge2);
-
-    fChargeRatioAverage = charge1Average / charge2Average;
-    fChargeDifferenceAverage = charge2Average - charge1Average;
-    fChargeRelativeDifferenceAverage = fChargeDifferenceAverage / charge1Average;
-
-}
-
-
-void STriangleCalo::CreateEnergyLossVsResidualRangePlot() {
-    TCanvas *c1 = new TCanvas("canvasCalo","Calorimetry", 600,1200);
-    c1->cd();
-    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.98,0.98);
-    MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, pad1);
-    delete c1;
-    delete pad1;
-}
 
 // --- Broken line fit ---
 Double_t BrokenLine(Double_t *x,Double_t *par) {
@@ -268,6 +181,13 @@ TVectorD FisherDiscriminant2D(const std::vector<SHit>& sample1, const std::vecto
     std::cout << "Fisher's Discriminant Direction: (" << w[0] << ", " << w[1] << ")" << std::endl;
 
     return w;
+}
+
+
+// --- Constructor ---
+STriangleCalo::STriangleCalo(STriangle triangle):
+    fTriangle(triangle)
+{
 }
 
 
@@ -509,6 +429,129 @@ void STriangleCalo::JointFitAnalysisFisher(){
 }
 
 
+// --- Function to display dEdx ---
+void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, TPad *pad) {
+    
+    if(pad!=nullptr){
+        pad->cd();
+    }
+    
+
+    // Get vectors
+    const std::vector<double> residualRange1 = calo1.GetResidualRange();
+    const std::vector<double> depositedEnergy1 = calo1.GetDepositedEnergy();
+    const std::vector<double> residualRange2 = calo2.GetResidualRange();
+    const std::vector<double> depositedEnergy2 = calo2.GetDepositedEnergy();
+
+    // Define graph 1
+    TGraph* graph1 = new TGraph(residualRange1.size(), &residualRange1[0], &depositedEnergy1[0]);
+    graph1->SetTitle("Track 1");
+    graph1->SetLineColor(fColor1);
+    graph1->SetMarkerColor(fColor1);
+    graph1->SetMarkerStyle(20);
+
+    // Define graph 2
+    TGraph* graph2 = new TGraph(residualRange2.size(), &residualRange2[0], &depositedEnergy2[0]);
+    graph2->SetTitle("Track 2");
+    graph2->SetLineColor(fColor2);
+    graph2->SetMarkerColor(fColor2);
+    graph2->SetMarkerStyle(20);
+
+    // Frame
+    std::cout<<"JAJA "<<calo1.GetTrackLength()<<" "<<calo2.GetTrackLength()<<std::endl;
+    double maxX = std::max(calo1.GetTrackLength(), calo2.GetTrackLength());
+    std::cout<<"JAJA "<<depositedEnergy1.size()<<" "<<depositedEnergy2.size()<<std::endl;
+    double maxY = std::max(*std::max_element(depositedEnergy1.begin(), depositedEnergy1.end()), *std::max_element(depositedEnergy2.begin(), depositedEnergy2.end()));
+    
+    TH2F *hFrame = new TH2F("hFrame", ";Residual range [cm];Charge [AU]", 200, 0, maxX, 100, 0, maxY);
+    hFrame->GetYaxis()->SetTitleOffset(.8);
+    hFrame->GetXaxis()->SetTitleOffset(.8);
+    hFrame->SetStats(0);
+    hFrame->Draw();
+    graph1->Draw("lp same");
+    graph2->Draw("lp same");
+
+    // TLegend
+    TLegend *leg = new TLegend(0.7, 0.5, 0.85, 0.65);
+    leg->AddEntry(graph1, "Track1", "lp");
+    leg->AddEntry(graph2, "Track2", "lp");
+    leg->Draw("same");
+
+    // Fit the two graphs to two constants
+    TF1 *fit1 = new TF1("fit1", "[0]", 0, maxX);
+    fit1->SetLineColor(fColor1);
+    fit1->SetLineWidth(2);
+    graph1->Fit(fit1, "R");
+    TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, maxX);
+    fit1Exp->SetLineColor(fColor1);
+    fit1Exp->SetLineWidth(2);
+    fit1Exp->SetParameters(1, -1, fit1->GetParameter(0));
+    fit1Exp->SetParLimits(1, -1e6, 0);
+    fit1Exp->SetParLimits(2, 0, 1e6);
+    graph1->Fit(fit1Exp, "BR");
+    
+    TF1 *fit2 = new TF1("fit2", "[0]", 0, maxX);
+    fit2->SetLineColor(fColor2);
+    fit2->SetLineWidth(2);
+    graph2->Fit(fit2, "R");
+    TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, maxX);
+    fit2Exp->SetLineColor(fColor2);
+    fit2Exp->SetLineWidth(2);
+    fit2Exp->SetParameters(1, -1, fit2->GetParameter(0));
+    fit2Exp->SetParLimits(1, -1e6, 0);
+    fit2Exp->SetParLimits(2, 0, 1e6);
+    graph2->Fit(fit2Exp, "BR");
+    
+
+    std::cout<<" dEdX fit done!\n";
+
+    // Draw the fitted functions
+    fit1->Draw("same");
+    fit2->Draw("same");
+    fit1Exp->Draw("same");
+    fit2Exp->Draw("same");
+
+    double charge1Fit = std::min(fit1->GetParameter(0), fit2->GetParameter(0));
+    double charge2Fit = std::max(fit1->GetParameter(0), fit2->GetParameter(0));
+
+    fChargeRatioFit = charge1Fit / charge2Fit;
+    fChargeDifferenceFit = charge2Fit - charge1Fit;
+    fChargeRelativeDifferenceFit = fChargeDifferenceFit / charge1Fit;
+
+    double charge1=0, charge2=0;
+    if(depositedEnergy1.size()>1)
+        charge1 = std::accumulate(depositedEnergy1.begin(), depositedEnergy1.end(), 0.0) / depositedEnergy1.size();
+    if(depositedEnergy2.size()>1)
+        charge2 = std::accumulate(depositedEnergy2.begin(), depositedEnergy2.end(), 0.0) / depositedEnergy2.size();
+
+    double charge1Average = std::min(charge1, charge2);
+    double charge2Average = std::max(charge1, charge2);
+
+    fChargeRatioAverage = charge1Average / charge2Average;
+    fChargeDifferenceAverage = charge2Average - charge1Average;
+    fChargeRelativeDifferenceAverage = fChargeDifferenceAverage / charge1Average;
+
+    std::cout << "Charge ratio (fit): " << fChargeRatioFit << std::endl;
+    std::cout << "Charge difference (fit): " << fChargeDifferenceFit << std::endl;
+    std::cout << "Charge relative difference (fit): " << fChargeRelativeDifferenceFit << std::endl;
+    std::cout << "Charge ratio (average): " << fChargeRatioAverage << std::endl;
+    std::cout << "Charge difference (average): " << fChargeDifferenceAverage << std::endl;
+    std::cout << "Charge relative difference (average): " << fChargeRelativeDifferenceAverage << std::endl;
+
+
+}
+
+
+void STriangleCalo::CreateEnergyLossVsResidualRangePlot() {
+    TCanvas *c1 = new TCanvas("canvasCalo","Calorimetry", 600,1200);
+    c1->cd();
+    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.02,0.98,0.98);
+    MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, pad1);
+    delete c1;
+    delete pad1;
+}
+
+
 // --- Sort hits by distance ---
 void SortSHitVectorByDistance(std::vector<SHit>& hits, double externalX, double externalY) {
     // Lambda expression for comparing SHit objects based on distance
@@ -529,43 +572,57 @@ void SortSHitVectorByDistance(std::vector<SHit>& hits, double externalX, double 
     std::sort(hits.begin(), hits.end(), distanceComparator);
 }
 
+// --- Get mean and std deviation of vector of hits ---
+void GetStatisticsHitVector(std::vector<SHit> hits, double & mean, double & stddev){
+    double sum = 0;
+    double sum2 = 0;
+    for(SHit & h:hits){
+        sum+=h.Integral();
+        sum2+=h.Integral() * h.Integral();
+    }
+    sum/=hits.size();
+    sum2/=hits.size();
+    mean = sum;
+    stddev = std::sqrt(sum2-sum*sum);
+
+    return;
+
+}
+
 
 // --- JointFit analysis---
-void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError, double& fitSlope1, double& fitSlope2, ChargeDensity & chargeDensityAlgo){
-
-    // --- Create the canvas ---
-    TCanvas *c1 = new TCanvas("canvasCalo","Calorimetry", 600,1200);
-    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.98,0.98);
-    TPad *pad2 = new TPad("pad2","This is pad2",0.02,0.02,0.98,0.48);
-    pad1->Draw();
-    pad2->Draw();
+void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError){
 
     // --- Get the hits and the vertex ---
     // Vertex
-    double xVertex = fTriangle.GetMainVertex().X();
-    double yVertex = fTriangle.GetMainVertex().Y();
+    fXVertex = fTriangle.GetMainVertex().X();
+    fYVertex = fTriangle.GetMainVertex().Y();
 
-    // All hits
-    std::vector<SHit> hitList = fTriangle.GetAllHits();
-
-    // Hit coordinates fior the first maxHits hits
+    // Hit coordinates for the first maxHits hits
+    maxHits = std::min( maxHits, (unsigned int)std::min(fTriangle.GetNHitsTrack1(), fTriangle.GetNHitsTrack2()) );
     std::vector<double> xV, yV, widthV;
     size_t n = 0;
     for(SHit &h:fTriangle.GetTrack1().GetHits()){
         if(n>=maxHits) break;
-        xV.push_back(h.X()-xVertex);
-        yV.push_back(h.Y()-yVertex);
+        xV.push_back(h.X()-fXVertex);
+        yV.push_back(h.Y()-fYVertex);
         widthV.push_back(h.Width());
         n++;
     }
     n=0;
     for(SHit &h:fTriangle.GetTrack2().GetHits()){
         if(n>=maxHits) break;
-        xV.push_back(h.X()-xVertex);
-        yV.push_back(h.Y()-yVertex);
+        xV.push_back(h.X()-fXVertex);
+        yV.push_back(h.Y()-fYVertex);
         widthV.push_back(h.Width());
         n++;
     }
+
+    // --- Get frame values ---
+    fMinX = *std::min_element(xV.begin(), xV.end());
+    fMaxX = *std::max_element(xV.begin(), xV.end());
+    fMinY = *std::min_element(yV.begin(), yV.end());
+    fMaxY = *std::max_element(yV.begin(), yV.end());
 
     // --- Create the TGraph ---
     n = xV.size();
@@ -600,7 +657,6 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
         return f;
     };
 
-
     // --- Fit the graph to the function ---
     ROOT::Math::Functor fcn(Chi2TwoLines, 4);
     ROOT::Fit::Fitter  fitter;
@@ -625,92 +681,37 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
         fPassFit = true;
     }
 
-    // Fit results
+    // --- Fit results ---
     const ROOT::Fit::FitResult & result = fitter.Result();
-
-    // --- Draw the graph and the fit ---
-    pad1->cd();
-    // Get frame values
-    double x1 = *std::min_element(xV.begin(), xV.end());
-    double x2 = *std::max_element(xV.begin(), xV.end());
-    double yMin = *std::min_element(yV.begin(), yV.end());
-    double yMax = *std::max_element(yV.begin(), yV.end());
-    x1-=0.1*(x2-x1);
-    x2+=0.1*(x2-x1);
-    yMax+=0.1*(yMax-yMin);
-    yMin-=0.1*(yMax-yMin);
-    TH2F * hFrame = new TH2F("hFrame", ";Wire ID;Time Tick [0.5 #mu s]", 200, x1, x2, 200, yMin, yMax);
-    hFrame->GetYaxis()->SetTitleOffset(.8);
-    hFrame->GetXaxis()->SetTitleOffset(.8);
-    hFrame->SetStats(0);
-
-
-    // Get parameters
-    double m1 = result.Parameter(0);
-    double n1 = result.Parameter(1);
-    double m2 = result.Parameter(2);
-    double xB = result.Parameter(3);
-    double n2 = (m1-m2)*xB+n1;
-
-    // Line1
-    double y1 = m1*x1+n1;
-    double y2 = m1*x2+n1;
-    TLine *line1 = new TLine(x1,y1,x2,y2);
-    line1->SetLineColor(fColor1);
-    line1->SetLineWidth(4); 
-
-    // Line2
-    y1 = m2*x1+n2;
-    y2 = m2*x2+n2;
-    TLine *line2 = new TLine(x1,y1,x2,y2);
-    line2->SetLineColor(fColor2);
-    line2->SetLineWidth(4);
-
-    // Fitted vertex
-    double xFitVtx = result.Parameter(3);
-    double yFitVtx = m1*xFitVtx+n1;
-    TMarker *marker = new TMarker(xFitVtx, yFitVtx, 29);
-    marker->SetMarkerColor(kRed);
-    marker->SetMarkerSize(2);
-
-    // TLegend
-    TLegend *leg = new TLegend(0.7, 0.5, 0.85, 0.65);
-    leg->AddEntry(gr,"Data","p");
-    leg->AddEntry(line1, "Fitted line 1", "l");
-    leg->AddEntry(line2, "Fitted line 2", "l");
-    leg->AddEntry(marker, "Fitted vertex", "p");
-
-    // Create text with the fit results
-    TPaveText *pt = new TPaveText(0.7, 0.7, 0.85, 0.85, "NDC");
-    pt->AddText(Form("Fit result #chi^{2} = %.2f\n",result.MinFcnValue()));
-    pt->AddText(Form("m1 = %.2f #pm %.2f",result.Parameter(0),result.ParError(0)));
-    pt->AddText(Form("n1 = %.2f #pm %.2f",result.Parameter(1),result.ParError(1)));
-    pt->AddText(Form("m2 = %.2f #pm %.2f",result.Parameter(2),result.ParError(2)));
-    pt->AddText(Form("xB = %.2f #pm %.2f",result.Parameter(3),result.ParError(3)));
-
-
-
-    // Draw
-    hFrame->Draw();
-    gr->Draw("p same");
-    line1->Draw("same");
-    line2->Draw("same");
-    marker->Draw("same");
-    leg->Draw("same");
-    pt->Draw("same");
+    fM1 = result.Parameter(0);
+    fN1 = result.Parameter(1);
+    fM2 = result.Parameter(2);
+    fXB = result.Parameter(3);
+    fN2 = (fM1-fM2)*fXB+fN1;
+    fXFitVtx = fXB;
+    fYFitVtx = fM1*fXFitVtx+fN1;
+    result.Print(std::cout);
 
     // --- Assing each hit to a track ---
-    std::vector<SHit> hitsTrack1, hitsTrack2;
-    double maxIntegral = 0;
+    fMaxIntegral = 0;
+    fHitsTrack1.clear();
+    fHitsTrack2.clear();
+    fVertexHits.clear();
+    std::vector<SHit> hitList = fTriangle.GetAllHits();
     for(SHit &h:hitList){
 
         // shifted values 
-        double x = h.X()-xVertex;
-        double y = h.Y()-yVertex;
+        double x = h.X()-fXVertex;
+        double y = h.Y()-fYVertex;
+
+        if(x<fMinX) fMinX = x;
+        if(y<fMinY) fMinY = y;
+        if(x>fMaxX) fMaxX = x;
+        if(y>fMaxY) fMaxY = y;
 
         // values from fitted slopes
-        double yH1 = m1*x+n1;
-        double yH2 = m2*x+n2;
+        double yH1 = fM1*x+fN1;
+        double yH2 = fM2*x+fN2;
 
         // closest tracks
         bool isTrack1 = std::abs( y-yH1 )<widthTol*h.Width();
@@ -718,80 +719,103 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
 
         // if shared hit, split the integral in two hits
         if(isTrack1 && isTrack2){
-            SHit sharedHit(-1, h.X(), h.Y(), h.Width(), 0.5*h.Integral());
-            hitsTrack1.push_back(sharedHit);
-            hitsTrack2.push_back(sharedHit);
+            //SHit sharedHit(-1, h.X(), h.Y(), h.Width(), 0.5*h.Integral());
+            //fHitsTrack1.push_back(sharedHit);
+            //fHitsTrack2.push_back(sharedHit);
+            fVertexHits.push_back(h);
         }
         else if(isTrack1){
-            hitsTrack1.push_back(h);
+            fHitsTrack1.push_back(h);
         }
         else if(isTrack2){
-            hitsTrack2.push_back(h);
+            fHitsTrack2.push_back(h);
         }
         else{
             // if not width compatible, add to the closest
             double d1 = std::abs(y-yH1);
             double d2 = std::abs(y-yH2);
-            d1<d2? hitsTrack1.push_back(h):hitsTrack2.push_back(h);
+            d1<d2? fHitsTrack1.push_back(h):fHitsTrack2.push_back(h);
         }
 
         // update maximum integral
-        if(h.Integral()>maxIntegral) maxIntegral = h.Integral();
+        if(h.Integral()>fMaxIntegral) fMaxIntegral = h.Integral();
     }
 
-    // --- Draw xV and yV markers after assignment ---
-    for(SHit &h:hitsTrack1){
-        double size = (h.Integral()/maxIntegral) * fMaxMarkerSize;
-        TMarker *marker = new TMarker(h.X()-xVertex, h.Y()-yVertex, 21);
-        marker->SetMarkerColorAlpha(fColor1, fAlpha);
-        marker->SetMarkerSize(size);
-        marker->Draw("same");
-    }
+    // --- Remove outliers hits ---
+    // Average track 1 hit intetgral
+    double meanIntegral1 = 0, stdDev1 = 0;
+    double meanIntegral2 = 0, stdDev2 = 0;
+    GetStatisticsHitVector(fHitsTrack1, meanIntegral1, stdDev1);
+    GetStatisticsHitVector(fHitsTrack2, meanIntegral2, stdDev2);
 
-    for(SHit &h:hitsTrack2){
-        double size = (h.Integral()/maxIntegral) * fMaxMarkerSize;
-        TMarker *marker = new TMarker(h.X()-xVertex, h.Y()-yVertex, 20);
-        marker->SetMarkerColorAlpha(fColor2, fAlpha);
-        marker->SetMarkerSize(size);
-        marker->Draw("same");
-    }
 
-    // --- Sort by distance to fitted vertex ---
-    SortSHitVectorByDistance(hitsTrack1, xVertex+xFitVtx, yVertex+yFitVtx);
-    SortSHitVectorByDistance(hitsTrack2, xVertex+xFitVtx, yVertex+yFitVtx);
+    // Check last hit and remove
+    if(fHitsTrack1.back().Integral()<meanIntegral1){
+        fHitsTrack1.pop_back();
+    }
+    if(fHitsTrack2.back().Integral()<meanIntegral2){
+        fHitsTrack2.pop_back();
+    }
+    //fHitsTrack1.erase(fHitsTrack1.begin()); fHitsTrack2.erase(fHitsTrack2.begin());
+
+    double meanIntegralShared = 0, stdDevShared = 0;
+    GetStatisticsHitVector(fVertexHits, meanIntegralShared, stdDevShared);
+    std::vector<SHit> auxVertexHits = fVertexHits;
+    std::cout<<" VEEEE "<<meanIntegralShared<<" "<<stdDevShared<<std::endl; 
+    fVertexHits.clear();
+    for(SHit & h:auxVertexHits){
+        std::cout<<h.Integral()<<std::endl;
+        if( std::abs(h.Integral() - meanIntegralShared) < 3*stdDevShared ) std::cout<<"Out\n";
+        fVertexHits.push_back(h);
+    }
 
     // --- Calorimetry objects ---
-    SCalo calo1(hitsTrack1, std::atan(m1));
-    SCalo calo2(hitsTrack2, std::atan(m2));
-    MakeEnergyLossVsResidualRangePlot(calo1, calo2, pad2);
-    
-    
-    c1->Update();
-    c1->cd();
+    // Sort by distance to fitted vertex ---
+    SortSHitVectorByDistance(fHitsTrack1, fXVertex+fXFitVtx, fYVertex+fYFitVtx);
+    SortSHitVectorByDistance(fHitsTrack2, fXVertex+fXFitVtx, fYVertex+fYFitVtx);
+    SortSHitVectorByDistance(fVertexHits, fXVertex+fXFitVtx, fYVertex+fYFitVtx);
 
-    // Return values
-    fitSlope1 = m1;
-    fitSlope2 = m2;
+    //fHitsTrack1.pop_back(); fHitsTrack2.pop_back();
+    // Create the objects
+    SCalo calo1(fHitsTrack1, std::atan(fM1));
+    SCalo calo2(fHitsTrack2, std::atan(fM2));
+    fCalo1 = calo1;
+    fCalo2 = calo2;
+    MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, nullptr);
+   
+    // --- Return values ---
     fTwoLinesChi2 = result.MinFcnValue();
 
+    fMinX-=0.1*(fMaxX-fMinX);
+    fMaxX+=0.1*(fMaxX-fMinX);
+    fMinY-=0.1*(fMaxY-fMinY);
+    fMaxY+=0.1*(fMaxY-fMinY);
+
     // vertex charge vs track charge
+    SortSHitVectorByDistance(hitList, fXVertex+fXFitVtx, fYVertex+fYFitVtx);
     double vertexHitsIntegral = 0;
     double bulkHitsIntegral = 0;
     int nVertexHits = 0;
     int nBulkHits = 0;
     // loop over the hits
-    for(SHit &h:hitList){
-        double d = std::hypot( h.X() - xVertex - xFitVtx, h.Y() - yVertex - yFitVtx );
-        if(d<2.5){
-            vertexHitsIntegral+=h.Integral();
-            nVertexHits++;
-        }
-        else if(d>2.5 && d <10){
-            bulkHitsIntegral+=h.Integral();
-            nBulkHits++;
-        }
+    for(SHit &h:fVertexHits){
+        vertexHitsIntegral+=h.Integral();
     }
-    std::cout<<"CHECK 1\n";
+    nVertexHits = fVertexHits.size();
+    int nCounter=0;
+    for(SHit &h:fHitsTrack1){
+        if(nCounter>(int)fHitsTrack1.size()/2) continue;
+        bulkHitsIntegral+=h.Integral();
+        nBulkHits++;
+        nCounter++;
+    }
+    nCounter=0;
+    for(SHit &h:fHitsTrack2){
+        if(nCounter>(int)fHitsTrack2.size()/2) continue;
+        bulkHitsIntegral+=h.Integral();
+        nBulkHits++;
+        nCounter++;
+    }
 
     double vertexCharge = vertexHitsIntegral/nVertexHits;
     double bulkCharge = bulkHitsIntegral/nBulkHits;
@@ -800,17 +824,111 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     fVertexHitIntegralDifference = vertexCharge-bulkCharge;
     fVertexHitIntegralRelativeDifference = fVertexHitIntegralDifference/bulkCharge;
 
-    /*SVertex fVertexFit = SVertex( SPoint( xFitVtx+xVertex, yFitVtx+yVertex ), "");
-    chargeDensityAlgo.Fill(hitList, fVertexFit);
-    TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 700, 0, 900, 1200);
-    chargeDensityAlgo.Display(cDisplay);
-    double eta = chargeDensityAlgo.Eta();
-    std::cout<<"Eta: "<<eta<<std::endl;*/
-    std::cout<<"CHECK 1\n";
-    delete c1;
-    //delete pad1;
-    //delete pad2;
-    std::cout<<"CHECK 1\n";
+    std::cout << "VertexHitIntegralRatio: "<<fVertexHitIntegralRatio<<std::endl;
+    std::cout << "VertexHitIntegralDifference: "<<fVertexHitIntegralDifference<<std::endl;
+    std::cout << "VertexHitIntegralRelDifference: "<<fVertexHitIntegralRelativeDifference<<std::endl;
+
+
     return;
 
+}
+
+
+// --- Display function ---
+void STriangleCalo::Display(TCanvas *c1){
+    // --- Create the canvas ---
+    bool deleteCanvas = false;
+    if(c1==nullptr) {
+        c1 = new TCanvas("canvasCalo","Calorimetry", 600,1200);
+        deleteCanvas = true;
+    }
+    c1->cd();
+    TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.98,0.98);
+    TPad *pad2 = new TPad("pad2","This is pad2",0.02,0.02,0.98,0.48);
+    pad1->Draw();
+    pad2->Draw();
+
+    // --- Draw the graph and the fit ---
+    pad1->cd();
+    TH2F * hFrame = new TH2F("hFrame", ";Wire ID;Time Tick [0.5 #mu s]", 200, fMinX, fMaxX, 200, fMinY, fMaxY);
+    hFrame->GetYaxis()->SetTitleOffset(.8);
+    hFrame->GetXaxis()->SetTitleOffset(.8);
+    hFrame->SetStats(0);
+
+    // Line1
+    double y1 = fM1*fMinX+fN1;
+    double y2 = fM1*fMaxX+fN1;
+    TLine *line1 = new TLine(fMinX,y1,fMaxX,y2);
+    line1->SetLineColor(fColor1);
+    line1->SetLineWidth(4); 
+
+    // Line2
+    y1 = fM2*fMinX+fN2;
+    y2 = fM2*fMaxX+fN2;
+    TLine *line2 = new TLine(fMinX,y1,fMaxX,y2);
+    line2->SetLineColor(fColor2);
+    line2->SetLineWidth(4);
+
+    // Fitted vertex
+    TMarker *marker = new TMarker(fXB, fM1*fXB+fN1, 29);
+    marker->SetMarkerColor(kRed);
+    marker->SetMarkerSize(2);
+
+    // TLegend
+    TLegend *leg = new TLegend(0.7, 0.5, 0.85, 0.65);
+    leg->AddEntry(line1, "Fitted line 1", "l");
+    leg->AddEntry(line2, "Fitted line 2", "l");
+    leg->AddEntry(marker, "Fitted vertex", "p");
+
+    // Create text with the fit results
+    TPaveText *pt = new TPaveText(0.7, 0.7, 0.85, 0.85, "NDC");
+    pt->AddText(Form("Fit result #chi^{2} = %.2f\n",fTwoLinesChi2));
+    pt->AddText(Form("m1 = %.2f #pm %.2f",fM1, 0.));
+    pt->AddText(Form("n1 = %.2f #pm %.2f",fN1, 0.));
+    pt->AddText(Form("m2 = %.2f #pm %.2f",fM2, 0.));
+    pt->AddText(Form("xB = %.2f #pm %.2f",fXB, 0.));
+
+    // Draw
+    hFrame->Draw();
+    line1->Draw("same");
+    line2->Draw("same");
+    marker->Draw("same");
+    leg->Draw("same");
+    pt->Draw("same");
+    
+    std::cout<<" Drawing calorimetry...track length: "<<fHitsTrack1.size()<<"\n";
+    // --- Draw xV and yV markers after assignment ---
+    for(SHit &h:fHitsTrack1){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 21);
+        marker->SetMarkerColorAlpha(fColor1, fAlpha);
+        marker->SetMarkerSize(size);
+        marker->Draw("same");
+    }
+
+    for(SHit &h:fHitsTrack2){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
+        marker->SetMarkerColorAlpha(fColor2, fAlpha);
+        marker->SetMarkerSize(size);
+        marker->Draw("same");
+    }
+
+    for(SHit &h:fVertexHits){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
+        marker->SetMarkerColorAlpha(kGray, fAlpha);
+        marker->SetMarkerSize(size);
+        marker->Draw("same");
+    }
+
+   
+    MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, pad2); 
+
+
+
+    c1->Update();
+    c1->cd();
+
+    return;
 }

@@ -219,22 +219,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
                     double fitSlope1=1, fitSlope2=1;
                     STriangleCalo triangleCalo(angleList[orix]);
-                    triangleCalo.JointFitAnalysis(50, 1.5, true, fitSlope1, fitSlope2, _FRANSAlgo);
-                    
-                    // cout calorimetry attributes
-                    std::cout<<"  - ChargeRatioAverage: "<<triangleCalo.ChargeRatioAverage()<<std::endl;
-                    std::cout<<"  - ChargeDifferenceAverage: "<<triangleCalo.ChargeDifferenceAverage()<<std::endl;
-                    std::cout<<"  - ChargeRelativeDifferenceAverage: "<<triangleCalo.ChargeRelativeDifferenceAverage()<<std::endl;
-                    
-                    std::cout<<"  - ChargeRatioFit: "<<triangleCalo.ChargeRatioFit()<<std::endl;
-                    std::cout<<"  - ChargeDifferenceFit: "<<triangleCalo.ChargeDifferenceFit()<<std::endl;
-                    std::cout<<"  - ChargeRelativeDifferenceFit: "<<triangleCalo.ChargeRelativeDifferenceFit()<<std::endl;
-                   
-                    std::cout<<"  - VertexHitIntegralRatio: "<<triangleCalo.VertexHitIntegralRatio()<<std::endl;
-                    std::cout<<"  - VertexHitIntegralDifference: "<<triangleCalo.VertexHitIntegralDifference()<<std::endl;
-                    std::cout<<"  - VertexHitIntegralRelativeDifference: "<<triangleCalo.VertexHitIntegralRelativeDifference()<<std::endl;
-                    std::cout<<"  - PassFit: "<<triangleCalo.PassFit()<<std::endl;
-                    std::cout<<"  - TwoLinesChi2: "<<triangleCalo.TwoLinesChi2()<<std::endl;
+                    triangleCalo.JointFitAnalysis(50, 1.5, true);
                 }
             }
             
@@ -281,15 +266,15 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 recoEvent.GetUnassociatedHits(angleList[bestTriangleIx], nFreeHits, fNUnassociatedHits);
             }
 
-            //bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
-            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
+            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
+            //bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
     
             
             // Update the efficiency calculator
             if(accepted){
                 _EfficiencyCalculator.UpdateSelected(ev);
 
-                if(Debug==-12){
+                if(DebugMode==-12){
                     gROOT->SetBatch(false);
                     _TPCLinesAlgo.Display( "Misselected"+ev.Label());
                     gROOT->SetBatch(true);
@@ -376,11 +361,19 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             fAnaTreeHandle.fRecoIsFiducial = true;
             
             //fAnaTreeHandle.FillTree();
-
-            TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(), "FinalRecoTPCLines", 0, 0, 1000, 800);
+            
+            TCanvas *cCalo = new TCanvas(("canvasCalo"+ev.Label()).c_str(),"Calorimetry", 600,1200);
+            TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(),  ("FinalReco"+ev.Label()).c_str(), 0, 0, 1000, 800);
+            if(bestTriangleIx!=-1){
+                STriangleCalo triangleCalo(angleList[bestTriangleIx]);
+                triangleCalo.JointFitAnalysis(50, 1.5, true);
+                triangleCalo.Display(cCalo);
+            }
             _TPCLinesAlgo.Display("", cTPCDisplay);
             cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
             delete cTPCDisplay;
+            delete cCalo;
+
             
             outputLabel+="FRANS";
             if(bestFRANSScore!=-1000 && parser.getPlotFRANS()){

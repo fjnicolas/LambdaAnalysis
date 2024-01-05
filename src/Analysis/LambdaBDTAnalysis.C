@@ -125,6 +125,10 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
     //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
+    dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio", "", 'D' );
+    dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference", "", 'D' );
+    //dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
+    dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
 
     
 
