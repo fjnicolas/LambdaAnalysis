@@ -28,6 +28,7 @@
 #include "TMath.h"
 #include <TVectorD.h>
 #include <TMatrixD.h>
+#include "TVirtualFitter.h"
 
 
 #if LAMBDAANA_LARSOFT == 1
@@ -55,6 +56,7 @@ public:
     std::vector<double> GetResidualRange() const {return fResidualRange;};
     std::vector<double> GetDepositedEnergy() const {return fDepositedEnergy;};
     double GetTrackLength() const {return fTrackLength;};
+    double GetResidualRangeRMS() const {return fResidualRangeRMS;};
 
 private:
 
@@ -73,6 +75,8 @@ private:
     std::vector<double> fPathLengths;
     std::vector<double> fDepositedEnergy;
     std::vector<double> fResidualRange;
+    // Residual range RMS
+    double fResidualRangeRMS;
 
     // Function to calculate the distance between two hit points
     double CalculateDistance(const SHit& p1, const SHit& p2);
@@ -82,6 +86,7 @@ private:
 
     // Function to calculate residual range and deposited energy
     void CalculateResidualRange();
+    
 };
 
 
@@ -93,7 +98,7 @@ class STriangleCalo {
         SCalo fCalo1;
         SCalo fCalo2;
 
-        std::vector<SHit> fHitsTrack1, fHitsTrack2, fVertexHits;
+        std::vector<SHit> fAllHits, fHitsTrack1, fHitsTrack2, fVertexHits, fResidualHits;
         // Fit parameters
         bool fPassFit;
         double fM1;
@@ -117,14 +122,23 @@ class STriangleCalo {
         double fChargeDifferenceAverage;
         double fChargeRelativeDifferenceAverage;
 
+        bool fPassChargeFit;
+        double fBandOverlap;
         double fChargeRatioFit;
         double fChargeDifferenceFit;
         double fChargeRelativeDifferenceFit;
 
+        int fNVertexHits;
+        int fNBulkHits;
         double fVertexHitIntegralRatio;
         double fVertexHitIntegralDifference;
         double fVertexHitIntegralRelativeDifference;
 
+        double fTrackLength1;
+        double fTrackLength2;
+        double fTrackLengthRatio;
+        double fResidualRange1RMS;
+        double fResidualRange2RMS;
 
         double fTwoLinesChi2;
 
@@ -144,14 +158,23 @@ class STriangleCalo {
         double ChargeRatioAverage() {return fChargeRatioAverage;};
         double ChargeDifferenceAverage() {return fChargeDifferenceAverage;};
         double ChargeRelativeDifferenceAverage() {return fChargeRelativeDifferenceAverage;};
+        bool PassFit() {return fPassFit;};
         double ChargeRatioFit() {return fChargeRatioFit;};
         double ChargeDifferenceFit() {return fChargeDifferenceFit;};
         double ChargeRelativeDifferenceFit() {return fChargeRelativeDifferenceFit;};
+        int NVertexHits() {return fNVertexHits;};
+        int NBulkHits() {return fNBulkHits;};
         double VertexHitIntegralRatio() {return fVertexHitIntegralRatio;};
         double VertexHitIntegralDifference() {return fVertexHitIntegralDifference;};
         double VertexHitIntegralRelativeDifference() {return fVertexHitIntegralRelativeDifference;};
-        bool PassFit() {return fPassFit;};
+        bool PassChargeFit() {return fPassChargeFit;};
+        double BandOverlap() {return fBandOverlap;};
         double TwoLinesChi2() {return fTwoLinesChi2;};
+        double TrackLengthRatio() {return fTrackLengthRatio;};
+        double TrackLength1() {return fTrackLength1;};
+        double TrackLength2() {return fTrackLength2;};
+        double ResidualRange1RMS() {return fResidualRange1RMS;};
+        double ResidualRange2RMS() {return fResidualRange2RMS;};
 
 };
 

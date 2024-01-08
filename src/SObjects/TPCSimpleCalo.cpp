@@ -21,6 +21,7 @@
 #include "TLegend.h"
 #include "TMarker.h"
 #include "TPaveText.h"
+#include "TStyle.h"
 
 // Calorimetry conversion factor (ADC to charge)
 // (1 / 0.0201293) e-/ADC*time_ticks x  23.6e-6 MeV/e-  x)
@@ -37,7 +38,6 @@ SCalo::SCalo(const std::vector<SHit>& hits, double trackAngle)
     fTrackAngle(trackAngle),
     fHitList(hits)
 {
-    std::cout<<"HEY";
     CalculateResidualRange();
 }
 
@@ -82,7 +82,8 @@ void SCalo::CalculateResidualRange() {
     fResidualRange.clear();
 
     fTrackLength = 0;
-    if(fPathLengths.size()>0){
+    std::cout<<" fHitList.size() "<<fHitList.size()<<" PP: "<<fPathLengths.size()<<std::endl;
+    if(fPathLengths.size()>1){
         fTrackLength = std::accumulate(fPathLengths.begin(), fPathLengths.end(), fTrackLength);
 
         double pathLength = 0;
@@ -92,7 +93,48 @@ void SCalo::CalculateResidualRange() {
             //fDepositedEnergy.push_back( (fHitList[i].Integral() * fHitIntegralToEnergy) * fCosTrackAngle );
             pathLength+=fPathLengths[i];
         }
+
+        // Check last points
+        double minE = *std::min_element(fDepositedEnergy.begin(), fDepositedEnergy.end());
+        std::cout << " minE " << minE << " " << fDepositedEnergy.front() << " " << fDepositedEnergy.back() << std::endl;
+
+        if(fResidualRange.size()>3){
+            while (!fDepositedEnergy.empty() && fDepositedEnergy.back() <= minE) {
+                fDepositedEnergy.pop_back();
+                fResidualRange.pop_back();
+                fPathLengths.pop_back();
+                fHitList.pop_back();
+                minE = *std::min_element(fDepositedEnergy.begin(), fDepositedEnergy.end());
+            }
+        }
+
+        double lastResidualRange = fResidualRange.back();
+        std::cout << " lastResidualRange " << lastResidualRange << std::endl;
+        // reshift 
+        for(size_t i=0; i<fResidualRange.size(); i++){
+            fResidualRange[i] = fResidualRange[i] - lastResidualRange;
+        }
+        fTrackLength = fTrackLength - lastResidualRange;
     }
+
+    if(fResidualRange.size()>=2){
+        
+        std::vector<double> rangeDiff;
+        for(size_t i=0; i<fResidualRange.size()-1; i++){
+            rangeDiff.push_back( fResidualRange[i+1] - fResidualRange[i] );
+        }
+        double sq_sum = std::inner_product(rangeDiff.begin(), rangeDiff.end(), rangeDiff.begin(), 0.0);
+        double mean = std::accumulate(rangeDiff.begin(), rangeDiff.end(), 0.0) / rangeDiff.size();
+        fResidualRangeRMS = std::sqrt(sq_sum / rangeDiff.size() - mean * mean);
+
+    }
+    else{
+        fResidualRangeRMS = -1;
+    }
+
+
+
+    
 
 }
 
@@ -207,7 +249,7 @@ void STriangleCalo::JointFitAnalysisFisher(){
     size_t nhits2 = fTriangle.GetNHitsTrack2();
     size_t maxNHits = std::min(nhits1, nhits2);
     maxNHits = std::min(nhits1, nhits2);
-    //maxNHits = 20;
+   
 
     // x-y values from hits
     size_t hitCont = 0;
@@ -258,9 +300,6 @@ void STriangleCalo::JointFitAnalysisFisher(){
             maxD = d;
         }
     }
-
-    std::cout<<" CHEEEEECK \n";
-    std::cout<<" Opposited coordinates: "<<x1<<":"<<y1<<"   "<<x2<<":"<<y2<<std::endl;
 
     double m = (y2-y1)/(x2-x1);
 
@@ -428,15 +467,70 @@ void STriangleCalo::JointFitAnalysisFisher(){
 
 }
 
+// --- Function to check overlap between two contours plots ---
+double CheckOverlapRegion(TH1F *h1, TH1F *h2, double x1Max, double x2Max){
+    double overlapArea = 0;
+
+    double x1Min = h1->GetXaxis()->GetXmin();
+    double x2Min = h2->GetXaxis()->GetXmin();
+    
+    double x1BinWidth = h1->GetXaxis()->GetBinWidth(1);
+    double x2BinWidth = h2->GetXaxis()->GetBinWidth(1);
+
+    double xMax = std::min(x1Max, x2Max);
+    // First get total area of the two histograms in the range min-max
+    // Now get the overlap
+    double x1 = x1Min;
+    double x2 = x2Min;    
+
+    double area1 = 0;
+    double area2 = 0;
+    while(x1<xMax){
+        area1+=2*h1->GetBinError(h1->FindBin(x1))*x1BinWidth;
+        x1+=x1BinWidth;
+    }
+    while(x2<xMax){
+        area2+=2*h2->GetBinError(h2->FindBin(x2))*x2BinWidth;
+        x2+=x2BinWidth;
+    }
+
+    // Now get the overlap
+    x1 = x1Min;
+    x2 = x2Min;    
+    while(x1<xMax && x2<xMax){
+        // Get y values with errors
+        double y1Error = h1->GetBinError(h1->FindBin(x1));
+        double y1 = h1->GetBinContent(h1->FindBin(x1));
+        double y2Error = h2->GetBinError(h2->FindBin(x2));
+        double y2 = h2->GetBinContent(h2->FindBin(x2));
+
+        double y1Low = y1-y1Error;
+        double y1High = y1+y1Error;
+        double y2Low = y2-y2Error;
+        double y2High = y2+y2Error;
+
+        // Calculate the overlap integral
+        double overlap = ( std::min(y1High, y2High) - std::max(y1Low, y2Low) ) * x1BinWidth;
+        if (overlap < 0.0) overlap = 0.0;
+        //std::cout<<" x1: "<<x1<<" x2: "<<x2<<" Y1: "<<y1Low<<":"<<y1High<<" Y2: "<<y2Low<<":"<<y2High<<" overlap: "<<overlap<<std::endl;
+
+        x1+=x1BinWidth;
+        x2+=x2BinWidth;
+        overlapArea+=2*overlap; // overlap counts to the two ranges
+    }
+    std::cout<<" overlapArea: "<<overlapArea<<" area1: "<<area1<<" area2: "<<area2<<std::endl;
+    return overlapArea/(area1+area2);
+}
 
 // --- Function to display dEdx ---
 void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, TPad *pad) {
     
     if(pad!=nullptr){
         pad->cd();
+        gStyle->SetOptStat(0);
     }
+    double fCondifenceLevel = 0.95;
     
-
     // Get vectors
     const std::vector<double> residualRange1 = calo1.GetResidualRange();
     const std::vector<double> depositedEnergy1 = calo1.GetDepositedEnergy();
@@ -447,6 +541,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     TGraph* graph1 = new TGraph(residualRange1.size(), &residualRange1[0], &depositedEnergy1[0]);
     graph1->SetTitle("Track 1");
     graph1->SetLineColor(fColor1);
+    graph1->SetLineStyle(kDashed);
     graph1->SetMarkerColor(fColor1);
     graph1->SetMarkerStyle(20);
 
@@ -455,15 +550,19 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     graph2->SetTitle("Track 2");
     graph2->SetLineColor(fColor2);
     graph2->SetMarkerColor(fColor2);
+    graph2->SetLineStyle(kDashed);
     graph2->SetMarkerStyle(20);
 
     // Frame
-    std::cout<<"JAJA "<<calo1.GetTrackLength()<<" "<<calo2.GetTrackLength()<<std::endl;
-    double maxX = std::max(calo1.GetTrackLength(), calo2.GetTrackLength());
-    std::cout<<"JAJA "<<depositedEnergy1.size()<<" "<<depositedEnergy2.size()<<std::endl;
-    double maxY = std::max(*std::max_element(depositedEnergy1.begin(), depositedEnergy1.end()), *std::max_element(depositedEnergy2.begin(), depositedEnergy2.end()));
+    double maxX = std::max(calo1.GetTrackLength(), calo2.GetTrackLength());   
+    double maxY1 = 0, maxY2 = 0;
+    if(depositedEnergy1.size()>1)
+        maxY1 = *std::max_element(depositedEnergy1.begin(), depositedEnergy1.end());
+    if(depositedEnergy2.size()>1)
+        maxY2 = *std::max_element(depositedEnergy2.begin(), depositedEnergy2.end()); 
+    double maxY = std::max(maxY1, maxY2);
     
-    TH2F *hFrame = new TH2F("hFrame", ";Residual range [cm];Charge [AU]", 200, 0, maxX, 100, 0, maxY);
+    TH2F *hFrame = new TH2F("hFrame", ";Residual range [cm];dQ/dx [AU]", 200, 0, 1.1*maxX, 100, 0, 1.1*maxY);
     hFrame->GetYaxis()->SetTitleOffset(.8);
     hFrame->GetXaxis()->SetTitleOffset(.8);
     hFrame->SetStats(0);
@@ -477,67 +576,128 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     leg->AddEntry(graph2, "Track2", "lp");
     leg->Draw("same");
 
+    TVirtualFitter* fitter = TVirtualFitter::GetFitter();
+    
     // Fit the two graphs to two constants
+    bool passFit1 = false;
+    bool passFit1Exp = false;
+    bool passFit2 = false;
+    bool passFit2Exp = false;
+    double maxLength = std::max(calo1.GetTrackLength(), calo2.GetTrackLength());
+    TH1F *hint1 = new TH1F("hint1", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
+    TH1F *hint1Exp = new TH1F("hint1Exp", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
+    TH1F *hint2 = new TH1F("hint2", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
+    TH1F *hint2Exp = new TH1F("hint2Exp", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
+    hint1->SetFillColorAlpha(fColor1,0.5);
+    hint1Exp->SetFillColorAlpha(fColor1,0.5);
+    hint2->SetFillColorAlpha(fColor2,0.5);
+    hint2Exp->SetFillColorAlpha(fColor2,0.5);
+
     TF1 *fit1 = new TF1("fit1", "[0]", 0, maxX);
     fit1->SetLineColor(fColor1);
     fit1->SetLineWidth(2);
     graph1->Fit(fit1, "R");
-    TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, maxX);
+    fitter = TVirtualFitter::GetFitter();
+    if(fitter){
+        fitter->GetConfidenceIntervals(hint1, fCondifenceLevel);
+        passFit1 = true;
+    }
+    
+    TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, calo1.GetTrackLength());
     fit1Exp->SetLineColor(fColor1);
     fit1Exp->SetLineWidth(2);
-    fit1Exp->SetParameters(1, -1, fit1->GetParameter(0));
+    fit1Exp->SetParameters(maxY, -1, fit1->GetParameter(0));
     fit1Exp->SetParLimits(1, -1e6, 0);
     fit1Exp->SetParLimits(2, 0, 1e6);
-    graph1->Fit(fit1Exp, "BR");
+    graph1->Fit(fit1Exp, "BR");    
+    fitter = TVirtualFitter::GetFitter();
+    if(fitter){
+        fitter->GetConfidenceIntervals(hint1Exp, fCondifenceLevel);
+        passFit1Exp = true;
+    }
     
-    TF1 *fit2 = new TF1("fit2", "[0]", 0, maxX);
+
+    TF1 *fit2 = new TF1("fit2", "[0]", 0, calo2.GetTrackLength());
     fit2->SetLineColor(fColor2);
     fit2->SetLineWidth(2);
     graph2->Fit(fit2, "R");
-    TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, maxX);
+    fitter = TVirtualFitter::GetFitter();
+    if(fitter){
+        fitter->GetConfidenceIntervals(hint2, fCondifenceLevel);
+        passFit2 = true;
+    }
+    TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, calo2.GetTrackLength());
     fit2Exp->SetLineColor(fColor2);
     fit2Exp->SetLineWidth(2);
-    fit2Exp->SetParameters(1, -1, fit2->GetParameter(0));
+    fit2Exp->SetParameters(maxY, -1, fit2->GetParameter(0));
     fit2Exp->SetParLimits(1, -1e6, 0);
     fit2Exp->SetParLimits(2, 0, 1e6);
     graph2->Fit(fit2Exp, "BR");
-    
-
-    std::cout<<" dEdX fit done!\n";
+    fitter = TVirtualFitter::GetFitter();
+    if(fitter){
+        fitter->GetConfidenceIntervals(hint2Exp, fCondifenceLevel);
+        passFit2Exp = true;
+    }
 
     // Draw the fitted functions
     fit1->Draw("same");
     fit2->Draw("same");
     fit1Exp->Draw("same");
     fit2Exp->Draw("same");
-
-    double charge1Fit = std::min(fit1->GetParameter(0), fit2->GetParameter(0));
-    double charge2Fit = std::max(fit1->GetParameter(0), fit2->GetParameter(0));
-
-    fChargeRatioFit = charge1Fit / charge2Fit;
-    fChargeDifferenceFit = charge2Fit - charge1Fit;
-    fChargeRelativeDifferenceFit = fChargeDifferenceFit / charge1Fit;
+    double p0Fit_1 = 1;
+    double p0Fit_2 = 1;
+    if(fit1Exp->GetParameter(0)>0 && fit1Exp->GetParameter(1)<0 && hint1Exp->Integral()>0){
+        hint1Exp->Draw("e3 same");
+        p0Fit_1 = fit1Exp->GetParameter(2);
+    }
+    else{
+        hint1->Draw("e3 same");
+        p0Fit_1 = fit1->GetParameter(0);
+    }
+    if(fit2Exp->GetParameter(0)>0 && fit2Exp->GetParameter(1)<0 && hint2Exp->Integral()>0){
+        hint2Exp->Draw("e3 same");
+        p0Fit_2 = fit2Exp->GetParameter(2);
+    }
+    else{
+        hint2->Draw("e3 same");
+        p0Fit_2 = fit2->GetParameter(0);
+    }
 
     double charge1=0, charge2=0;
     if(depositedEnergy1.size()>1)
         charge1 = std::accumulate(depositedEnergy1.begin(), depositedEnergy1.end(), 0.0) / depositedEnergy1.size();
     if(depositedEnergy2.size()>1)
         charge2 = std::accumulate(depositedEnergy2.begin(), depositedEnergy2.end(), 0.0) / depositedEnergy2.size();
-
-    double charge1Average = std::min(charge1, charge2);
-    double charge2Average = std::max(charge1, charge2);
-
+    double charge1Average = std::max(charge1, charge2);
+    double charge2Average = std::min(charge1, charge2);
     fChargeRatioAverage = charge1Average / charge2Average;
     fChargeDifferenceAverage = charge2Average - charge1Average;
     fChargeRelativeDifferenceAverage = fChargeDifferenceAverage / charge1Average;
 
-    std::cout << "Charge ratio (fit): " << fChargeRatioFit << std::endl;
-    std::cout << "Charge difference (fit): " << fChargeDifferenceFit << std::endl;
-    std::cout << "Charge relative difference (fit): " << fChargeRelativeDifferenceFit << std::endl;
-    std::cout << "Charge ratio (average): " << fChargeRatioAverage << std::endl;
-    std::cout << "Charge difference (average): " << fChargeDifferenceAverage << std::endl;
-    std::cout << "Charge relative difference (average): " << fChargeRelativeDifferenceAverage << std::endl;
 
+    bool pass1 = passFit1 || passFit1Exp;
+    bool pass2 = passFit2 || passFit2Exp;
+
+    fPassChargeFit = pass1 && pass2;
+    if(fPassChargeFit){
+        double charge1Fit = std::max(p0Fit_1, p0Fit_2);
+        double charge2Fit = std::min(p0Fit_1, p0Fit_2);
+
+        fChargeRatioFit = charge1Fit / charge2Fit;
+        fChargeDifferenceFit = charge2Fit - charge1Fit;
+        fChargeRelativeDifferenceFit = fChargeDifferenceFit / charge1Fit;
+
+        // Check the overlap
+        double overlap = CheckOverlapRegion(hint1Exp, hint2Exp, calo1.GetTrackLength(), calo2.GetTrackLength());
+        std::cout<<"Overlap: "<<overlap<<std::endl;
+        fBandOverlap = overlap;
+    }
+    else{
+        fChargeRatioFit = 1;
+        fChargeDifferenceFit = 0;
+        fChargeRelativeDifferenceFit = 0;
+        fBandOverlap = 1;
+    }
 
 }
 
@@ -588,6 +748,28 @@ void GetStatisticsHitVector(std::vector<SHit> hits, double & mean, double & stdd
     return;
 
 }
+
+// --- Right/left hits with respect to vertex ---
+std::vector<SHit> GetSideHits(std::vector<SHit> hitV, double xVertex, std::vector<SHit> & residualHits){
+
+    std::vector<SHit> vLeft, vRight;
+    for(SHit & h:hitV){
+        if(h.X()>=xVertex) vRight.push_back(h);
+        else  vLeft.push_back(h);
+    }
+
+    if(vLeft.size()>vRight.size()) {
+        residualHits.clear();
+        residualHits = vRight;
+        return vLeft;
+    }
+    else{
+        residualHits.clear();
+        residualHits = vLeft;
+        return vRight;
+    }
+}
+
 
 
 // --- JointFit analysis---
@@ -698,6 +880,7 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     fHitsTrack2.clear();
     fVertexHits.clear();
     std::vector<SHit> hitList = fTriangle.GetAllHits();
+    fAllHits = hitList;
     for(SHit &h:hitList){
 
         // shifted values 
@@ -742,30 +925,28 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     }
 
     // --- Remove outliers hits ---
+    std::vector<SHit> resHits;
+    fHitsTrack1 = GetSideHits(fHitsTrack1, fXVertex+fXFitVtx, resHits);
+    if(resHits.size()>0){
+        fResidualHits.insert(fResidualHits.end(), resHits.begin(), resHits.end());
+        resHits.clear();
+    }
+    fHitsTrack2 = GetSideHits(fHitsTrack2, fXVertex+fXFitVtx, resHits);
+    if(resHits.size()>0){
+        fResidualHits.insert(fResidualHits.end(), resHits.begin(), resHits.end());
+        resHits.clear();
+    }
     // Average track 1 hit intetgral
     double meanIntegral1 = 0, stdDev1 = 0;
     double meanIntegral2 = 0, stdDev2 = 0;
     GetStatisticsHitVector(fHitsTrack1, meanIntegral1, stdDev1);
     GetStatisticsHitVector(fHitsTrack2, meanIntegral2, stdDev2);
 
-
-    // Check last hit and remove
-    if(fHitsTrack1.back().Integral()<meanIntegral1){
-        fHitsTrack1.pop_back();
-    }
-    if(fHitsTrack2.back().Integral()<meanIntegral2){
-        fHitsTrack2.pop_back();
-    }
-    //fHitsTrack1.erase(fHitsTrack1.begin()); fHitsTrack2.erase(fHitsTrack2.begin());
-
     double meanIntegralShared = 0, stdDevShared = 0;
     GetStatisticsHitVector(fVertexHits, meanIntegralShared, stdDevShared);
     std::vector<SHit> auxVertexHits = fVertexHits;
-    std::cout<<" VEEEE "<<meanIntegralShared<<" "<<stdDevShared<<std::endl; 
     fVertexHits.clear();
     for(SHit & h:auxVertexHits){
-        std::cout<<h.Integral()<<std::endl;
-        if( std::abs(h.Integral() - meanIntegralShared) < 3*stdDevShared ) std::cout<<"Out\n";
         fVertexHits.push_back(h);
     }
 
@@ -781,6 +962,7 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     SCalo calo2(fHitsTrack2, std::atan(fM2));
     fCalo1 = calo1;
     fCalo2 = calo2;
+    std::cout<<" Set calo objects\n";
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, nullptr);
    
     // --- Return values ---
@@ -820,13 +1002,49 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     double vertexCharge = vertexHitsIntegral/nVertexHits;
     double bulkCharge = bulkHitsIntegral/nBulkHits;
     
-    fVertexHitIntegralRatio = vertexCharge/bulkCharge;
-    fVertexHitIntegralDifference = vertexCharge-bulkCharge;
-    fVertexHitIntegralRelativeDifference = fVertexHitIntegralDifference/bulkCharge;
+    fNVertexHits = nVertexHits;
+    fNBulkHits = nBulkHits;
+    if(nVertexHits>0 and nBulkHits>0){
+        fVertexHitIntegralRatio = vertexCharge/bulkCharge;
+        fVertexHitIntegralDifference = vertexCharge-bulkCharge;
+        fVertexHitIntegralRelativeDifference = fVertexHitIntegralDifference/bulkCharge;
+    }
+    else{
+        fVertexHitIntegralRatio = 0;
+        fVertexHitIntegralDifference = 0;
+        fVertexHitIntegralRelativeDifference = 0;
+    }
 
+    double trackLength1 = calo1.GetTrackLength();
+    double trackLength2 = calo2.GetTrackLength();
+    fTrackLength1 = std::max(trackLength1, trackLength2);
+    fTrackLength2 = std::min(trackLength1, trackLength2);
+    fTrackLengthRatio = fTrackLength1/fTrackLength2;
+    fResidualRange1RMS = calo1.GetResidualRangeRMS();
+    fResidualRange2RMS = calo2.GetResidualRangeRMS();
+
+    std::cout << "NVertexHits: " << fNVertexHits <<std::endl;
+    std::cout << "NBulkHits: " << fNBulkHits <<std::endl;
     std::cout << "VertexHitIntegralRatio: "<<fVertexHitIntegralRatio<<std::endl;
     std::cout << "VertexHitIntegralDifference: "<<fVertexHitIntegralDifference<<std::endl;
     std::cout << "VertexHitIntegralRelDifference: "<<fVertexHitIntegralRelativeDifference<<std::endl;
+    std::cout << "--- TrackLengthVariables: "<<std::endl;
+    std::cout << "TrackLengthRatio: "<<fTrackLengthRatio<<std::endl;
+    std::cout << "Track 1 length: "<<fTrackLength1<<std::endl;
+    std::cout << "Track 2 length: "<<fTrackLength2<<std::endl;
+    std::cout << "Track 1 residual range RMS: "<<fResidualRange1RMS<<std::endl;
+    std::cout << "Track 2 residual range RMS: "<<fResidualRange2RMS<<std::endl;
+    std::cout << "--- Charge variables: "<<std::endl;
+    std::cout << "Charge ratio (average): " << fChargeRatioAverage << std::endl;
+    std::cout << "Charge difference (average): " << fChargeDifferenceAverage << std::endl;
+    std::cout << "Charge relative difference (average): " << fChargeRelativeDifferenceAverage << std::endl;
+    std::cout << "Charge ratio (fit) variables: "<<std::endl;
+    std::cout << "Pass charge fit: " << fPassChargeFit << std::endl;
+    std::cout << "Band overlap: " << fBandOverlap << std::endl;
+    std::cout << "Charge ratio (fit): " << fChargeRatioFit << std::endl;
+    std::cout << "Charge difference (fit): " << fChargeDifferenceFit << std::endl;
+    std::cout << "Charge relative difference (fit): " << fChargeRelativeDifferenceFit << std::endl;
+    
 
 
     return;
@@ -873,7 +1091,7 @@ void STriangleCalo::Display(TCanvas *c1){
     marker->SetMarkerSize(2);
 
     // TLegend
-    TLegend *leg = new TLegend(0.7, 0.5, 0.85, 0.65);
+    TLegend *leg = new TLegend(0.7, 0.4, 0.85, 0.65);
     leg->AddEntry(line1, "Fitted line 1", "l");
     leg->AddEntry(line2, "Fitted line 2", "l");
     leg->AddEntry(marker, "Fitted vertex", "p");
@@ -891,28 +1109,12 @@ void STriangleCalo::Display(TCanvas *c1){
     line1->Draw("same");
     line2->Draw("same");
     marker->Draw("same");
-    leg->Draw("same");
     pt->Draw("same");
     
     std::cout<<" Drawing calorimetry...track length: "<<fHitsTrack1.size()<<"\n";
     // --- Draw xV and yV markers after assignment ---
-    for(SHit &h:fHitsTrack1){
-        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
-        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 21);
-        marker->SetMarkerColorAlpha(fColor1, fAlpha);
-        marker->SetMarkerSize(size);
-        marker->Draw("same");
-    }
 
-    for(SHit &h:fHitsTrack2){
-        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
-        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
-        marker->SetMarkerColorAlpha(fColor2, fAlpha);
-        marker->SetMarkerSize(size);
-        marker->Draw("same");
-    }
-
-    for(SHit &h:fVertexHits){
+    for(SHit &h:fAllHits){
         double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
         TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
         marker->SetMarkerColorAlpha(kGray, fAlpha);
@@ -920,7 +1122,43 @@ void STriangleCalo::Display(TCanvas *c1){
         marker->Draw("same");
     }
 
-   
+    for(SHit &h:fResidualHits){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
+        marker->SetMarkerColorAlpha(kGreen, fAlpha);
+        marker->SetMarkerSize(size);
+        marker->Draw("same");
+    }
+
+    for(SHit &h:fHitsTrack1){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 22);
+        marker->SetMarkerColorAlpha(fColor1, fAlpha);
+        marker->SetMarkerSize(size);
+        marker->Draw("same");
+        if (&h == &fHitsTrack1.front()) leg->AddEntry(marker, "Track 1 hits", "p");
+    }
+
+    for(SHit &h:fHitsTrack2){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 23);
+        marker->SetMarkerColorAlpha(fColor2, 1);
+        marker->SetMarkerSize(size);
+        marker->Draw("same");
+        if (&h == &fHitsTrack2.front()) leg->AddEntry(marker, "Track 2 hits",  "p");
+    }
+
+    for(SHit &h:fVertexHits){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
+        marker->SetMarkerColorAlpha(kViolet-6, 1);
+        marker->SetMarkerSize(size);
+        marker->Draw("same");
+        if (&h == &fVertexHits.front()) leg->AddEntry(marker, "Vertex hits",  "p");
+    }
+
+    leg->Draw("same");
+
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, pad2); 
 
 

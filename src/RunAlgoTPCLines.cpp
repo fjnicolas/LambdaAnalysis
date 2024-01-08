@@ -216,8 +216,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 if(score>bestFRANSScore){
                     bestFRANSScore = score;
                     bestTriangleIx = orix;
-
-                    double fitSlope1=1, fitSlope2=1;
                     STriangleCalo triangleCalo(angleList[orix]);
                     triangleCalo.JointFitAnalysis(50, 1.5, true);
                 }
@@ -266,8 +264,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 recoEvent.GetUnassociatedHits(angleList[bestTriangleIx], nFreeHits, fNUnassociatedHits);
             }
 
-            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut;
-            //bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
+
+            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
     
             
             // Update the efficiency calculator
