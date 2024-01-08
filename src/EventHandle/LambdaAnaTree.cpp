@@ -156,17 +156,27 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("NUnassociatedHits", &fNUnassociatedHits, readMode);
 
     // Set branch addresses for charge ratio information
-    SetBranch("AngleChargeRatioAverage", &fAngleChargeRatioAverage, readMode);
-    SetBranch("AngleChargeDifferenceAverage", &fAngleChargeDifferenceAverage, readMode);
-    SetBranch("AngleChargeRelativeDifferenceAverage", &fAngleChargeRelativeDifferenceAverage, readMode);
-    SetBranch("AngleChargeRatioFit", &fAngleChargeRatioFit, readMode);
-    SetBranch("AngleChargeDifferenceFit", &fAngleChargeDifferenceFit, readMode);
-    SetBranch("AngleChargeRelativeDifferenceFit", &fAngleChargeRelativeDifferenceFit, readMode);
+    SetBranch("AnglePassFit", &fAnglePassFit, readMode);
+    SetBranch("AngleTwoLinesChi2", &fAngleTwoLinesChi2, readMode);
+    SetBranch("AngleNVertexHits", &fAngleNVertexHits, readMode);
+    SetBranch("AngleNBulkHits", &fAngleNBulkHits, readMode);
     SetBranch("AngleVertexHitIntegralRatio", &fAngleVertexHitIntegralRatio, readMode);
     SetBranch("AngleVertexHitIntegralDifference", &fAngleVertexHitIntegralDifference, readMode);
     SetBranch("AngleVertexHitIntegralRelativeDifference", &fAngleVertexHitIntegralRelativeDifference, readMode);
-    SetBranch("AnglePassFit", &fAnglePassFit, readMode);
-    SetBranch("AngleTwoLinesChi2", &fAngleTwoLinesChi2, readMode);
+    SetBranch("AngleTrackLength1", &fAngleTrackLength1, readMode);
+    SetBranch("AngleTrackLength2", &fAngleTrackLength2, readMode);
+    SetBranch("AngleTrackLengthRatio", &fAngleTrackLengthRatio, readMode);
+    SetBranch("AngleResidualRange1RMS", &fAngleResidualRange1RMS, readMode);
+    SetBranch("AngleResidualRange2RMS", &fAngleResidualRange2RMS, readMode);
+    SetBranch("AngleChargeRatioAverage", &fAngleChargeRatioAverage, readMode);
+    SetBranch("AngleChargeDifferenceAverage", &fAngleChargeDifferenceAverage, readMode);
+    SetBranch("AngleChargeRelativeDifferenceAverage", &fAngleChargeRelativeDifferenceAverage, readMode);
+    SetBranch("AnglePassChargeFit", &fAnglePassChargeFit, readMode);
+    SetBranch("AngleBandOverlap", &fAngleBandOverlap, readMode);
+    SetBranch("AngleChargeRatioFit", &fAngleChargeRatioFit, readMode);
+    SetBranch("AngleChargeDifferenceFit", &fAngleChargeDifferenceFit, readMode);
+    SetBranch("AngleChargeRelativeDifferenceFit", &fAngleChargeRelativeDifferenceFit, readMode);
+
 
     if(readMode==false)
         SetBranch("InputFileName", &fInputFileName, readMode);
@@ -270,17 +280,27 @@ void LambdaAnaTree::ResetVars(){
     fAngleDirtHitsWiresRatio = -999;
     fAngleOpeningAngle = -999;
 
-    fAngleChargeRatioAverage = -999;
-    fAngleChargeDifferenceAverage = -999;
-    fAngleChargeRelativeDifferenceAverage = -999;
-    fAngleChargeDifferenceFit = -999;
-    fAngleChargeRatioFit = -999;
-    fAngleChargeRelativeDifferenceFit = -999;
+    fAnglePassFit = false;
+    fAngleTwoLinesChi2 = -999;
+    fAngleNVertexHits = -999;
+    fAngleNBulkHits = -999;
     fAngleVertexHitIntegralRatio = -999;
     fAngleVertexHitIntegralDifference = -999;
     fAngleVertexHitIntegralRelativeDifference = -999;
-    fAnglePassFit = false;
-    fAngleTwoLinesChi2 = -999;
+    fAngleTrackLength1 = -999;
+    fAngleTrackLength2 = -999;
+    fAngleTrackLengthRatio = -999;
+    fAngleResidualRange1RMS = -999;
+    fAngleResidualRange2RMS = -999;
+    fAngleChargeRatioAverage = -999;
+    fAngleChargeDifferenceAverage = -999;
+    fAngleChargeRelativeDifferenceAverage = -999;
+    fAnglePassChargeFit = false;
+    fAngleBandOverlap = -999;
+    fAngleChargeRatioFit = -999;
+    fAngleChargeDifferenceFit = -999;
+    fAngleChargeRelativeDifferenceFit = -999;
+
 
     fNFreeHits = -999;
     fNUnassociatedHits = -999;

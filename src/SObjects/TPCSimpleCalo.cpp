@@ -601,6 +601,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     if(fitter){
         fitter->GetConfidenceIntervals(hint1, fCondifenceLevel);
         passFit1 = true;
+        std::cout<<"Pass fit 1"<<std::endl;
     }
     
     TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, calo1.GetTrackLength());
@@ -614,6 +615,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     if(fitter){
         fitter->GetConfidenceIntervals(hint1Exp, fCondifenceLevel);
         passFit1Exp = true;
+        std::cout<<"Pass fit 1 exp"<<std::endl;
     }
     
 
@@ -625,6 +627,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     if(fitter){
         fitter->GetConfidenceIntervals(hint2, fCondifenceLevel);
         passFit2 = true;
+        std::cout<<"Pass fit 2"<<std::endl;
     }
     TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, calo2.GetTrackLength());
     fit2Exp->SetLineColor(fColor2);
@@ -637,6 +640,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     if(fitter){
         fitter->GetConfidenceIntervals(hint2Exp, fCondifenceLevel);
         passFit2Exp = true;
+        std::cout<<"Pass fit 2 exp"<<std::endl;
     }
 
     // Draw the fitted functions

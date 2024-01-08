@@ -142,18 +142,30 @@ public:
     int fNUnassociatedHits;
 
     // Calorimetry
-    double fAngleChargeRatioAverage;
-    double fAngleChargeDifferenceAverage;
-    double fAngleChargeRelativeDifferenceAverage;
-    double fAngleChargeRatioFit;
-    double fAngleChargeDifferenceFit;
-    double fAngleChargeRelativeDifferenceFit;
-    double fAngleVertexHitIntegralRatio;
-    double fAngleVertexHitIntegralDifference;
-    double fAngleVertexHitIntegralRelativeDifference;
     bool fAnglePassFit;
     double fAngleTwoLinesChi2;
 
+    int fAngleNVertexHits;
+    int fAngleNBulkHits;
+    double fAngleVertexHitIntegralRatio;
+    double fAngleVertexHitIntegralDifference;
+    double fAngleVertexHitIntegralRelativeDifference;
+
+    double fAngleTrackLength1;
+    double fAngleTrackLength2;
+    double fAngleTrackLengthRatio;
+    double fAngleResidualRange1RMS;
+    double fAngleResidualRange2RMS;
+
+    double fAngleChargeRatioAverage;
+    double fAngleChargeDifferenceAverage;
+    double fAngleChargeRelativeDifferenceAverage;
+
+    bool fAnglePassChargeFit;
+    double fAngleBandOverlap;
+    double fAngleChargeRatioFit;
+    double fAngleChargeDifferenceFit;
+    double fAngleChargeRelativeDifferenceFit;
 
 
 

@@ -175,7 +175,6 @@ class STriangleCalo {
         double TrackLength2() {return fTrackLength2;};
         double ResidualRange1RMS() {return fResidualRange1RMS;};
         double ResidualRange2RMS() {return fResidualRange2RMS;};
-
 };
 
 
