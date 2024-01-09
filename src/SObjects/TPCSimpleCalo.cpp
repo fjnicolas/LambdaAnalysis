@@ -678,11 +678,14 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         fit1->Draw("same");
         fit1Exp->Draw("same");
 
+        std::cout<<" *** "<<fit1Exp->GetParameter(0)<<" "<<fit1Exp->GetParameter(1)<<" "<<hint1Exp->Integral()<<std::endl;
         if(fit1Exp->GetParameter(0)>0 && fit1Exp->GetParameter(1)<0 && hint1Exp->Integral()>0){
+            std::cout<<" Using exp\n";
             hint1Exp->Draw("e3 same");
             p0Fit_1 = fit1Exp->GetParameter(2);
         }
         else{
+            std::cout<<" Using const\n";
             hint1->Draw("e3 same");
             p0Fit_1 = fit1->GetParameter(0);
         }
