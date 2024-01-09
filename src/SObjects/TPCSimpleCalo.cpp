@@ -22,6 +22,9 @@
 #include "TMarker.h"
 #include "TPaveText.h"
 #include "TStyle.h"
+#include <Math/WrappedMultiTF1.h>
+#include <TFitResult.h>
+#include <TMatrixDSym.h>
 
 // Calorimetry conversion factor (ADC to charge)
 // (1 / 0.0201293) e-/ADC*time_ticks x  23.6e-6 MeV/e-  x)
@@ -522,6 +525,35 @@ double CheckOverlapRegion(TH1F *h1, TH1F *h2, double x1Max, double x2Max){
     return overlapArea/(area1+area2);
 }
 
+
+// --- Function to get confidence interval ---
+bool GetFitConfidenceInterval(TH1F *h, TF1 *f, TFitResultPtr fitResult, double confidenceLevel){
+
+    if(fitResult->Status()!=0) return false;
+    else{
+        // Get range from histogram
+        int nPoints = h->GetNbinsX();
+        
+        std::vector<double> xPoints;
+        for(int i=1; i<=nPoints; i++){
+            double x = h->GetBinCenter(i);
+            xPoints.push_back(x);
+        }
+        std::vector<double> confInterval(nPoints);
+        
+        fitResult->GetConfidenceIntervals(nPoints, 1, 1, &xPoints[0], &confInterval[0], confidenceLevel);
+
+        // Fill the histogram
+        for(int i=1; i<=nPoints; i++){  
+            h->SetBinContent(i, f->Eval(xPoints[i]));
+            h->SetBinError(i, confInterval[i]);
+        }
+
+        return true;
+    }
+   
+}
+
 // --- Function to display dEdx ---
 void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, TPad *pad) {
     
@@ -554,7 +586,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     graph2->SetMarkerStyle(20);
 
     // Frame
-    double maxX = std::max(calo1.GetTrackLength(), calo2.GetTrackLength());   
+    double maxLength = std::max(calo1.GetTrackLength(), calo2.GetTrackLength());   
     double maxY1 = 0, maxY2 = 0;
     if(depositedEnergy1.size()>1)
         maxY1 = *std::max_element(depositedEnergy1.begin(), depositedEnergy1.end());
@@ -562,7 +594,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         maxY2 = *std::max_element(depositedEnergy2.begin(), depositedEnergy2.end()); 
     double maxY = std::max(maxY1, maxY2);
     
-    TH2F *hFrame = new TH2F("hFrame", ";Residual range [cm];dQ/dx [AU]", 200, 0, 1.1*maxX, 100, 0, 1.1*maxY);
+    TH2F *hFrame = new TH2F("hFrame", ";Residual range [cm];dQ/dx [AU]", 200, 0, 1.1*maxLength, 100, 0, 1.1*maxY);
     hFrame->GetYaxis()->SetTitleOffset(.8);
     hFrame->GetXaxis()->SetTitleOffset(.8);
     hFrame->SetStats(0);
@@ -575,15 +607,14 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     leg->AddEntry(graph1, "Track1", "lp");
     leg->AddEntry(graph2, "Track2", "lp");
     leg->Draw("same");
+    
 
     TVirtualFitter* fitter = TVirtualFitter::GetFitter();
-    
     // Fit the two graphs to two constants
     bool passFit1 = false;
     bool passFit1Exp = false;
     bool passFit2 = false;
     bool passFit2Exp = false;
-    double maxLength = std::max(calo1.GetTrackLength(), calo2.GetTrackLength());
     TH1F *hint1 = new TH1F("hint1", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
     TH1F *hint1Exp = new TH1F("hint1Exp", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
     TH1F *hint2 = new TH1F("hint2", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
@@ -593,57 +624,46 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     hint2->SetFillColorAlpha(fColor2,0.5);
     hint2Exp->SetFillColorAlpha(fColor2,0.5);
 
-    TF1 *fit1 = new TF1("fit1", "[0]", 0, maxX);
+    // --- First track fitting
+    // Constant
+    TF1 *fit1 = new TF1("fit1", "[0]", 0, maxLength);
     fit1->SetLineColor(fColor1);
     fit1->SetLineWidth(2);
-    graph1->Fit(fit1, "R");
-    fitter = TVirtualFitter::GetFitter();
-    if(fitter){
-        fitter->GetConfidenceIntervals(hint1, fCondifenceLevel);
-        passFit1 = true;
-        std::cout<<"Pass fit 1"<<std::endl;
-    }
+    TFitResultPtr fitResult1 = graph1->Fit(fit1, "RS");
+    passFit1 = GetFitConfidenceInterval(hint1, fit1, fitResult1, fCondifenceLevel);
     
+    // Exponential
     TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, calo1.GetTrackLength());
     fit1Exp->SetLineColor(fColor1);
     fit1Exp->SetLineWidth(2);
     fit1Exp->SetParameters(maxY, -1, fit1->GetParameter(0));
     fit1Exp->SetParLimits(1, -1e6, 0);
     fit1Exp->SetParLimits(2, 0, 1e6);
-    graph1->Fit(fit1Exp, "BR");    
-    fitter = TVirtualFitter::GetFitter();
-    if(fitter){
-        fitter->GetConfidenceIntervals(hint1Exp, fCondifenceLevel);
-        passFit1Exp = true;
-        std::cout<<"Pass fit 1 exp"<<std::endl;
-    }
+    TFitResultPtr fitResult1Exp = graph1->Fit(fit1Exp, "BRS");    
+    passFit1Exp = GetFitConfidenceInterval(hint1Exp, fit1Exp, fitResult1Exp, fCondifenceLevel);
     
 
+    // --- Second track fitting
+    // Constant
     TF1 *fit2 = new TF1("fit2", "[0]", 0, calo2.GetTrackLength());
     fit2->SetLineColor(fColor2);
     fit2->SetLineWidth(2);
-    graph2->Fit(fit2, "R");
-    fitter = TVirtualFitter::GetFitter();
-    if(fitter){
-        fitter->GetConfidenceIntervals(hint2, fCondifenceLevel);
-        passFit2 = true;
-        std::cout<<"Pass fit 2"<<std::endl;
-    }
+    TFitResultPtr fitResult2 = graph2->Fit(fit2, "RS");
+    passFit2 = GetFitConfidenceInterval(hint2, fit2, fitResult2, fCondifenceLevel);
+
+    // Exponential
     TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, calo2.GetTrackLength());
     fit2Exp->SetLineColor(fColor2);
     fit2Exp->SetLineWidth(2);
     fit2Exp->SetParameters(maxY, -1, fit2->GetParameter(0));
     fit2Exp->SetParLimits(1, -1e6, 0);
     fit2Exp->SetParLimits(2, 0, 1e6);
-    graph2->Fit(fit2Exp, "BR");
-    fitter = TVirtualFitter::GetFitter();
-    if(fitter){
-        fitter->GetConfidenceIntervals(hint2Exp, fCondifenceLevel);
-        passFit2Exp = true;
-        std::cout<<"Pass fit 2 exp"<<std::endl;
-    }
+    TFitResultPtr fitResult2Exp = graph2->Fit(fit2Exp, "BRS");
+    passFit2Exp = GetFitConfidenceInterval(hint2Exp, fit2Exp, fitResult2Exp, fCondifenceLevel);
 
-    // Draw the fitted functions
+    // --- Draw the fitted functions
+    std::cout<<" *** Fits status: "<<passFit1<<" "<<passFit1Exp<<" "<<passFit2<<" "<<passFit2Exp<<std::endl;
+
     fit1->Draw("same");
     fit2->Draw("same");
     fit1Exp->Draw("same");
@@ -773,7 +793,6 @@ std::vector<SHit> GetSideHits(std::vector<SHit> hitV, double xVertex, std::vecto
         return vRight;
     }
 }
-
 
 
 // --- JointFit analysis---
@@ -1172,3 +1191,69 @@ void STriangleCalo::Display(TCanvas *c1){
 
     return;
 }
+
+
+
+
+    /*TF1 fit = new TF1("fit","[0]", 0, calo1.GetTrackLength() );
+    ROOT::Math::WrappedMultiTF1 fitFunction(fit, fit->GetNdim() );
+    fit->SetParameters(1);
+    ROOT::Fit::Fitter myFitter;
+    myFitter.SetFCN(fitFunction, 1);
+    // Get the fit result
+    myFitter.Fit(graph1, "S");
+    auto result = myFitter.Result();
+    std::cout<<"Fit status: "<<result.Status()<<std::endl;*/
+
+
+
+    /*
+    fitter = TVirtualFitter::GetFitter();
+    if(fitter){
+        fitter->GetConfidenceIntervals(hint1Exp, fCondifenceLevel);
+        passFit1Exp = true;
+        std::cout<<"Pass fit 1 exp"<<std::endl;
+    }
+    */
+
+
+    /*
+        // Accessing parameter estimates and errors
+    double a_est = fit1Exp->GetParameter(0);
+    double b_est = fit1Exp->GetParameter(1);
+    double c_est = fit1Exp->GetParameter(2);
+    double a_err = fit1Exp->GetParError(0);
+    double b_err = fit1Exp->GetParError(1);
+    double c_err = fit1Exp->GetParError(2);
+
+    // Accessing covariance matrix
+    TMatrixDSym covarianceMatrix = fitResult->GetCovarianceMatrix();
+
+    // Define a function to calculate f(x) with uncertainty
+    auto calculateFWithUncertainty = [&](double x_value, double alpha) {
+        double f_x = a_est * exp(b_est * x_value) + c_est;
+
+        double term1 = a_err * a_err * exp(2 * b_est * x_value);
+        double term2 = b_err * b_err * x_value * x_value * exp(2 * b_est * x_value);
+        double term3 = covarianceMatrix(0, 1) * x_value * exp(b_est * x_value);
+        double uncertainty = sqrt(term1 + term2 + 2 * term3);
+
+        // Calculate the confidence interval with significance level alpha
+        double z_alpha_over_2 = TMath::NormQuantile(1 - alpha / 2.0);
+        double interval = z_alpha_over_2 * uncertainty;
+
+        return std::make_pair(f_x, interval);
+    };
+
+
+    // Example: Calculate a confidence interval for f(x) at x = 11 with a 95% confidence level
+    double x_value = 2.0;
+    double alpha = 0.01;  // 1 - confidence level
+
+    auto result = calculateFWithUncertainty(x_value, alpha);
+
+    std::cout << "Confidence Interval for f(" << x_value << "): ["
+              << result.first - result.second << ", " << result.first + result.second << "]" << std::endl;
+
+    
+    */
