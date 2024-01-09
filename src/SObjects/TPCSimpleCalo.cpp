@@ -593,7 +593,6 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     if(depositedEnergy2.size()>1)
         maxY2 = *std::max_element(depositedEnergy2.begin(), depositedEnergy2.end()); 
     double maxY = std::max(maxY1, maxY2);
-    
     TH2F *hFrame = new TH2F("hFrame", ";Residual range [cm];dQ/dx [AU]", 200, 0, 1.1*maxLength, 100, 0, 1.1*maxY);
     hFrame->GetYaxis()->SetTitleOffset(.8);
     hFrame->GetXaxis()->SetTitleOffset(.8);
@@ -609,12 +608,13 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     leg->Draw("same");
     
 
-    TVirtualFitter* fitter = TVirtualFitter::GetFitter();
-    // Fit the two graphs to two constants
+
+    // Fit results
     bool passFit1 = false;
     bool passFit1Exp = false;
     bool passFit2 = false;
     bool passFit2Exp = false;
+    // Confidence interval histograms
     TH1F *hint1 = new TH1F("hint1", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
     TH1F *hint1Exp = new TH1F("hint1Exp", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
     TH1F *hint2 = new TH1F("hint2", "Fitted Gaussian with .95 conf.band", 100, 0, maxLength);
@@ -623,68 +623,83 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     hint1Exp->SetFillColorAlpha(fColor1,0.5);
     hint2->SetFillColorAlpha(fColor2,0.5);
     hint2Exp->SetFillColorAlpha(fColor2,0.5);
+    // Fit functions
+    TF1 *fit1 = new TF1("fit1", "[0]", 0, maxLength);
+    TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, calo1.GetTrackLength());
+    TF1 *fit2 = new TF1("fit2", "[0]", 0, calo2.GetTrackLength());
+    TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, calo2.GetTrackLength());
 
     // --- First track fitting
-    // Constant
-    TF1 *fit1 = new TF1("fit1", "[0]", 0, maxLength);
-    fit1->SetLineColor(fColor1);
-    fit1->SetLineWidth(2);
-    TFitResultPtr fitResult1 = graph1->Fit(fit1, "RS");
-    passFit1 = GetFitConfidenceInterval(hint1, fit1, fitResult1, fCondifenceLevel);
-    
-    // Exponential
-    TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, calo1.GetTrackLength());
-    fit1Exp->SetLineColor(fColor1);
-    fit1Exp->SetLineWidth(2);
-    fit1Exp->SetParameters(maxY, -1, fit1->GetParameter(0));
-    fit1Exp->SetParLimits(1, -1e6, 0);
-    fit1Exp->SetParLimits(2, 0, 1e6);
-    TFitResultPtr fitResult1Exp = graph1->Fit(fit1Exp, "BRS");    
-    passFit1Exp = GetFitConfidenceInterval(hint1Exp, fit1Exp, fitResult1Exp, fCondifenceLevel);
-    
+    if(graph1->GetN()>0){
+        // Constant
+        fit1->SetLineColor(fColor1);
+        fit1->SetLineWidth(2);
+        TFitResultPtr fitResult1 = graph1->Fit(fit1, "RS");
+        passFit1 = GetFitConfidenceInterval(hint1, fit1, fitResult1, fCondifenceLevel);
+        
+        // Exponential
+        fit1Exp->SetLineColor(fColor1);
+        fit1Exp->SetLineWidth(2);
+        fit1Exp->SetParameters(maxY, -1, fit1->GetParameter(0));
+        fit1Exp->SetParLimits(1, -1e6, 0);
+        fit1Exp->SetParLimits(2, 0, 1e6);
+        TFitResultPtr fitResult1Exp = graph1->Fit(fit1Exp, "BRS");    
+        passFit1Exp = GetFitConfidenceInterval(hint1Exp, fit1Exp, fitResult1Exp, fCondifenceLevel);
+    }    
 
     // --- Second track fitting
-    // Constant
-    TF1 *fit2 = new TF1("fit2", "[0]", 0, calo2.GetTrackLength());
-    fit2->SetLineColor(fColor2);
-    fit2->SetLineWidth(2);
-    TFitResultPtr fitResult2 = graph2->Fit(fit2, "RS");
-    passFit2 = GetFitConfidenceInterval(hint2, fit2, fitResult2, fCondifenceLevel);
+    if(graph2->GetN()>0){ 
+        // Constant
+        fit2->SetLineColor(fColor2);
+        fit2->SetLineWidth(2);
+        TFitResultPtr fitResult2 = graph2->Fit(fit2, "RS");
+        passFit2 = GetFitConfidenceInterval(hint2, fit2, fitResult2, fCondifenceLevel);
 
-    // Exponential
-    TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, calo2.GetTrackLength());
-    fit2Exp->SetLineColor(fColor2);
-    fit2Exp->SetLineWidth(2);
-    fit2Exp->SetParameters(maxY, -1, fit2->GetParameter(0));
-    fit2Exp->SetParLimits(1, -1e6, 0);
-    fit2Exp->SetParLimits(2, 0, 1e6);
-    TFitResultPtr fitResult2Exp = graph2->Fit(fit2Exp, "BRS");
-    passFit2Exp = GetFitConfidenceInterval(hint2Exp, fit2Exp, fitResult2Exp, fCondifenceLevel);
+        // Exponential
+        fit2Exp->SetLineColor(fColor2);
+        fit2Exp->SetLineWidth(2);
+        fit2Exp->SetParameters(maxY, -1, fit2->GetParameter(0));
+        fit2Exp->SetParLimits(1, -1e6, 0);
+        fit2Exp->SetParLimits(2, 0, 1e6);
+        TFitResultPtr fitResult2Exp = graph2->Fit(fit2Exp, "BRS");
+        passFit2Exp = GetFitConfidenceInterval(hint2Exp, fit2Exp, fitResult2Exp, fCondifenceLevel);
+    
+    }
 
     // --- Draw the fitted functions
     std::cout<<" *** Fits status: "<<passFit1<<" "<<passFit1Exp<<" "<<passFit2<<" "<<passFit2Exp<<std::endl;
+    bool pass1 = passFit1 || passFit1Exp;
+    bool pass2 = passFit2 || passFit2Exp;
 
-    fit1->Draw("same");
-    fit2->Draw("same");
-    fit1Exp->Draw("same");
-    fit2Exp->Draw("same");
-    double p0Fit_1 = 1;
-    double p0Fit_2 = 1;
-    if(fit1Exp->GetParameter(0)>0 && fit1Exp->GetParameter(1)<0 && hint1Exp->Integral()>0){
-        hint1Exp->Draw("e3 same");
-        p0Fit_1 = fit1Exp->GetParameter(2);
+    double p0Fit_1 = -1;
+    double p0Fit_2 = -1;
+
+    if(pass1){
+        fit1->Draw("same");
+        fit1Exp->Draw("same");
+
+        if(fit1Exp->GetParameter(0)>0 && fit1Exp->GetParameter(1)<0 && hint1Exp->Integral()>0){
+            hint1Exp->Draw("e3 same");
+            p0Fit_1 = fit1Exp->GetParameter(2);
+        }
+        else{
+            hint1->Draw("e3 same");
+            p0Fit_1 = fit1->GetParameter(0);
+        }
+
     }
-    else{
-        hint1->Draw("e3 same");
-        p0Fit_1 = fit1->GetParameter(0);
-    }
-    if(fit2Exp->GetParameter(0)>0 && fit2Exp->GetParameter(1)<0 && hint2Exp->Integral()>0){
-        hint2Exp->Draw("e3 same");
-        p0Fit_2 = fit2Exp->GetParameter(2);
-    }
-    else{
-        hint2->Draw("e3 same");
-        p0Fit_2 = fit2->GetParameter(0);
+    if(pass2){
+        fit2->Draw("same");
+        fit2Exp->Draw("same");
+
+        if(fit2Exp->GetParameter(0)>0 && fit2Exp->GetParameter(1)<0 && hint2Exp->Integral()>0){
+            hint2Exp->Draw("e3 same");
+            p0Fit_2 = fit2Exp->GetParameter(2);
+        }
+        else{
+            hint2->Draw("e3 same");
+            p0Fit_2 = fit2->GetParameter(0);
+        }
     }
 
     double charge1=0, charge2=0;
@@ -699,8 +714,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     fChargeRelativeDifferenceAverage = fChargeDifferenceAverage / charge1Average;
 
 
-    bool pass1 = passFit1 || passFit1Exp;
-    bool pass2 = passFit2 || passFit2Exp;
+   
 
     fPassChargeFit = pass1 && pass2;
     if(fPassChargeFit){
