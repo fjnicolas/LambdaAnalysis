@@ -80,6 +80,14 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio", CutType::kNone, 1, {0, 3, 20}, false, "AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio"}
     ,{"AngleVertexHitIntegralDifference", "AngleVertexHitIntegralDifference", CutType::kNone, 1, {-10, 10, 100}, false, "AngleVertexHitIntegralDifference", "AngleVertexHitIntegralDifference"}
     ,{"AngleVertexHitIntegralRelativeDifference", "AngleVertexHitIntegralRelativeDifference", CutType::kNone, 1, {-2, 2, 100}, false, "AngleVertexHitIntegralRelativeDifference", "AngleVertexHitIntegralRelativeDifference"}
+    ,{"AngleTrackLengthRatio", "AngleTrackLengthRatio", CutType::kNone, 1, {0, 3, 20}, false, "AngleTrackLengthRatio", "AngleTrackLengthRatio"}
+    ,{"AngleResidualRange1RMS", "AngleResidualRange1RMS", CutType::kNone, 1, {0, 10, 100}, false, "AngleResidualRange1RMS", "AngleResidualRange1RMS"}
+    ,{"AngleResidualRange2RMS", "AngleResidualRange2RMS", CutType::kNone, 1, {0, 10, 100}, false, "AngleResidualRange2RMS", "AngleResidualRange2RMS"}
+    ,{"AngleNVertexHits", "AngleNVertexHits", CutType::kNone, 1, {0, 100, 20}, false, "AngleNVertexHits", "AngleNVertexHits"}
+    ,{"AngleNBulkHits", "AngleNBulkHits", CutType::kNone, 1, {0, 100, 20}, false, "AngleNBulkHits", "AngleNBulkHits"}
+    ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kNone, 1, {0, 2, 2}, false, "AnglePassChargeFit", "AnglePassChargeFit"}
+    ,{"AngleBandOverlap", "AngleBandOverlap", CutType::kNone, 1, {0, 2, 50}, false, "AngleBandOverlap", "AngleBandOverlap"}
+
 
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS,      {-.5,.5,40}, true, "V FRANS score",   "V \\ FRANS \\ score"}
     ,{"NUnOriginsMultGT3", "NUnOriginsMultGT3", CutType::kLeft,  0, {0, 5, 5}, false, "# origins mult 3", "\\# \\ origins \\ mult \\ 3"}
@@ -90,10 +98,22 @@ std::vector<PlotDef> cutDefs2 = {
     
     ,{"NShowers", "NShowers", CutType::kLeft, 1, {0, 10, 10}, true, "# showers", "\\# \\ showers"}
     ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  1, {0, 20, 40}, true, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
-    ,{"AngleLongestIsMain", "AngleLongestIsMain", CutType::kCenter,  1, {0, 2, 2}, true, "Longest is main", "Longest \\ is \\ main"}
+    //,{"AngleLongestIsMain", "AngleLongestIsMain", CutType::kCenter,  1, {0, 2, 2}, true, "Longest is main", "Longest \\ is \\ main"}
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 200, 40}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
-    ,{"AngleNHitsTrack1", "AngleNHitsTrack1", CutType::kRight, 4, {0, 100, 50}, true, "track 1 # hits ", "Track1 \\ \\# \\ hits"}
-    ,{"AngleNHitsTrack2", "AngleNHitsTrack2", CutType::kRight, 4, {0, 100, 50}, true, "track 2 # hits ", "Track2 \\ \\# \\ hits"}
+    //,{"AngleNHitsTrack1", "AngleNHitsTrack1", CutType::kRight, 4, {0, 100, 50}, true, "track 1 # hits ", "Track1 \\ \\# \\ hits"}
+    //,{"AngleNHitsTrack2", "AngleNHitsTrack2", CutType::kRight, 4, {0, 100, 50}, true, "track 2 # hits ", "Track2 \\ \\# \\ hits"}
+    
+
+   
+   
+    ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassChargeFit", "AnglePassChargeFit"}
+    ,{"AngleNVertexHits", "AngleNVertexHits", CutType::kRight, 1, {0, 100, 20}, true, "AngleNVertexHits", "AngleNVertexHits"}
+    , {"AngleNBulkHits", "AngleNBulkHits", CutType::kNone, 1, {0, 100, 20}, false, "AngleNBulkHits", "AngleNBulkHits"}
+    ,{"AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio", CutType::kRight, 1., {0, 3, 20}, true, "AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio"}
+    //,{"AngleChargeDifferenceFit", "AngleChargeDifferenceFit", CutType::kNone, 1, {-10, 10, 100}, false, "AngleChargeDifferenceFit", "AngleChargeDifferenceFit"}
+    ,{"AngleBandOverlap", "AngleBandOverlap", CutType::kLeft, 0.9, {0, 2, 50}, true, "AngleBandOverlap", "AngleBandOverlap"}
+    ,{"AngleChargeRatioFit", "AngleChargeRatioFit", CutType::kRight, 1.25, {0, 3, 20}, true, "AngleChargeRatioFit", "AngleChargeRatioFit"}
+    //,{"AngleVertexHitIntegralDifference", "AngleVertexHitIntegralDifference", CutType::kNone, 1, {-10, 10, 100}, false, "AngleVertexHitIntegralDifference", "AngleVertexHitIntegralDifference"}
     
 
 

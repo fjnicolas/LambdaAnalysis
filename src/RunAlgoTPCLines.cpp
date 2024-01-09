@@ -364,7 +364,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(),  ("FinalReco"+ev.Label()).c_str(), 0, 0, 1000, 800);
             if(bestTriangleIx!=-1){
                 STriangleCalo triangleCalo(angleList[bestTriangleIx]);
-                triangleCalo.JointFitAnalysis(50, 1.5, true);
+                triangleCalo.JointFitAnalysis(10, 1.5, true);
                 triangleCalo.Display(cCalo);
             }
             _TPCLinesAlgo.Display("", cTPCDisplay);

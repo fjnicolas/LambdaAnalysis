@@ -87,7 +87,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     // 1-dimensional likelihood ("naive Bayes estimator")
     Use["Likelihood"]      = 0;
     // Linear Discriminant Analysis
-    Use["Fisher"]          = 1;
+    Use["Fisher"]          = 0;
     // Boosted Decision Trees
     Use["BDT"]             = 1;
     // Neural Networks (all are feed-forward Multilayer Perceptrons)
@@ -125,10 +125,20 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
     //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
+    // Calorimetry
+    //dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
+    //dataloader->AddVariable( "AnglePassChargeFit", "Pass Charge Fit", "", 'I' );
+    dataloader->AddVariable( "AngleBandOverlap", "Band Overlap", "", 'D' );
     dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio", "", 'D' );
     dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference", "", 'D' );
-    //dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
-    dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
+    //dataloader->AddVariable( "AngleChargeRatioAverage", "Charge Ratio Average", "", 'D' );
+    dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
+    //dataloader->AddVariable( "AngleTrackLengthRatio", "Track Length Ratio", "", 'D' );
+    dataloader->AddVariable( "AngleResidualRange1RMS", "Residuals Range 1 RMS", "", 'D' );
+    dataloader->AddVariable( "AngleResidualRange2RMS", "Residuals Range 2 RMS", "", 'D' );
+    dataloader->AddVariable( "AngleNVertexHits", "N Vertex Hits", "", 'I' );
+    dataloader->AddVariable( "AngleNBulkHits", "N Bulk Hits", "", 'I' );
+
 
     
 

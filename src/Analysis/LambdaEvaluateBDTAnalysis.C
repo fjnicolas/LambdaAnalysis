@@ -62,10 +62,22 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     float NShowers;
     float NShowerHits;
     float AngleLongestIsMain;
+    // Calorimetry variables
+    float AngleTwoLinesChi2;
+    float AnglePassChargeFit;
+    float AngleBandOverlap;
     float AngleChargeRatioFit;
     float AngleChargeDifferenceFit;
+    float AngleChargeRatioAverage;
     float AngleVertexHitIntegralRatio;
-    float AngleTwoLinesChi2;
+    float AngleTrackLengthRatio;
+    float AngleResidualRange1RMS;
+    float AngleResidualRange2RMS;
+    float AngleNVertexHits;
+    float AngleNBulkHits;
+
+
+    
 
 
     // Add variables to the reader
@@ -95,12 +107,20 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     if(fVarLabels["NShowerHits"]==true) fTMVAReader->AddVariable( "NShowerHits", &NShowerHits );
     if(fVarLabels["AngleOpeningAngle"]==true) fTMVAReader->AddVariable( "AngleOpeningAngle", &AngleOpeningAngle );
     if(fVarLabels["AngleLongestIsMain"]==true) fTMVAReader->AddVariable( "AngleLongestIsMain", &AngleLongestIsMain );
+    // Calo
+    if(fVarLabels["AngleTwoLinesChi2"]==true) fTMVAReader->AddVariable( "AngleTwoLinesChi2", &AngleTwoLinesChi2 );
+    if(fVarLabels["AnglePassChargeFit"]==true) fTMVAReader->AddVariable( "AnglePassChargeFit", &AnglePassChargeFit );
+    if(fVarLabels["AngleBandOverlap"]==true) fTMVAReader->AddVariable( "AngleBandOverlap", &AngleBandOverlap );
     if(fVarLabels["AngleChargeRatioFit"]==true) fTMVAReader->AddVariable( "AngleChargeRatioFit", &AngleChargeRatioFit );
     if(fVarLabels["AngleChargeDifferenceFit"]==true) fTMVAReader->AddVariable( "AngleChargeDifferenceFit", &AngleChargeDifferenceFit );
+    if(fVarLabels["AngleChargeRatioAverage"]==true) fTMVAReader->AddVariable( "AngleChargeRatioAverage", &AngleChargeRatioAverage );
     if(fVarLabels["AngleVertexHitIntegralRatio"]==true) fTMVAReader->AddVariable( "AngleVertexHitIntegralRatio", &AngleVertexHitIntegralRatio );
-    if(fVarLabels["AngleTwoLinesChi2"]==true) fTMVAReader->AddVariable( "AngleTwoLinesChi2", &AngleTwoLinesChi2 );
-
-
+    if(fVarLabels["AngleTrackLengthRatio"]==true) fTMVAReader->AddVariable( "AngleTrackLengthRatio", &AngleTrackLengthRatio );
+    if(fVarLabels["AngleResidualRange1RMS"]==true) fTMVAReader->AddVariable( "AngleResidualRange1RMS", &AngleResidualRange1RMS );
+    if(fVarLabels["AngleResidualRange2RMS"]==true) fTMVAReader->AddVariable( "AngleResidualRange2RMS", &AngleResidualRange2RMS );
+    if(fVarLabels["AngleNVertexHits"]==true) fTMVAReader->AddVariable( "AngleNVertexHits", &AngleNVertexHits );
+    if(fVarLabels["AngleNBulkHits"]==true) fTMVAReader->AddVariable( "AngleNBulkHits", &AngleNBulkHits );
+    
     // Load the BDT
     fTMVAReader->BookMVA( "FRAMS BDT", fWeightFilePath.c_str() );
 
@@ -151,10 +171,20 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         NShowers = fAnaTreeHandle.fNShowers;
         NShowerHits = fAnaTreeHandle.fNShowerHits;
         AngleLongestIsMain = fAnaTreeHandle.fAngleLongestIsMain;
+        // Calo vars
+        AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
+        AnglePassChargeFit = fAnaTreeHandle.fAnglePassChargeFit;
+        AngleBandOverlap = fAnaTreeHandle.fAngleBandOverlap;
         AngleChargeRatioFit = fAnaTreeHandle.fAngleChargeRatioFit;
         AngleChargeDifferenceFit = fAnaTreeHandle.fAngleChargeDifferenceFit;
+        AngleChargeRatioAverage = fAnaTreeHandle.fAngleChargeRatioAverage;
         AngleVertexHitIntegralRatio = fAnaTreeHandle.fAngleVertexHitIntegralRatio;
-        AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
+        AngleTrackLengthRatio = fAnaTreeHandle.fAngleTrackLengthRatio;
+        AngleResidualRange1RMS = fAnaTreeHandle.fAngleResidualRange1RMS;
+        AngleResidualRange2RMS = fAnaTreeHandle.fAngleResidualRange2RMS;
+        AngleNVertexHits = fAnaTreeHandle.fAngleNVertexHits;
+        AngleNBulkHits = fAnaTreeHandle.fAngleNBulkHits;
+
         
         // check active volume
         bool fTruthIsActive = 1;// fAnaTreeHandle.fTruthIsAV;

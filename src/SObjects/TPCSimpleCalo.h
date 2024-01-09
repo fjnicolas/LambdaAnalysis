@@ -122,8 +122,13 @@ class STriangleCalo {
         double fChargeDifferenceAverage;
         double fChargeRelativeDifferenceAverage;
 
+        double fChargeRatioIntegral;
+        double fChargeDifferenceIntegral;
+        double fChargeRelativeDifferenceIntegral;
+
         bool fPassChargeFit;
         double fBandOverlap;
+        double fBandCrossHits;
         double fChargeRatioFit;
         double fChargeDifferenceFit;
         double fChargeRelativeDifferenceFit;
@@ -139,11 +144,14 @@ class STriangleCalo {
         double fTrackLengthRatio;
         double fResidualRange1RMS;
         double fResidualRange2RMS;
+        double fResidualRangeMinRMS;
 
         double fTwoLinesChi2;
 
         void MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, TPad *pad);
 
+        // Function to print calorimetry results
+        void PrintResults();
     public:
         STriangleCalo(STriangle triangle);
 
