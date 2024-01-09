@@ -712,7 +712,10 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         charge2 = std::accumulate(depositedEnergy2.begin(), depositedEnergy2.end(), 0.0) / depositedEnergy2.size();
     double charge1Average = std::max(charge1, charge2);
     double charge2Average = std::min(charge1, charge2);
-    fChargeRatioAverage = charge1Average / charge2Average;
+    if(charge2Average!=0 && charge1Average!=0)
+        fChargeRatioAverage = charge1Average / charge2Average;
+    else
+        fChargeRatioAverage = 0;
     fChargeDifferenceAverage = charge2Average - charge1Average;
     fChargeRelativeDifferenceAverage = fChargeDifferenceAverage / charge1Average;
 
@@ -724,14 +727,21 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         double charge1Fit = std::max(p0Fit_1, p0Fit_2);
         double charge2Fit = std::min(p0Fit_1, p0Fit_2);
 
-        fChargeRatioFit = charge1Fit / charge2Fit;
+        if(charge2Fit!=0)
+            fChargeRatioFit = charge1Fit / charge2Fit;
+        else
+            fChargeRatioFit = 0;
         fChargeDifferenceFit = charge2Fit - charge1Fit;
         fChargeRelativeDifferenceFit = fChargeDifferenceFit / charge1Fit;
 
         // Check the overlap
         double overlap = CheckOverlapRegion(hint1Exp, hint2Exp, calo1.GetTrackLength(), calo2.GetTrackLength());
         std::cout<<"Overlap: "<<overlap<<std::endl;
+        // check overlap is not a nan
+        if(isnan(std::abs(overlap))) overlap = 1;
+
         fBandOverlap = overlap;
+
     }
     else{
         fChargeRatioFit = 1;
@@ -1059,7 +1069,10 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     double trackLength2 = calo2.GetTrackLength();
     fTrackLength1 = std::max(trackLength1, trackLength2);
     fTrackLength2 = std::min(trackLength1, trackLength2);
-    fTrackLengthRatio = fTrackLength1/fTrackLength2;
+    if(fTrackLength2!=0)
+        fTrackLengthRatio = fTrackLength1/fTrackLength2;
+    else
+        fTrackLengthRatio = 0;
     fResidualRange1RMS = calo1.GetResidualRangeRMS();
     fResidualRange2RMS = calo2.GetResidualRangeRMS();
 
