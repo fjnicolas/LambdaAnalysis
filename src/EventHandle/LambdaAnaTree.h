@@ -156,13 +156,19 @@ public:
     double fAngleTrackLengthRatio;
     double fAngleResidualRange1RMS;
     double fAngleResidualRange2RMS;
+    double fAngleResidualRangeMinRMS;
 
     double fAngleChargeRatioAverage;
     double fAngleChargeDifferenceAverage;
     double fAngleChargeRelativeDifferenceAverage;
 
+    double fAngleChargeRatioIntegral;
+    double fAngleChargeDifferenceIntegral;
+    double fAngleChargeRelativeDifferenceIntegral;
+
     bool fAnglePassChargeFit;
     double fAngleBandOverlap;
+    double fAngleBandCrossHits;
     double fAngleChargeRatioFit;
     double fAngleChargeDifferenceFit;
     double fAngleChargeRelativeDifferenceFit;

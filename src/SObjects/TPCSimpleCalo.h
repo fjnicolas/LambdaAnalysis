@@ -166,6 +166,9 @@ class STriangleCalo {
         double ChargeRatioAverage() {return fChargeRatioAverage;};
         double ChargeDifferenceAverage() {return fChargeDifferenceAverage;};
         double ChargeRelativeDifferenceAverage() {return fChargeRelativeDifferenceAverage;};
+        double ChargeRatioIntegral() {return fChargeRatioIntegral;};
+        double ChargeDifferenceIntegral() {return fChargeDifferenceIntegral;};
+        double ChargeRelativeDifferenceIntegral() {return fChargeRelativeDifferenceIntegral;};
         bool PassFit() {return fPassFit;};
         double ChargeRatioFit() {return fChargeRatioFit;};
         double ChargeDifferenceFit() {return fChargeDifferenceFit;};
@@ -177,12 +180,14 @@ class STriangleCalo {
         double VertexHitIntegralRelativeDifference() {return fVertexHitIntegralRelativeDifference;};
         bool PassChargeFit() {return fPassChargeFit;};
         double BandOverlap() {return fBandOverlap;};
+        double BandCrossHits() {return fBandCrossHits;};
         double TwoLinesChi2() {return fTwoLinesChi2;};
         double TrackLengthRatio() {return fTrackLengthRatio;};
         double TrackLength1() {return fTrackLength1;};
         double TrackLength2() {return fTrackLength2;};
         double ResidualRange1RMS() {return fResidualRange1RMS;};
         double ResidualRange2RMS() {return fResidualRange2RMS;};
+        double ResidualRangeMinRMS() {return fResidualRangeMinRMS;};
 };
 
 
