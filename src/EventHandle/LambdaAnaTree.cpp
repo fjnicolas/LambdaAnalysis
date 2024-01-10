@@ -91,6 +91,8 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("LambdaKE", &fLambdaKE, readMode);
     SetBranch("ProtonKE", &fProtonKE, readMode);
     SetBranch("PionKE", &fPionKE, readMode);
+    SetBranch("HasLambda", &fHasLambda, readMode);
+    SetBranch("HasLambdaVDecayed", &fHasLambdaVDecayed, readMode);
 
     // Set branch addresses for cosmic rejection
     SetBranch("CRUMBSScore", &fCRUMBSScore, readMode);
@@ -231,6 +233,8 @@ void LambdaAnaTree::ResetVars(){
     fLambdaKE = -999;
     fProtonKE = -999;
     fPionKE = -999;
+    fHasLambda = false;
+    fHasLambdaVDecayed = false;
 
     fCRUMBSScore = -999;
 

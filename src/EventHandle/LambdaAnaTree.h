@@ -77,6 +77,8 @@ public:
     double fLambdaKE;
     double fProtonKE;
     double fPionKE;
+    bool fHasLambda;
+    bool fHasLambdaVDecayed;
 
     // Cosmic rejection
     double fCRUMBSScore;
