@@ -116,7 +116,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     //dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
     //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
@@ -128,14 +128,18 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     // Calorimetry
     //dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
     //dataloader->AddVariable( "AnglePassChargeFit", "Pass Charge Fit", "", 'I' );
-    dataloader->AddVariable( "AngleBandOverlap", "Band Overlap", "", 'D' );
-    dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio", "", 'D' );
-    dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference", "", 'D' );
+    //dataloader->AddVariable( "AngleBandOverlap", "Band Overlap", "", 'D' );
+    dataloader->AddVariable( "AngleBandCrossHits", "Band Overlap", "", 'D' );
+    //dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio", "", 'D' );
+    //dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference", "", 'D' );
+    dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio", "", 'D' );
+    dataloader->AddVariable( "AngleChargeDifferenceIntegral", "Charge Difference", "", 'D' );
     //dataloader->AddVariable( "AngleChargeRatioAverage", "Charge Ratio Average", "", 'D' );
     dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
     //dataloader->AddVariable( "AngleTrackLengthRatio", "Track Length Ratio", "", 'D' );
-    dataloader->AddVariable( "AngleResidualRange1RMS", "Residuals Range 1 RMS", "", 'D' );
-    dataloader->AddVariable( "AngleResidualRange2RMS", "Residuals Range 2 RMS", "", 'D' );
+    //dataloader->AddVariable( "AngleResidualRange1RMS", "Residuals Range 1 RMS", "", 'D' );
+    //dataloader->AddVariable( "AngleResidualRange2RMS", "Residuals Range 2 RMS", "", 'D' );
+    //dataloader->AddVariable( "AngleResidualRangeMinRMS", "Residuals Range Min RMS", "", 'D' );
     dataloader->AddVariable( "AngleNVertexHits", "N Vertex Hits", "", 'I' );
     dataloader->AddVariable( "AngleNBulkHits", "N Bulk Hits", "", 'I' );
 

@@ -66,13 +66,17 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     float AngleTwoLinesChi2;
     float AnglePassChargeFit;
     float AngleBandOverlap;
+    float AngleBandCrossHits;
     float AngleChargeRatioFit;
     float AngleChargeDifferenceFit;
+    float AngleChargeRatioIntegral;
+    float AngleChargeDifferenceIntegral;
     float AngleChargeRatioAverage;
     float AngleVertexHitIntegralRatio;
     float AngleTrackLengthRatio;
     float AngleResidualRange1RMS;
     float AngleResidualRange2RMS;
+    float AngleResidualRangeMinRMS;
     float AngleNVertexHits;
     float AngleNBulkHits;
 
@@ -111,13 +115,17 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     if(fVarLabels["AngleTwoLinesChi2"]==true) fTMVAReader->AddVariable( "AngleTwoLinesChi2", &AngleTwoLinesChi2 );
     if(fVarLabels["AnglePassChargeFit"]==true) fTMVAReader->AddVariable( "AnglePassChargeFit", &AnglePassChargeFit );
     if(fVarLabels["AngleBandOverlap"]==true) fTMVAReader->AddVariable( "AngleBandOverlap", &AngleBandOverlap );
+    if(fVarLabels["AngleBandCrossHits"]==true) fTMVAReader->AddVariable( "AngleBandCrossHits", &AngleBandCrossHits );
     if(fVarLabels["AngleChargeRatioFit"]==true) fTMVAReader->AddVariable( "AngleChargeRatioFit", &AngleChargeRatioFit );
     if(fVarLabels["AngleChargeDifferenceFit"]==true) fTMVAReader->AddVariable( "AngleChargeDifferenceFit", &AngleChargeDifferenceFit );
+    if(fVarLabels["AngleChargeRatioIntegral"]==true) fTMVAReader->AddVariable( "AngleChargeRatioIntegral", &AngleChargeRatioIntegral );
+    if(fVarLabels["AngleChargeDifferenceIntegral"]==true) fTMVAReader->AddVariable( "AngleChargeDifferenceIntegral", &AngleChargeDifferenceIntegral );
     if(fVarLabels["AngleChargeRatioAverage"]==true) fTMVAReader->AddVariable( "AngleChargeRatioAverage", &AngleChargeRatioAverage );
     if(fVarLabels["AngleVertexHitIntegralRatio"]==true) fTMVAReader->AddVariable( "AngleVertexHitIntegralRatio", &AngleVertexHitIntegralRatio );
     if(fVarLabels["AngleTrackLengthRatio"]==true) fTMVAReader->AddVariable( "AngleTrackLengthRatio", &AngleTrackLengthRatio );
     if(fVarLabels["AngleResidualRange1RMS"]==true) fTMVAReader->AddVariable( "AngleResidualRange1RMS", &AngleResidualRange1RMS );
     if(fVarLabels["AngleResidualRange2RMS"]==true) fTMVAReader->AddVariable( "AngleResidualRange2RMS", &AngleResidualRange2RMS );
+    if(fVarLabels["AngleResidualRangeMinRMS"]==true) fTMVAReader->AddVariable( "AngleResidualRangeMinRMS", &AngleResidualRangeMinRMS );
     if(fVarLabels["AngleNVertexHits"]==true) fTMVAReader->AddVariable( "AngleNVertexHits", &AngleNVertexHits );
     if(fVarLabels["AngleNBulkHits"]==true) fTMVAReader->AddVariable( "AngleNBulkHits", &AngleNBulkHits );
     
@@ -175,13 +183,17 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
         AnglePassChargeFit = fAnaTreeHandle.fAnglePassChargeFit;
         AngleBandOverlap = fAnaTreeHandle.fAngleBandOverlap;
+        AngleBandCrossHits = fAnaTreeHandle.fAngleBandCrossHits;
         AngleChargeRatioFit = fAnaTreeHandle.fAngleChargeRatioFit;
         AngleChargeDifferenceFit = fAnaTreeHandle.fAngleChargeDifferenceFit;
+        AngleChargeRatioIntegral = fAnaTreeHandle.fAngleChargeRatioIntegral;
+        AngleChargeDifferenceIntegral = fAnaTreeHandle.fAngleChargeDifferenceIntegral;
         AngleChargeRatioAverage = fAnaTreeHandle.fAngleChargeRatioAverage;
         AngleVertexHitIntegralRatio = fAnaTreeHandle.fAngleVertexHitIntegralRatio;
         AngleTrackLengthRatio = fAnaTreeHandle.fAngleTrackLengthRatio;
         AngleResidualRange1RMS = fAnaTreeHandle.fAngleResidualRange1RMS;
         AngleResidualRange2RMS = fAnaTreeHandle.fAngleResidualRange2RMS;
+        AngleResidualRangeMinRMS = fAnaTreeHandle.fAngleResidualRangeMinRMS;
         AngleNVertexHits = fAnaTreeHandle.fAngleNVertexHits;
         AngleNBulkHits = fAnaTreeHandle.fAngleNBulkHits;
 

@@ -655,8 +655,6 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     leg->AddEntry(graph2, "Track2", "lp");
     leg->Draw("same");
     
-
-
     // Fit results
     bool passFit1 = false;
     bool passFit1Exp = false;
@@ -1036,7 +1034,7 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     bool ok = fitter.FitFCN();
     if (!ok) {
         fPassFit = false;
-        Error("line3Dfit","Line3D Fit failed");
+        std::cout << "TPCSimpleCalo: 2Lines fit failed!" << std::endl;
     }
     else{
         fPassFit = true;

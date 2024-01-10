@@ -75,6 +75,7 @@ public:
     // Hits information
     std::vector<int> *hitsView = new std::vector<int>;
     std::vector<double> *hitsIntegral = new std::vector<double>;
+    std::vector<double> *hitsSummedADC = new std::vector<double>;
     std::vector<double> *hitsPeakTime = new std::vector<double>;
     std::vector<int> *hitsChannel = new std::vector<int>;
     std::vector<double> *hitsRMS = new std::vector<double>;
