@@ -231,7 +231,8 @@ TVectorD FisherDiscriminant2D(const std::vector<SHit>& sample1, const std::vecto
 
 // --- Constructor ---
 STriangleCalo::STriangleCalo(STriangle triangle):
-    fTriangle(triangle)
+    fTriangle(triangle),
+    fRatioUpperLimit(15.)
 {
 }
 
@@ -500,8 +501,6 @@ double CheckCrossHits(TH1F *h1, TH1F *h2, TGraph *gr1, TGraph *gr2){
         double yHistError = h1->GetBinError(h1->FindBin(x));
         double yBandLow = yHist-yHistError;
         double yBandHigh = yHist+yHistError;
-
-        std::cout<<" x: "<<x<<" y: "<<y<<" yHist: "<<yHist<<" yHistError: "<<yHistError<<" yBandLow: "<<yBandLow<<" yBandHigh: "<<yBandHigh<<std::endl;
         
         if(y>yBandLow && y<yBandHigh){
             nPointsCross++;
@@ -782,22 +781,33 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         fChargeRatioAverage = charge1Average / charge2Average;
     else
         fChargeRatioAverage = 0;
+    if(fChargeRatioAverage>fRatioUpperLimit) fChargeRatioAverage = fRatioUpperLimit;
     fChargeDifferenceAverage = charge2Average - charge1Average;
     fChargeRelativeDifferenceAverage = fChargeDifferenceAverage / charge1Average;
 
 
-    // Integral method
+    // Integral method near the end track
+    double fEndTrackLength = 4.;
+    int bin1_End = h1->FindBin(3.);
+    int bin2_End = h2->FindBin(3.);
+    double length1 = fEndTrackLength;
+    double length2 = fEndTrackLength;
+    if(calo1.GetTrackLength()<fEndTrackLength) length1 = calo1.GetTrackLength();
+    if(calo2.GetTrackLength()<fEndTrackLength) length2 = calo2.GetTrackLength();
+    std::cout<<" bin1_End: "<<bin1_End<<" bin2_End: "<<bin2_End<<std::endl;
+    std::cout<<" length1: "<<length1<<" length2: "<<length2<<std::endl;
     double charge1Integral = 0;
     double charge2Integral = 0;
-    if(pass1) charge1Integral = h1->Integral();
-    if(pass2) charge2Integral = h2->Integral();
+    if(pass1) charge1Integral = h1->Integral(1, bin1_End, "width");
+    if(pass2) charge2Integral = h2->Integral(1, bin2_End, "width");
+    std::cout<<" charge1Integral: "<<charge1Integral<<" charge2Integral: "<<charge2Integral<<std::endl;
     
-    if(calo1.GetTrackLength()>0)
-        charge1Integral /= calo1.GetTrackLength();
+    if(length1>0)
+        charge1Integral/=length1;
     else
         charge1Integral = 0;
-    if(calo2.GetTrackLength()>0)
-        charge2Integral /= calo2.GetTrackLength();
+    if(length2>0)
+        charge2Integral/=length2;
     else
         charge2Integral = 0;
     double charge1IntegralMax = std::max(charge1Integral, charge2Integral);
@@ -806,6 +816,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         fChargeRatioIntegral = charge1IntegralMax / charge2IntegralMin;
     else
         fChargeRatioIntegral = 0;
+    if(fChargeRatioIntegral>fRatioUpperLimit) fChargeRatioIntegral = fRatioUpperLimit;
     fChargeDifferenceIntegral = charge2IntegralMin - charge1IntegralMax;
     fChargeRelativeDifferenceIntegral = fChargeDifferenceIntegral / charge1IntegralMax;
 
@@ -819,6 +830,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
             fChargeRatioFit = charge1Fit / charge2Fit;
         else
             fChargeRatioFit = 0;
+        if(fChargeRatioFit>fRatioUpperLimit) fChargeRatioFit = fRatioUpperLimit;
         fChargeDifferenceFit = charge2Fit - charge1Fit;
         fChargeRelativeDifferenceFit = fChargeDifferenceFit / charge1Fit;
 
@@ -919,6 +931,7 @@ std::vector<SHit> GetSideHits(std::vector<SHit> hitV, double xVertex, std::vecto
 
 // --- Print results function ---
 void STriangleCalo::PrintResults(){
+    std::cout << "PassFit: " << fPassFit <<std::endl;
     std::cout << "NVertexHits: " << fNVertexHits <<std::endl;
     std::cout << "NBulkHits: " << fNBulkHits <<std::endl;
     std::cout << "VertexHitIntegralRatio: "<<fVertexHitIntegralRatio<<std::endl;
@@ -949,8 +962,13 @@ void STriangleCalo::PrintResults(){
     return;
 }
 
+double lineDistance(double m, double n, double x, double y){
+    return std::abs( -m*x+y-n )/std::sqrt(m*m+1);        
+}
+
 // --- JointFit analysis---
 void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError){
+
 
     // --- Get the hits and the vertex ---
     // Vertex
@@ -965,7 +983,8 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
         if(n>=maxHits) break;
         xV.push_back(h.X()-fXVertex);
         yV.push_back(h.Y()-fYVertex);
-        widthV.push_back(h.Width());
+        //widthV.push_back(h.Width());
+        widthV.push_back(h.Chi2());
         n++;
     }
     n=0;
@@ -973,7 +992,8 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
         if(n>=maxHits) break;
         xV.push_back(h.X()-fXVertex);
         yV.push_back(h.Y()-fYVertex);
-        widthV.push_back(h.Width());
+        //widthV.push_back(h.Width());
+        widthV.push_back(h.Chi2());
         n++;
     }
 
@@ -1005,12 +1025,16 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
             double errorH =  useHitError? error[i]:1;
 
             // get residuals to the two lines
-            double dr1 = ( yH - ( par[0]*xH + par[1] ) ) / errorH ;
-            double dr2 = ( yH - ( par[2]*xH + (par[0]-par[2])*par[3] + par[1] ) ) / errorH;
-            
+            //double dr1 = ( yH - ( par[0]*xH + par[1] ) ) / errorH ;
+            //double dr2 = ( yH - ( par[2]*xH + (par[0]-par[2])*par[3] + par[1] ) ) / errorH;
+            double dr1 = lineDistance(par[0], par[1], xH, yH) / errorH;
+            double dr2 = lineDistance(par[2], (par[0]-par[2])*par[3], xH, yH) / errorH;
+
+            dr1 = dr1*dr1;
+            dr2 = dr2*dr2;
             // add contribution to the chi2 (minimum residual to the two lines)
-            double dr = std::min(dr1*dr1,dr2*dr2);
-            f += dr*dr;
+            double dr = std::min(dr1,dr2);
+            f += dr;
         }
 
         return f;
@@ -1188,6 +1212,7 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
         fVertexHitIntegralRatio = vertexCharge/bulkCharge;
         fVertexHitIntegralDifference = vertexCharge-bulkCharge;
         fVertexHitIntegralRelativeDifference = fVertexHitIntegralDifference/bulkCharge;
+        if(fVertexHitIntegralRatio>fRatioUpperLimit) fVertexHitIntegralRatio = fRatioUpperLimit;
     }
     else{
         fVertexHitIntegralRatio = 0;

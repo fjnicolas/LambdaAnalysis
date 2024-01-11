@@ -64,6 +64,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     float AngleLongestIsMain;
     // Calorimetry variables
     float AngleTwoLinesChi2;
+    float AnglePassFit;
     float AnglePassChargeFit;
     float AngleBandOverlap;
     float AngleBandCrossHits;
@@ -113,6 +114,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     if(fVarLabels["AngleLongestIsMain"]==true) fTMVAReader->AddVariable( "AngleLongestIsMain", &AngleLongestIsMain );
     // Calo
     if(fVarLabels["AngleTwoLinesChi2"]==true) fTMVAReader->AddVariable( "AngleTwoLinesChi2", &AngleTwoLinesChi2 );
+    if(fVarLabels["AnglePassFit"]==true) fTMVAReader->AddVariable( "AnglePassFit", &AnglePassFit );
     if(fVarLabels["AnglePassChargeFit"]==true) fTMVAReader->AddVariable( "AnglePassChargeFit", &AnglePassChargeFit );
     if(fVarLabels["AngleBandOverlap"]==true) fTMVAReader->AddVariable( "AngleBandOverlap", &AngleBandOverlap );
     if(fVarLabels["AngleBandCrossHits"]==true) fTMVAReader->AddVariable( "AngleBandCrossHits", &AngleBandCrossHits );
@@ -181,6 +183,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         AngleLongestIsMain = fAnaTreeHandle.fAngleLongestIsMain;
         // Calo vars
         AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
+        AnglePassFit = fAnaTreeHandle.fAnglePassFit;
         AnglePassChargeFit = fAnaTreeHandle.fAnglePassChargeFit;
         AngleBandOverlap = fAnaTreeHandle.fAngleBandOverlap;
         AngleBandCrossHits = fAnaTreeHandle.fAngleBandCrossHits;
@@ -206,7 +209,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
        
 
         // check minimal cut
-        bool passCut = fAnaTreeHandle.fRecoIsFiducial && fAnaTreeHandle.fNOriginsPairOneTwo>0 && fAnaTreeHandle.fNAngles>=1;
+        bool passCut = fAnaTreeHandle.fRecoIsFiducial && fAnaTreeHandle.fNOriginsPairOneTwo>0 && fAnaTreeHandle.fNAngles>=1 && fAnaTreeHandle.fAnglePassChargeFit==1;
         if(!passCut) score = -0.95;
 
         bool isSignal = fAnaTreeHandle.fIntOrigin==1 && fAnaTreeHandle.fIntDirt==0 && (fAnaTreeHandle.fIntNLambda>0 && fAnaTreeHandle.fIntMode==0 && std::abs(fAnaTreeHandle.fIntNuPDG)!=12);

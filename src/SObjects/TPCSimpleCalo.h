@@ -98,6 +98,8 @@ class STriangleCalo {
         SCalo fCalo1;
         SCalo fCalo2;
 
+        double fRatioUpperLimit;
+
         std::vector<SHit> fAllHits, fHitsTrack1, fHitsTrack2, fVertexHits, fResidualHits;
         // Fit parameters
         bool fPassFit;

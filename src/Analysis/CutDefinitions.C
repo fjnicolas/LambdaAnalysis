@@ -73,6 +73,7 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"AngleNHitsTrack2", "AngleNHitsTrack2", CutType::kRight, 4, {0, 100, 50}, false, "track 2 # hits ", "Track2 \\ \\# \\ hits"}*/
 
     
+    ,{"AnglePassFit", "AnglePassFit", CutType::kNone, 1, {0, 2, 2}, false, "AnglePassFit", "AnglePassFit"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kNone, 1, {0, 2, 2}, false, "AnglePassChargeFit", "AnglePassChargeFit"}
     ,{"AngleTwoLinesChi2", "AngleTwoLinesChi2", CutType::kNone, 1, {0, 1000, 100}, false, "Chi2", "Chi2"}
     ,{"AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio", CutType::kNone, 1, {0, 3, 20}, false, "AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio"}
@@ -90,11 +91,15 @@ std::vector<PlotDef> cutDefs2 = {
 
 
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS,      {-.5,.5,40}, true, "V FRANS score",   "V \\ FRANS \\ score"}
+
+    ,{"AnglePassFit", "AnglePassFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassFit", "AnglePassFit"}
+    ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassChargeFit", "AnglePassChargeFit"}
+
     ,{"NUnOriginsMultGT3", "NUnOriginsMultGT3", CutType::kLeft,  0, {0, 5, 5}, false, "# origins mult 3", "\\# \\ origins \\ mult \\ 3"}
     ,{"NUnOrigins",        "NUnOrigins",        CutType::kLeft,  0,   {0, 15, 15}, true,  "# origins",  "\\#  \\ origins"}
     ,{"CRUMBSScore",  "CRUMBSScore",         CutType::kRight,   fCutCRUMBS, {-1,1,20}, true, "CRUMBSScore",  "CRUMBSScore"}
     //,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 15, {0, 200, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
-    
+
     
     ,{"NShowers", "NShowers", CutType::kLeft, 1, {0, 10, 10}, true, "# showers", "\\# \\ showers"}
     ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  1, {0, 20, 40}, true, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
@@ -104,7 +109,7 @@ std::vector<PlotDef> cutDefs2 = {
     //,{"AngleNHitsTrack2", "AngleNHitsTrack2", CutType::kRight, 4, {0, 100, 50}, true, "track 2 # hits ", "Track2 \\ \\# \\ hits"}
     
 
-    ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassChargeFit", "AnglePassChargeFit"}
+    
     ,{"AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio", CutType::kRight, 1.2, {0, 3, 20}, true, "AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio"}
     ,{"AngleResidualRangeMinRMS", "AngleResidualRangeMinRMS", CutType::kLeft, 0.1, {0, 2, 40}, true, "AngleResidualRangeMinRMS", "AngleResidualRangeMinRMS"}
     ,{"AngleChargeRatioFit", "AngleChargeRatioFit", CutType::kRight, 1.25, {0, 3, 20}, true, "AngleChargeRatioFit", "AngleChargeRatioFit"}

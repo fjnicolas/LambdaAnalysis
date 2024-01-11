@@ -113,7 +113,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     //dataloader->AddVariable( "AngleNHitsMainTrack", "Main track # hits", "", 'I' );
     //dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
     //dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
-    dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
+    //dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     //dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
     //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
@@ -127,13 +127,14 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
     // Calorimetry
     //dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
+    //dataloader->AddVariable( "AnglePassFit", "PassFit", "", 'I' );
     //dataloader->AddVariable( "AnglePassChargeFit", "Pass Charge Fit", "", 'I' );
     //dataloader->AddVariable( "AngleBandOverlap", "Band Overlap", "", 'D' );
     dataloader->AddVariable( "AngleBandCrossHits", "Band Overlap", "", 'D' );
     //dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio", "", 'D' );
     //dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference", "", 'D' );
     dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio", "", 'D' );
-    dataloader->AddVariable( "AngleChargeDifferenceIntegral", "Charge Difference", "", 'D' );
+    //dataloader->AddVariable( "AngleChargeDifferenceIntegral", "Charge Difference", "", 'D' );
     //dataloader->AddVariable( "AngleChargeRatioAverage", "Charge Ratio Average", "", 'D' );
     dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
     //dataloader->AddVariable( "AngleTrackLengthRatio", "Track Length Ratio", "", 'D' );
@@ -147,7 +148,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     
 
     // ---- Minimal cut
-    TCut fMinimalCut("RecoIsFiducial && NAngles>=1");
+    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassChargeFit==1");
 
     Double_t signalWeight     = 1.0;
     Double_t backgroundWeight = 1.0;

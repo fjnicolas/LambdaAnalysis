@@ -36,6 +36,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string directory_path = parser.getDirectoryPath();
     std::string ext = parser.getExtension();
 
+    bool fUseHitRMSInFit = true;
+    double fHitWidthTolInFit = 1.5;
+
     // Output ana tree
     TTree *fTreeAna = new TTree("LambdafAnaTreeHandle", "LambdafAnaTreeHandle");
     LambdaAnaTree fAnaTreeHandle(fTreeAna);
@@ -217,7 +220,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                     bestFRANSScore = score;
                     bestTriangleIx = orix;
                     STriangleCalo triangleCalo(angleList[orix]);
-                    triangleCalo.JointFitAnalysis(50, 1.5, true);
+                    triangleCalo.JointFitAnalysis(10, fHitWidthTolInFit, fUseHitRMSInFit);
                 }
             }
             
@@ -364,7 +367,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(),  ("FinalReco"+ev.Label()).c_str(), 0, 0, 1000, 800);
             if(bestTriangleIx!=-1){
                 STriangleCalo triangleCalo(angleList[bestTriangleIx]);
-                triangleCalo.JointFitAnalysis(10, 1.5, true);
+                triangleCalo.JointFitAnalysis(10, fHitWidthTolInFit, fUseHitRMSInFit);
                 triangleCalo.Display(cCalo);
             }
             _TPCLinesAlgo.Display("", cTPCDisplay);
