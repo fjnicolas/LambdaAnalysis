@@ -29,7 +29,7 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
 // sy function
 void TPCLinesAlgo::Display(std::string name, TCanvas *canvas){
 
-    fDisplay.Show(name, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins, canvas);
+    fDisplay.Show(false, name, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins, canvas);
 
     return;
 }
@@ -327,7 +327,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
             double residual =  trk_eqClosest.GetDistance(SPoint(hit.X(), hit.Y()));
 
             if(fTPCLinesPset.Verbose>=2) std::cout << "       " << hit.Id() << "  X=" << hit.X() << " Y=" << hit.Y() << " " << " d " << minD << " dConn " << minDConn << " dCompHypo" << minDHypo << " residual: "<<residual << std::endl;
-            if (minDConn < dTh * trackConn && minDHypo < dTh * trackComp && minD < dTh * trackComp){// && residual < dTh*trackAvResidual) {
+            if (minDConn < dTh * trackConn && minDHypo < dTh * trackComp && minD < dTh * trackComp){
                 newHitList.push_back(hit);
                 mergedHitsCounter[candidateHitsIx[sortedCandidateHits[ix]]] = true;
                 currentCluster = SCluster(newHitList);

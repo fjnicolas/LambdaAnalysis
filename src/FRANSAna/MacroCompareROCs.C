@@ -34,7 +34,7 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
         TString fname;
         TIter next(files);
         while ((file=(TSystemFile*)next())) {
-            
+            std::cout<<file->GetName()<<std::endl;
             fname = file->GetName();
             if (!file->IsDirectory() && fname.EndsWith(".root") && fname.BeginsWith("TMVAResults")) {
                 // check fname contains keyLabel

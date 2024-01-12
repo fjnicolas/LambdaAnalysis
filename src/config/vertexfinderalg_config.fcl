@@ -5,7 +5,7 @@ VertexFinderAlg:
     MaxDistToEdge: 4
     RefineVertexIntersection: true 
     UseEdgesDiscard: true 
-    MaxTrackFractionInMain: 0.75 
+    MaxTrackFractionInMain: 0.75
     DecideMainTrack: true 
     AddCollinearLines: false
     VertexDistanceROI: 30

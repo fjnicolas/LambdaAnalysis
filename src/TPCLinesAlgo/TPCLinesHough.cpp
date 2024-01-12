@@ -34,7 +34,7 @@ LineEquation TPCLinesHough::ComputeLineEquationFromHough(double th, SPoint p) {
     return LineEquation(m, n);
 }
 
-double TPCLinesHough::HoughWeightDistance(LineEquation line, std::vector<SHit> hitList) {
+double TPCLinesHough::HoughWeightDistanceStep(LineEquation line, std::vector<SHit> hitList) {
     double weight = 0;
     for (auto hit : hitList) {
         double d = line.GetDistance(SPoint{hit.X(), hit.Y()});
@@ -44,7 +44,18 @@ double TPCLinesHough::HoughWeightDistance(LineEquation line, std::vector<SHit> h
             weight += 1. / d;
         }
     }
-    return weight;
+    return 1./weight;
+}
+
+
+double TPCLinesHough::HoughWeightDistance(LineEquation line, std::vector<SHit> hitList) {
+    double weight = 0;
+    for (auto hit : hitList) {
+        double d = line.GetDistance(SPoint{hit.X(), hit.Y()});
+        weight+=d;
+    }
+    if(weight>0) return 1./weight;
+    else return 0;
 }
 
 double TPCLinesHough::HoughWeightDistanceIntegral(LineEquation line, std::vector<SHit> hitList) {
@@ -113,8 +124,14 @@ HoughLine TPCLinesHough::GetBestHoughLine(std::vector<SHit> hitList, SVertex ver
     // theta step (in radians)
     double thetaStep = M_PI*fTPCLinesHoughPset.ThetaRes/180;
 
+    double bestTheta = 0;
+    SHit bestPivot(-1, vertex.X(), vertex.Y());
+
     // loop over the pivot hits
     for (auto pivotHit : hitPivotList) {
+
+        // only build for event (reduce computation time)
+        //if(pivotHit.Id()%2==1) continue;
        
         SPoint P0( pivotHit.X(), pivotHit.Y() );
 
@@ -122,12 +139,56 @@ HoughLine TPCLinesHough::GetBestHoughLine(std::vector<SHit> hitList, SVertex ver
         for (double theta = 0; theta < M_PI; theta +=thetaStep) {
 
             LineEquation hypoLine = ComputeLineEquationFromHough(theta, P0);
-            
+
             // get hits closer to the Hough hypothesis
             std::vector<SHit> hitHoughList;
+            int nInTube = 0;
             for (auto hit : hitList) {
                 if (hit.Id() == pivotHit.Id()) continue;
     
+                double d_clo = hypoLine.GetDistance(SPoint{hit.X(), hit.Y()});
+
+                if (d_clo < fTPCLinesHoughPset.MaxDistanceTube) {
+                    nInTube++;
+                }
+
+                hitHoughList.push_back(hit);
+            }
+
+
+            // get a score to the hough line
+            double hypoLineWeight = HoughWeightDistance(hypoLine, hitHoughList);
+
+            if(nInTube==0) hypoLineWeight=0;
+
+            if (hypoLineWeight > bestHoughLine.Score()) {
+                bestHoughLine.SetLineEquation ( hypoLine );
+                bestHoughLine.SetScore( hypoLineWeight ); 
+                bestHoughLine.SetNHits( hitHoughList.size()+1 ); //+1 to include the pivot hit
+
+                bestPivot = pivotHit;
+                bestTheta = theta;
+
+                if(fTPCLinesHoughPset.Verbose>=3) fDisplay.Show(true, "New Hough direction", hitList, hypoLine, hitHoughList);
+            }
+        }
+    }
+
+    // fine search around the best Hough line
+    bool fRefineSearch = false;
+
+    if(fRefineSearch){
+        for(double theta = bestTheta - thetaStep/2.; theta<=bestTheta+thetaStep/2.; theta+=thetaStep/10.){
+            
+            SPoint P0( bestPivot.X(), bestPivot.Y() );
+            
+            LineEquation hypoLine = ComputeLineEquationFromHough(theta, P0);
+
+            // get hits closer to the Hough hypothesis
+            std::vector<SHit> hitHoughList;
+            for (auto hit : hitList) {
+                if (hit.Id() == bestPivot.Id()) continue;
+
                 double d_clo = hypoLine.GetDistance(SPoint{hit.X(), hit.Y()});
 
                 if (d_clo < fTPCLinesHoughPset.MaxDistanceTube) {
@@ -136,17 +197,17 @@ HoughLine TPCLinesHough::GetBestHoughLine(std::vector<SHit> hitList, SVertex ver
             }
 
             // get a score to the hough line
-            double hypoLineWeight = HoughWeightDistanceIntegral(hypoLine, hitHoughList);
+            double hypoLineWeight = HoughWeightDistance(hypoLine, hitHoughList);
 
             if (hypoLineWeight > bestHoughLine.Score()) {
                 bestHoughLine.SetLineEquation ( hypoLine );
                 bestHoughLine.SetScore( hypoLineWeight ); 
                 bestHoughLine.SetNHits( hitHoughList.size()+1 ); //+1 to include the pivot hit
-
-                if(fTPCLinesHoughPset.Verbose>=3) fDisplay.Show("New Hough direction", hitList, hypoLine, hitHoughList);
             }
         }
     }
+
+
 
     return bestHoughLine;
 }

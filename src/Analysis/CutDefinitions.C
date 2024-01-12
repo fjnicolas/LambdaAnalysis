@@ -94,6 +94,7 @@ std::vector<PlotDef> cutDefs2 = {
 
     ,{"AnglePassFit", "AnglePassFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassFit", "AnglePassFit"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassChargeFit", "AnglePassChargeFit"}
+    ,{"AngleNVertexHits", "AngleNVertexHits", CutType::kRight, 1, {0, 100, 20}, true, "AngleNVertexHits", "AngleNVertexHits"}   
 
     ,{"NUnOriginsMultGT3", "NUnOriginsMultGT3", CutType::kLeft,  0, {0, 5, 5}, false, "# origins mult 3", "\\# \\ origins \\ mult \\ 3"}
     ,{"NUnOrigins",        "NUnOrigins",        CutType::kLeft,  0,   {0, 15, 15}, true,  "# origins",  "\\#  \\ origins"}
@@ -114,7 +115,6 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"AngleResidualRangeMinRMS", "AngleResidualRangeMinRMS", CutType::kLeft, 0.1, {0, 2, 40}, true, "AngleResidualRangeMinRMS", "AngleResidualRangeMinRMS"}
     ,{"AngleChargeRatioFit", "AngleChargeRatioFit", CutType::kRight, 1.25, {0, 3, 20}, true, "AngleChargeRatioFit", "AngleChargeRatioFit"}
     ,{"AngleChargeRatioIntegral", "AngleChargeRatioIntegral", CutType::kRight, 1.25, {0, 3, 20}, true, "AngleChargeRatioIntegral", "AngleChargeRatioIntegral"}
-    ,{"AngleNVertexHits", "AngleNVertexHits", CutType::kRight, 0, {0, 100, 20}, true, "AngleNVertexHits", "AngleNVertexHits"}   
     ,{"AngleBandCrossHits", "AngleBandCrossHits", CutType::kLeft, 0.5, {0, 2, 50}, true, "AngleBandCrossHits", "AngleBandCrossHits"}
 
 

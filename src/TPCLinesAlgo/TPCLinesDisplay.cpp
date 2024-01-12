@@ -180,6 +180,7 @@ void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend * leg, s
 
 
 void TPCLinesDisplay::Show(
+    bool wait,
     std::string eventLabel,
     std::vector<SHit> allHitsV,
     LineEquation houghLine,
@@ -286,9 +287,9 @@ void TPCLinesDisplay::Show(
 
     canvas->cd();
     canvas->Update();
-    canvas->WaitPrimitive();
-    
-    
+    if(wait)
+        canvas->WaitPrimitive();
+
 
     return;
 }

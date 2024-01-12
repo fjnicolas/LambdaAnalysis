@@ -17,6 +17,8 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
     vertexOption = 0;
     treeName = "ana";
     plotFRANS = false;
+    view = 2;
+    threeViews = false;
     
     // Loop through command-line arguments
     for (int i = 1; i < argc; ++i) {
@@ -89,6 +91,20 @@ CommandLineParser::CommandLineParser(int argc, char* argv[]) {
                 i++;
             }
         }
+        else if (argument == "-v") {
+            if (i + 1 < argc) {
+                view = std::stoi(argv[i + 1]);
+                i++;
+            }
+        }
+        else if (argument == "-3v") {
+            if (i + 1 < argc) {
+                threeViews = true;
+                i++;
+            }
+        }
+
+
 
     }
 }

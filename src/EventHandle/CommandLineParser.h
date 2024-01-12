@@ -20,6 +20,8 @@ class CommandLineParser {
         int getVertexOption() const { return vertexOption; }
         std::string getTreeName() const { return treeName; }
         bool getPlotFRANS() const { return plotFRANS; }
+        int getView() const { return view; }
+        bool getThreeViews() const { return threeViews; }
 
     private:
         int Debug;
@@ -35,5 +37,7 @@ class CommandLineParser {
         int vertexOption;
         std::string treeName;
         bool plotFRANS;
+        int view;
+        bool threeViews;
 
 };

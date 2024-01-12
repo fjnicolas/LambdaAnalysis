@@ -58,19 +58,22 @@ std::map<std::string, bool> extractLabels(const std::string& xmlDataFile) {
 }
 
 //---------  Main function
-void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
    
     TCut fTruthInFV("TruthIsFiducial==1");
     TCut fTruthInAV("TruthIsAV==1");
 
+    // ---- Minimal cut
+    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassFit==1 && AnglePassChargeFit==1"); //&& AngleChargeRatioAverage>=0  && AngleChargeRatioAverage<=15");
+
     // Batch mode
     useBatchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
 
     //--------- Output file
-    gSystem->Exec( "rm -rf TMVAResults" );
-    gSystem->Exec( "mkdir TMVAResults" );
-    std::string fOutputTMVAROOtFileName = "TMVAResults/TMTMVAResults.root";
+    gSystem->Exec( "rm -rf TMVAResultsTest" );
+    gSystem->Exec( "mkdir TMVAResultsTest" );
+    std::string fOutputTMVAROOtFileName = "TMVAResultsTest/TMVAResults.root";
     TFile* outputFile = TFile::Open( fOutputTMVAROOtFileName.c_str(), "CREATE" );
 
     // Input file
@@ -116,7 +119,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     //dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     //dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
     //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
@@ -130,25 +133,27 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     //dataloader->AddVariable( "AnglePassFit", "PassFit", "", 'I' );
     //dataloader->AddVariable( "AnglePassChargeFit", "Pass Charge Fit", "", 'I' );
     //dataloader->AddVariable( "AngleBandOverlap", "Band Overlap", "", 'D' );
+    
     dataloader->AddVariable( "AngleBandCrossHits", "Band Overlap", "", 'D' );
-    //dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio", "", 'D' );
+    
+    //dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio Fit", "", 'D' );
     //dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference", "", 'D' );
-    dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio", "", 'D' );
+    
+    dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio Integral", "", 'D' );
+    
     //dataloader->AddVariable( "AngleChargeDifferenceIntegral", "Charge Difference", "", 'D' );
     //dataloader->AddVariable( "AngleChargeRatioAverage", "Charge Ratio Average", "", 'D' );
+    
     dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
+    
     //dataloader->AddVariable( "AngleTrackLengthRatio", "Track Length Ratio", "", 'D' );
     //dataloader->AddVariable( "AngleResidualRange1RMS", "Residuals Range 1 RMS", "", 'D' );
     //dataloader->AddVariable( "AngleResidualRange2RMS", "Residuals Range 2 RMS", "", 'D' );
     //dataloader->AddVariable( "AngleResidualRangeMinRMS", "Residuals Range Min RMS", "", 'D' );
+    
     dataloader->AddVariable( "AngleNVertexHits", "N Vertex Hits", "", 'I' );
     dataloader->AddVariable( "AngleNBulkHits", "N Bulk Hits", "", 'I' );
 
-
-    
-
-    // ---- Minimal cut
-    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassChargeFit==1");
 
     Double_t signalWeight     = 1.0;
     Double_t backgroundWeight = 1.0;
@@ -165,7 +170,8 @@ void LambdaBDTAnalysis(std::string fInputFileName="", int nTrain = -1, bool useB
     std::cout<<"nMaxBg: "<<nMaxBg<<std::endl;
 
     std::string tmva_options = "";
-    if(nTrain==-1) tmva_options = "nTrain_Signal="+std::to_string(nMaxSignal)+":nTrain_Background="+to_string(nMaxBg);
+    if(nTrainFrac<0) tmva_options = "nTrain_Signal="+std::to_string(nMaxSignal)+":nTrain_Background="+to_string(nMaxBg);
+    else tmva_options = "nTrain_Signal="+std::to_string((int)nTrainFrac*nMaxSignal)+":nTrain_Background="+to_string((int)nTrainFrac*nMaxBg);
     tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";
     dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, tmva_options );
 

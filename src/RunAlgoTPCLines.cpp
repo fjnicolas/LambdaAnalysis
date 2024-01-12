@@ -92,7 +92,12 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     int nEvents=0;
 
     // Define TPC LINES ALGORITHM
+    fPsetAnaView.View = parser.getView();
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
+    fPsetAnaView.View = 0;
+    TPCLinesAlgo _TPCLinesAlgoSecondView1(fPsetAnaView);
+    fPsetAnaView.View = 1;
+    TPCLinesAlgo _TPCLinesAlgoSecondView2(fPsetAnaView);
     // Define FRANS LINES ALGORITHM
     ChargeDensity _FRANSAlgo(fPsetFRANS, 2);
     // Effiency status
@@ -149,7 +154,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
 
 
-            int view = fPsetAnaView.View;
+            //int view = fPsetAnaView.View;
+            int view = parser.getView();
+
             if(fPsetAnaView.View==-1){ // use best view
                 int bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
                 std::cout<<"  Using best view: "<<bestView<<" TPC="<<std::to_string(TPC)<<std::endl;
@@ -221,6 +228,62 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                     bestTriangleIx = orix;
                     STriangleCalo triangleCalo(angleList[orix]);
                     triangleCalo.JointFitAnalysis(10, fHitWidthTolInFit, fUseHitRMSInFit);
+
+                    // check the V in the other views
+                    double triangleYlower = angleList[orix].GetMinY()+_TPCLinesAlgo.ShiftY();
+                    double triangleYupper = angleList[orix].GetMaxY()+_TPCLinesAlgo.ShiftY();
+                    // add porch
+                    double porch = 0.25*(triangleYupper-triangleYlower);
+                    triangleYlower -= porch;
+                    triangleYupper += porch;
+
+                    // Get the hits in the view
+                    std::vector<SHit> hitListOther = GetHitsInView(0,
+                                                                treeReader.hitsChannel,
+                                                                treeReader.hitsPeakTime,
+                                                                treeReader.hitsIntegral, 
+                                                                treeReader.hitsRMS,
+                                                                treeReader.hitsStartT, 
+                                                                treeReader.hitsEndT,
+                                                                treeReader.hitsView,
+                                                                treeReader.hitsChi2);
+
+                    std::vector<SHit> hitListOtherFiltered;
+                    for(SHit &h:hitListOther){
+                        if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
+                    }
+                    std::cout<<" Filling second view 1\n";
+                    filled = _TPCLinesAlgoSecondView1.SetHitList(0, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
+                    if(filled){
+                        std::cout<<"Filled!\n";
+                        _TPCLinesAlgoSecondView1.AnaView(ev.Label());
+                        
+                    }
+
+                    hitListOther.clear();
+                    hitListOtherFiltered.clear();
+                    hitListOther = GetHitsInView(1,
+                                                treeReader.hitsChannel,
+                                                treeReader.hitsPeakTime,
+                                                treeReader.hitsIntegral, 
+                                                treeReader.hitsRMS,
+                                                treeReader.hitsStartT, 
+                                                treeReader.hitsEndT,
+                                                treeReader.hitsView,
+                                                treeReader.hitsChi2);
+
+                    
+                    for(SHit &h:hitListOther){
+                        if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
+                    }
+                    std::cout<<" Filling second view 2\n";
+                    filled = _TPCLinesAlgoSecondView2.SetHitList(1, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
+                    if(filled){
+                        std::cout<<"Filled!\n";
+                        _TPCLinesAlgoSecondView2.AnaView(ev.Label());
+                    }
+
+
                 }
             }
             
@@ -367,11 +430,23 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(),  ("FinalReco"+ev.Label()).c_str(), 0, 0, 1000, 800);
             if(bestTriangleIx!=-1){
                 STriangleCalo triangleCalo(angleList[bestTriangleIx]);
-                triangleCalo.JointFitAnalysis(10, fHitWidthTolInFit, fUseHitRMSInFit);
+                triangleCalo.JointFitAnalysis(10, fHitWidthTolInFit, fUseHitRMSInFit, treeReader.lambdaProtonPDir, treeReader.lambdaPionPDir);
                 triangleCalo.Display(cCalo);
             }
             _TPCLinesAlgo.Display("", cTPCDisplay);
             cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
+            if(parser.getThreeViews()){
+                TCanvas *cTPCDisplaySecondView = new TCanvas( ("FinalRecoSecondView"+ev.Label()).c_str(),  ("FinalRecoSecondView"+ev.Label()).c_str(), 500, 500, 1000, 800);
+                TCanvas *cTPCDisplayThirdView = new TCanvas( ("FinalRecoThirdView"+ev.Label()).c_str(),  ("FinalRecoThirdView"+ev.Label()).c_str(), 500, 100, 1000, 800);
+                _TPCLinesAlgoSecondView1.Display("", cTPCDisplaySecondView);
+                _TPCLinesAlgoSecondView2.Display("", cTPCDisplayThirdView);
+                cTPCDisplay->WaitPrimitive();
+                delete cTPCDisplaySecondView;
+                delete cTPCDisplayThirdView;
+            }
+            else{
+                cTPCDisplay->WaitPrimitive();
+            }            
             delete cTPCDisplay;
             delete cCalo;
 
@@ -424,6 +499,7 @@ int main(int argc, char* argv[]){
     std::cout << "ext: " << parser.getExtension() << std::endl;
     std::cout << "treeName: " << parser.getTreeName() << std::endl;
     std::cout << "plotFRANS: " << parser.getPlotFRANS() << std::endl;
+    std::cout << "view: " << parser.getView() << std::endl;
 
     // Create a ROOT application object
     TApplication *myApp = new TApplication("myApp", &argc, argv);

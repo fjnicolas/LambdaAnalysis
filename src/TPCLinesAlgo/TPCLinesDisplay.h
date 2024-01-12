@@ -57,6 +57,7 @@ class TPCLinesDisplay {
         TPCLinesDisplay(bool show, std::string outputPath="plots/");
 
         void Show(
+            bool wait,
             std::string eventLabel,
             std::vector<SHit> allHitsV,
             LineEquation houghLine,

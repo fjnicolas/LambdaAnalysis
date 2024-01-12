@@ -150,10 +150,12 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     TH1F *hScoreBG = new TH1F("hScoreBG", "; Classifier score; # entries", 100, -1, 1);
     TH1F *hScoreCosmic = new TH1F("hScoreCosmic", "; Classifier score; # entries", 100, -1, 1);
 
-    // Save entries that pass cuts
-    std::vector<int> passCutEventID;
-    std::vector<std::string> passCutEventLabels;
-
+    // Store highest BG score events
+    int nHighestScoreEvents = 5;
+    std::vector<int> highestScoreEventID;
+    std::vector<std::string> highestScoreEventLabels;
+    std::vector<double> highestScoreEventScores;
+    
     // loop over the TTree
     std::cout<<"Looping over the TTree"<<std::endl;
     std::cout<<"Number of entries: "<<fAnaTreeHandle.GetEntries()<<std::endl;
@@ -209,7 +211,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
        
 
         // check minimal cut
-        bool passCut = fAnaTreeHandle.fRecoIsFiducial && fAnaTreeHandle.fNOriginsPairOneTwo>0 && fAnaTreeHandle.fNAngles>=1 && fAnaTreeHandle.fAnglePassChargeFit==1;
+        bool passCut = fAnaTreeHandle.fRecoIsFiducial && fAnaTreeHandle.fNAngles>=1 && fAnaTreeHandle.fAnglePassFit==1 && fAnaTreeHandle.fAnglePassChargeFit==1;
         if(!passCut) score = -0.95;
 
         bool isSignal = fAnaTreeHandle.fIntOrigin==1 && fAnaTreeHandle.fIntDirt==0 && (fAnaTreeHandle.fIntNLambda>0 && fAnaTreeHandle.fIntMode==0 && std::abs(fAnaTreeHandle.fIntNuPDG)!=12);
@@ -225,13 +227,32 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
             hScoreCosmic->Fill(score);
         }
 
-
-        //sif(passCut && isSignal && NShowers>=2) {
+        // Fill highest score events
         if(passCut && !isSignal && score>0.2){
-            std::string label = std::to_string(fAnaTreeHandle.fRunID)+":"+std::to_string(fAnaTreeHandle.fSubrunID);
-            std::cout<<"Pass cuts BG Event "<<label<<" score: "<<score<<" FRANSPANDORA:"<<FRANSScorePANDORA<<std::endl;
-            passCutEventID.push_back(fAnaTreeHandle.fEventID);
-            passCutEventLabels.push_back(label);
+            if(highestScoreEventID.size()<nHighestScoreEvents){
+                highestScoreEventID.push_back(fAnaTreeHandle.fEventID);
+                std::string label = std::to_string(fAnaTreeHandle.fRunID)+":"+std::to_string(fAnaTreeHandle.fSubrunID);
+                highestScoreEventLabels.push_back(label);
+                highestScoreEventScores.push_back(score);
+            }
+            else{
+                // check if score is higher than the lowest score in the vector
+                double lowestScore = highestScoreEventScores[0];
+                int lowestScoreIndex = 0;
+                for(int i=1; i<nHighestScoreEvents; i++){
+                    if(highestScoreEventScores[i]<lowestScore){
+                        lowestScore = highestScoreEventScores[i];
+                        lowestScoreIndex = i;
+                    }
+                }
+                // if score is higher than the lowest score, replace it
+                if(score>lowestScore){
+                    highestScoreEventID[lowestScoreIndex] = fAnaTreeHandle.fEventID;
+                    std::string label = std::to_string(fAnaTreeHandle.fRunID)+":"+std::to_string(fAnaTreeHandle.fSubrunID);
+                    highestScoreEventLabels[lowestScoreIndex] = label;
+                    highestScoreEventScores[lowestScoreIndex] = score;
+                }
+            }
         }
 
       
@@ -338,6 +359,12 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     gNBg->GetYaxis()->SetRangeUser(0.1, 70);
     gNBg->GetXaxis()->SetRangeUser(0.1, 0.35);
 
+    // Draw horizontal line at y=20
+    TLine *l20 = new TLine(ScoreValues[0], 20, ScoreValues[nBins-1], 20);
+    l20->SetLineColor(kBlack);
+    l20->SetLineStyle(2);
+    l20->Draw("same");
+
     // Wait
     cScoreNorm->Update();
 
@@ -355,6 +382,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     std::cout<<"Total entries in background histogram: "<<hScoreBG->GetEntries()<<std::endl;
 
 
+    // --- Save BG events with highest score
     // Read TreeHeader 
     unsigned int fSubRunId;
     fTreeHeader->SetBranchAddress("SubRunID", &fSubRunId);
@@ -364,7 +392,6 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     fTreeHeader->SetBranchAddress("InputFileName", &fLArInputFileName);
     // Create map of run-subrun filename
     std::map<std::string, std::vector<std::string>> subrunFilenameMap;
-
     std::map<std::string, int> fileCounterMap;
     for(size_t i=0; i<fTreeHeader->GetEntries(); ++i){
         fTreeHeader->GetEntry(i);
@@ -392,24 +419,22 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
             fileCounterMap[*fLArInputFileName]++;
         } 
     }
-    
     std::cout<<"Number of files: "<<fileCounterMap.size()<<std::endl;
-    // loop over pass cuts and print run, subrun and event in file
+    
     std::ofstream fPassCutFile;
     fPassCutFile.open("handScanBDT.txt");
-    for(int i=0; i<passCutEventLabels.size(); i++){
-        std::string eventLabel = passCutEventLabels[i]; 
-
-        std::cout<<"Event label: "<<eventLabel<<std::endl;       
-        
+    std::cout<<"Highest score events: "<<std::endl;
+    for(int i=0; i<highestScoreEventID.size(); i++){
+        std::cout<<"Event "<<highestScoreEventID[i]<<" "<<highestScoreEventLabels[i]<<" score: "<<highestScoreEventScores[i]<<std::endl;
+        std::string eventLabel = highestScoreEventLabels[i];
         std::vector<std::string> filenames = subrunFilenameMap[eventLabel];
         std::cout<<"Number of files: "<<filenames.size()<<std::endl;
         for(auto& filename : filenames){
             std::cout<<"Filename: "<<filename<<std::endl;
-            fPassCutFile<<eventLabel<<":"<<passCutEventID[i]<<" "<<filename<<std::endl;
+            fPassCutFile<<eventLabel<<":"<<highestScoreEventID[i]<<" "<<filename<<std::endl;
         }
-        
     }
+    
 
 
 }

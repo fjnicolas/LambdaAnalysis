@@ -32,12 +32,13 @@
 
 
 // Constructor to initialize the collection
-SCalo::SCalo(const std::vector<SHit>& hits, double trackAngle)
+SCalo::SCalo(const std::vector<SHit>& hits, double trackAngle, double yAngle)
     : fHitIntegralToEnergy( (1 / 0.0201293) *  23.6e-6 ),
     fStepXToLength(0.3),
     fStepYToLength(0.075),
     fTrackLength(0),
     fCosTrackAngle( std::abs(std::cos(trackAngle)) ),
+    fCosY( std::abs(std::cos(yAngle)) ),
     fTrackAngle(trackAngle),
     fHitList(hits)
 {
@@ -967,7 +968,7 @@ double lineDistance(double m, double n, double x, double y){
 }
 
 // --- JointFit analysis---
-void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError){
+void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError, std::vector<double> *pProton, std::vector<double> *pPion){
 
 
     // --- Get the hits and the vertex ---
@@ -1159,11 +1160,24 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
 
     //fHitsTrack1.pop_back(); fHitsTrack2.pop_back();
     // Create the objects
-    SCalo calo1(fHitsTrack1, std::atan(fM1));
-    SCalo calo2(fHitsTrack2, std::atan(fM2));
+    double yAngle1 = 0;
+    double yAngle2 = 0;
+    if(pProton!=nullptr){
+        if(pProton->size()>0)
+            yAngle1 = std::acos( pProton->at(1) );
+    }
+    if(pPion!=nullptr){
+        if(pPion->size()>0)
+            yAngle2 = std::acos( pPion->at(1) );
+    }
+    SCalo calo1(fHitsTrack1, std::atan(fM1), yAngle1);
+    SCalo calo2(fHitsTrack2, std::atan(fM2), yAngle2);
     fCalo1 = calo1;
     fCalo2 = calo2;
     std::cout<<" Set calo objects\n";
+
+    
+    
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, nullptr);
    
     // --- Return values ---
@@ -1232,6 +1246,11 @@ void STriangleCalo::JointFitAnalysis(unsigned int maxHits, double widthTol, bool
     fResidualRange2RMS = calo2.GetResidualRangeRMS();
     fResidualRangeMinRMS = std::min(fResidualRange1RMS, fResidualRange2RMS);
 
+    if(yAngle1>0){
+        std::cout<<"YProton angle: "<<yAngle1<<" YPion angle: "<<yAngle2<<"\n";
+        std::cout<<" YProtonCos: "<<std::abs(pProton->at(1))<<" YPionCos: "<<std::abs(pPion->at(1))<<"\n";
+        std::cout<<" Ratio: "<<std::max(std::abs(pProton->at(1)), std::abs(pPion->at(1)))/std::min(std::abs(pProton->at(1)), std::abs(pPion->at(1)))<<"\n";
+    }
     return;
 
 }

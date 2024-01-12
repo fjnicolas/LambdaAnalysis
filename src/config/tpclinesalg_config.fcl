@@ -3,11 +3,11 @@ BEGIN_PROLOG
 TPCLinesAlg:
 {
     MinTrackHits: 3
-    MaxRadius: 250 
+    MaxRadius: 250
     DriftConversion: 1. 
-    MaxHoughTracks: 15 
-    RemoveIsolatedHits: true 
-    MaxNeighbourDistance: 2 
+    MaxHoughTracks: 15
+    RemoveIsolatedHits: true
+    MaxNeighbourDistance: 2
     MinNeighboursHits: 2
     MinTrackGoodness: 10
     CustomKinkPoint: false

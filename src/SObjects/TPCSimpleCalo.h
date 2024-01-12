@@ -48,7 +48,7 @@ const double fColor2 = kOrange+8;
 class SCalo {
 public:
     // Constructor to initialize the collection
-    SCalo(const std::vector<SHit>& points = {}, double angle=0);
+    SCalo(const std::vector<SHit>& points = {}, double angle=0, double yAngle=0);
 
     // Method to display the calculated path lengths
     void Display();
@@ -69,6 +69,7 @@ private:
     double fTrackLength;
     // TrackOrientationAngle
     double fCosTrackAngle;
+    double fCosY;
     double fTrackAngle;
     // Define the hit points and path lengths as private members
     std::vector<SHit> fHitList;
@@ -160,7 +161,7 @@ class STriangleCalo {
         // Function to display dEdx
         void CreateEnergyLossVsResidualRangePlot();
         // Triangle joint fit analysis
-        void JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError);
+        void JointFitAnalysis(unsigned int maxHits, double widthTol, bool useHitError, std::vector<double> *pProton=nullptr, std::vector<double> *pPion=nullptr);
         void JointFitAnalysisFisher();
         void Display(TCanvas *c1);
 

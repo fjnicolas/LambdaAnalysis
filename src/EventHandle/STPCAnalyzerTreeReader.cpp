@@ -104,6 +104,9 @@ MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
     tree->SetBranchAddress("HitsChi2", &hitsChi2);
     tree->SetBranchAddress("HitsNDF", &hitsNDF);
     tree->SetBranchAddress("HitsClusterID", &hitsClusterID);
+
+    tree->SetBranchAddress("LambdaProtonPDir", &lambdaProtonPDir);
+    tree->SetBranchAddress("LambdaPionPDir", &lambdaPionPDir);
 }
 
 
