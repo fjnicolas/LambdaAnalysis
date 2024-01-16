@@ -14,8 +14,7 @@
 #include <vector>
 #include <cmath>
 #include <map>
-
-
+#include <unordered_set>
 #if LAMBDAANA_LARSOFT == 1
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleClusters.h"
@@ -55,6 +54,9 @@ class TPCLinesAlgo {
         // Input variables
         size_t fNTotalHits;
         std::vector<SHit> fHitList;
+        std::vector<SHit> fHitListOutROI;
+        std::vector<SHit> fUnmatchedHits;
+        std::map<int, int> fClusterIdCounter;
         SVertex fVertex;
         SVertex fVertexTrue;
         int fMinX;
@@ -83,37 +85,50 @@ class TPCLinesAlgo {
 
         std::vector<SLinearCluster> MergeIsolatedHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, double dCleaning1D, std::vector<SHit> & discardedHits, double dTh = 3);
 
+        std::vector<SLinearCluster> MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList);
+
+        std::vector<SLinearCluster> CreateOutOfROIClusters(std::vector<SLinearCluster> recoTrackList);
+
+        std::vector<SHit> GetHitsInCluster(int clusterId);
+
         SEvent fRecoEvent;
         SPoint fMainVertex;
 
     public:
-        // constructor
+        // --- Constructor ---
         TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset);
         
-        // Function to set the input variables
+        // --- Function to set the input variables ---
         bool SetHitList(int view,
-                            std::vector<int>& vertex,
-                            std::vector<int>& vertexTrue,
-                            std::vector<SHit> hits);
+                        std::vector<int>& vertex,
+                        std::vector<int>& vertexTrue,
+                        std::vector<SHit> hits);
         
-        // Function to analyze the view
+        // --- Main analysis function ---
         void AnaView(std::string eventLabel);
 
-        // Function to get the average desnity of hits per wire
+        // --- Getters ---
+        // Get average desnity of hits per wire
         double GetAverageHitDensity();
-
-        // Function to get the best view
+        
+        // Get best view (best average chi2)
         int GetBestView(std::vector<int> *_Ch, std::vector<double> *_Chi2);
-
+        
+        // Get X-Y shifts
         int ShiftX(){ return fMinX; };
         double ShiftY(){ return fMinY; };
+        
+        // Get N input hits
+        int GetNInputHits() {return fNTotalHits; };
 
+        // Get reco event
         SEvent GetRecoEvent() { return fRecoEvent; };
         SPoint GetMainVertex() { return fMainVertex; };
-        // Display
+
+        // --- Display function ---
         void Display(std::string name, TCanvas *canvas = nullptr);
 
-        int GetNInputHits();
+        
 };
 
 #endif // TPC_SIMPLE_LINES_H

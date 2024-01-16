@@ -59,6 +59,8 @@ SCluster::SCluster(std::vector<SHit> hitList){
         fConnectedness1D = TPCLinesDistanceUtils::CalculateMean(fConnectedness1DV);
         fConnectedness1DRMS = TPCLinesDistanceUtils::CalculateStdDev(fConnectedness1DV);
         fAverageWidth = TPCLinesDistanceUtils::CalculateMean(fWidths);
+
+        CalculateMainClusterID();
     }
     else {
         fCompactness = 0;
@@ -68,12 +70,44 @@ SCluster::SCluster(std::vector<SHit> hitList){
         fConnectedness1D = 0;
         fConnectedness1DRMS = 0;
         fAverageWidth = 0;
+        fMainClusterId = -1;
+        fClusterIDs.clear();
     }
 }
 
 void SCluster::AddHit(SHit& hit) {
     fHitList.push_back(hit);
     fNHits++;
+}
+
+void SCluster::CalculateMainClusterID(){
+
+    // map to count entries per cluster id
+    std::map<int, int> clusterIdCounter;
+    for (auto& hit : fHitList) {
+        clusterIdCounter[hit.ClusterId()] = 0;
+    }
+
+    // count entries per cluster id
+    for (auto& hit : fHitList) {
+        clusterIdCounter[hit.ClusterId()]++;
+    }
+
+    // get cluster id with max entries
+    int mainClusterID = -1;
+    int maxEntries = 0;
+    fClusterIDs.clear();
+    for (auto& entry : clusterIdCounter) {
+        fClusterIDs.push_back(entry.first);
+        if (entry.second > maxEntries) {
+            maxEntries = entry.second;
+            mainClusterID = entry.first;
+        }
+    }
+
+    fMainClusterId = mainClusterID;
+
+    return;
 }
 
 std::ostream& operator<<(std::ostream& out, SCluster & c)

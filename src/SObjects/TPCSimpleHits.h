@@ -75,7 +75,7 @@ class SHit {
 
     public:
         // Constructor
-        SHit(int id=-1, float x=0, float y=0, float w=0, float integral=0, float st=0, float et=0, float chi2=0, int clusterID=0);
+        SHit(int id=-1, float x=0, float y=0, float w=0, float integral=0, float st=0, float et=0, float chi2=0, int clusterID=-1);
         SHit(float x, float y);
 
         int Id(){return fId;}

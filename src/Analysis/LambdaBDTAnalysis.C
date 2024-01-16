@@ -118,9 +118,9 @@ void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bo
     //dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
     //dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
     //dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
-    //dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
+    dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
     //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );

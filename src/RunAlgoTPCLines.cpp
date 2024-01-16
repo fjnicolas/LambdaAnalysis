@@ -229,34 +229,37 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                     triangleYlower -= porch;
                     triangleYupper += porch;
 
-                    // Get the hits in the view
-                    std::vector<SHit> hitListOther = treeReader.GetHitsInView(0);
+                    if(parser.getThreeViews()){
+                        std::cout<<"  - Filling other views\n";
+                        // Get the hits in the view
+                        std::vector<SHit> hitListOther = treeReader.GetHitsInView(0);
 
-                    std::vector<SHit> hitListOtherFiltered;
-                    for(SHit &h:hitListOther){
-                        if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
-                    }
-                    std::cout<<" Filling second view 1\n";
-                    filled = _TPCLinesAlgoSecondView1.SetHitList(0, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
-                    if(filled){
-                        std::cout<<"Filled!\n";
-                        _TPCLinesAlgoSecondView1.AnaView(ev.Label());
+                        std::vector<SHit> hitListOtherFiltered;
+                        for(SHit &h:hitListOther){
+                            if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
+                        }
+                        std::cout<<" Filling second view 1\n";
+                        filled = _TPCLinesAlgoSecondView1.SetHitList(0, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
+                        if(filled){
+                            std::cout<<"Filled!\n";
+                            _TPCLinesAlgoSecondView1.AnaView(ev.Label());
+                            
+                        }
+
+                        hitListOther.clear();
+                        hitListOtherFiltered.clear();
+                        hitListOther = treeReader.GetHitsInView(1);
+
                         
-                    }
-
-                    hitListOther.clear();
-                    hitListOtherFiltered.clear();
-                    hitListOther = treeReader.GetHitsInView(1);
-
-                    
-                    for(SHit &h:hitListOther){
-                        if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
-                    }
-                    std::cout<<" Filling second view 2\n";
-                    filled = _TPCLinesAlgoSecondView2.SetHitList(1, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
-                    if(filled){
-                        std::cout<<"Filled!\n";
-                        _TPCLinesAlgoSecondView2.AnaView(ev.Label());
+                        for(SHit &h:hitListOther){
+                            if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
+                        }
+                        std::cout<<" Filling second view 2\n";
+                        filled = _TPCLinesAlgoSecondView2.SetHitList(1, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
+                        if(filled){
+                            std::cout<<"Filled!\n";
+                            _TPCLinesAlgoSecondView2.AnaView(ev.Label());
+                        }
                     }
 
 
@@ -297,13 +300,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                                                 nFractionDirtHitsInTriangle,
                                                 nDirtHitsInTriangleWires,
                                                 nFractionDirtHitsInTriangleWires);
-            }
-
-            
-            int nFreeHits = 0;
-            int fNUnassociatedHits = 0;
-            if(bestTriangleIx!=-1){
-                recoEvent.GetUnassociatedHits(angleList[bestTriangleIx], nFreeHits, fNUnassociatedHits);
             }
 
 
@@ -389,13 +385,16 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 std::cout<<"  - Minimum hits: "<<std::min(bestTriangle.GetNHitsTrack1(), bestTriangle.GetNHitsTrack2())<<std::endl;
                 //cout opening angle
                 std::cout<<"  - Opening angle: "<<bestTriangle.GetOpeningAngle()<<std::endl;
+
+                int nFreeHits = 0;
+                int nUnassociatedHits = 0;
+                recoEvent.GetUnassociatedHits(bestTriangle, nFreeHits, nUnassociatedHits);               
+                std::cout<<"  - Unassociated hits: "<<nUnassociatedHits<<" NFreeHits: "<<nFreeHits<<std::endl;
+                fAnaTreeHandle.fNUnassociatedHits = nUnassociatedHits;
+                
             }
 
-            int associatedHits = recoEvent.NHits();
-            int totalHits = _TPCLinesAlgo.GetNInputHits();
-            int unassociatedHits = totalHits - associatedHits;
-            fAnaTreeHandle.fNUnassociatedHits = unassociatedHits;
-            std::cout<<"  - Associated hits: "<<associatedHits<<" Total hits: "<<totalHits<<" Unassociated hits: "<<unassociatedHits<<std::endl;
+            
 
             fAnaTreeHandle.fTruthIsFiducial = true;
             fAnaTreeHandle.fRecoIsFiducial = true;

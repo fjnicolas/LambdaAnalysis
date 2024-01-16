@@ -16,6 +16,8 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
     fTPCLinesPset(tpcLinesAlgoPset),
     fNTotalHits(0),
     fHitList({}),
+    fHitListOutROI({}),
+    fUnmatchedHits({}),
     fVertex(SPoint(-1, -1), ""),
     fHoughAlgo(tpcLinesAlgoPset.HoughAlgorithmPset),
     fTrackFinder(tpcLinesAlgoPset.TrackFinderAlgorithmPset),
@@ -26,10 +28,12 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
 
 
 //----------------------------------------------------------------------
-// sy function
+// Display function
 void TPCLinesAlgo::Display(std::string name, TCanvas *canvas){
 
-    fDisplay.Show(false, name, fHitList, LineEquation(0, 0), {}, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins, canvas);
+    std::vector<SHit> hitList = fHitList;
+    hitList.insert(hitList.end(), fHitListOutROI.begin(), fHitListOutROI.end());
+    fDisplay.Show(false, name, hitList, LineEquation(0, 0), fUnmatchedHits, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins, canvas);
 
     return;
 }
@@ -75,102 +79,6 @@ int TPCLinesAlgo::GetBestView(std::vector<int> *_View, std::vector<double> *_Chi
 
 
 //----------------------------------------------------------------------
-// Set the input hits
-bool TPCLinesAlgo::SetHitList(int view,
-                            std::vector<int>& vertex,
-                            std::vector<int>& vertexTrue,
-                            std::vector<SHit> hits)
-{   
-    // reset the class variables
-    fHitList.clear();
-    fNTotalHits=0;
-
-    // Define the reco vertex
-    double vertexX = vertex[2];
-    if (view == 0) vertexX = vertex[0];
-    if (view == 1) vertexX = vertex[1];
-    double vertexY = vertex[3] / fTPCLinesPset.DriftConversion;
-    
-    // Define the true vertex
-    double vertexXTrue = vertexTrue[2];
-    if (view == 0) vertexXTrue = vertexTrue[0];
-    if (view == 1) vertexXTrue = vertexTrue[1];
-    double vertexYTrue = vertexTrue[3] / fTPCLinesPset.DriftConversion;
-    if(fTPCLinesPset.Verbose>=2) std::cout << "  ** Vertex XY: " << vertexX << " " << vertexY << std::endl;
-    
-    if (vertexX != -1){
-
-        // Get hits in the ROI circle around the vertex
-        // Hits are already filtered by plane type
-        for (size_t i = 0; i < hits.size(); i++) { 
-            
-            double x = hits[i].X();
-            double y = hits[i].Y();
-            
-            double d = std::sqrt(std::pow(x - vertexX, 2) + std::pow(y - vertexY, 2));
-            
-            if (d < fTPCLinesPset.MaxRadius) {
-                fHitList.push_back(hits[i]);
-            }
-        }
-
-        if ( (int)fHitList.size() > fTPCLinesPset.MinTrackHits) {
-            
-            // Shift hits to have origin in (0,0), leave 3 ticks under/overflow
-            double minX = std::min_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.X()<h2.X();})->X() - 3;
-            double minY = std::min_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.Y()<h2.Y();})->Y() - 3;
-            double maxX = std::max_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.X()>h2.X();})->X() - 3;        
-
-            for (size_t i = 0; i < fHitList.size(); i++) {
-                fHitList[i] = SHit(
-                                i,
-                                fHitList[i].X() - minX,
-                                fHitList[i].Y() - minY,
-                                fHitList[i].Width(),
-                                fHitList[i].Integral(),
-                                fHitList[i].StartT() - minY,
-                                fHitList[i].EndT() - minY,
-                                fHitList[i].Chi2()
-                                );
-
-            }
-            fNTotalHits = fHitList.size();
-
-            // create vertex with common origin
-            vertexX = vertexX - minX;
-            vertexY = vertexY - minY;
-            vertexXTrue = vertexXTrue - minX;
-            vertexYTrue = vertexYTrue - minY;
-            fVertex = SVertex(SPoint(vertexX, vertexY), std::to_string(view));
-            fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), std::to_string(view));
-
-            // set edge variables
-            fMaxX = maxX - minX;
-            fMinX = minX;
-            fMinY = minY;
-            std::cout << "  ** Origin vertex: " << fVertex;
-            std::cout << "  ** NInputHits:"<<fNTotalHits<<std::endl;
-
-            return true;
-        }
-        else {
-            std::cout << "   SKIPPED NHits selected near the vertex " << fHitList.size() << std::endl;
-            return false;
-        }
-
-    }
-
-    return false;
-}
-
-
-//----------------------------------------------------------------------
-// Get the number of input hits
-int TPCLinesAlgo::GetNInputHits(){
-    return fNTotalHits;
-}
-
-//----------------------------------------------------------------------
 // Function to get the average hit density
 double TPCLinesAlgo::GetAverageHitDensity(){
     // initialize hit map
@@ -195,6 +103,7 @@ double TPCLinesAlgo::GetAverageHitDensity(){
 
     return sum/nwires;
 }
+
 
 //----------------------------------------------------------------------
 // Remove isolated hits
@@ -350,74 +259,294 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 
 
 //----------------------------------------------------------------------
+// Merge out of ROI hits
+std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList)
+{
+
+    // map of vector of hits 
+    std::map<int, std::vector<SHit>> newHitsMap;
+    for(size_t k=0; k<recoTrackList.size(); k++){
+        newHitsMap[k] = {};
+    }
+
+    for(SHit & h:fHitListOutROI){
+        for(size_t k=0; k<recoTrackList.size(); k++){
+            std::cout<<" MAIN CLUSTER ID "<<recoTrackList[k].GetHitCluster().GetMainClusterID()<<std::endl;
+            if( h.ClusterId()==recoTrackList[k].GetHitCluster().GetMainClusterID() ){
+                newHitsMap[k].push_back(h);
+            }
+        }
+    }
+
+
+    std::vector<SLinearCluster> newRecoTrackList;
+    for(size_t k=0; k<recoTrackList.size(); k++){
+        std::vector<SHit> newHitList = recoTrackList[k].GetHits();
+        newHitList.insert(newHitList.end(), newHitsMap[k].begin(), newHitsMap[k].end());
+        SLinearCluster newCluster(newHitList);
+        newRecoTrackList.push_back(newCluster);
+    }
+
+
+
+    return newRecoTrackList;
+}
+
+//----------------------------------------------------------------------
+// Create out of ROI clusters
+std::vector<SLinearCluster> TPCLinesAlgo::CreateOutOfROIClusters(std::vector<SLinearCluster> recoTrackList)
+{
+
+    std::cout<<"UNUSED CLUSTERS:\n";
+
+    // get used clusters IDs
+    std::unordered_set<int> usedClusterID;
+    for(SLinearCluster &cluster:recoTrackList){
+        std::vector<int> clusterIDs = cluster.GetHitCluster().GetClusterIDs();
+        for(int &id:clusterIDs){
+            std::cout<<cluster.NHits()<<" "<<id<<std::endl;
+            usedClusterID.insert(id);
+        }
+    }
+
+    // loop over the out of ROI hits
+    std::vector<SHit> hitsToAdd;
+    std::unordered_set<int> freeClusterIDs;
+    for(SHit &h:fHitListOutROI){
+        // check the hit cluster ID is not in the unordered set
+        if( usedClusterID.find(h.ClusterId()) == usedClusterID.end() ){
+            hitsToAdd.push_back(h);
+            freeClusterIDs.insert(h.ClusterId());
+        }
+    }
+
+
+    std::map<int, std::vector<SHit>> newHitsMap;
+    for (const auto& id:freeClusterIDs){
+        newHitsMap[id] = {};
+        std::cout<<" Unused cluster ID "<<id<<std::endl;
+    }
+
+    for(SHit &h:hitsToAdd){
+        newHitsMap[h.ClusterId()].push_back(h);
+    }
+
+    std::vector<SLinearCluster> newRecoTrackList = recoTrackList;
+    for(auto& clusterPair:newHitsMap){
+        SLinearCluster newCluster(clusterPair.second);
+        newRecoTrackList.push_back(newCluster);
+    }
+
+
+    return newRecoTrackList;
+}
+
+
+//----------------------------------------------------------------------
+// Set the input hits
+bool TPCLinesAlgo::SetHitList(int view,
+                            std::vector<int>& vertex,
+                            std::vector<int>& vertexTrue,
+                            std::vector<SHit> hits)
+{   
+    // reset the class variables
+    fHitList.clear();
+    fHitListOutROI.clear();
+    fNTotalHits=0;
+    fClusterIdCounter.clear();
+
+    // Define the reco vertex
+    double vertexX = vertex[2];
+    if (view == 0) vertexX = vertex[0];
+    if (view == 1) vertexX = vertex[1];
+    double vertexY = vertex[3] / fTPCLinesPset.DriftConversion;
+    
+    // Define the true vertex
+    double vertexXTrue = vertexTrue[2];
+    if (view == 0) vertexXTrue = vertexTrue[0];
+    if (view == 1) vertexXTrue = vertexTrue[1];
+    double vertexYTrue = vertexTrue[3] / fTPCLinesPset.DriftConversion;
+    if(fTPCLinesPset.Verbose>=2) std::cout << "  ** Vertex XY: " << vertexX << " " << vertexY << std::endl;
+    
+    if (vertexX != -1){
+
+        // Get hits in the ROI circle around the vertex
+        // Hits are already filtered by plane type
+        for (size_t i = 0; i < hits.size(); i++) { 
+            
+            double x = hits[i].X();
+            double y = hits[i].Y();
+            
+            double d = std::sqrt(std::pow(x - vertexX, 2) + std::pow(y - vertexY, 2));
+            
+            if (d < fTPCLinesPset.MaxRadius) {
+                fHitList.push_back(hits[i]);
+            }
+            else if(std::abs(x-vertexX)<1500){ // make sure is the same TPC
+                fHitListOutROI.push_back(hits[i]);
+            }
+        }
+
+        if ( (int)fHitList.size() >= fTPCLinesPset.MinTrackHits) {
+            
+            // Shift hits to have origin in (0,0), leave 3 ticks under/overflow
+            double minX = std::min_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.X()<h2.X();})->X() - 3;
+            double minY = std::min_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.Y()<h2.Y();})->Y() - 3;
+            double maxX = std::max_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.X()>h2.X();})->X() - 3;        
+            // Fill cluster counter map
+            int maxClusterId = std::max_element(fHitList.begin(), fHitList.end(), [](const SHit& h1, const SHit& h2) {return h1.ClusterId()<h2.ClusterId();} )->ClusterId();        
+
+            // Set cluster id counter
+            for (int cID = 0; cID <= maxClusterId; cID++) {
+                fClusterIdCounter[cID] = 0;
+            }
+
+            for (size_t i = 0; i < fHitList.size(); i++) {
+                SHit h = fHitList[i];
+                fHitList[i] = SHit(i, h.X() - minX, h.Y() - minY,
+                                    h.Width(), h.Integral(),
+                                    h.StartT() - minY, h.EndT() - minY,
+                                    h.Chi2(), h.ClusterId()
+                                    );
+                fClusterIdCounter[h.ClusterId()]++;
+
+            }
+
+            for (size_t i = 0; i < fHitListOutROI.size(); i++) {
+                SHit h = fHitListOutROI[i];
+                fHitListOutROI[i] = SHit(i, h.X() - minX, h.Y() - minY,
+                                    h.Width(), h.Integral(),
+                                    h.StartT() - minY, h.EndT() - minY,
+                                    h.Chi2(), h.ClusterId()
+                                    );
+            }
+
+
+            fNTotalHits = fHitList.size();
+            // cout cluster ID counter
+            std::cout<<" CLM  "<<maxClusterId<<std::endl;
+            for(auto & co:fClusterIdCounter){
+                std::cout<<co.first<<":"<<co.second<<"  ";
+            }
+
+
+            // create vertex with common origin
+            vertexX = vertexX - minX;
+            vertexY = vertexY - minY;
+            vertexXTrue = vertexXTrue - minX;
+            vertexYTrue = vertexYTrue - minY;
+            fVertex = SVertex(SPoint(vertexX, vertexY), std::to_string(view));
+            fVertexTrue = SVertex(SPoint(vertexXTrue, vertexYTrue), std::to_string(view));
+
+            // set edge variables
+            fMaxX = maxX - minX;
+            fMinX = minX;
+            fMinY = minY;
+            std::cout << "  ** Origin vertex: " << fVertex;
+            std::cout << "  ** NInputHits:"<<fNTotalHits<<std::endl;
+
+            return true;
+        }
+        else {
+            std::cout << "   SKIPPED NHits selected near the vertex " << fHitList.size() << std::endl;
+            return false;
+        }
+
+    }
+
+    return false;
+}
+
+//----------------------------------------------------------------------
+// Get the hits in a given cluster
+std::vector<SHit> TPCLinesAlgo::GetHitsInCluster(int clusterId){
+
+    std::vector<SHit> hits;
+    for(SHit &h:fHitList){
+        if(h.ClusterId()==clusterId) hits.push_back(h);
+    }
+
+    return hits;
+}
+
+
+//----------------------------------------------------------------------
 // Main function
 void TPCLinesAlgo::AnaView(std::string eventLabel)
 {
-    // --- Objects for the Hough tracks
-    int trkIter = 0;
-    std::vector<SHit> hitListForHough = fHitList;
+    // --- Reconstructed objects
     std::vector<SHit> discardedHits;
     std::vector<SLinearCluster> finalLinearClusterV;
 
-    trkIter = (int)hitListForHough.size()>fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
-    std::cout<<trkIter<<" "<<fHitList.size()<<" "<<hitListForHough.size()<<std::endl;
-    // --- Loop over the hough tracks
-    while(trkIter<fTPCLinesPset.MaxHoughTracks){
+    for(std::pair<int, int> clusterPair: fClusterIdCounter){
+            
+        //std::vector<SHit> hitListForHough = fHitList;
+        std::vector<SHit> hitListForHough = GetHitsInCluster(clusterPair.first);
 
-        if(fTPCLinesPset.Verbose>=2) std::cout<<" **** Track finder iteration: "<<trkIter<< " # hough hits:"<<hitListForHough.size()<<std::endl;
+        std::cout<<" Ana cluster "<<clusterPair.first<<" "<<clusterPair.second<<std::endl;
+    
+        int trkIterCluster = (int)hitListForHough.size()>=fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
+        std::cout<<trkIterCluster<<" "<<fHitList.size()<<" "<<hitListForHough.size()<<std::endl;
+        // --- Loop over the hough tracks
+        while(trkIterCluster<fTPCLinesPset.MaxHoughTracks){
 
-        // -- Get the best Hough line       
-        HoughLine houghLine = fHoughAlgo.GetBestHoughLine(hitListForHough, fVertex);
-        if(fTPCLinesPset.Verbose>=3)
-            if(fTPCLinesPset.Verbose>=2) std::cout<<"    Hough line results: "<<houghLine.NHits()<<" Score: "<<houghLine.Score()<<std::endl;
+            if(fTPCLinesPset.Verbose>=2) std::cout<<" **** Track finder iteration: "<<trkIterCluster<< " # hough hits:"<<hitListForHough.size()<<std::endl;
 
-        // -- Skip if not enough hits
-        if(houghLine.NHits() < fTPCLinesPset.MinTrackHits){
+            // -- Get the best Hough line       
+            HoughLine houghLine = fHoughAlgo.GetBestHoughLine(hitListForHough, fVertex);
             if(fTPCLinesPset.Verbose>=3)
-                if(fTPCLinesPset.Verbose>=2) std::cout<<"   Hough lines has <"<<fTPCLinesPset.MinTrackHits<<", ending the search\n";
-            trkIter = fTPCLinesPset.MaxHoughTracks;
-        }
+                if(fTPCLinesPset.Verbose>=2) std::cout<<"    Hough line results: "<<houghLine.NHits()<<" Score: "<<houghLine.Score()<<std::endl;
 
-        // -- Call the track finfder otherwise
-        else{
-            std::vector<SLinearCluster> linearClusterV = fTrackFinder.ReconstructTracksFromHoughDirection(hitListForHough, houghLine.GetLineEquation(), trkIter);
+            // -- Skip if not enough hits
+            if(houghLine.NHits() < fTPCLinesPset.MinTrackHits){
+                if(fTPCLinesPset.Verbose>=3)
+                    if(fTPCLinesPset.Verbose>=2) std::cout<<"   Hough lines has <"<<fTPCLinesPset.MinTrackHits<<", ending the search\n";
+                trkIterCluster = fTPCLinesPset.MaxHoughTracks;
+            }
 
-            // -- check the found tracks has enough hits
-            if(linearClusterV.size()!=0){
-                
-                finalLinearClusterV.insert(finalLinearClusterV.begin(), linearClusterV.begin(), linearClusterV.end());
-                
-                if(fTPCLinesPset.Verbose>=2){
-                    std::cout<<"   Found "<<linearClusterV.size()<<" new tracks! Current track list: \n";
-                    for(SLinearCluster &trk:finalLinearClusterV){
-                        std::cout<<"   "<<trk.GetId()<<" "<<trk.GetMinX()<<" "<<trk.GetMaxX()<<std::endl;
+            // -- Call the track finfder otherwise
+            else{
+                std::vector<SLinearCluster> linearClusterV = fTrackFinder.ReconstructTracksFromHoughDirection(hitListForHough, houghLine.GetLineEquation(), trkIterCluster);
+
+                // -- check the found tracks has enough hits
+                if(linearClusterV.size()!=0){
+                    
+                    finalLinearClusterV.insert(finalLinearClusterV.begin(), linearClusterV.begin(), linearClusterV.end());
+                    
+                    if(fTPCLinesPset.Verbose>=2){
+                        std::cout<<"   Found "<<linearClusterV.size()<<" new tracks! Current track list: \n";
+                        for(SLinearCluster &trk:finalLinearClusterV){
+                            std::cout<<"   "<<trk.GetId()<<" "<<trk.GetMinX()<<" "<<trk.GetMaxX()<<std::endl;
+                        }
+                    }
+
+                    // -- check there's enough hits for the next Hough iteration
+                    if((int)hitListForHough.size() < fTPCLinesPset.MinTrackHits){
+                        if(fTPCLinesPset.Verbose>=3)
+                            if(fTPCLinesPset.Verbose>=2) std::cout<<"   Remaining hits are "<<hitListForHough.size()<<", ending the search\n";
+                        trkIterCluster = fTPCLinesPset.MaxHoughTracks;
                     }
                 }
-
-                // -- check there's enough hits for the next Hough iteration
-                if((int)hitListForHough.size() < fTPCLinesPset.MinTrackHits){
+                // end Hough loop otherwise
+                else{
                     if(fTPCLinesPset.Verbose>=3)
-                        if(fTPCLinesPset.Verbose>=2) std::cout<<"   Remaining hits are "<<hitListForHough.size()<<", ending the search\n";
-                    trkIter = fTPCLinesPset.MaxHoughTracks;
+                        if(fTPCLinesPset.Verbose>=2) std::cout<<"   Not found new tracks\n";
+                    trkIterCluster = fTPCLinesPset.MaxHoughTracks;
                 }
+                
+                // -- Remove isolated hits
+                if (fTPCLinesPset.RemoveIsolatedHits) {
+                    hitListForHough = RemoveIsolatedHits(hitListForHough, discardedHits, fTPCLinesPset.MaxNeighbourDistance, fTPCLinesPset.MinNeighboursHits);
+                }
+                
             }
-            // end Hough loop otherwise
-            else{
-                if(fTPCLinesPset.Verbose>=3)
-                    if(fTPCLinesPset.Verbose>=2) std::cout<<"   Not found new tracks\n";
-                trkIter = fTPCLinesPset.MaxHoughTracks;
-            }
-            
-            // -- Remove isolated hits
-            if (fTPCLinesPset.RemoveIsolatedHits) {
-                hitListForHough = RemoveIsolatedHits(hitListForHough, discardedHits, fTPCLinesPset.MaxNeighbourDistance, fTPCLinesPset.MinNeighboursHits);
-            }
-            
-        }
 
-        trkIter++;
-    } // -- end Hough loop
+            trkIterCluster++;
+        } // -- end Hough loop
 
+        discardedHits.insert(discardedHits.end(), hitListForHough.begin(), hitListForHough.end());
+
+    }
 
     for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
         std::cout<<" ix:"<<ix<<" Min/MaxX:"<<finalLinearClusterV[ix].GetMinX()<<" "<<finalLinearClusterV[ix].GetMaxX()<<std::endl;
@@ -509,7 +638,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
 
 
         // Isolated hit merger
-        std::vector<SHit> remainingHits = hitListForHough;
+        std::vector<SHit> remainingHits;// = hitListForHough;
         remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
         discardedHits.clear();
         NewTrackList = MergeIsolatedHits(NewTrackList, remainingHits, 10, discardedHits);
@@ -518,6 +647,15 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
             NewTrackList[ix].AssignId(ix);
         }
+
+        // Out of ROI hits merger
+        /*NewTrackList = MergeOutOfROIHits(NewTrackList, {});
+        // Characterize the tracks
+        for(size_t ix = 0; ix<NewTrackList.size(); ix++){
+            NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
+            NewTrackList[ix].AssignId(ix);
+        }*/
+
 
         //Find secondary vertexes
         std::cout<<" We have "<<NewTrackList.size()<<" tracks\n";
@@ -542,10 +680,19 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         }
 
     }    
-    
+
+    NewTrackList = CreateOutOfROIClusters(NewTrackList);
+    // Characterize the tracks
+    for(size_t ix = 0; ix<NewTrackList.size(); ix++){
+        NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
+        NewTrackList[ix].AssignId(ix);
+    }
+
     double hitDensity = GetAverageHitDensity();
     std::cout<<"Hit density: "<<hitDensity<<std::endl;
 
+    discardedHits.insert(discardedHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
+    fUnmatchedHits = discardedHits;
     SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, associatedOrigins, hitDensity, discardedHits);
     fRecoEvent = recoEvent;
 

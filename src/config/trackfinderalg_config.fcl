@@ -11,7 +11,7 @@ TrackFinderAlg:
     ClusterAngleCut: 5
     CaptureMissingHits: true
     MinTrackHits: 3
-    HitDensityThreshold: 4
+    HitDensityThreshold: 2
     UseCompactness: true
     ConnectednessTol: 5.
     ConnectednessWidthTol: 3

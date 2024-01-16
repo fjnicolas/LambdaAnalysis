@@ -297,23 +297,46 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
     nFreeHits = 0;
     nUnassociatedHits = 0;
 
+    // triangle tracks and main track IDs
     int track1ID = triangle.GetTrack1().GetId();
     int track2ID = triangle.GetTrack2().GetId();
     int mainTrackID = triangle.GetMainTrack().GetId();
 
+    // associated tracks IDs
+    std::unordered_set<int> vetoTrackIDs = {track1ID, track2ID, mainTrackID};
+    std::unordered_set<int> vetoClusterIDs = {triangle.GetTrack1().GetHitCluster().GetMainClusterID(),
+                                                triangle.GetTrack2().GetHitCluster().GetMainClusterID(),
+                                                triangle.GetMainTrack().GetHitCluster().GetMainClusterID()};
 
-    // Get the limits of the V+line
+    for(SLinearCluster & track:GetTracks()){
+        if(IsTrackAssociatedToTrack(track.GetId(), track1ID)){
+            vetoTrackIDs.insert(track.GetId());
+            vetoClusterIDs.insert(track.GetHitCluster().GetMainClusterID());
+        }
+        if(IsTrackAssociatedToTrack(track.GetId(), track2ID)){
+            vetoTrackIDs.insert(track.GetId());
+            vetoClusterIDs.insert(track.GetHitCluster().GetMainClusterID());
+        }
+        if(IsTrackAssociatedToTrack(track.GetId(), mainTrackID)){
+            vetoTrackIDs.insert(track.GetId());
+            vetoClusterIDs.insert(track.GetHitCluster().GetMainClusterID());
+        }
+    }
+
+
+    /*// Get the limits of the V+line
     int minX = std::min((float)triangle.GetMinX(), triangle.GetMainTrack().GetMinX());
     int maxX = std::max((float)triangle.GetMaxX(), triangle.GetMainTrack().GetMaxX());
     double minY = std::min((float)triangle.GetMinY(), triangle.GetMainTrack().GetMinY());
     double maxY = std::max((float)triangle.GetMaxY(), triangle.GetMainTrack().GetMaxY());
 
     // Print limits
-    std::cout<<"Limits: "<<minX<<" "<<maxX<<" "<<minY<<" "<<maxY<<std::endl;
+    std::cout<<"Limits: "<<minX<<" "<<maxX<<" "<<minY<<" "<<maxY<<std::endl;*/
 
     // Get the free hits
     for(SHit & h:GetFreeHits()){
-        if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY) nFreeHits++;
+        //if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY)
+        if(vetoClusterIDs.find(h.ClusterId())==vetoClusterIDs.end()) nFreeHits++;
     }
 
     nUnassociatedHits+=nFreeHits;
@@ -329,7 +352,7 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
         std::vector<SHit> auxHits;
         auxHits = track.GetHits();
         for(SHit & h:auxHits){
-            if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY) nUnassociatedHits++;
+            if(vetoClusterIDs.find(h.ClusterId())==vetoClusterIDs.end()) nUnassociatedHits++;    
         }
     }
 

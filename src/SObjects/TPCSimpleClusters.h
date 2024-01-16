@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <vector>
+#include <map>
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -34,6 +35,9 @@ class SCluster {
         std::vector<double> fConnectedness1DV;
         std::vector<double> fWidths;
         
+        int fMainClusterId;
+        std::vector<int> fClusterIDs;
+
         double fCompactness;
         double fCompactnessRMS;
         double fConnectedness;
@@ -59,6 +63,9 @@ class SCluster {
         double GetCompactness(){return fCompactness;};
         double GetCompactnessRMS(){return fCompactnessRMS;};
         double GetAverageWidth(){return fAverageWidth;};
+        int GetMainClusterID() {return fMainClusterId;};
+        void CalculateMainClusterID();
+        std::vector<int> GetClusterIDs() {return fClusterIDs;};
 
         // get hit distance to clusters method
         template <typename T> double GetMinDistanceToCluster(const T& h);
