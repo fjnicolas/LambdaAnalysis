@@ -164,15 +164,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
             
             // Get the hits in the view
-            std::vector<SHit> hitList = GetHitsInView(view,
-                                                        treeReader.hitsChannel,
-                                                        treeReader.hitsPeakTime,
-                                                        treeReader.hitsIntegral, 
-                                                        treeReader.hitsRMS,
-                                                        treeReader.hitsStartT, 
-                                                        treeReader.hitsEndT,
-                                                        treeReader.hitsView,
-                                                        treeReader.hitsChi2);
+            std::vector<SHit> hitList = treeReader.GetHitsInView(view);
 
             // Set the hits
             bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, hitList);
@@ -238,15 +230,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                     triangleYupper += porch;
 
                     // Get the hits in the view
-                    std::vector<SHit> hitListOther = GetHitsInView(0,
-                                                                treeReader.hitsChannel,
-                                                                treeReader.hitsPeakTime,
-                                                                treeReader.hitsIntegral, 
-                                                                treeReader.hitsRMS,
-                                                                treeReader.hitsStartT, 
-                                                                treeReader.hitsEndT,
-                                                                treeReader.hitsView,
-                                                                treeReader.hitsChi2);
+                    std::vector<SHit> hitListOther = treeReader.GetHitsInView(0);
 
                     std::vector<SHit> hitListOtherFiltered;
                     for(SHit &h:hitListOther){
@@ -262,15 +246,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
                     hitListOther.clear();
                     hitListOtherFiltered.clear();
-                    hitListOther = GetHitsInView(1,
-                                                treeReader.hitsChannel,
-                                                treeReader.hitsPeakTime,
-                                                treeReader.hitsIntegral, 
-                                                treeReader.hitsRMS,
-                                                treeReader.hitsStartT, 
-                                                treeReader.hitsEndT,
-                                                treeReader.hitsView,
-                                                treeReader.hitsChi2);
+                    hitListOther = treeReader.GetHitsInView(1);
 
                     
                     for(SHit &h:hitListOther){

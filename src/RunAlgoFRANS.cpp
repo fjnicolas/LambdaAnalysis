@@ -168,16 +168,8 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             }
             
             // Set the hits
-            std::vector<SHit> hitList = GetHitsInView(view,
-                                                    treeReader.hitsChannel,
-                                                    treeReader.hitsPeakTime,
-                                                    treeReader.hitsIntegral, 
-                                                    treeReader.hitsRMS,
-                                                    treeReader.hitsStartT, 
-                                                    treeReader.hitsEndT,
-                                                    treeReader.hitsView,
-                                                    treeReader.hitsChi2);
-                                        
+            std::vector<SHit> hitList = treeReader.GetHitsInView(view);
+            
             // Set the vertex
             // true
             double vertexXTrue = VertexUVYT[2];
@@ -222,21 +214,6 @@ void RunAlgoFRANS(const CommandLineParser& parser)
             
             _FRANSAlgoPANDORA.Fill(hitList, fVertexReco);
             _FRANSAlgo.Fill(hitList, fVertex);
-
-            /*
-            // Check if it's signal
-            bool isSignal=false;
-            std::cout<<"Perl\n";
-            for(size_t k=0; k<treeReader.truePrimeriesPDG->size();k++){
-                if(treeReader.truePrimeriesPDG->at(k)==3122) isSignal=true;
-            }
-            myTree.FillDataMC(treeReader.runID, treeReader.subrunID, treeReader.eventID, 0, 0, 0, 0, isSignal, 0, 0, 0);
-            myTree.FillData(2,
-                            _FRANSAlgo.Delta(), _FRANSAlgo.Eta(), _FRANSAlgo.FitScore(), _FRANSAlgo.Alpha(),
-                            _FRANSAlgo.Omega(), _FRANSAlgo.Tau(), _FRANSAlgo.Iota(),
-                            recoEvent.GetNOrigins(), recoEvent.GetNOriginsMult(1), recoEvent.GetNOriginsMult(2), recoEvent.GetNOriginsMultGt(3), recoEvent.HitDensity() );
-            myTree.FillTree();*/
-  
 
 
             _FRANSAlgo.Score()>=fFRANSScoreCut ? _EfficiencyCalculator.UpdateSelected(ev):_EfficiencyCalculator.UpdateNotSelected(ev);

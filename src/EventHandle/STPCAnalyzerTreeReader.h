@@ -24,21 +24,6 @@
 #endif
 
 
-
-// Class to get the hits in a specific view
-std::vector<SHit> GetHitsInView(
-                    int view,
-                    std::vector<int> *_X,
-                    std::vector<double> *_Y,
-                    std::vector<double> *_Int,
-                    std::vector<double> *_Wi,
-                    std::vector<double> *_ST,
-                    std::vector<double> *_ET,
-                    std::vector<int> *_View,
-                    std::vector<double> *_Chi2);
-
-
-
 // Class to read the TPCAnalyzer TTree
 class MyTPCTreeReader {
 private:
@@ -48,6 +33,8 @@ private:
     int fNEntries;
     
 public:
+    
+    // --- Data members ---
     // Event information
     int eventID;
     int subrunID;
@@ -57,8 +44,12 @@ public:
     double nuvE, nuvT, nuvX, nuvY, nuvZ;
     int nuvU, nuvV, nuvC, nuvTimeTick;
 
+    // True interaction mode
     int intMode;
     int intNLambda;
+
+    // MC PDGs
+    std::vector<int> *truePrimeriesPDG = new std::vector<int>;
     
     // Reco Vertex information
     double recnuvX;
@@ -68,9 +59,6 @@ public:
     int recnuvV;
     int recnuvC;
     int recnuvTimeTick;
-
-    // MC PDGs
-    std::vector<int> *truePrimeriesPDG = new std::vector<int>;
 
     // Hits information
     std::vector<int> *hitsView = new std::vector<int>;
@@ -87,16 +75,14 @@ public:
     std::vector<double> *lambdaProtonPDir = new std::vector<double>;
     std::vector<double> *lambdaPionPDir = new std::vector<double>;
 
+    // --- Methods ---
     MyTPCTreeReader(TString fileName, std::string treeName);
-
     ~MyTPCTreeReader();
-
     bool GetEntry(int entry);
-
     int NEntries();
+    std::vector<SHit> GetHitsInView(int view);
+
 
 };
 
-
-
-#endif // TPC_LINES_PARAMETERS_H
+#endif

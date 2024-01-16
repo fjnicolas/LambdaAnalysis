@@ -10,48 +10,13 @@
 
 #include "STPCAnalyzerTreeReader.h"
 
-
-// Class to get the hits in a specific view
-std::vector<SHit> GetHitsInView(
-    int view,
-    std::vector<int> *_X,
-    std::vector<double> *_Y,
-    std::vector<double> *_Int,
-    std::vector<double> *_Wi,
-    std::vector<double> *_ST,
-    std::vector<double> *_ET,
-    std::vector<int> *_View,
-    std::vector<double> *_Chi2)
-{
-
-    // set variables
-    std::vector<SHit> hitList;
-    int nTotalHits = _X->size();
-
-    // loop over the hits
-    for (int i = 0; i < nTotalHits; i++) {
-
-        // filter channels for the view        
-        if ( _View->at(i)==view ) {
-            SHit hit(-1, _X->at(i), _Y->at(i), _Wi->at(i), _Int->at(i), _ST->at(i), _ET->at(i), _Chi2->at(i));
-            hitList.push_back(hit);
-        }
-    }
-
-    return hitList;
-
-}
-
-
-
-// Class to read the TPCAnalyzer TTree
+// --- Destructor ---
 MyTPCTreeReader::~MyTPCTreeReader(){
     // Clean up when the class is destroyed
     delete file;
 }
 
-int MyTPCTreeReader::NEntries(){return fNEntries;}
-
+// --- Constructor ---
 MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
     // Open the ROOT file
     file = new TFile(fileName);
@@ -110,6 +75,11 @@ MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
 }
 
 
+// --- Get the number of entries ---
+int MyTPCTreeReader::NEntries(){return fNEntries;}
+
+
+// --- Get the entry ---
 bool MyTPCTreeReader::GetEntry(int entry) {
     if (entry < 0 || entry >= tree->GetEntries())
         return false;
@@ -119,4 +89,24 @@ bool MyTPCTreeReader::GetEntry(int entry) {
 }
 
 
+// --- Get the hits in a given view ---
+std::vector<SHit> MyTPCTreeReader::GetHitsInView(int view)
+{
+    // set variables
+    std::vector<SHit> hitList;
+    int nTotalHits = hitsChannel->size();
 
+    // loop over the hits
+    for (int i = 0; i < nTotalHits; i++) {
+
+        // filter channels for the view        
+        if ( hitsView->at(i)==view ) {
+            //SHit hit(-1, _X->at(i), _Y->at(i), _Wi->at(i), _Int->at(i), _ST->at(i), _ET->at(i), _Chi2->at(i), _ClusterId->at(i));
+            SHit hit(i, hitsChannel->at(i), hitsPeakTime->at(i), hitsRMS->at(i), hitsIntegral->at(i), hitsStartT->at(i), hitsEndT->at(i), hitsChi2->at(i), hitsClusterID->at(i));
+            hitList.push_back(hit);
+        }
+    }
+
+    return hitList;
+
+}
