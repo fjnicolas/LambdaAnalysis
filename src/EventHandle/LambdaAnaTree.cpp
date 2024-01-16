@@ -325,3 +325,15 @@ void LambdaAnaTree::ResetVars(){
 void LambdaAnaTree::GetEntry(int i){
     fTree->GetEntry(i);
 }
+
+
+// --- Print function ---
+void LambdaAnaTree::PrintEventInfo() {
+        // Event information
+        std::cout << "\n Run: " << fRunID << " Subrun: " << fSubrunID << " Event: " << fEventID << "\n";
+        std::cout << "Input File Name: " << *fInputFileNameRead << "\n";
+        std::cout << " NuE: "<<fNuvE<<" NuT: "<<fNuvT<<" NuX: "<<fNuvX<<" NuY: "<<fNuvY<<" NuZ: "<<fNuvZ<<std::endl;
+        std::cout << " Lambda gap: " << fGap << " LambdaKE: "<<fLambdaKE<<std::endl;
+        // Track lengths
+        std::cout << " Track lengths: " << fAngleLengthTrack1 << " " << fAngleLengthTrack2 << " " << fAngleLengthMainTrack << std::endl;
+    }

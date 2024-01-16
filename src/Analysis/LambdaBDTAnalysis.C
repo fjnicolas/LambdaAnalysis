@@ -65,7 +65,8 @@ void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bo
     TCut fTruthInAV("TruthIsAV==1");
 
     // ---- Minimal cut
-    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassFit==1 && AnglePassChargeFit==1"); //&& AngleChargeRatioAverage>=0  && AngleChargeRatioAverage<=15");
+    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassFit && AnglePassChargeFit");
+    //TCut fSelCuts("FRANSScorePANDORA>=0.2 && AngleDecayContainedDiff<1 && NUnOrigins<1");
 
     // Batch mode
     useBatchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
@@ -106,8 +107,8 @@ void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bo
 
 
     dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
-    dataloader->AddVariable( "NUnOriginsMultGT3", "N^{2}", "", 'I' );
-    dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
+    //dataloader->AddVariable( "NUnOriginsMultGT3", "N^{2}", "", 'I' );
+    //dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
     //dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
     dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
     dataloader->AddVariable( "AngleLengthMainTrack", "Main track Length [cm]", "", 'I' );
@@ -119,7 +120,7 @@ void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bo
     //dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     //dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
     //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
@@ -132,14 +133,14 @@ void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bo
     //dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
     //dataloader->AddVariable( "AnglePassFit", "PassFit", "", 'I' );
     //dataloader->AddVariable( "AnglePassChargeFit", "Pass Charge Fit", "", 'I' );
-    //dataloader->AddVariable( "AngleBandOverlap", "Band Overlap", "", 'D' );
+    //dataloader->AddVariable( "AngleBandOverlap", "B and Overlap", "", 'D' );
     
     dataloader->AddVariable( "AngleBandCrossHits", "Band Overlap", "", 'D' );
     
     //dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio Fit", "", 'D' );
-    //dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference", "", 'D' );
+    //dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference Fit", "", 'D' );
     
-    dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio Integral", "", 'D' );
+    //dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio Integral", "", 'D' );
     
     //dataloader->AddVariable( "AngleChargeDifferenceIntegral", "Charge Difference", "", 'D' );
     //dataloader->AddVariable( "AngleChargeRatioAverage", "Charge Ratio Average", "", 'D' );

@@ -128,7 +128,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             
             nEvents++;
             std::cout << "\n\n ************** Analyzing: " << ev;
-            std::cout << "   Interaction mode: "<<treeReader.intMode<<" NLambda: "<<treeReader.intNLambda<<std::endl;
+            std::cout << "   Interaction mode: "<<treeReader.intMode<<" NLambda: "<<treeReader.intNLambda<<" E = "<<treeReader.nuvE<<" GeV" << " T = " <<treeReader.nuvT<<" ns"<<std::endl;
             
             // True vertex
             std::vector<double> VertexXYZ = {treeReader.nuvX, treeReader.nuvY, treeReader.nuvZ};
@@ -425,6 +425,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             fAnaTreeHandle.fRecoIsFiducial = true;
             
             //fAnaTreeHandle.FillTree();
+            // Cout FRANS Score PANDORA
+            std::cout<<"  - FRANS Score PANDORA: "<<FRANSScorePANDORA<<std::endl;
+            std::cout<<"  - FRANS Score: "<<bestFRANSScore<<std::endl;
             
             TCanvas *cCalo = new TCanvas(("canvasCalo"+ev.Label()).c_str(),"Calorimetry", 600,1200);
             TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(),  ("FinalReco"+ev.Label()).c_str(), 0, 0, 1000, 800);
@@ -461,6 +464,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 cDisplayPANDORA->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
                 delete cDisplay;
             }
+
+
 
         }
     }

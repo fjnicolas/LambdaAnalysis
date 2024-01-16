@@ -184,7 +184,11 @@ public:
     int GetEntries() { return fTree->GetEntries(); }
     void GetEntry(int i);
 
+    // Reset all variables
     void ResetVars();
+
+    // Print event information
+    void PrintEventInfo();
 
 };
 

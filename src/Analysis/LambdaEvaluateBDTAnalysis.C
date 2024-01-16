@@ -104,12 +104,12 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     if(fVarLabels["AngleNHitsTrack2"]==true) fTMVAReader->AddVariable( "AngleNHitsTrack2", &AngleNHitsTrack2 );
     if(fVarLabels["AngleMinNHits"]==true) fTMVAReader->AddVariable( "AngleMinNHits", &AngleMinNHits );
     if(fVarLabels["NUnassociatedHits"]==true) fTMVAReader->AddVariable( "NUnassociatedHits", &NUnassociatedHits );
-    if(fVarLabels["ShowerEnergy"]==true) fTMVAReader->AddVariable( "ShowerEnergy", &ShowerEnergy );
     if(fVarLabels["FRANSScorePANDORA"]==true) fTMVAReader->AddVariable( "FRANSScorePANDORA", &FRANSScorePANDORA );
     if(fVarLabels["AngleCoveredArea"]==true) fTMVAReader->AddVariable( "AngleCoveredArea", &AngleCoveredArea );
     if(fVarLabels["AngleDirtHits"]==true) fTMVAReader->AddVariable( "AngleDirtHits", &AngleDirtHits );
     if(fVarLabels["NShowers"]==true) fTMVAReader->AddVariable( "NShowers", &NShowers );
     if(fVarLabels["NShowerHits"]==true) fTMVAReader->AddVariable( "NShowerHits", &NShowerHits );
+    if(fVarLabels["ShowerEnergy"]==true) fTMVAReader->AddVariable( "ShowerEnergy", &ShowerEnergy );
     if(fVarLabels["AngleOpeningAngle"]==true) fTMVAReader->AddVariable( "AngleOpeningAngle", &AngleOpeningAngle );
     if(fVarLabels["AngleLongestIsMain"]==true) fTMVAReader->AddVariable( "AngleLongestIsMain", &AngleLongestIsMain );
     // Calo
@@ -151,7 +151,7 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
     TH1F *hScoreCosmic = new TH1F("hScoreCosmic", "; Classifier score; # entries", 100, -1, 1);
 
     // Store highest BG score events
-    int nHighestScoreEvents = 5;
+    int nHighestScoreEvents = 25;
     std::vector<int> highestScoreEventID;
     std::vector<std::string> highestScoreEventLabels;
     std::vector<double> highestScoreEventScores;
@@ -211,11 +211,17 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
        
 
         // check minimal cut
-        bool passCut = fAnaTreeHandle.fRecoIsFiducial && fAnaTreeHandle.fNAngles>=1 && fAnaTreeHandle.fAnglePassFit==1 && fAnaTreeHandle.fAnglePassChargeFit==1;
+        bool minimalCut = fAnaTreeHandle.fRecoIsFiducial && fAnaTreeHandle.fNAngles>=1;
+        bool passFitCuts = fAnaTreeHandle.fAnglePassFit==1 && fAnaTreeHandle.fAnglePassChargeFit==1;
+        bool selCuts = fAnaTreeHandle.fFRANSScorePANDORA>0.2 && fAnaTreeHandle.fAngleDecayContainedDiff<1 && fAnaTreeHandle.fNUnOrigins<=0;
+        bool passCut;
+
+        passCut = minimalCut && passFitCuts;
         if(!passCut) score = -0.95;
 
         bool isSignal = fAnaTreeHandle.fIntOrigin==1 && fAnaTreeHandle.fIntDirt==0 && (fAnaTreeHandle.fIntNLambda>0 && fAnaTreeHandle.fIntMode==0 && std::abs(fAnaTreeHandle.fIntNuPDG)!=12);
         bool isNuBG = fAnaTreeHandle.fIntOrigin==1 && fAnaTreeHandle.fIntDirt==0 && !(fAnaTreeHandle.fIntNLambda>0 && fAnaTreeHandle.fIntMode==0 && std::abs(fAnaTreeHandle.fIntNuPDG)!=12);
+        
         // Fill histogram for signals
         if(fTruthIsActive){
             if(isSignal)
@@ -228,7 +234,8 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         }
 
         // Fill highest score events
-        if(passCut && !isSignal && score>0.2){
+        if(passCut && !isSignal){
+            fAnaTreeHandle.PrintEventInfo();
             if(highestScoreEventID.size()<nHighestScoreEvents){
                 highestScoreEventID.push_back(fAnaTreeHandle.fEventID);
                 std::string label = std::to_string(fAnaTreeHandle.fRunID)+":"+std::to_string(fAnaTreeHandle.fSubrunID);
@@ -435,8 +442,6 @@ void EvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeightFi
         }
     }
     
-
-
 }
 
 void MacroEvaluateBDT(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")

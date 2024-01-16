@@ -61,6 +61,8 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
     
+    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
+    
     ,{"NOriginsPairOneTwo>0", "NOriginsPairOneTwo>0", CutType::kCenter, 1, {0,2,2}, true, "# origins mult 1>0, # origins mult2>0", "\\#\\ origins\\ mult \\ 1>0, \\# \\ origins \\ mult \\ 2>0"}
     ,{"NAngles",               "NAngles",             CutType::kRight, fCutMinNAngles , {0,5,5}, true, "# V", "\\# \\ V" }
     
@@ -90,11 +92,11 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"AngleBandCrossHits", "AngleBandCrossHits", CutType::kNone, 1, {0, 2, 50}, false, "AngleBandCrossHits", "AngleBandCrossHits"}
 
 
-    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS,      {-.5,.5,40}, true, "V FRANS score",   "V \\ FRANS \\ score"}
+    
+    //,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS,      {-.5,.5,40}, true, "V FRANS score",   "V \\ FRANS \\ score"}
 
     ,{"AnglePassFit", "AnglePassFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassFit", "AnglePassFit"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassChargeFit", "AnglePassChargeFit"}
-    ,{"AngleNVertexHits", "AngleNVertexHits", CutType::kRight, 1, {0, 100, 20}, true, "AngleNVertexHits", "AngleNVertexHits"}   
 
     ,{"NUnOriginsMultGT3", "NUnOriginsMultGT3", CutType::kLeft,  0, {0, 5, 5}, false, "# origins mult 3", "\\# \\ origins \\ mult \\ 3"}
     ,{"NUnOrigins",        "NUnOrigins",        CutType::kLeft,  0,   {0, 15, 15}, true,  "# origins",  "\\#  \\ origins"}
@@ -115,6 +117,7 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"AngleResidualRangeMinRMS", "AngleResidualRangeMinRMS", CutType::kLeft, 0.1, {0, 2, 40}, true, "AngleResidualRangeMinRMS", "AngleResidualRangeMinRMS"}
     ,{"AngleChargeRatioFit", "AngleChargeRatioFit", CutType::kRight, 1.25, {0, 3, 20}, true, "AngleChargeRatioFit", "AngleChargeRatioFit"}
     ,{"AngleChargeRatioIntegral", "AngleChargeRatioIntegral", CutType::kRight, 1.25, {0, 3, 20}, true, "AngleChargeRatioIntegral", "AngleChargeRatioIntegral"}
+    ,{"AngleNVertexHits", "AngleNVertexHits", CutType::kRight, 0, {0, 100, 20}, true, "AngleNVertexHits", "AngleNVertexHits"}   
     ,{"AngleBandCrossHits", "AngleBandCrossHits", CutType::kLeft, 0.5, {0, 2, 50}, true, "AngleBandCrossHits", "AngleBandCrossHits"}
 
 
@@ -126,7 +129,7 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"AngleNHits", "AngleNHits",  CutType::kRight, 10, {0, 200, 40}, false, "Angle # hits", "Angle \\ \\# \\ hits"}
     ,{"NFreeHits",         "NFreeHits",         CutType::kLeft,  30, {0, 200, 40}, false,  "# free hits",  "\\#  \\ free \\ hits"}*/
 
-    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
+    
 
     
                                                     
