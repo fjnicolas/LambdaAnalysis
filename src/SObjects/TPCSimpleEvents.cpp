@@ -323,6 +323,70 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
         }
     }
 
+    // Get the free hits
+    std::unordered_set<int> freeClusterIDs;
+    for(SHit & h:GetFreeHits()){
+        //if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY)
+        if(vetoClusterIDs.find(h.ClusterId())==vetoClusterIDs.end()) nFreeHits++;
+        freeClusterIDs.insert(h.ClusterId());
+    }
+
+    // Michel electron check
+    // check the cluster doesn't start in the end of the cluster associated to the muon
+    int muonClusterID = triangle.GetMainTrack().GetHitCluster().GetMainClusterID();
+    // Organize free hits by cluster ID
+    std::map<int, std::vector<SHit>> hitCluterIDMap;
+    for(auto &id:freeClusterIDs){
+        std::cout<<id<<std::endl;
+        hitCluterIDMap[id] = {};
+    }
+
+    for(SHit & h:GetFreeHits()){
+        hitCluterIDMap[h.ClusterId()].push_back(h);
+    }
+
+    std::vector<SHit> muonTrackHits = triangle.GetMainTrack().GetHits();
+    if(hitCluterIDMap.find(muonClusterID)!=hitCluterIDMap.end()){
+        muonTrackHits.insert(muonTrackHits.end(), hitCluterIDMap[muonClusterID].begin(), hitCluterIDMap[muonClusterID].end());
+    }
+
+    double maxD = 0;
+    SHit muonEndHit=muonTrackHits.front();
+    for(SHit &h:muonTrackHits){
+        //double d = std::hypot( h.X()-triangle.GetMainVertex().X(), h.Y()-triangle.GetMainVertex().Y());
+        double d = std::abs( h.X()-triangle.GetMainVertex().X());
+        if(d>maxD) {
+            maxD = d;
+            muonEndHit = h;
+        }
+    }
+
+    std::cout<< " Muon end hit: "<<muonEndHit.X()<<" "<<muonEndHit.Y()<<std::endl;
+
+    // check min distance of the other cluster to the end hit (not already in the veto)
+    for(auto &clusterHits:hitCluterIDMap){
+        std::cout<<clusterHits.first<<"...already in veto?";
+        if(vetoClusterIDs.find(clusterHits.first)!=vetoClusterIDs.end()){
+            std::cout<<"true\n";
+        }
+        else{
+            std::cout<<"false\n";
+            // now check the min distance to the end hit
+            double minD = 1e4;
+            for(SHit &h:clusterHits.second){
+                double d = std::hypot( 0.3*(h.X()-muonEndHit.X()), 0.075*(h.Y()-muonEndHit.Y()) );
+                if(d<minD) minD = d;
+            }
+
+            std::cout<<"    MinD: "<<minD<<std::endl;
+            // WARNING: HARCODED!!!!
+            if(minD<2) vetoClusterIDs.insert(clusterHits.first);
+        }
+    }
+
+
+
+
 
     /*// Get the limits of the V+line
     int minX = std::min((float)triangle.GetMinX(), triangle.GetMainTrack().GetMinX());
@@ -333,13 +397,13 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
     // Print limits
     std::cout<<"Limits: "<<minX<<" "<<maxX<<" "<<minY<<" "<<maxY<<std::endl;*/
 
-    // Get the free hits
-    for(SHit & h:GetFreeHits()){
-        //if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY)
-        if(vetoClusterIDs.find(h.ClusterId())==vetoClusterIDs.end()) nFreeHits++;
+    // cout the veto cluster IDs
+    std::cout<<"Veto clusters IDs: ";
+    for(auto &id:vetoClusterIDs){
+        std::cout<<id<<" ";
     }
-
-    nUnassociatedHits+=nFreeHits;
+    std::cout<<std::endl;
+    
     for(SLinearCluster & track:GetTracks()){
         if(track.GetId()==track1ID) continue;
         if(track.GetId()==track2ID) continue;
