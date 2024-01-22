@@ -304,6 +304,8 @@ class AnaPlot{
 
         TCanvas *fCanvas;
         CutStyler *fStyler;
+
+        bool fDrawPhaseSpace;
 };
 
 
@@ -320,6 +322,8 @@ AnaPlot::AnaPlot(int cutIndex, PlotDef plotDef, std::vector<SampleDef> intTypes,
     //--------- Hisogram initializations
     for (size_t j = 0; j < fIntTypes.size(); ++j){
         
+        fDrawPhaseSpace = (fPhaseSpaceVars.size()>0);
+
         std::string intTypeLabel = fIntTypes[j].GetLabelS();
         std::string plotLabel = std::to_string(fPlotIndex)+"_"+std::to_string(j);
 
@@ -621,15 +625,17 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
             maxValInt = fHistV[intTypeLabel]->Integral();
         }
 
-        // --- Draw phase space
-        if(fIntTypes[j].IsSignal()){
+        if(fDrawPhaseSpace){
+            // --- Draw phase space
+            if(fIntTypes[j].IsSignal()){
 
 
-            for(int i=0; i<fPhaseSpaceVars.size(); i++){
-                std::string plotLabel0 = std::to_string(fPlotIndex)+"_"+std::to_string(i)+"_PS0";
-                fTree->Draw( (fPhaseSpaceVars[i].GetVarS()+">>"+plotLabel0).c_str(), sampelCut, "hist");
-                std::string plotLabel1 = std::to_string(fPlotIndex)+"_"+std::to_string(i)+"_PS1";
-                fTree->Draw( (fPhaseSpaceVars[i].GetVarS()+">>"+plotLabel1).c_str(), sampelCut && currentCut && fPlotDef.GetCut(), "hist");
+                for(int i=0; i<fPhaseSpaceVars.size(); i++){
+                    std::string plotLabel0 = std::to_string(fPlotIndex)+"_"+std::to_string(i)+"_PS0";
+                    fTree->Draw( (fPhaseSpaceVars[i].GetVarS()+">>"+plotLabel0).c_str(), sampelCut, "hist");
+                    std::string plotLabel1 = std::to_string(fPlotIndex)+"_"+std::to_string(i)+"_PS1";
+                    fTree->Draw( (fPhaseSpaceVars[i].GetVarS()+">>"+plotLabel1).c_str(), sampelCut && currentCut && fPlotDef.GetCut(), "hist");
+                }
             }
         }
 
@@ -873,7 +879,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
     //c2->WaitPrimitive();
     std::string stageLabel = afterCut ? "1after" : "0before";
     c2->SaveAs(("OutputPlots/plot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+".pdf").c_str());
-    cPhaseSpace->SaveAs(("OutputPlots/zphaseSpacePlot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+"PhaseSpace.pdf").c_str());
+    if(fDrawPhaseSpace) cPhaseSpace->SaveAs(("OutputPlots/PhaseSpace/zphaseSpacePlot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+"PhaseSpace.pdf").c_str());
     TFile *fFile = new TFile("OutputPlots/OutputPlots.root","UPDATE");
     fFile->cd();
     c2->Write();

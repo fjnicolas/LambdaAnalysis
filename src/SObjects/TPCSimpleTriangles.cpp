@@ -34,7 +34,8 @@ double GetAngle360(double x, double y) {
     }   
 }
 
-
+STriangle::STriangle(){
+};
 
 STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track2, SLinearCluster track1, SLinearCluster mainTrack, double weight_b, double weight_c)
 {

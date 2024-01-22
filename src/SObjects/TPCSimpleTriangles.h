@@ -42,6 +42,8 @@ class STriangle {
         double fOpeningAngle;
         
     public:
+        STriangle();
+
         STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track2, SLinearCluster track1, SLinearCluster mainTrack, double weight_b=1, double weight_c=1);
 
         SLinearCluster GetTrack1() const {

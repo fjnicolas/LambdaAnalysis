@@ -33,36 +33,43 @@ std::vector<TPad*> buildpadcanvas(int nx, int ny){
 
 
 std::vector<TString> GetInputFileList(std::string file_name,  std::string ext, std::string dirPath){
-  // Get the candidate Files
-  std::vector<TString> fFilePaths;
-  std::cout<<" Looking in directory: "<<dirPath<<std::endl;
-  TSystemDirectory dir(dirPath.c_str(), dirPath.c_str());
-  TList *files = dir.GetListOfFiles();
-  TString targetFileName(file_name);
-  TString targetExtension(ext);
-  std::cout<<" Target file name "<<targetFileName<<std::endl;
-  gSystem->Exec("ls");
-  if (files){
-      TSystemFile *file;
-      TString fname;
-      TIter next(files);
-      while ((file=(TSystemFile*)next())) {
-          fname = file->GetName();
-          
-          if (!file->IsDirectory() && fname.EndsWith(targetExtension)){
-              if(fname.Contains(targetFileName)){
+    // Get the candidate Files
+    std::vector<TString> fFilePaths;
+    std::cout<<" Looking in directory: "<<dirPath<<std::endl;
+    TSystemDirectory dir(dirPath.c_str(), dirPath.c_str());
+    TList *files = dir.GetListOfFiles();
+    TString targetFileName(file_name);
+    TString targetExtension(ext);
+    std::cout<<" Target file name "<<targetFileName<<std::endl;
+    gSystem->Exec("ls");
+    if (files){
+        TSystemFile *file;
+        TString fname;
+        TIter next(files);
+        while ((file=(TSystemFile*)next())) {
+            fname = file->GetName();
+            
+            if (!file->IsDirectory() && fname.EndsWith(targetExtension)){
+                if(fname.Contains(targetFileName)){
                 if(dirPath!=".")
-                  fFilePaths.push_back(dirPath+fname);
+                    fFilePaths.push_back(dirPath+fname);
                 else
-                  fFilePaths.push_back(fname);
-              }
-              std::cout << fname << " Target:" << targetFileName <<std::endl;
-              std::cout<<" Contains: "<<fname.Contains(targetFileName)<<std::endl;
-          }
-      }
-  }
+                    fFilePaths.push_back(fname);
+                }
+            }
+        }
+    }
 
-  return fFilePaths;
+    // sort in alphabetical order
+    std::sort(fFilePaths.begin(), fFilePaths.end());
+
+    // cout
+    std::cout<<" Found "<<fFilePaths.size()<<" files"<<std::endl;
+    for(auto &f:fFilePaths){
+        std::cout<<"  "<<f<<std::endl;
+    }
+
+    return fFilePaths;
 }
 
 

@@ -12,7 +12,7 @@
 
 //----------------------------------------------------------------------
 // Constructor
-TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
+TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, FRANSPsetType fransPset):
     fTPCLinesPset(tpcLinesAlgoPset),
     fNTotalHits(0),
     fHitList({}),
@@ -22,6 +22,8 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
     fHoughAlgo(tpcLinesAlgoPset.HoughAlgorithmPset),
     fTrackFinder(tpcLinesAlgoPset.TrackFinderAlgorithmPset),
     fVertexFinder(tpcLinesAlgoPset.VertexFinderAlgorithmPset),
+    fFRANSAlgo(fransPset, tpcLinesAlgoPset.View),
+    fTriangleCalo(tpcLinesAlgoPset.CaloAlgorithmPset),
     fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, tpcLinesAlgoPset.OutputPath))
 {
 }
@@ -29,11 +31,16 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset):
 
 //----------------------------------------------------------------------
 // Display function
-void TPCLinesAlgo::Display(std::string name, TCanvas *canvas){
+void TPCLinesAlgo::Display(std::string name, TCanvas *canvas, TCanvas *canvasCalo, TCanvas *canvasFRANS){
 
     std::vector<SHit> hitList = fHitList;
     hitList.insert(hitList.end(), fHitListOutROI.begin(), fHitListOutROI.end());
+
     fDisplay.Show(false, name, hitList, LineEquation(0, 0), fUnmatchedHits, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins, canvas);
+
+    fTriangleCalo.Display(canvasCalo);
+
+    fFRANSAlgo.Display(canvasFRANS);
 
     return;
 }
@@ -292,6 +299,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
     return newRecoTrackList;
 }
 
+
 //----------------------------------------------------------------------
 // Create out of ROI clusters
 std::vector<SLinearCluster> TPCLinesAlgo::CreateOutOfROIClusters(std::vector<SLinearCluster> recoTrackList)
@@ -456,6 +464,7 @@ bool TPCLinesAlgo::SetHitList(int view,
 
     return false;
 }
+
 
 //----------------------------------------------------------------------
 // Get the hits in a given cluster
@@ -697,4 +706,133 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     fRecoEvent = recoEvent;
 
     return;
+}
+
+
+
+void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
+
+
+
+    // --- Hits for FRANS ---
+    std::vector<SHit> allHits= fHitList;
+    if(fHitListOutROI.size()>0)
+        allHits.insert(allHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
+    
+    // --- FRANS with PANDORA vertex ---
+    fFRANSAlgo.Fill(allHits, fVertex);
+    double FRANSScorePANDORA = fFRANSAlgo.Score();
+    lambdaAnaTree.fFRANSScorePANDORA = FRANSScorePANDORA;
+    
+    // --- FRANS with custom origin: get the best triangle ---
+    std::vector<STriangle> angleList = fRecoEvent.GetAngleList();
+    std::vector<SOrigin> associatedOrigins = fRecoEvent.GetAssociatedOrigins();
+    int bestTriangleIx = -1;
+    double bestFRANSScore = -1000;
+    for(size_t orix=0; orix<angleList.size(); orix++){
+        SVertex fVertexMine(associatedOrigins[orix].GetPoint(), "");
+        
+        fFRANSAlgo.Fill(allHits, fVertexMine);
+        double score = fFRANSAlgo.Score();
+
+        if(score>bestFRANSScore){
+            bestFRANSScore = score;
+            bestTriangleIx = orix;
+        }
+    }
+
+    // --- Number of origins variables ---
+    lambdaAnaTree.fNOrigins = fRecoEvent.GetNOrigins();
+    lambdaAnaTree.fNOriginsMult1 = fRecoEvent.GetNOriginsMult(1);
+    lambdaAnaTree.fNOriginsMult2 = fRecoEvent.GetNOriginsMult(2);
+    lambdaAnaTree.fNOriginsMultGT3 = fRecoEvent.GetNOriginsMultGt(3);
+    lambdaAnaTree.fNOriginsPairOneTwo = fRecoEvent.GetNOriginsMult(2) * fRecoEvent.GetNOriginsMult(1);
+    lambdaAnaTree.fNAngles = fRecoEvent.GetNAngles(); 
+
+    // --- Best triangle variables ---
+    if(bestTriangleIx!=-1){
+        STriangle bestTriangle = angleList[bestTriangleIx];
+
+        // --- Triangle variables ---
+        lambdaAnaTree.fAngleFRANSScore = bestFRANSScore;
+        lambdaAnaTree.fAngleGap = bestTriangle.GetGap();
+        lambdaAnaTree.fAngleDecayContainedDiff = bestTriangle.GetDecayAngleDifference();
+        lambdaAnaTree.fAngleNHits = bestTriangle.GetNHitsTriangle();
+        lambdaAnaTree.fAngleNHitsTrack1 = bestTriangle.GetNHitsTrack1();
+        lambdaAnaTree.fAngleNHitsTrack2 = bestTriangle.GetNHitsTrack2();
+        lambdaAnaTree.fAngleNHitsMainTrack = bestTriangle.GetNHitsMainTrack();
+        lambdaAnaTree.fAngleLengthTrack1 = bestTriangle.GetLengthTrack1();
+        lambdaAnaTree.fAngleLengthTrack2 = bestTriangle.GetLengthTrack2();
+        lambdaAnaTree.fAngleLengthMainTrack = bestTriangle.GetLengthMainTrack();
+        lambdaAnaTree.fAngleMinNHits = std::min(bestTriangle.GetNHitsTrack1(), bestTriangle.GetNHitsTrack2());
+        lambdaAnaTree.fAngleOpeningAngle = bestTriangle.GetOpeningAngle();
+        
+        // --- Unassociated origins ---
+        SEvent notAssociatedRecoEvent = fRecoEvent.UnassociatedOrigins(bestTriangle);
+        lambdaAnaTree.fNUnOrigins = notAssociatedRecoEvent.GetNOrigins();
+        lambdaAnaTree.fNUnOriginsMult1 = notAssociatedRecoEvent.GetNOriginsMult(1);
+        lambdaAnaTree.fNUnOriginsMult2 = notAssociatedRecoEvent.GetNOriginsMult(2);
+        lambdaAnaTree.fNUnOriginsMultGT3 = notAssociatedRecoEvent.GetNOriginsMultGt(3);
+        if( bestTriangle.GetLengthMainTrack()> bestTriangle.GetLengthTrack1() && bestTriangle.GetLengthMainTrack()> bestTriangle.GetLengthTrack2() ){
+            lambdaAnaTree.fAngleLongestIsMain = true;
+        }
+        else{
+            lambdaAnaTree.fAngleLongestIsMain = false;
+        }
+        lambdaAnaTree.fAngleCoveredArea = bestTriangle.ComputeCoveredArea();
+
+        // --- Triangle cleaness ---
+        int nDirtHitsInTriangle = 0;
+        double nFractionDirtHitsInTriangle = 0;
+        int nDirtHitsInTriangleWires = 0;
+        double nFractionDirtHitsInTriangleWires = 0;
+        fRecoEvent.FreeHitsAroundTriangle(bestTriangle,
+                                        nDirtHitsInTriangle,
+                                        nFractionDirtHitsInTriangle,
+                                        nDirtHitsInTriangleWires,
+                                        nFractionDirtHitsInTriangleWires);
+          
+        lambdaAnaTree.fAngleDirtHits = nDirtHitsInTriangle;
+        lambdaAnaTree.fAngleDirtHitsWires = nDirtHitsInTriangleWires;
+        lambdaAnaTree.fAngleDirtHitsRatio = nFractionDirtHitsInTriangle;
+        lambdaAnaTree.fAngleDirtHitsWiresRatio = nFractionDirtHitsInTriangleWires;
+
+        // --- Unassociated hits ---
+        int nFreeHits = 0;
+        int nUnassociatedHits = 0;
+        fRecoEvent.GetUnassociatedHits(bestTriangle, nFreeHits, nUnassociatedHits);               
+        lambdaAnaTree.fNUnassociatedHits = nUnassociatedHits;
+
+                
+        // --- Triangle calorimetry ---
+        fTriangleCalo.SetTriangle(bestTriangle);
+        fTriangleCalo.JointFitAnalysis();
+
+        lambdaAnaTree.fAnglePassFit = fTriangleCalo.PassFit();
+        lambdaAnaTree.fAngleTwoLinesChi2 = fTriangleCalo.TwoLinesChi2();
+        lambdaAnaTree.fAngleNVertexHits = fTriangleCalo.NVertexHits();
+        lambdaAnaTree.fAngleNBulkHits = fTriangleCalo.NBulkHits();
+        lambdaAnaTree.fAngleVertexHitIntegralRatio = fTriangleCalo.VertexHitIntegralRatio();
+        lambdaAnaTree.fAngleVertexHitIntegralDifference = fTriangleCalo.VertexHitIntegralDifference();
+        lambdaAnaTree.fAngleVertexHitIntegralRelativeDifference = fTriangleCalo.VertexHitIntegralRelativeDifference();
+        lambdaAnaTree.fAngleTrackLength1 = fTriangleCalo.TrackLength1();
+        lambdaAnaTree.fAngleTrackLength2 = fTriangleCalo.TrackLength2();
+        lambdaAnaTree.fAngleTrackLengthRatio = fTriangleCalo.TrackLengthRatio();
+        lambdaAnaTree.fAngleResidualRange1RMS = fTriangleCalo.ResidualRange1RMS();
+        lambdaAnaTree.fAngleResidualRange2RMS = fTriangleCalo.ResidualRange2RMS();
+        lambdaAnaTree.fAngleResidualRangeMinRMS = fTriangleCalo.ResidualRangeMinRMS();
+        lambdaAnaTree.fAngleChargeRatioAverage = fTriangleCalo.ChargeRatioAverage();
+        lambdaAnaTree.fAngleChargeDifferenceAverage = fTriangleCalo.ChargeDifferenceAverage();
+        lambdaAnaTree.fAngleChargeRelativeDifferenceAverage = fTriangleCalo.ChargeRelativeDifferenceAverage();
+        lambdaAnaTree.fAnglePassChargeFit = fTriangleCalo.PassChargeFit();
+        lambdaAnaTree.fAngleBandOverlap = fTriangleCalo.BandOverlap();
+        lambdaAnaTree.fAngleBandCrossHits = fTriangleCalo.BandCrossHits();
+        lambdaAnaTree.fAngleChargeRatioFit = fTriangleCalo.ChargeRatioFit();
+        lambdaAnaTree.fAngleChargeDifferenceFit = fTriangleCalo.ChargeDifferenceFit();
+        lambdaAnaTree.fAngleChargeRelativeDifferenceFit = fTriangleCalo.ChargeRelativeDifferenceFit();
+        lambdaAnaTree.fAngleChargeRatioIntegral = fTriangleCalo.ChargeRatioIntegral();
+        lambdaAnaTree.fAngleChargeDifferenceIntegral = fTriangleCalo.ChargeDifferenceIntegral();
+        lambdaAnaTree.fAngleChargeRelativeDifferenceIntegral = fTriangleCalo.ChargeRelativeDifferenceIntegral();   
+    }
+
 }

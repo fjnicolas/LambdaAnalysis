@@ -58,7 +58,7 @@ std::map<std::string, bool> extractLabels(const std::string& xmlDataFile) {
 }
 
 //---------  Main function
-void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void RunLambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
    
     TCut fTruthInFV("TruthIsFiducial==1");
@@ -101,14 +101,15 @@ void LambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bo
 
     
     // Define factory and data loader
-    TMVA::Factory *factory = new TMVA::Factory( "FRAMSSelectionTMVA", outputFile,
+    TMVA::Factory *factory = new TMVA::Factory( "FRANSSelectionTMVA", outputFile,
                                                 "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
     TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
 
 
     dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
     //dataloader->AddVariable( "NUnOriginsMultGT3", "N^{2}", "", 'I' );
-    //dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
+    //dataloader->AddVariable( "NOrigins", "N_", "", 'I' );
+    dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
     //dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
     dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
     dataloader->AddVariable( "AngleLengthMainTrack", "Main track Length [cm]", "", 'I' );

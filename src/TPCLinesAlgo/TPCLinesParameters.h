@@ -220,6 +220,40 @@ struct HoughAlgorithmPsetType {
     }
 };
 
+struct CaloAlgorithmPsetType {
+
+    int MaxTrackHits;
+    bool MakeFit;
+    bool UseHitRMSInFit;
+    double HitWidthTolInFit;
+    int Verbose;
+
+    // constructor
+    CaloAlgorithmPsetType(){};
+
+    CaloAlgorithmPsetType(
+        int _maxTrackHits,
+        bool _makeFit,
+        bool _useHitRMSInFit,
+        double _hitWidthTolInFit,
+        int _verbose) : 
+        MaxTrackHits(_maxTrackHits),
+        MakeFit(_makeFit),
+        UseHitRMSInFit(_useHitRMSInFit),
+        HitWidthTolInFit(_hitWidthTolInFit),
+        Verbose(_verbose)
+    {}
+
+    void Print() const {
+        std::cout << "MaxTrackHits: " << MaxTrackHits << std::endl;
+        std::cout << "MakeFit: " << MakeFit << std::endl;
+        std::cout << "UseHitRMSInFit: " << UseHitRMSInFit << std::endl;
+        std::cout << "HitWidthTolInFit: " << HitWidthTolInFit << std::endl;
+        std::cout << "Verbose: " << Verbose << std::endl;
+    }
+
+};
+
 
 struct TPCLinesAlgoPsetType{
 
@@ -240,6 +274,7 @@ struct TPCLinesAlgoPsetType{
     HoughAlgorithmPsetType HoughAlgorithmPset;
     TrackFinderAlgorithmPsetType TrackFinderAlgorithmPset;
     VertexFinderAlgorithmPsetType VertexFinderAlgorithmPset;
+    CaloAlgorithmPsetType CaloAlgorithmPset;
     
     // constructor
     TPCLinesAlgoPsetType(){};
@@ -261,7 +296,8 @@ struct TPCLinesAlgoPsetType{
         int _debugMode,
         HoughAlgorithmPsetType _houghAlgorithmPset,
         TrackFinderAlgorithmPsetType _trackFinderPset,
-        VertexFinderAlgorithmPsetType _vertexFinderPset) :
+        VertexFinderAlgorithmPsetType _vertexFinderPset,
+        CaloAlgorithmPsetType _caloAlgorithmPset) :
         MaxRadius(_maxRadius),
         DriftConversion(_driftConversion),
         MaxHoughTracks(_maxHoughTracks),
@@ -278,7 +314,8 @@ struct TPCLinesAlgoPsetType{
         DebugMode(_debugMode),
         HoughAlgorithmPset(_houghAlgorithmPset),
         TrackFinderAlgorithmPset(_trackFinderPset),
-        VertexFinderAlgorithmPset(_vertexFinderPset)
+        VertexFinderAlgorithmPset(_vertexFinderPset),
+        CaloAlgorithmPset(_caloAlgorithmPset)
     {}
 
 
@@ -297,6 +334,7 @@ struct TPCLinesAlgoPsetType{
         HoughAlgorithmPset.Print();
         TrackFinderAlgorithmPset.Print();
         VertexFinderAlgorithmPset.Print();
+        CaloAlgorithmPset.Print();
     }
 };
 

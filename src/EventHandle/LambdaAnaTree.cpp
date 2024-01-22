@@ -31,7 +31,7 @@ template <typename T>
 void LambdaAnaTree::SetBranch(const char* name, T* variable, bool setAddress) {
     if (setAddress) {
         fTree->SetBranchAddress(name, variable);
-        std::cout << "Setting branch address for " << name << std::endl;
+        //std::cout << "Setting branch address for " << name << std::endl;
     } else {
         fTree->Branch(name, variable);
     }
@@ -330,10 +330,77 @@ void LambdaAnaTree::GetEntry(int i){
 // --- Print function ---
 void LambdaAnaTree::PrintEventInfo() {
         // Event information
-        std::cout << "\n Run: " << fRunID << " Subrun: " << fSubrunID << " Event: " << fEventID << "\n";
-        std::cout << "Input File Name: " << *fInputFileNameRead << "\n";
+        std::cout << " ---- Lambda Ana Tree Summary ----\n";
+        std::cout << "Run: " << fRunID << " Subrun: " << fSubrunID << " Event: " << fEventID << "\n";
         std::cout << " NuE: "<<fNuvE<<" NuT: "<<fNuvT<<" NuX: "<<fNuvX<<" NuY: "<<fNuvY<<" NuZ: "<<fNuvZ<<std::endl;
         std::cout << " Lambda gap: " << fGap << " LambdaKE: "<<fLambdaKE<<std::endl;
-        // Track lengths
-        std::cout << " Track lengths: " << fAngleLengthTrack1 << " " << fAngleLengthTrack2 << " " << fAngleLengthMainTrack << std::endl;
+        std::cout << " ProtonKE: " << fProtonKE << " PionKE: "<<fPionKE<<std::endl;
+        std::cout << " Has Lambda: " << fHasLambda << " Has Lambda V Decayed: "<<fHasLambdaVDecayed<<std::endl;
+        std::cout << " CRUMBS Score: " << fCRUMBSScore << std::endl;
+
+        // Slice information
+        std::cout << " Slice Completeness: " << fSliceCompleteness << " Slice Purity: "<<fSlicePurity<<std::endl;
+
+        // Reco vertex information
+        std::cout << " Reco nuvX: " << fRecnuvX << " Reco nuvY: "<<fRecnuvY<<" Reco nuvZ: "<<fRecnuvZ<<std::endl;
+        std::cout << " Reco Is Fiducial: " << fRecoIsFiducial << std::endl;
+
+        // FRANS PANDORA information
+        std::cout << " FRANS Score PANDORA: " << fFRANSScorePANDORA << std::endl;
+
+        // # origins information
+        std::cout << " # Origins: " << fNOrigins << " Mult 1: "<<fNOriginsMult1<<" Mult 2: "<<fNOriginsMult2<<" Mult >3: "<<fNOriginsMultGT3<<" # Origins Pair 1-2: "<<fNOriginsPairOneTwo<<std::endl;
+
+        // # unassociated origins information
+        std::cout << " # Unassociated Origins: " << fNUnOrigins << " Mult 1: "<<fNUnOriginsMult1<<" Mult 2: "<<fNUnOriginsMult2<<" Mult >3: "<<fNUnOriginsMultGT3<<std::endl;
+
+        // Angle information
+        std::cout << " --- Triangle Information --- " << std::endl;
+        std::cout << " # Angles: " << fNAngles << std::endl;
+        std::cout << " Angle FRANS Score: " << fAngleFRANSScore << std::endl;
+        std::cout << " Angle Gap: " << fAngleGap << std::endl;
+        std::cout << " Angle # Hits: " << fAngleNHits << std::endl;
+        std::cout << " Angle # Hits Track 1: " << fAngleNHitsTrack1 << std::endl;
+        std::cout << " Angle # Hits Track 2: " << fAngleNHitsTrack2 << std::endl;
+        std::cout << " Angle Min # Hits: " << fAngleMinNHits << std::endl;
+        std::cout << " Angle # Hits Main Track: " << fAngleNHitsMainTrack << std::endl;
+        std::cout << " Angle Length Track 1: " << fAngleLengthTrack1 << std::endl;
+        std::cout << " Angle Length Track 2: " << fAngleLengthTrack2 << std::endl;
+        std::cout << " Angle Length Main Track: " << fAngleLengthMainTrack << std::endl;
+        std::cout << " Angle Longest Is Main: " << fAngleLongestIsMain << std::endl;
+        std::cout << " Angle Decay Contained Diff: " << fAngleDecayContainedDiff << std::endl;
+        std::cout << " Angle Covered Area: " << fAngleCoveredArea << std::endl;
+        std::cout << " Angle Dirt Hits: " << fAngleDirtHits << std::endl;
+        std::cout << " Angle Dirt Hits Ratio: " << fAngleDirtHitsRatio << std::endl;
+        std::cout << " Angle Dirt Hits Wires: " << fAngleDirtHitsWires << std::endl;
+        std::cout << " Angle Dirt Hits Wires Ratio: " << fAngleDirtHitsWiresRatio << std::endl;
+        std::cout << " Angle Opening Angle: " << fAngleOpeningAngle << std::endl;
+
+        std::cout << " --- Calorimetry Information --- " << std::endl;
+        std::cout << " Angle Pass Fit: " << fAnglePassFit << std::endl;
+        std::cout << " Angle Two Lines Chi2: " << fAngleTwoLinesChi2 << std::endl;
+        std::cout << " Angle # Vertex Hits: " << fAngleNVertexHits << std::endl;
+        std::cout << " Angle # Bulk Hits: " << fAngleNBulkHits << std::endl;
+        std::cout << " Angle Vertex Hit Integral Ratio: " << fAngleVertexHitIntegralRatio << std::endl;
+        std::cout << " Angle Vertex Hit Integral Difference: " << fAngleVertexHitIntegralDifference << std::endl;
+        std::cout << " Angle Vertex Hit Integral Relative Difference: " << fAngleVertexHitIntegralRelativeDifference << std::endl;
+        std::cout << " Angle Track Length 1: " << fAngleTrackLength1 << std::endl;
+        std::cout << " Angle Track Length 2: " << fAngleTrackLength2 << std::endl;
+        std::cout << " Angle Track Length Ratio: " << fAngleTrackLengthRatio << std::endl;
+        std::cout << " Angle Residual Range 1 RMS: " << fAngleResidualRange1RMS << std::endl;
+        std::cout << " Angle Residual Range 2 RMS: " << fAngleResidualRange2RMS << std::endl;
+        std::cout << " Angle Residual Range Min RMS: " << fAngleResidualRangeMinRMS << std::endl;
+        std::cout << " Angle Charge Ratio Average: " << fAngleChargeRatioAverage << std::endl;
+        std::cout << " Angle Charge Difference Average: " << fAngleChargeDifferenceAverage << std::endl;
+        std::cout << " Angle Charge Relative Difference Average: " << fAngleChargeRelativeDifferenceAverage << std::endl;
+        std::cout << " Angle Charge Ratio Integral: " << fAngleChargeRatioIntegral << std::endl;
+        std::cout << " Angle Charge Difference Integral: " << fAngleChargeDifferenceIntegral << std::endl;
+        std::cout << " Angle Charge Relative Difference Integral: " << fAngleChargeRelativeDifferenceIntegral << std::endl;
+        std::cout << " Angle Pass Charge Fit: " << fAnglePassChargeFit << std::endl;
+        std::cout << " Angle Band Overlap: " << fAngleBandOverlap << std::endl;
+        std::cout << " Angle Band Cross Hits: " << fAngleBandCrossHits << std::endl;
+        std::cout << " Angle Charge Ratio Fit: " << fAngleChargeRatioFit << std::endl;
+        std::cout << " Angle Charge Difference Fit: " << fAngleChargeDifferenceFit << std::endl;
+        std::cout << " Angle Charge Relative Difference Fit: " << fAngleChargeRelativeDifferenceFit << std::endl;
+
     }

@@ -40,6 +40,11 @@
 #include "TPCLinesVertexFinder.h"
 #include "TPCLinesDisplay.h"
 #include "TPCLinesDirectionRecoUtils.h"
+
+#include "ChargeDensity.h"
+#include "ChargeDensityPset.h"
+
+#include "LambdaAnaTree.h"
 #endif
 
 
@@ -68,6 +73,7 @@ class TPCLinesAlgo {
         std::vector<STriangle> fAngleList;
         std::vector<SOrigin> fOrigins;
 
+        // --- Algorithms ---
         // Hough algorithm
         TPCLinesHough fHoughAlgo;
 
@@ -76,6 +82,13 @@ class TPCLinesAlgo {
 
         // Vertex finder algorithm
         TPCLinesVertexFinder fVertexFinder;
+
+        // FRANS
+        ChargeDensity fFRANSAlgo;
+
+        // Calorimetry
+        STriangleCalo fTriangleCalo;
+
 
         // Display app directory
         TPCLinesDisplay fDisplay;
@@ -96,7 +109,7 @@ class TPCLinesAlgo {
 
     public:
         // --- Constructor ---
-        TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset);
+        TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, FRANSPsetType fransPset);
         
         // --- Function to set the input variables ---
         bool SetHitList(int view,
@@ -106,6 +119,8 @@ class TPCLinesAlgo {
         
         // --- Main analysis function ---
         void AnaView(std::string eventLabel);
+
+        void FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree);
 
         // --- Getters ---
         // Get average desnity of hits per wire
@@ -126,7 +141,7 @@ class TPCLinesAlgo {
         SPoint GetMainVertex() { return fMainVertex; };
 
         // --- Display function ---
-        void Display(std::string name, TCanvas *canvas = nullptr);
+        void Display(std::string name, TCanvas *canvas = nullptr, TCanvas *canvasCalo = nullptr, TCanvas *canvasFRANS = nullptr);
 
         
 };

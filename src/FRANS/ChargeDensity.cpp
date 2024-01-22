@@ -546,7 +546,6 @@ void ChargeDensity::Display(TCanvas *c){
 
   c->cd();
   c->Update();
-  c->WaitPrimitive();
 
   return;
 }

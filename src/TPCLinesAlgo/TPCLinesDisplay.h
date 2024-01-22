@@ -41,7 +41,7 @@
 
 class TPCLinesDisplay {
     private:
-        void DrawHitScatter(std::vector<SHit> hitV, TLegend* leg, std::string label, int color, int style, double size, double errorAlpha);
+        void DrawHitScatter(std::vector<SHit> hitV, TLegend* leg, std::string label, int color, int style, double size, double errorAlpha, bool markerByCluster=false);
         void DrawLinearCluster(SLinearCluster cluster, TLegend* leg, std::string label, int color, double size=1.1, int style=4);
         void DrawLine(LineEquation line, double xmin, double xmax, TLegend* leg, std::string label, int color, int style);
         TH2F* GetFrame(std::vector<SHit> hitsV, std::string label);
@@ -51,6 +51,7 @@ class TPCLinesDisplay {
 
         std::vector<int> fColors;
         std::vector<int> fColorsOrigins;
+        std::vector<int> fHitsMarkers;
         double fLegendFontSize=0.12;
         std::string fOutputPath;
     public:

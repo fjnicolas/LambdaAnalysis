@@ -254,4 +254,22 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string bloc
     return fPsetTPCLines;
 }
 
+CaloAlgorithmPsetType ReadCaloAlgorithmPset(std::string filename, std::string blockName){
+
+    // Create the parameter set
+    CaloAlgorithmPsetType fPsetCalo;
+
+    // Create the boost property and read all the parameter in the given file
+    boost::property_tree::ptree pt = GetPropertyTreeFromFileName(filename, blockName);
+
+    // Fill the parameter set
+    fPsetCalo.MaxTrackHits = pt.get<int>("MaxTrackHits");
+    fPsetCalo.MakeFit = pt.get<bool>("MakeFit");
+    fPsetCalo.UseHitRMSInFit = pt.get<bool>("UseHitRMSInFit");
+    fPsetCalo.HitWidthTolInFit = pt.get<double>("HitWidthTolInFit");
+    fPsetCalo.Verbose = pt.get<int>("Verbose");
+
+    return fPsetCalo;
+}
+
 #endif // TPC_LINES_PARAMETERS_H

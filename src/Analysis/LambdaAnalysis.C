@@ -33,7 +33,7 @@ std::vector<SampleDef> sampleDefs = {
 double fPOTTotalNorm = 3.3e20;
 
 //---------  Phase space cuts
-std::vector<PlotDef> phaseSpaceDefs = phaseSpaceVars;
+std::vector<PlotDef> phaseSpaceDefs = {};// phaseSpaceVars;
 
 //---------  LATeX output file
 std::string fOutputFileName = "CutEfficiencies";
@@ -41,10 +41,7 @@ std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 
 TCut fCounterCut = "SliceID==0";
 
-std::vector<PlotDef> cutDefs = cutDefs2;
-
-
-
+std::vector<PlotDef> cutDefs = cutDefsTalk2;
 
 
 //---------  Main function
@@ -54,6 +51,7 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     //---------  Remove all *.pdf with gSystem
     gSystem->Exec("rm -rf OutputPlots");
     gSystem->Exec("mkdir OutputPlots");
+    gSystem->Exec("mkdir OutputPlots/PhaseSpace");
 
     //Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
@@ -102,11 +100,9 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     //--------- Create the LaTeX table (POT normalized)
     GenerateAndCompileTeXTable(sampleDefs, anaPlots, 0, fOutputFileNameNormalized, "Cut efficiencies", potScaling, potScalingSignal, fPOTTotalNorm);
    
-    //--------- Make BDT analysis
-    EvaluateBDTAnalysis(fTree, fTreeHeader, "dataset/weights/FRAMSSelectionTMVA_BDT.weights.xml", potScaling, potScalingSignal, fPOTTotalNorm);
-
     //--------- Output hand scans
     CreateHandScanList(fTree, fTreeHeader, previousCut, sampleDefs);
+    
 
     return;
 }

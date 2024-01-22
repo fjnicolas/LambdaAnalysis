@@ -297,12 +297,12 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
     nFreeHits = 0;
     nUnassociatedHits = 0;
 
-    // triangle tracks and main track IDs
+    // IDs of the tracks associated to the V+line
     int track1ID = triangle.GetTrack1().GetId();
     int track2ID = triangle.GetTrack2().GetId();
     int mainTrackID = triangle.GetMainTrack().GetId();
 
-    // associated tracks IDs
+    // IDs of the tracks associated to the V+line
     std::unordered_set<int> vetoTrackIDs = {track1ID, track2ID, mainTrackID};
     std::unordered_set<int> vetoClusterIDs = {triangle.GetTrack1().GetHitCluster().GetMainClusterID(),
                                                 triangle.GetTrack2().GetHitCluster().GetMainClusterID(),
@@ -322,55 +322,43 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
             vetoClusterIDs.insert(track.GetHitCluster().GetMainClusterID());
         }
     }
-
-    // Get the free hits
+    
+    
+    // Organize free hits by cluster ID
     std::unordered_set<int> freeClusterIDs;
-    for(SHit & h:GetFreeHits()){
-        //if(h.X()>minX && h.X()<maxX && h.Y()>minY && h.Y()<maxY)
-        if(vetoClusterIDs.find(h.ClusterId())==vetoClusterIDs.end()) nFreeHits++;
+    std::map<int, std::vector<SHit>> hitCluterIDMap;
+    for(SHit & h:GetFreeHits())
         freeClusterIDs.insert(h.ClusterId());
-    }
+    for(auto &id:freeClusterIDs)
+        hitCluterIDMap[id] = {};
+    for(SHit & h:GetFreeHits())
+        hitCluterIDMap[h.ClusterId()].push_back(h);
+    
 
     // Michel electron check
     // check the cluster doesn't start in the end of the cluster associated to the muon
-    int muonClusterID = triangle.GetMainTrack().GetHitCluster().GetMainClusterID();
-    // Organize free hits by cluster ID
-    std::map<int, std::vector<SHit>> hitCluterIDMap;
-    for(auto &id:freeClusterIDs){
-        std::cout<<id<<std::endl;
-        hitCluterIDMap[id] = {};
-    }
-
-    for(SHit & h:GetFreeHits()){
-        hitCluterIDMap[h.ClusterId()].push_back(h);
-    }
-
     std::vector<SHit> muonTrackHits = triangle.GetMainTrack().GetHits();
+    int muonClusterID = triangle.GetMainTrack().GetHitCluster().GetMainClusterID();
     if(hitCluterIDMap.find(muonClusterID)!=hitCluterIDMap.end()){
         muonTrackHits.insert(muonTrackHits.end(), hitCluterIDMap[muonClusterID].begin(), hitCluterIDMap[muonClusterID].end());
     }
 
+    // muon end hit
     double maxD = 0;
     SHit muonEndHit=muonTrackHits.front();
     for(SHit &h:muonTrackHits){
-        //double d = std::hypot( h.X()-triangle.GetMainVertex().X(), h.Y()-triangle.GetMainVertex().Y());
         double d = std::abs( h.X()-triangle.GetMainVertex().X());
         if(d>maxD) {
             maxD = d;
             muonEndHit = h;
         }
     }
-
     std::cout<< " Muon end hit: "<<muonEndHit.X()<<" "<<muonEndHit.Y()<<std::endl;
 
     // check min distance of the other cluster to the end hit (not already in the veto)
     for(auto &clusterHits:hitCluterIDMap){
-        std::cout<<clusterHits.first<<"...already in veto?";
-        if(vetoClusterIDs.find(clusterHits.first)!=vetoClusterIDs.end()){
-            std::cout<<"true\n";
-        }
-        else{
-            std::cout<<"false\n";
+        if(vetoClusterIDs.find(clusterHits.first)==vetoClusterIDs.end()){            
+            
             // now check the min distance to the end hit
             double minD = 1e4;
             for(SHit &h:clusterHits.second){
@@ -378,47 +366,31 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
                 if(d<minD) minD = d;
             }
 
-            std::cout<<"    MinD: "<<minD<<std::endl;
             // WARNING: HARCODED!!!!
             if(minD<2) vetoClusterIDs.insert(clusterHits.first);
         }
     }
 
 
-
-
-
-    /*// Get the limits of the V+line
-    int minX = std::min((float)triangle.GetMinX(), triangle.GetMainTrack().GetMinX());
-    int maxX = std::max((float)triangle.GetMaxX(), triangle.GetMainTrack().GetMaxX());
-    double minY = std::min((float)triangle.GetMinY(), triangle.GetMainTrack().GetMinY());
-    double maxY = std::max((float)triangle.GetMaxY(), triangle.GetMainTrack().GetMaxY());
-
-    // Print limits
-    std::cout<<"Limits: "<<minX<<" "<<maxX<<" "<<minY<<" "<<maxY<<std::endl;*/
-
     // cout the veto cluster IDs
     std::cout<<"Veto clusters IDs: ";
-    for(auto &id:vetoClusterIDs){
-        std::cout<<id<<" ";
-    }
-    std::cout<<std::endl;
+    for(auto &id:vetoClusterIDs) std::cout<<id<<std::endl;
     
     for(SLinearCluster & track:GetTracks()){
-        if(track.GetId()==track1ID) continue;
-        if(track.GetId()==track2ID) continue;
-        if(track.GetId()==mainTrackID) continue;
-
-        // check the track is not associated to the V
-        if(IsTrackAssociatedToTrack(track.GetId(), track1ID)) continue;
-        if(IsTrackAssociatedToTrack(track.GetId(), track2ID)) continue;
-
+        if( vetoTrackIDs.find(track.GetId()) != vetoTrackIDs.end() ) continue;
+        
         std::vector<SHit> auxHits;
         auxHits = track.GetHits();
         for(SHit & h:auxHits){
             if(vetoClusterIDs.find(h.ClusterId())==vetoClusterIDs.end()) nUnassociatedHits++;    
         }
     }
+
+    // finally add the free hits
+    for(SHit &h:GetFreeHits()){
+        if( vetoClusterIDs.find( h.ClusterId() ) == vetoClusterIDs.end() )  nFreeHits++;
+    }
+    nUnassociatedHits+=nFreeHits;
 
     // Pintout
     std::cout<<"NFree Hits "<<nFreeHits<<"  NUnassociatedHits "<<nUnassociatedHits<<std::endl;
@@ -427,3 +399,14 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
     return;
 
 }
+
+
+
+
+
+/*// Get the limits of the V+line
+int minX = std::min((float)triangle.GetMinX(), triangle.GetMainTrack().GetMinX());
+int maxX = std::max((float)triangle.GetMaxX(), triangle.GetMainTrack().GetMaxX());
+double minY = std::min((float)triangle.GetMinY(), triangle.GetMainTrack().GetMinY());
+double maxY = std::max((float)triangle.GetMaxY(), triangle.GetMainTrack().GetMaxY());
+std::cout<<"Limits: "<<minX<<" "<<maxX<<" "<<minY<<" "<<maxY<<std::endl;*/

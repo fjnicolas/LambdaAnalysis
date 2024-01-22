@@ -18,6 +18,8 @@ TPCLinesDisplay::TPCLinesDisplay(bool show, std::string outputPath):
 
     fColorsOrigins = {40, 42, 46, 30, 35, 40, 42, 46, 30, 35};
 
+    fHitsMarkers = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+
     if(show==false){
         gROOT->SetBatch(true);
     }
@@ -78,25 +80,38 @@ void TPCLinesDisplay::DrawLine(LineEquation line, double xmin, double xmax, TLeg
         leg->AddEntry(horizontalLine, label.c_str(), "l");
 }
 
-void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std::string label, int color, int style, double size, double errorAlpha){
+void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std::string label, int color, int style, double size, double errorAlpha, bool markerByCluster){
 
     if(hitsV.size()>0){
-        std::vector<double> x, y, err;
+        // map with vector of hits by ClusterID
+        std::map<int, std::vector<SHit>> hitMap;
         for(size_t ix=0; ix<hitsV.size(); ix++){
-            x.push_back(hitsV[ix].X());
-            y.push_back(hitsV[ix].Y());
-            err.push_back(hitsV[ix].Width());
+            if( hitMap.find(hitsV[ix].ClusterId())==hitMap.end())
+                hitMap[hitsV[ix].ClusterId()] = {hitsV[ix]};
+            else
+                hitMap[hitsV[ix].ClusterId()].push_back(hitsV[ix]);
         }
 
-        TGraphErrors *g = new TGraphErrors(x.size(),&x[0],&y[0], nullptr, &err[0]); 
-        g->SetMarkerColorAlpha(color, 0.5);
-        g->SetMarkerStyle(style);
-        g->SetMarkerSize(size);
-        g->SetLineColorAlpha(kGray, errorAlpha);
-        g->Draw("p");
-        
-        if(label!="")
-            leg->AddEntry(g, label.c_str(), "p");
+        for(auto & cluster:hitMap){
+            std::vector<SHit> hits = cluster.second;
+            std::vector<double> x, y, err;
+            for(size_t ix=0; ix<hits.size(); ix++){
+                x.push_back(hits[ix].X());
+                y.push_back(hits[ix].Y());
+                err.push_back(hits[ix].Width());
+            }
+
+            TGraphErrors *g = new TGraphErrors(x.size(),&x[0],&y[0], nullptr, &err[0]); 
+            g->SetMarkerColorAlpha(color, 0.5);
+            if(markerByCluster) g->SetMarkerStyle(fHitsMarkers[cluster.first]);
+            else g->SetMarkerStyle(style);
+            g->SetMarkerSize(size);
+            g->SetLineColorAlpha(kGray, errorAlpha);
+            g->Draw("p");
+            
+            if(label!="" && cluster.first<=0)
+                leg->AddEntry(g, label.c_str(), "p");
+        }
     }
 
     return;
@@ -222,11 +237,13 @@ void TPCLinesDisplay::Show(
     if(mainDirection.NHits()>0){
         // selected hits scatter
         std::vector<SHit> mainDirHits = mainDirection.GetHits();
-        DrawHitScatter(mainDirHits, legend, "MainLine", kBlack, 8, 1.8, 0);   
+        DrawHitScatter(mainDirHits, legend, "MainLine", kBlack, 8, 1., 0);   
     }
 
     // all hits scatter
-    DrawHitScatter(allHitsV, legend, "AllHits", 65, 8, 1, 0.6);
+    DrawHitScatter(allHitsV, legend, "AllHits", 65, 8, 1.5, 0.6, true);
+    
+    // selected hits
     if(selectedHitsV.size()!=0){
         // selected hits scatter
         DrawHitScatter(selectedHitsV, legend, "HoughHits", kRed, 24, 1.1, 0);
@@ -239,7 +256,7 @@ void TPCLinesDisplay::Show(
     if(clustersV.size()>0){
 
         for(size_t cIx=0; cIx<clustersV.size(); cIx++){
-            DrawLinearCluster(clustersV[cIx], legend, "Cluster", fColors[cIx], 1., 8);
+            DrawLinearCluster(clustersV[cIx], legend, "Cluster", fColors[cIx], .75, 8);
         }
     }
 

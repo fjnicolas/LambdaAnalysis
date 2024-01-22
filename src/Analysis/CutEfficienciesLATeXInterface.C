@@ -220,10 +220,11 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
     for(size_t i=0; i<fTreeHeader->GetEntries(); ++i){
         fTreeHeader->GetEntry(i);
         
-        // check the string includes the substring "Inclusive"
-        if(fLArInputFileName->find("V0Lambda") != std::string::npos || fLArInputFileName->find("V0Overlay") != std::string::npos){
-            continue;
-        }
+        // check the string includes the substring "V0Lambda"
+        //if(fLArInputFileName->find("V0Lambda") != std::string::npos || fLArInputFileName->find("V0Overlay") != std::string::npos) continue;
+        
+
+        if(fLArInputFileName->find("Inclusive") == std::string::npos) continue;
         
         
         std::string runSubrunLabel = std::to_string(fRunId) + ":" + std::to_string(fSubRunId);
@@ -256,7 +257,7 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
 
     // Output 
     std::ofstream handScanEvents;
-    handScanEvents.open("OutputPlots/handScanEvents.txt");
+    handScanEvents.open("OutputPlots/HandScanEvents.txt");
 
     // loop over signal types
     for (size_t k = 0; k < sampleDefs.size(); k++) {

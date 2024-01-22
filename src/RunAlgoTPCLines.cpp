@@ -15,13 +15,12 @@
 #include "TPCSimpleEvents.h"
 #include "TPCLinesParameters.h"
 #include "TPCLinesAlgo.h"
-#include "ChargeDensity.h"
-#include "ChargeDensityPset.h"
-#include "TPCSimpleCalo.h"
 
 void RunAlgoTPCLines(const CommandLineParser& parser)
 {
 
+    // ------------------------------------------------------------------ 
+    // Define the program control variables
     int Debug = parser.getDebug();
     std::string ConfPsetPath = parser.getPsetPath();
     if(ConfPsetPath==""){
@@ -36,27 +35,25 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     std::string directory_path = parser.getDirectoryPath();
     std::string ext = parser.getExtension();
 
-    bool fUseHitRMSInFit = true;
-    double fHitWidthTolInFit = 1.5;
-
-    // Output ana tree
-    TTree *fTreeAna = new TTree("LambdafAnaTreeHandle", "LambdafAnaTreeHandle");
-    LambdaAnaTree fAnaTreeHandle(fTreeAna);
-
     // Get input files
     std::vector<TString> fFilePaths = GetInputFileList(file_name, ext, directory_path);
 
     // Set batch mode
     if(Debug==0) gROOT->SetBatch(true);
 
-    // ---- FRANS parameters ----------------------------------------
-    double fFRANSScoreCut = 0.1;
+    int fNEv = n;
+    int fEv = event;
+    int fSubRun = sr;
+    int fNEvSkip = nskip;
+    int nEvents=0;
 
-    FRANSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
-    fPsetFRANS.Verbose = Debug;
-    fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
+    double fFRANSScoreCut = 0.1;
+    // ------------------------------------------------------------------ 
+
 
     // ---- TPCLines parameters ----------------------------------------
+    CaloAlgorithmPsetType fPsetCalo = ReadCaloAlgorithmPset( FindFile("caloalg_config.fcl"), "CaloAlg:");
+    fPsetCalo.Verbose = Debug;
     TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset( FindFile("trackfinderalg_config.fcl"), "TrackFinderAlg:");
     fPsetTrackFinder.Verbose = Debug;
     HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset( FindFile("houghalg_config.fcl"), "HoughAlg:");
@@ -69,37 +66,37 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     fPsetAnaView.HoughAlgorithmPset = fPsetHough;
     fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
     fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
-
+    fPsetAnaView.CaloAlgorithmPset = fPsetCalo;
     fPsetAnaView.Print();
+    // ---- FRANS parameters ----------------------------------------
+    FRANSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
+    fPsetFRANS.Verbose = Debug;
+    fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
     fPsetFRANS.Print();
 
-    // Check if the directory exists, create it if not
+    // ---- Output files ----------------------------------------
     gSystem->Exec(("rm -rf "+fPsetAnaView.OutputPath).c_str());
     if (!gSystem->OpenDirectory(fPsetAnaView.OutputPath.c_str())) {    
         gSystem->Exec( ("mkdir "+fPsetAnaView.OutputPath).c_str());
         gSystem->Exec( ("mkdir "+fPsetAnaView.OutputPath+"/rootfiles").c_str());
-    }  
-
-    // output ROOT files with analysis results
+    }
     TFile* anaOutputFile = new TFile("LambdaAnaOutput.root", "RECREATE");
-
-    // ------------------------------------------------------------------ 
-    // Define the program control variables
-    int fNEv = n;
-    int fEv = event;
-    int fSubRun = sr;
-    int fNEvSkip = nskip;
-    int nEvents=0;
+    TDirectory *fAnaTreeHandleDirectory = anaOutputFile->mkdir("originsAna");
+    fAnaTreeHandleDirectory->cd();
+    // Output ana tree
+    TTree *fTreeAna = new TTree("LambdaAnaTree", "LambdaAnaTree");
+    LambdaAnaTree fAnaTreeHandle;
+    fAnaTreeHandle.SetTree(fTreeAna);
 
     // Define TPC LINES ALGORITHM
     fPsetAnaView.View = parser.getView();
-    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
+    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fPsetFRANS);
     fPsetAnaView.View = 0;
-    TPCLinesAlgo _TPCLinesAlgoSecondView1(fPsetAnaView);
+    fPsetFRANS.CalculateScore = false;
+    TPCLinesAlgo _TPCLinesAlgoViewU(fPsetAnaView, fPsetFRANS);
     fPsetAnaView.View = 1;
-    TPCLinesAlgo _TPCLinesAlgoSecondView2(fPsetAnaView);
-    // Define FRANS LINES ALGORITHM
-    ChargeDensity _FRANSAlgo(fPsetFRANS, 2);
+    TPCLinesAlgo _TPCLinesAlgoViewV(fPsetAnaView, fPsetFRANS);
+    
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
 
@@ -114,37 +111,37 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
         MyTPCTreeReader treeReader(filepath, (parser.getTreeName()+"/AnaTPCTree").c_str());
         
         for (int entry = 0; entry < treeReader.NEntries(); entry++) {
+                
+            // --- get the entry
             std::cout<<"Entry "<<entry<<std::endl;
-            // get the entry
             treeReader.GetEntry(entry);
 
-            // check program control variables
+            // --- Check program control variables
             SEventId ev(treeReader.runID, treeReader.subrunID, treeReader.eventID);
             if (fNEv > 0 && nEvents >= fNEv) continue;
             if (treeReader.eventID != fEv && fEv != -1) continue;
             if (treeReader.subrunID != fSubRun && fSubRun != -1) continue;
             nEntries++;
-            if (nEntries <= fNEvSkip) continue;
-            
+            if (nEntries <= fNEvSkip) continue; 
             nEvents++;
             std::cout << "\n\n ************** Analyzing: " << ev;
             std::cout << "   Interaction mode: "<<treeReader.intMode<<" NLambda: "<<treeReader.intNLambda<<" E = "<<treeReader.nuvE<<" GeV" << " T = " <<treeReader.nuvT<<" ns"<<std::endl;
             
-            // True vertex
+            // --- True vertex
             std::vector<double> VertexXYZ = {treeReader.nuvX, treeReader.nuvY, treeReader.nuvZ};
             std::vector<int> VertexUVYT = {treeReader.nuvU, treeReader.nuvV, treeReader.nuvC, treeReader.nuvTimeTick};
             std::cout << "   - True vertex (X, Y, Z, T) " << VertexXYZ[0] << " " << VertexXYZ[1] << " " << VertexXYZ[2] << " " << treeReader.nuvT << " (U, V, C, TT): " << VertexUVYT[0] << " " << VertexUVYT[1] << " " << VertexUVYT[2] << " " << VertexUVYT[3] << std::endl;
 
-            // Reco vertex
+            // --- Reco vertex
             std::vector<double> RecoVertexXYZ = {treeReader.recnuvX, treeReader.recnuvY, treeReader.recnuvZ};
             std::vector<int> RecoVertexUVYT = {treeReader.recnuvU, treeReader.recnuvV, treeReader.recnuvC, treeReader.recnuvTimeTick};
             std::cout << "  - Reco vertex (X, Y, Z) " << RecoVertexXYZ[0] << " " << RecoVertexXYZ[1] << " " << RecoVertexXYZ[2] << " (U, V, C, TT): " << RecoVertexUVYT[0] << " " << RecoVertexUVYT[1] << " " << RecoVertexUVYT[2] << " "<< RecoVertexUVYT[3]  << std::endl;
 
-            // Set TPC using the drift coordinate of the reco vertex
+            // --- Set TPC using the drift coordinate of the reco vertex
             //TPC = (nuvX > 0) ? 1 : 0;
             int TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
             
-            // We need a minimum number of hits to run the track finder
+            // --- We need a minimum number of hits to run the track finder
             size_t nhits = treeReader.hitsChannel->size();
             std::cout << "  - NHits: " << nhits << std::endl;
             if(nhits<=3 || treeReader.recnuvU==-1){
@@ -154,295 +151,116 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             }
 
 
-            //int view = fPsetAnaView.View;
+            // --- Get and set the hits in the view
             int view = parser.getView();
-
-            if(fPsetAnaView.View==-1){ // use best view
-                int bestView=_TPCLinesAlgo.GetBestView(treeReader.hitsView, treeReader.hitsChi2);
-                std::cout<<"  Using best view: "<<bestView<<" TPC="<<std::to_string(TPC)<<std::endl;
-                view = bestView;
-            }
-            
-            // Get the hits in the view
             std::vector<SHit> hitList = treeReader.GetHitsInView(view);
-
-            // Set the hits
             bool filled = _TPCLinesAlgo.SetHitList(view, RecoVertexUVYT, VertexUVYT, hitList);
             
-            // Analyze
+            // --- Analyze
             SEvent recoEvent;
             if(filled){
                 _TPCLinesAlgo.AnaView(ev.Label());
-                recoEvent = _TPCLinesAlgo.GetRecoEvent();
             }
 
-            // FRANS part
-            std::vector<STriangle> angleList = recoEvent.GetAngleList();
-            std::vector<SOrigin> associatedOrigins = recoEvent.GetAssociatedOrigins();
-            int bestTriangleIx = -1;
-            double bestFRANSScore = -1000;
-            TCanvas *cDisplayPANDORA = new TCanvas( "FinalRecoFRANSPANDORA", "FinalRecoFRANS", 600, 0, 800, 1200);
-            TCanvas *cDisplay = new TCanvas( "FinalRecoFRANS", "FinalRecoFRANS", 700, 0, 900, 1200);
-            if(parser.getPlotFRANS()==false){
-                delete cDisplay;
-                delete cDisplayPANDORA;
-            }
-
-
-            SVertex fVertexReco = SVertex( SPoint( RecoVertexUVYT[2], RecoVertexUVYT[3]), "");
-            SVertex fVertexTrue = SVertex( SPoint( VertexUVYT[2], VertexUVYT[3]), "");
-
-            _FRANSAlgo.Fill(hitList, fVertexReco);
-            if(parser.getPlotFRANS())
-                _FRANSAlgo.Display(cDisplayPANDORA);
-            double FRANSScorePANDORA = _FRANSAlgo.Score();
-
-            for(size_t orix=0; orix<angleList.size(); orix++){
-                SVertex fVertex(associatedOrigins[orix].GetPoint(), std::to_string(view));
-                std::cout<<" LAMBDA CANDIDATE "<<fVertex<<std::endl;
-
-                std::cout<<" COVERED AREA: "<<angleList[orix].ComputeCoveredArea();
-
-                SVertex fVertexMine = SVertex( SPoint( fVertex.X()+_TPCLinesAlgo.ShiftX(),
-                                                fVertex.Y()+_TPCLinesAlgo.ShiftY())
-                                            , "");
-
-                                        
-
-                std::cout<<" VertexTrue "<<fVertexTrue;
-                std::cout<<" VertexMine "<<fVertexMine;
-                
-                _FRANSAlgo.Fill(hitList, fVertexMine);
-                double score = _FRANSAlgo.Score();
-
-                if(score>bestFRANSScore){
-                    bestFRANSScore = score;
-                    bestTriangleIx = orix;
-                    STriangleCalo triangleCalo(angleList[orix]);
-                    triangleCalo.JointFitAnalysis(10, fHitWidthTolInFit, fUseHitRMSInFit);
-
-                    // check the V in the other views
-                    double triangleYlower = angleList[orix].GetMinY()+_TPCLinesAlgo.ShiftY();
-                    double triangleYupper = angleList[orix].GetMaxY()+_TPCLinesAlgo.ShiftY();
-                    // add porch
-                    double porch = 0.25*(triangleYupper-triangleYlower);
-                    triangleYlower -= porch;
-                    triangleYupper += porch;
-
-                    if(parser.getThreeViews()){
-                        std::cout<<"  - Filling other views\n";
-                        // Get the hits in the view
-                        std::vector<SHit> hitListOther = treeReader.GetHitsInView(0);
-
-                        std::vector<SHit> hitListOtherFiltered;
-                        for(SHit &h:hitListOther){
-                            if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
-                        }
-                        std::cout<<" Filling second view 1\n";
-                        filled = _TPCLinesAlgoSecondView1.SetHitList(0, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
-                        if(filled){
-                            std::cout<<"Filled!\n";
-                            _TPCLinesAlgoSecondView1.AnaView(ev.Label());
-                            
-                        }
-
-                        hitListOther.clear();
-                        hitListOtherFiltered.clear();
-                        hitListOther = treeReader.GetHitsInView(1);
-
-                        
-                        for(SHit &h:hitListOther){
-                            if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
-                        }
-                        std::cout<<" Filling second view 2\n";
-                        filled = _TPCLinesAlgoSecondView2.SetHitList(1, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
-                        if(filled){
-                            std::cout<<"Filled!\n";
-                            _TPCLinesAlgoSecondView2.AnaView(ev.Label());
-                        }
-                    }
-
-
-                }
-            }
-            
-            int nAngles = recoEvent.GetNAngles();
-
-            int nOrigins = recoEvent.GetNOrigins();
-            int nOriginsMultGT3;
-            if(bestTriangleIx!=-1) nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3, angleList[bestTriangleIx].GetTrack1().GetId(), angleList[bestTriangleIx].GetTrack2().GetId());
-            else nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
-            nOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
-
-            // Print the track associations
-            recoEvent.PrintTrackConnections();
-
-    
-            SEvent notAssociatedRecoEvent ({}, {}, {}, {}, 0, {});
-            if(bestTriangleIx!=-1){
-                notAssociatedRecoEvent = recoEvent.UnassociatedOrigins(angleList[bestTriangleIx]);
-            }
-
-            std::cout<<"  - Not associated reco event: \n";
-            std::cout<<" NOrigins: "<<notAssociatedRecoEvent.GetNOrigins()<<std::endl;
-            std::cout<<" NOrigins mult 2: "<<notAssociatedRecoEvent.GetNOriginsMult(2)<<std::endl;
-            std::cout<<" NOrigins mult 1: "<<notAssociatedRecoEvent.GetNOriginsMult(1)<<std::endl;
-            std::cout<<" NOrigins mult GT 3: "<<notAssociatedRecoEvent.GetNOriginsMultGt(3)<<std::endl;
-
-
-            int nDirtHitsInTriangle = 0;
-            double nFractionDirtHitsInTriangle = 0;
-            int nDirtHitsInTriangleWires = 0;
-            double nFractionDirtHitsInTriangleWires = 0;
-            if(bestTriangleIx!=-1){
-                recoEvent.FreeHitsAroundTriangle(angleList[bestTriangleIx],
-                                                nDirtHitsInTriangle,
-                                                nFractionDirtHitsInTriangle,
-                                                nDirtHitsInTriangleWires,
-                                                nFractionDirtHitsInTriangleWires);
-            }
-
-
-            bool accepted = nAngles>0 && bestFRANSScore>fFRANSScoreCut && nOrigins<=6 && nOriginsMultGT3==0;
-    
-            
-            // Update the efficiency calculator
-            if(accepted){
-                _EfficiencyCalculator.UpdateSelected(ev);
-
-                if(DebugMode==-12){
-                    gROOT->SetBatch(false);
-                    _TPCLinesAlgo.Display( "Misselected"+ev.Label());
-                    gROOT->SetBatch(true);
-                }
-
-            }
-            else
-                _EfficiencyCalculator.UpdateNotSelected(ev);
-
-            
-            std::string outNamePreffix = accepted? "Accepted":"Rejected";
-            std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label() + "_" + std::to_string(_EfficiencyCalculator.NEvents()); 
-            
-            if(recoEvent.GetNOrigins()>0){
-                _EfficiencyCalculator.UpdateHistograms(recoEvent);
-
-                if(Debug==-13){
-
-                    std::vector<SOrigin> origins = recoEvent.GetOrigins();
-
-                    if(origins.size()==2){
-                        int maxMult = std::max(origins[0].Multiplicity(), origins[1].Multiplicity());
-                        int minMult = std::min(origins[0].Multiplicity(), origins[1].Multiplicity());
-                        if(maxMult==2 && minMult==1){
-                            gROOT->SetBatch(false);
-                            _TPCLinesAlgo.Display("Misselected"+ev.Label());
-                            gROOT->SetBatch(true);
-                        }
-                    }
-                }
-            }
-            std::cout<<_EfficiencyCalculator;
-
+            // --- Fill the TTree
             fAnaTreeHandle.ResetVars();
+            // True vars
             fAnaTreeHandle.fEventID = treeReader.eventID;
             fAnaTreeHandle.fSubrunID = treeReader.subrunID;
             fAnaTreeHandle.fRunID = treeReader.runID;
             fAnaTreeHandle.fSliceID = 1;
-
             fAnaTreeHandle.fIntMode = treeReader.intMode;
             fAnaTreeHandle.fIntNLambda = treeReader.intNLambda;
-
-            fAnaTreeHandle.fFRANSScorePANDORA = FRANSScorePANDORA;
-
-            // Number of origins variables
-            fAnaTreeHandle.fNOrigins = recoEvent.GetNOrigins();
-            fAnaTreeHandle.fNOriginsMult1 = recoEvent.GetNOriginsMult(1);
-            fAnaTreeHandle.fNOriginsMult2 = recoEvent.GetNOriginsMult(2);
-            fAnaTreeHandle.fNOriginsMultGT3 = recoEvent.GetNOriginsMultGt(3);
-            fAnaTreeHandle.fNOriginsPairOneTwo = recoEvent.GetNOriginsMult(2) * recoEvent.GetNOriginsMult(1);
-
-            // Angle variables
-            fAnaTreeHandle.fNAngles = recoEvent.GetNAngles(); 
-            if(bestTriangleIx!=-1){
-                STriangle bestTriangle = angleList[bestTriangleIx];
-
-                fAnaTreeHandle.fAngleFRANSScore = bestFRANSScore;
-                fAnaTreeHandle.fAngleGap = bestTriangle.GetGap();
-                fAnaTreeHandle.fAngleDecayContainedDiff = bestTriangle.GetDecayAngleDifference();
-                fAnaTreeHandle.fAngleNHits = bestTriangle.GetNHitsTriangle();
-                fAnaTreeHandle.fAngleNHitsTrack1 = bestTriangle.GetNHitsTrack1();
-                fAnaTreeHandle.fAngleNHitsTrack2 = bestTriangle.GetNHitsTrack2();
-                fAnaTreeHandle.fAngleNHitsMainTrack = bestTriangle.GetNHitsMainTrack();
-                fAnaTreeHandle.fAngleLengthTrack1 = bestTriangle.GetLengthTrack1();
-                fAnaTreeHandle.fAngleLengthTrack2 = bestTriangle.GetLengthTrack2();
-                fAnaTreeHandle.fAngleLengthMainTrack = bestTriangle.GetLengthMainTrack();
-
-                std::cout<<"  - Best angle: "<<bestTriangleIx<<" FRANS: "<<bestFRANSScore<<" Gap: "<<bestTriangle.GetGap()<<" DecayContainedDiff: "<<bestTriangle.GetDecayAngleDifference()<<std::endl;
-                std::cout<<"  - NHits: "<<bestTriangle.GetNHitsTriangle()<<" NHitsTrack1: "<<bestTriangle.GetNHitsTrack1()<<" NHitsTrack2: "<<bestTriangle.GetNHitsTrack2()<<" NHitsMainTrack: "<<bestTriangle.GetNHitsMainTrack()<<std::endl;
-                std::cout<<"  - LengthTrack1: "<<bestTriangle.GetLengthTrack1()<<" LengthTrack2: "<<bestTriangle.GetLengthTrack2()<<" LengthMainTrack: "<<bestTriangle.GetLengthMainTrack()<<std::endl;
-                // cout minimum hits
-                std::cout<<"  - Minimum hits: "<<std::min(bestTriangle.GetNHitsTrack1(), bestTriangle.GetNHitsTrack2())<<std::endl;
-                //cout opening angle
-                std::cout<<"  - Opening angle: "<<bestTriangle.GetOpeningAngle()<<std::endl;
-
-                int nFreeHits = 0;
-                int nUnassociatedHits = 0;
-                recoEvent.GetUnassociatedHits(bestTriangle, nFreeHits, nUnassociatedHits);               
-                std::cout<<"  - Unassociated hits: "<<nUnassociatedHits<<" NFreeHits: "<<nFreeHits<<std::endl;
-                fAnaTreeHandle.fNUnassociatedHits = nUnassociatedHits;
-                
-            }
-
-            
-
             fAnaTreeHandle.fTruthIsFiducial = true;
             fAnaTreeHandle.fRecoIsFiducial = true;
+            // Reco vars
+            _TPCLinesAlgo.FillLambdaAnaTree(fAnaTreeHandle);
+            // Fill the tree
+            fAnaTreeHandleDirectory->cd();
+            fAnaTreeHandle.FillTree();
+
+            // --- Run for the other views
+            /*if(parser.getThreeViews()){
+
+                // check the V in the other views
+                double triangleYlower = angleList[orix].GetMinY()+_TPCLinesAlgo.ShiftY();
+                double triangleYupper = angleList[orix].GetMaxY()+_TPCLinesAlgo.ShiftY();
+                // add porch
+                double porch = 0.05*(triangleYupper-triangleYlower);
+                triangleYlower -= porch;
+                triangleYupper += porch;
+
+                std::cout<<"  - Filling other views\n";
+                // Get the hits in the view
+                std::vector<SHit> hitListOther = treeReader.GetHitsInView(0);
+
+                std::vector<SHit> hitListOtherFiltered;
+                for(SHit &h:hitListOther){
+                    if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
+                }
+                std::cout<<" Filling second view 1\n";
+                filled = _TPCLinesAlgoViewU.SetHitList(0, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
+                if(filled){
+                    std::cout<<"Filled!\n";
+                    _TPCLinesAlgoViewU.AnaView(ev.Label());
+                    
+                }
+
+                hitListOther.clear();
+                hitListOtherFiltered.clear();
+                hitListOther = treeReader.GetHitsInView(1);
+
+                
+                for(SHit &h:hitListOther){
+                    if(h.Y()>triangleYlower && h.Y()<triangleYupper) hitListOtherFiltered.push_back(h);
+                }
+                std::cout<<" Filling second view 2\n";
+                filled = _TPCLinesAlgoViewV.SetHitList(1, RecoVertexUVYT, VertexUVYT, hitListOtherFiltered);
+                if(filled){
+                    std::cout<<"Filled!\n";
+                    _TPCLinesAlgoViewV.AnaView(ev.Label());
+                }
+            }*/
+
+
+            // --- Update the efficiency calculator
+            bool accepted = fAnaTreeHandle.fNAngles>0 && fAnaTreeHandle.fAngleFRANSScore>fFRANSScoreCut;
+            if(accepted)
+                _EfficiencyCalculator.UpdateSelected(ev);
+            else
+                _EfficiencyCalculator.UpdateNotSelected(ev);
+            std::cout<<_EfficiencyCalculator;
+
             
-            //fAnaTreeHandle.FillTree();
-            // Cout FRANS Score PANDORA
-            std::cout<<"  - FRANS Score PANDORA: "<<FRANSScorePANDORA<<std::endl;
-            std::cout<<"  - FRANS Score: "<<bestFRANSScore<<std::endl;
-            
-            TCanvas *cCalo = new TCanvas(("canvasCalo"+ev.Label()).c_str(),"Calorimetry", 600,1200);
+            // --- Displays
+            std::string outNamePreffix = accepted? "Accepted":"Rejected";
+            std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label() + "_" + std::to_string(_EfficiencyCalculator.NEvents()); 
+            TCanvas *cCalo = new TCanvas(("canvasCalo"+ev.Label()).c_str(),"CanvasCalorimetry", 500, 0, 1000, 1000);
+            TCanvas *cFRANS = new TCanvas(("canvasFRANS"+ev.Label()).c_str(),"CanvasFRANS", 500, 0, 1000, 1000);
             TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(),  ("FinalReco"+ev.Label()).c_str(), 0, 0, 1000, 800);
-            if(bestTriangleIx!=-1){
-                STriangleCalo triangleCalo(angleList[bestTriangleIx]);
-                triangleCalo.JointFitAnalysis(10, fHitWidthTolInFit, fUseHitRMSInFit, treeReader.lambdaProtonPDir, treeReader.lambdaPionPDir);
-                triangleCalo.Display(cCalo);
-            }
-            _TPCLinesAlgo.Display("", cTPCDisplay);
+            _TPCLinesAlgo.Display("", cTPCDisplay, cCalo, cFRANS);
             cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
-            if(parser.getThreeViews()){
-                TCanvas *cTPCDisplaySecondView = new TCanvas( ("FinalRecoSecondView"+ev.Label()).c_str(),  ("FinalRecoSecondView"+ev.Label()).c_str(), 500, 500, 1000, 800);
-                TCanvas *cTPCDisplayThirdView = new TCanvas( ("FinalRecoThirdView"+ev.Label()).c_str(),  ("FinalRecoThirdView"+ev.Label()).c_str(), 500, 100, 1000, 800);
-                _TPCLinesAlgoSecondView1.Display("", cTPCDisplaySecondView);
-                _TPCLinesAlgoSecondView2.Display("", cTPCDisplayThirdView);
-                cTPCDisplay->WaitPrimitive();
-                delete cTPCDisplaySecondView;
-                delete cTPCDisplayThirdView;
-            }
-            else{
-                cTPCDisplay->WaitPrimitive();
-            }            
+            
+            fAnaTreeHandle.PrintEventInfo();
+            cTPCDisplay->WaitPrimitive();
             delete cTPCDisplay;
             delete cCalo;
+            delete cFRANS;
+
+            if(parser.getThreeViews()){
+                TCanvas *cTPCDisplayViewU = new TCanvas( ("FinalRecoViewU"+ev.Label()).c_str(),  ("FinalRecoViewU"+ev.Label()).c_str(), 500, 500, 1000, 800);
+                TCanvas *cTPCDisplayViewV = new TCanvas( ("FinalRecoViewV"+ev.Label()).c_str(),  ("FinalRecoViewV"+ev.Label()).c_str(), 500, 100, 1000, 800);
+                _TPCLinesAlgoViewU.Display("", cTPCDisplayViewU);
+                _TPCLinesAlgoViewV.Display("", cTPCDisplayViewV);
+                cTPCDisplay->WaitPrimitive();
+                delete cTPCDisplayViewU;
+                delete cTPCDisplayViewV;
+            }
 
             
-            outputLabel+="FRANS";
-            if(bestFRANSScore!=-1000 && parser.getPlotFRANS()){
-                cDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
-            }
-
-            if(parser.getPlotFRANS()){
-                outputLabel+="FRANSPANDORA";
-                cDisplayPANDORA->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
-                delete cDisplay;
-            }
-
-
-
+            
         }
+        
     }
 
     // Origins Ana Results
@@ -452,12 +270,8 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     originsAnaDirectory->cd();
     _EfficiencyCalculator.DrawHistograms(cOriginsAna);
     cOriginsAna->Write();
-    TDirectory *fAnaTreeHandleDirectory = anaOutputFile->mkdir("originsAna");
-    fAnaTreeHandleDirectory->cd();
-    fAnaTreeHandle.WriteTree();
     anaOutputFile->Write();
     anaOutputFile->Close();
-
 
     std::cout<<" Processed files "<<fileCounter<<std::endl;
     return;

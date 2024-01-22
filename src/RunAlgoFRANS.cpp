@@ -97,7 +97,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     ChargeDensity _FRANSAlgo(fPsetFRANS);
     ChargeDensity _FRANSAlgoPANDORA(fPsetFRANS);
     // Define TPC LINES ALGORITHM
-    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView);
+    TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fPsetFRANS);
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
 
