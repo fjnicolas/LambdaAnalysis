@@ -257,8 +257,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 delete cTPCDisplayViewV;
             }
 
-            
-            
         }
         
     }
