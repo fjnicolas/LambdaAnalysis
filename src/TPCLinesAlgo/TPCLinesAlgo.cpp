@@ -424,10 +424,10 @@ bool TPCLinesAlgo::SetHitList(int view,
 
             for (size_t i = 0; i < fHitListOutROI.size(); i++) {
                 SHit h = fHitListOutROI[i];
-                fHitListOutROI[i] = SHit(i, h.X() - minX, h.Y() - minY,
-                                    h.Width(), h.Integral(),
-                                    h.StartT() - minY, h.EndT() - minY,
-                                    h.Chi2(), h.ClusterId()
+                fHitListOutROI[i] = SHit(fHitList.size()+i, h.X() - minX, h.Y() - minY,
+                                        h.Width(), h.Integral(),
+                                        h.StartT() - minY, h.EndT() - minY,
+                                        h.Chi2(), h.ClusterId()
                                     );
             }
 

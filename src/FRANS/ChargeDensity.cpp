@@ -335,8 +335,6 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
 
     std::cout << "Refactored vertex: " << vCh << " " << vTimeTick << std::endl;
 
-    
-
     // Fill the vectors
     int dMax = 0;
     for (auto &hit : Hits) {
@@ -346,12 +344,12 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
             if(fFRANSPset.UseHitWidth){
 
               // lower and upper time ticks of the hit
-              size_t lower_bin = std::floor(hit.Y()-hit.Width());
-              size_t uppper_bin = std::ceil(hit.Y()+hit.Width());
+              int lower_bin = std::floor(hit.Y()-hit.Width());
+              int uppper_bin = std::ceil(hit.Y()+hit.Width());
 
               std::vector<double> hitWeights;
               std::vector<double> hitY;
-              for(size_t k = lower_bin; k<=uppper_bin; k++){
+              for(int k = lower_bin; k<=uppper_bin; k++){
                 hitWeights.push_back(gaussian(k, hit.Y(), hit.Width()));
                 hitY.push_back(k+0.5);
               }
