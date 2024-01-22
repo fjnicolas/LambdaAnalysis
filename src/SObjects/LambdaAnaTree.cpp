@@ -375,6 +375,8 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Angle Dirt Hits Wires: " << fAngleDirtHitsWires << std::endl;
         std::cout << " Angle Dirt Hits Wires Ratio: " << fAngleDirtHitsWiresRatio << std::endl;
         std::cout << " Angle Opening Angle: " << fAngleOpeningAngle << std::endl;
+        std::cout << " Angle Unassociated Hits: " << fNUnassociatedHits << std::endl;
+        std::cout << " Angle Free Hits: " << fNFreeHits << std::endl;
 
         std::cout << " --- Calorimetry Information --- " << std::endl;
         std::cout << " Angle Pass Fit: " << fAnglePassFit << std::endl;
