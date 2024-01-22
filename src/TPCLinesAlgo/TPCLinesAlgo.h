@@ -96,6 +96,8 @@ class TPCLinesAlgo {
         // Calorimetry
         STriangleCalo fTriangleCalo;
 
+        bool fHasTriangle;
+
 
         // Display app directory
         TPCLinesDisplay fDisplay;

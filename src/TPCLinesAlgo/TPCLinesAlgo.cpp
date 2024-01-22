@@ -24,6 +24,7 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, FRANSPsetType 
     fVertexFinder(tpcLinesAlgoPset.VertexFinderAlgorithmPset),
     fFRANSAlgo(fransPset, tpcLinesAlgoPset.View),
     fTriangleCalo(tpcLinesAlgoPset.CaloAlgorithmPset),
+    fHasTriangle(false),
     fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, tpcLinesAlgoPset.OutputPath))
 {
 }
@@ -38,9 +39,10 @@ void TPCLinesAlgo::Display(std::string name, TCanvas *canvas, TCanvas *canvasCal
 
     fDisplay.Show(false, name, hitList, LineEquation(0, 0), fUnmatchedHits, fFinalTrackList, fMainDirection, fAngleList, fVertex, fVertexTrue, fOrigins, canvas);
 
-    fTriangleCalo.Display(canvasCalo);
-
-    fFRANSAlgo.Display(canvasFRANS);
+    if(fHasTriangle){
+        fTriangleCalo.Display(canvasCalo);
+        fFRANSAlgo.Display(canvasFRANS);
+    }
 
     return;
 }
@@ -715,11 +717,12 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
 
 
     // --- Hits for FRANS ---
-    std::vector<SHit> allHits= fHitList;
+    std::vector<SHit> allHits = fHitList;
     if(fHitListOutROI.size()>0)
         allHits.insert(allHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
     
     // --- FRANS with PANDORA vertex ---
+    std::cout<<" FRANS PANDORA with "<<allHits.size()<<" hits\n";
     fFRANSAlgo.Fill(allHits, fVertex);
     double FRANSScorePANDORA = fFRANSAlgo.Score();
     lambdaAnaTree.fFRANSScorePANDORA = FRANSScorePANDORA;
@@ -729,9 +732,11 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
     std::vector<SOrigin> associatedOrigins = fRecoEvent.GetAssociatedOrigins();
     int bestTriangleIx = -1;
     double bestFRANSScore = -1000;
+    fHasTriangle = false;
     for(size_t orix=0; orix<angleList.size(); orix++){
         SVertex fVertexMine(associatedOrigins[orix].GetPoint(), "");
         
+        std::cout<<" FRANS with "<<allHits.size()<<" hits\n";
         fFRANSAlgo.Fill(allHits, fVertexMine);
         double score = fFRANSAlgo.Score();
 
@@ -751,6 +756,7 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
 
     // --- Best triangle variables ---
     if(bestTriangleIx!=-1){
+        fHasTriangle = true;
         STriangle bestTriangle = angleList[bestTriangleIx];
 
         // --- Triangle variables ---
