@@ -13,6 +13,7 @@ if(DEFINED ENV{LARSOFT_VERSION})
             TPCLinesDistanceUtils.cpp
             TPCSimpleEvents.cpp
             TPCLinesPCA.cpp
+            LambdaAnaTree.cpp
 
         LIBRARIES
             ROOT::Tree
@@ -43,6 +44,8 @@ add_library(sobjects_library
     TPCSimpleEvents.h
     TPCLinesPCA.cpp
     TPCLinesPCA.h
+    LambdaAnaTree.cpp
+    LambdaAnaTree.h
 )
 
 # Include directories for header files

@@ -21,7 +21,7 @@ if(DEFINED ENV{LARSOFT_VERSION})
             ROOT::Core
 
             sbndcode_SObjects
-            sbndcode_SEventHandle
+            sbndcode_FRANS
       )
 
       install_headers()
@@ -55,6 +55,5 @@ add_library(tpclines_library
 target_link_libraries(tpclines_library PRIVATE ROOT::Hist ROOT::Graf ROOT::Gpad)
 target_link_libraries(tpclines_library PRIVATE sobjects_library)
 target_link_libraries(tpclines_library PRIVATE frans_library)
-target_link_libraries(tpclines_library PRIVATE seventhandle_library)
 
 

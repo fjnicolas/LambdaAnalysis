@@ -20,31 +20,38 @@
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleClusters.h"
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleTriangles.h"
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleEvents.h"
+#include "sbndcode/LambdaAnalysis/src/SObjects/LambdaAnaTree.h"
 
 #include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesParameters.h"
 #include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesHough.h"
 #include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesTrackFinder.h"
 #include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesVertexFinder.h"
+#include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCSimpleCalo.h"
 #include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesDisplay.h"
 #include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesDirectionRecoUtils.h"
+
+#include "sbndcode/LambdaAnalysis/src/FRANS/ChargeDensity.h"
+#include "sbndcode/LambdaAnalysis/src/FRANS/ChargeDensityPset.h"
 
 #else
 #include "TPCSimpleHits.h"
 #include "TPCSimpleClusters.h"
 #include "TPCSimpleTriangles.h"
 #include "TPCSimpleEvents.h"
+#include "LambdaAnaTree.h"
 
 #include "TPCLinesParameters.h"
 #include "TPCLinesHough.h"
 #include "TPCLinesTrackFinder.h"
 #include "TPCLinesVertexFinder.h"
+#include "TPCSimpleCalo.h"
 #include "TPCLinesDisplay.h"
 #include "TPCLinesDirectionRecoUtils.h"
 
 #include "ChargeDensity.h"
 #include "ChargeDensityPset.h"
 
-#include "LambdaAnaTree.h"
+
 #endif
 
 

@@ -23,7 +23,6 @@
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleLines.h"
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleTriangles.h"
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCLinesDistanceUtils.h"
-#include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleCalo.h"
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleEvents.h"
 
 #include "sbndcode/LambdaAnalysis/src/TPCLinesAlgo/TPCLinesParameters.h"
@@ -35,7 +34,6 @@
 #include "TPCSimpleLines.h"
 #include "TPCSimpleTriangles.h"
 #include "TPCLinesDistanceUtils.h"
-#include "TPCSimpleCalo.h"
 #include "TPCSimpleEvents.h"
 
 #include "TPCLinesParameters.h"

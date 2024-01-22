@@ -10,7 +10,6 @@ if(DEFINED ENV{LARSOFT_VERSION})
             CommandLineParser.cpp
             SEventHandle.cpp
             STPCAnalyzerTreeReader.cpp
-            LambdaAnaTree.cpp
         LIBRARIES
             ROOT::Tree
             ROOT::Core
@@ -30,8 +29,6 @@ add_library(seventhandle_library
     SEventHandle.h
     STPCAnalyzerTreeReader.cpp
     STPCAnalyzerTreeReader.h
-    LambdaAnaTree.cpp
-    LambdaAnaTree.h
     SParserConfig.h
 )
 
