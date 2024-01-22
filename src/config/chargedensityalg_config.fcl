@@ -13,7 +13,7 @@ ChargeDensityAlg:
     SlidingWindowN: 3
     NSamplesBeginSlope: 3
     MaxRadius: 90
-    UseHitWidth: false
+    UseHitWidth: true
     DebugMode: false
     CalculateScore: true
     UseAlpha: true
