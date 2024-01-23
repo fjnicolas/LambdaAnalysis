@@ -139,7 +139,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
 
             // --- Set TPC using the drift coordinate of the reco vertex
             //TPC = (nuvX > 0) ? 1 : 0;
-            int TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
+            //int TPC = (RecoVertexXYZ[0] > 0) ? 1 : 0;
             
             // --- We need a minimum number of hits to run the track finder
             size_t nhits = treeReader.hitsChannel->size();
