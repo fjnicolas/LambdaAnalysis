@@ -747,6 +747,7 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
     }
 
     // --- Number of origins variables ---
+    std::cout<<"Filling NOrigins\n";
     lambdaAnaTree.fNOrigins = fRecoEvent.GetNOrigins();
     lambdaAnaTree.fNOriginsMult1 = fRecoEvent.GetNOriginsMult(1);
     lambdaAnaTree.fNOriginsMult2 = fRecoEvent.GetNOriginsMult(2);
@@ -786,7 +787,7 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
             lambdaAnaTree.fAngleLongestIsMain = false;
         }
         lambdaAnaTree.fAngleCoveredArea = bestTriangle.ComputeCoveredArea();
-
+        
         // --- Triangle cleaness ---
         int nDirtHitsInTriangle = 0;
         double nFractionDirtHitsInTriangle = 0;
@@ -808,10 +809,12 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         int nUnassociatedHits = 0;
         fRecoEvent.GetUnassociatedHits(bestTriangle, nFreeHits, nUnassociatedHits);               
         lambdaAnaTree.fNUnassociatedHits = nUnassociatedHits;
-
+        lambdaAnaTree.fNFreeHits = nFreeHits;
                 
         // --- Triangle calorimetry ---
+        std::cout<<"Making now calo\n";
         fTriangleCalo.SetTriangle(bestTriangle);
+        std::cout<<"Making joint fit analysis\n";
         fTriangleCalo.JointFitAnalysis();
 
         lambdaAnaTree.fAnglePassFit = fTriangleCalo.PassFit();
@@ -838,7 +841,7 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         lambdaAnaTree.fAngleChargeRelativeDifferenceFit = fTriangleCalo.ChargeRelativeDifferenceFit();
         lambdaAnaTree.fAngleChargeRatioIntegral = fTriangleCalo.ChargeRatioIntegral();
         lambdaAnaTree.fAngleChargeDifferenceIntegral = fTriangleCalo.ChargeDifferenceIntegral();
-        lambdaAnaTree.fAngleChargeRelativeDifferenceIntegral = fTriangleCalo.ChargeRelativeDifferenceIntegral();   
+        lambdaAnaTree.fAngleChargeRelativeDifferenceIntegral = fTriangleCalo.ChargeRelativeDifferenceIntegral();
     }
 
 }
