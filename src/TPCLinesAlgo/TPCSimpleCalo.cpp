@@ -235,7 +235,9 @@ STriangleCalo::STriangleCalo(CaloAlgorithmPsetType caloPset) : fCaloPset(caloPse
 {}
 
 void STriangleCalo::SetTriangle(STriangle triangle){
+    std::cout<<"Setting triangle\n";
     fTriangle = triangle;
+    std::cout<<"Setted triangle\n";
     fRatioUpperLimit = 15.;
 }
 
@@ -980,6 +982,7 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
 
     // Hit coordinates for the first maxHits hits
     maxHits = std::min( maxHits, (unsigned int)std::min(fTriangle.GetNHitsTrack1(), fTriangle.GetNHitsTrack2()) );
+    std::cout<<" Set max hits\n";
     std::vector<double> xV, yV, widthV;
     size_t n = 0;
     for(SHit &h:fTriangle.GetTrack1().GetHits()){
@@ -1269,6 +1272,7 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
         std::cout<<" YProtonCos: "<<std::abs(pProton->at(1))<<" YPionCos: "<<std::abs(pPion->at(1))<<"\n";
         std::cout<<" Ratio: "<<std::max(std::abs(pProton->at(1)), std::abs(pPion->at(1)))/std::min(std::abs(pProton->at(1)), std::abs(pPion->at(1)))<<"\n";
     }
+    
     return;
 
 }

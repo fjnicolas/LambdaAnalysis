@@ -287,6 +287,8 @@ void SEvent::FreeHitsAroundTriangle(STriangle triangle,
     
     std::cout<<" NDirt hits in triangle: "<<nDirtHitsInTriangle<<" Fraction: "<<nFractionDirtHitsInTriangle<<std::endl;
     std::cout<<" NDirt hits in triangle wires: "<<nDirtHitsInTriangleWires<<" Fraction: "<<nFractionDirtHitsInTriangleWires<<std::endl;
+
+    return;
    
 }
 
@@ -393,11 +395,11 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
     nUnassociatedHits+=nFreeHits;
 
     // Pintout
+    std::cout<<"Unassociated results: \n";
     std::cout<<"NFree Hits "<<nFreeHits<<"  NUnassociatedHits "<<nUnassociatedHits<<std::endl;
-
+    std::cout<<"End unassociated results \n";
 
     return;
-
 }
 
 
