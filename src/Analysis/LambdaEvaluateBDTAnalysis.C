@@ -19,7 +19,7 @@
 #include "CutEfficienciesDefinitions.C"
 #include "CutEfficienciesLATeXInterface.C"
 
-#include "../EventHandle/LambdaAnaTree.cpp"
+#include "../SObjects/LambdaAnaTree.cpp"
 
 using namespace TMVA::Experimental;
 
@@ -470,7 +470,7 @@ void RunEvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeigh
        
         // check minimal cut
         bool minimalCut = fAnaTreeHandle.fRecoIsFiducial && fAnaTreeHandle.fNAngles>=1;
-        bool passFitCuts = fAnaTreeHandle.fAnglePassFit==1 && fAnaTreeHandle.fAnglePassChargeFit==1;
+        bool passFitCuts = fAnaTreeHandle.fAnglePassChargeFit==1;//&& fAnaTreeHandle.fAnglePassFit==1;
         bool selCuts = fAnaTreeHandle.fFRANSScorePANDORA>0.2 && fAnaTreeHandle.fAngleDecayContainedDiff<1 && fAnaTreeHandle.fNUnOrigins<=0;
         bool passCut;
 

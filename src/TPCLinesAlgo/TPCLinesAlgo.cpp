@@ -747,7 +747,6 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
     }
 
     // --- Number of origins variables ---
-    std::cout<<"Filling NOrigins\n";
     lambdaAnaTree.fNOrigins = fRecoEvent.GetNOrigins();
     lambdaAnaTree.fNOriginsMult1 = fRecoEvent.GetNOriginsMult(1);
     lambdaAnaTree.fNOriginsMult2 = fRecoEvent.GetNOriginsMult(2);
@@ -756,6 +755,7 @@ void TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
     lambdaAnaTree.fNAngles = fRecoEvent.GetNAngles(); 
 
     // --- Best triangle variables ---
+    bestTriangleIx = -1;
     if(bestTriangleIx!=-1){
         fHasTriangle = true;
         STriangle bestTriangle = angleList[bestTriangleIx];

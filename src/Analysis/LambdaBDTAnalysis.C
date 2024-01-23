@@ -65,7 +65,7 @@ void RunLambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     TCut fTruthInAV("TruthIsAV==1");
 
     // ---- Minimal cut
-    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassFit && AnglePassChargeFit");
+    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassChargeFit");
     //TCut fSelCuts("FRANSScorePANDORA>=0.2 && AngleDecayContainedDiff<1 && NUnOrigins<1");
 
     // Batch mode
