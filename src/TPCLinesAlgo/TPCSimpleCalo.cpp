@@ -232,13 +232,48 @@ TVectorD FisherDiscriminant2D(const std::vector<SHit>& sample1, const std::vecto
 
 // --- Constructor ---
 STriangleCalo::STriangleCalo(CaloAlgorithmPsetType caloPset) : fCaloPset(caloPset)
-{}
+{
+    fRatioUpperLimit = 15.;
+}
 
 void STriangleCalo::SetTriangle(STriangle triangle){
-    std::cout<<"Setting triangle\n";
+
+    fAllHits.clear();
+    fHitsTrack1.clear();
+    fHitsTrack2.clear();
+    fVertexHits.clear();
+    fResidualHits.clear();
+    fFitHits.clear();
+    
     fTriangle = triangle;
-    std::cout<<"Setted triangle\n";
-    fRatioUpperLimit = 15.;
+   
+   /*float yCorrFactor = 0.075/0.3;
+
+    SPoint mainVertex(triangle.GetMainVertex().X(), triangle.GetMainVertex().Y()*yCorrFactor);
+    SPoint vertexB(triangle.GetVertexB().X(), triangle.GetVertexB().Y()*yCorrFactor);
+    SPoint vertexC(triangle.GetVertexC().X(), triangle.GetVertexC().Y()*yCorrFactor);
+    SHit mainHit(mainVertex.X(), mainVertex.Y());
+    std::vector<SHit> track1Hits = triangle.GetTrack1().GetHits();
+    for(SHit &h:track1Hits){
+        h.SetY( h.Y()*yCorrFactor );
+        h.SetWidth( h.Width()*yCorrFactor );
+    }
+    SLinearCluster newTrack1(track1Hits);
+    std::vector<SHit> track2Hits = triangle.GetTrack2().GetHits();
+    for(SHit &h:track2Hits){
+        h.SetY( h.Y()*yCorrFactor );
+        h.SetWidth( h.Width()*yCorrFactor );
+    }
+    
+   
+    SLinearCluster newTrack2(track2Hits);
+
+    STriangle newTriangle(mainVertex, vertexB, vertexC, mainHit, newTrack1, newTrack2, triangle.GetMainTrack(), 1, 1);
+    
+    std::cout<<triangle.GetTrack1().GetTrackEquation().Slope()<<" "<<triangle.GetTrack2().GetTrackEquation().Slope()<<std::endl;
+    fTriangle = newTriangle;
+    std::cout<<fTriangle.GetTrack1().GetTrackEquation().Slope()<<" "<<fTriangle.GetTrack2().GetTrackEquation().Slope()<<std::endl;*/
+    
 }
 
 
@@ -971,6 +1006,7 @@ double lineDistance(double m, double n, double x, double y){
     return std::abs( -m*x+y-n )/std::sqrt(m*m+1);        
 }
 
+
 // --- JointFit analysis---
 void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<double> *pPion){
 
@@ -980,18 +1016,50 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     fXVertex = fTriangle.GetMainVertex().X();
     fYVertex = fTriangle.GetMainVertex().Y();
 
+    // drift to wire correction
+    double yCorrFactor = 0.25;
+
     // Hit coordinates for the first maxHits hits
-    maxHits = std::min( maxHits, (unsigned int)std::min(fTriangle.GetNHitsTrack1(), fTriangle.GetNHitsTrack2()) );
+    //maxHits = std::min( maxHits, (unsigned int)std::min(fTriangle.GetNHitsTrack1(), fTriangle.GetNHitsTrack2()) );
     std::cout<<" Set max hits\n";
     std::vector<double> xV, yV, widthV;
     size_t n = 0;
+
+    // Get tracks start/end slope based on distance to main vertex
+
+    SLinearCluster track1 = fTriangle.GetTrack1();
+    SLinearCluster track2 = fTriangle.GetTrack2();
+    SPoint mainVertex = fTriangle.GetMainVertex();
+    double m1, n1, m2, n2;
+
+    
+    if (std::abs(mainVertex.X() - track1.GetMinX()) < std::abs(mainVertex.X()  - track1.GetMaxX())) {
+        m1 = track1.GetTrackEquationStart().Slope();
+        n1 = track1.GetTrackEquationStart().Intercept();
+    }
+    else{
+        m1 = track1.GetTrackEquationEnd().Slope();
+        n1 = track1.GetTrackEquationEnd().Intercept();
+    }
+    if (std::abs(mainVertex.X() - track2.GetMinX()) < std::abs(mainVertex.X()  - track2.GetMaxX())) {
+        m2 = track2.GetTrackEquationStart().Slope();
+        n2 = track2.GetTrackEquationStart().Intercept();
+    }
+    else{
+        m2 = track2.GetTrackEquationEnd().Slope();
+        n2 = track2.GetTrackEquationEnd().Intercept();
+    }
+
+
     for(SHit &h:fTriangle.GetTrack1().GetHits()){
         if(n>=maxHits) break;
         xV.push_back(h.X()-fXVertex);
         yV.push_back(h.Y()-fYVertex);
         widthV.push_back(h.Width());
-        //widthV.push_back(h.Chi2());
-        n++;
+        fFitHits.push_back(h);
+        // if compatible with the two tracks, discard
+        if( std::abs( h.Y() - m2*h.X() - n2 ) > h.Width() )
+            n++;
     }
     n=0;
     for(SHit &h:fTriangle.GetTrack2().GetHits()){
@@ -999,8 +1067,9 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
         xV.push_back(h.X()-fXVertex);
         yV.push_back(h.Y()-fYVertex);
         widthV.push_back(h.Width());
-        //widthV.push_back(h.Chi2());
-        n++;
+        fFitHits.push_back(h);
+        if( std::abs( h.Y() - m1*h.X() - n1 ) > h.Width() )
+            n++;
     }
 
     // --- Get frame values ---
@@ -1037,8 +1106,8 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
                 double dr1 = lineDistance(par[0], par[1], xH, yH) / errorH;
                 double dr2 = lineDistance(par[2], (par[0]-par[2])*par[3], xH, yH) / errorH;
 
-                dr1 = dr1*dr1;
-                dr2 = dr2*dr2;
+                //dr1 = dr1*dr1;
+                //dr2 = dr2*dr2;
                 // add contribution to the chi2 (minimum residual to the two lines)
                 double dr = std::min(dr1,dr2);
                 f += dr;
@@ -1104,6 +1173,7 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     fVertexHits.clear();
     std::vector<SHit> hitList = fTriangle.GetAllHits();
     fAllHits = hitList;
+    double fYCorrFactor = 0.075/0.3;
     for(SHit &h:hitList){
 
         // shifted values 
@@ -1138,8 +1208,8 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
         }
         else{
             // if not width compatible, add to the closest
-            double d1 = std::abs(y-yH1);
-            double d2 = std::abs(y-yH2);
+            double d1 = lineDistance(fYCorrFactor*fM1, fYCorrFactor*fN1, x, fYCorrFactor*y);
+            double d2 = lineDistance(fYCorrFactor*fM2, fYCorrFactor*fN2, x, fYCorrFactor*y);
             d1<d2? fHitsTrack1.push_back(h):fHitsTrack2.push_back(h);
         }
 
@@ -1390,6 +1460,15 @@ void STriangleCalo::Display(TCanvas *c1){
         marker->SetMarkerSize(size);
         marker->Draw("same");
         if (&h == &fVertexHits.front()) leg->AddEntry(marker, "Vertex hits",  "p");
+    }
+
+    for(SHit &h:fFitHits){
+        double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
+        TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
+        marker->SetMarkerColorAlpha(kBlack, fAlpha);
+        marker->SetMarkerSize(size);
+        marker->SetMarkerStyle(24);
+        marker->Draw("same");
     }
 
     leg->Draw("same");

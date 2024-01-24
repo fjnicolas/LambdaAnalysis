@@ -16,7 +16,7 @@ VertexFinderAlg:
     VertexHitsMinHits: 5
     VertexCompactnessTol: 1.5
     MinTrackOccupancy: 0.6
-    MinTrackGoodness: 10
+    MinTrackGoodness: 20
     MakeCalorimetry: false
     Verbose: 0
 }

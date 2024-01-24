@@ -1075,6 +1075,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         SLinearCluster track1 = ori.GetTrackEntry(0);
         SLinearCluster track2 = ori.GetTrackEntry(1);
 
+        std::cout<< "Looking for a triangle for tracks "<<track1.GetId()<<" and "<<track2.GetId()<<std::endl;
         // Only intersetctions between "good" tracks
         std::cout<<"  Goodness: "<<track1.GetTrackEquation().Goodness()<<" "<<track2.GetTrackEquation().Goodness()<<std::endl;
         if(std::abs(track1.GetTrackEquation().Goodness())>fTPCLinesVertexFinderPset.MinTrackGoodness) continue;
@@ -1096,6 +1097,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             SLinearCluster mainTrack = ori1.GetTrackEntry(0);
 
             // Only intersetctions between "good" tracks
+            std::cout<<"  Main track "<<mainTrack.GetId()<<" goodness: "<<mainTrack.GetTrackEquation().Goodness()<<std::endl;
             if(std::abs(mainTrack.GetTrackEquation().Goodness())>fTPCLinesVertexFinderPset.MinTrackGoodness) continue;
 
             double occ3 = mainTrack.GetOccupancy1D();
@@ -1108,6 +1110,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             // check the track length
             double trackLength = std::hypot( 0.3*(mainTrack.GetStartPoint().X() - mainTrack.GetEndPoint().X()), 0.075*(mainTrack.GetStartPoint().Y()-mainTrack.GetEndPoint().Y()) );
             if(trackLength<2) continue;
+            std::cout<<"  MainTrackLength "<<trackLength<<std::endl;
             
             //main track and the V tracks cannot be connected
             std::vector<SOrigin> mainTrackOrigins;
@@ -1127,6 +1130,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     }
                 }
             }
+            std::cout<<" Connected through others "<<connectedThroughOthers<<std::endl;
             if(connectedThroughOthers==true)
                 continue;
 

@@ -36,7 +36,7 @@ double GetAngle360(double x, double y) {
 
 STriangle::STriangle(){}
 
-STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track2, SLinearCluster track1, SLinearCluster mainTrack, double weight_b, double weight_c)
+STriangle::STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track1, SLinearCluster track2, SLinearCluster mainTrack, double weight_b, double weight_c)
 {
     fTrack1 = track1;
     fTrack2 = track2;
@@ -414,4 +414,17 @@ double STriangle::GetMaxY(){
     return std::max(fMainVertex.Y(), std::max(fVertexB.Y(), fVertexC.Y())  );
 }
 
+double STriangle::GetOverlapWithMainTrack(){
+    // min/max x of the maint track
+    int minX = fMainTrack.GetMinX();
+    int maxX = fMainTrack.GetMaxX();
+
+    // min/max x of the triangle
+    int minXTriangle = std::min(fMainVertex.X(), std::min(fVertexB.X(), fVertexC.X())  );
+    int maxXTriangle = std::max(fMainVertex.X(), std::max(fVertexB.X(), fVertexC.X())  );
+
+    // get overlap length in X
+    return getSegmentOverlap(minX, maxX, minXTriangle, maxXTriangle);
+
+}
 

@@ -44,7 +44,7 @@ class STriangle {
     public:
         STriangle();
 
-        STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track2, SLinearCluster track1, SLinearCluster mainTrack, double weight_b=1, double weight_c=1);
+        STriangle(SPoint main_vertex, SPoint vertex_b, SPoint vertex_c, SHit mainhit, SLinearCluster track1, SLinearCluster track2, SLinearCluster mainTrack, double weight_b=1, double weight_c=1);
 
         SLinearCluster GetTrack1() const {
             return fTrack1;
@@ -138,6 +138,8 @@ class STriangle {
         double GetMaxX();
         double GetMinY();
         double GetMaxY();
+
+        double GetOverlapWithMainTrack();
         
         
 };

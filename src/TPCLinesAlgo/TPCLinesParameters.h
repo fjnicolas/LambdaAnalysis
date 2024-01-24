@@ -181,6 +181,7 @@ struct VertexFinderAlgorithmPsetType {
         std::cout << "VertexHitsMinHits: " << VertexHitsMinHits << std::endl;
         std::cout << "VertexCompactnessTol: " << VertexCompactnessTol << std::endl;
         std::cout << "MinTrackOccupancy: " << MinTrackOccupancy << std::endl;
+        std::cout << "MinTrackGoodness: " << MinTrackGoodness << std::endl;
         std::cout << "MakeCalorimetry: " << (MakeCalorimetry ? "true" : "false") << std::endl;
         std::cout << "Verbose: " << Verbose << std::endl;
     }

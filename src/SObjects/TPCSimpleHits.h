@@ -78,6 +78,7 @@ class SHit {
         SHit(int id=-1, float x=0, float y=0, float w=0, float integral=0, float st=0, float et=0, float chi2=0, int clusterID=-1);
         SHit(float x, float y);
 
+        // Getters
         int Id(){return fId;}
         float X() const {return fP.X();}
         float Y() const {return fP.Y();}
@@ -92,6 +93,13 @@ class SHit {
         float Compactness() const {return fCompactness;}
         float Connectednes() const {return fConnectedness;}
         float Connectednes1D() const {return fConnectednes1D;}
+        SPoint GetPoint() const {return fP;}
+
+        // Setters
+        void SetX(float x) { fP.AssignX(x); };
+        void SetY(float y) { fP.AssignY(y); };
+        void SetWidth(float w) { fWidth = w; };
+
 
         // Set the hit connectivity
         void SetHitConnectivity(float comp, float conn, float conn1d);

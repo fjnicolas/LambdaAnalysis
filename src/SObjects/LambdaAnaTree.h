@@ -139,6 +139,7 @@ public:
     int fAngleDirtHitsWires;
     double fAngleDirtHitsWiresRatio;
     double fAngleOpeningAngle;
+    double fAngleMainTrackOverlap;
 
     int fNFreeHits;
     int fNUnassociatedHits;

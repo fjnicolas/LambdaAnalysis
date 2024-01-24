@@ -3,8 +3,8 @@ BEGIN_PROLOG
 CaloAlg:
 {
     MaxTrackHits: 10
-    MakeFit: false
-    UseHitRMSInFit: true
+    MakeFit: true
+    UseHitRMSInFit: false
     HitWidthTolInFit: 1.5
     Verbose: 0
 }

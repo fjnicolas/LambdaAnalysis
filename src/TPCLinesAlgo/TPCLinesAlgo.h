@@ -129,7 +129,7 @@ class TPCLinesAlgo {
         // --- Main analysis function ---
         void AnaView(std::string eventLabel);
 
-        void FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree);
+        STriangle FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree);
 
         // --- Getters ---
         // Get average desnity of hits per wire

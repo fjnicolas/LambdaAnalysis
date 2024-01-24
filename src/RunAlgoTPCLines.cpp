@@ -174,17 +174,19 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             fAnaTreeHandle.fTruthIsFiducial = true;
             fAnaTreeHandle.fRecoIsFiducial = true;
             // Reco vars
-            _TPCLinesAlgo.FillLambdaAnaTree(fAnaTreeHandle);
+            STriangle foundTriangle = _TPCLinesAlgo.FillLambdaAnaTree(fAnaTreeHandle);
             // Fill the tree
             fAnaTreeHandleDirectory->cd();
             fAnaTreeHandle.FillTree();
 
+            std::cout<<"JJJJJ "<<foundTriangle.GetMainVertex()<<std::endl;
+            
             // --- Run for the other views
-            /*if(parser.getThreeViews()){
+            if(parser.getThreeViews() && foundTriangle.GetMainVertex().X()!=-1 && foundTriangle.GetMainVertex().Y()!=-1){
 
                 // check the V in the other views
-                double triangleYlower = angleList[orix].GetMinY()+_TPCLinesAlgo.ShiftY();
-                double triangleYupper = angleList[orix].GetMaxY()+_TPCLinesAlgo.ShiftY();
+                double triangleYlower = foundTriangle.GetMinY()+_TPCLinesAlgo.ShiftY();
+                double triangleYupper = foundTriangle.GetMaxY()+_TPCLinesAlgo.ShiftY();
                 // add porch
                 double porch = 0.05*(triangleYupper-triangleYlower);
                 triangleYlower -= porch;
@@ -220,7 +222,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                     std::cout<<"Filled!\n";
                     _TPCLinesAlgoViewV.AnaView(ev.Label());
                 }
-            }*/
+            }
 
 
             // --- Update the efficiency calculator
@@ -235,24 +237,31 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             // --- Displays
             std::string outNamePreffix = accepted? "Accepted":"Rejected";
             std::string outputLabel = "FinalReco" + outNamePreffix + ev.Label() + "_" + std::to_string(_EfficiencyCalculator.NEvents()); 
-            TCanvas *cCalo = new TCanvas(("canvasCalo"+ev.Label()).c_str(),"CanvasCalorimetry", 500, 0, 1000, 1000);
-            TCanvas *cFRANS = new TCanvas(("canvasFRANS"+ev.Label()).c_str(),"CanvasFRANS", 500, 0, 1000, 1000);
+            TCanvas *cFRANS = new TCanvas(("canvasFRANS"+ev.Label()).c_str(),"CanvasFRANS", 1000, 0, 1000, 1000);
+            TCanvas *cCalo = new TCanvas(("canvasCalo"+ev.Label()).c_str(),"CanvasCalorimetry", 1000, 0, 1000, 1000);
+            TCanvas *cTPCDisplayViewU = new TCanvas( ("FinalRecoViewU"+ev.Label()).c_str(),  ("FinalRecoViewU"+ev.Label()).c_str(), 500, 500, 1000, 800);
+            TCanvas *cTPCDisplayViewV = new TCanvas( ("FinalRecoViewV"+ev.Label()).c_str(),  ("FinalRecoViewV"+ev.Label()).c_str(), 500, 100, 1000, 800);
             TCanvas *cTPCDisplay = new TCanvas( ("FinalReco"+ev.Label()).c_str(),  ("FinalReco"+ev.Label()).c_str(), 0, 0, 1000, 800);
             _TPCLinesAlgo.Display("", cTPCDisplay, cCalo, cFRANS);
             cTPCDisplay->SaveAs( (fPsetAnaView.OutputPath+"/"+outputLabel+".pdf").c_str() );
             
             fAnaTreeHandle.PrintEventInfo();
+
+            if(parser.getThreeViews()){
+                _TPCLinesAlgoViewU.Display("", cTPCDisplayViewU);
+                _TPCLinesAlgoViewV.Display("", cTPCDisplayViewV);
+                cTPCDisplay->WaitPrimitive();
+            }
+            else{
+                delete cTPCDisplayViewU;
+                delete cTPCDisplayViewV;
+            }
+
             cTPCDisplay->WaitPrimitive();
             delete cTPCDisplay;
             delete cCalo;
             delete cFRANS;
-
             if(parser.getThreeViews()){
-                TCanvas *cTPCDisplayViewU = new TCanvas( ("FinalRecoViewU"+ev.Label()).c_str(),  ("FinalRecoViewU"+ev.Label()).c_str(), 500, 500, 1000, 800);
-                TCanvas *cTPCDisplayViewV = new TCanvas( ("FinalRecoViewV"+ev.Label()).c_str(),  ("FinalRecoViewV"+ev.Label()).c_str(), 500, 100, 1000, 800);
-                _TPCLinesAlgoViewU.Display("", cTPCDisplayViewU);
-                _TPCLinesAlgoViewV.Display("", cTPCDisplayViewV);
-                cTPCDisplay->WaitPrimitive();
                 delete cTPCDisplayViewU;
                 delete cTPCDisplayViewV;
             }

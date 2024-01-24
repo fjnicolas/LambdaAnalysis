@@ -148,6 +148,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleLongestIsMain", &fAngleLongestIsMain, readMode);
     SetBranch("AngleDecayContainedDiff", &fAngleDecayContainedDiff, readMode);
     SetBranch("AngleCoveredArea", &fAngleCoveredArea, readMode);
+    SetBranch("AngleMainTrackOverlap", &fAngleMainTrackOverlap, readMode);
     SetBranch("AngleDirtHits", &fAngleDirtHits, readMode);
     SetBranch("AngleDirtHitsRatio", &fAngleDirtHitsRatio, readMode);
     SetBranch("AngleDirtHitsWires", &fAngleDirtHitsWires, readMode);
@@ -283,6 +284,7 @@ void LambdaAnaTree::ResetVars(){
     fAngleLongestIsMain = false;
     fAngleDecayContainedDiff = -999;
     fAngleCoveredArea = -999;
+    fAngleMainTrackOverlap = -999;
     fAngleDirtHits = -999;
     fAngleDirtHitsRatio = -999;
     fAngleDirtHitsWires = -999;
@@ -370,6 +372,7 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Angle Longest Is Main: " << fAngleLongestIsMain << std::endl;
         std::cout << " Angle Decay Contained Diff: " << fAngleDecayContainedDiff << std::endl;
         std::cout << " Angle Covered Area: " << fAngleCoveredArea << std::endl;
+        std::cout << " Angle Main Track Overlap: " << fAngleMainTrackOverlap << std::endl;
         std::cout << " Angle Dirt Hits: " << fAngleDirtHits << std::endl;
         std::cout << " Angle Dirt Hits Ratio: " << fAngleDirtHitsRatio << std::endl;
         std::cout << " Angle Dirt Hits Wires: " << fAngleDirtHitsWires << std::endl;

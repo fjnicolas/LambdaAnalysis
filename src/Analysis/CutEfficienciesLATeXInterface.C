@@ -267,7 +267,7 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
         std::cout << " Sample: " << sampleDefs[k].GetLabel() << std::endl;
 
         // Create the histogram
-        TH3D* h3_all = new TH3D("h3_all", "3D Histogram", 100, 1, 101, 1100, 1, 1101, 1100, 1, 1101);
+        TH3D* h3_all = new TH3D("h3_all", "3D Histogram", 100, 1, 101, 2100, 1, 2101, 2100, 1, 2101);
 
         // Create the cut
         TCut debugCut = cut && (TCut(sampleDefs[k].GetVar()));
