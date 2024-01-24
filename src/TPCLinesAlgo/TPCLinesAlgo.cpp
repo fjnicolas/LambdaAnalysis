@@ -702,7 +702,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     if(finalLinearClusterV.size()>0){
         
         // ------- Get the parallel tracks
-        std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, 6, fTPCLinesPset.Verbose);
+        std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, fTPCLinesPset.ParallelTracksMaxD, fTPCLinesPset.Verbose);
         NewTrackList.clear();
 
         std::cout<<" Final tracks for origin finder: \n";

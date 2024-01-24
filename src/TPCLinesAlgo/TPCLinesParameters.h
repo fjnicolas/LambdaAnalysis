@@ -267,6 +267,7 @@ struct TPCLinesAlgoPsetType{
     int MinNeighboursHits;
     float MinTrackGoodness;
     bool CustomKinkPoint;
+    int ParallelTracksMaxD;
     int VertexAlgorithm;
     int View;
     std::string OutputPath;
@@ -290,6 +291,7 @@ struct TPCLinesAlgoPsetType{
         int _minNeighboursHits,
         float _minTrackGoodness,
         bool customKinkPoint,
+        int _parallelTracksMaxD,
         int _vertexAlgorithm,
         int _view,
         std::string _outputPath,
@@ -308,6 +310,7 @@ struct TPCLinesAlgoPsetType{
         MinNeighboursHits(_minNeighboursHits),
         MinTrackGoodness(_minTrackGoodness),
         CustomKinkPoint(customKinkPoint),
+        ParallelTracksMaxD(_parallelTracksMaxD),
         VertexAlgorithm(_vertexAlgorithm),
         View(_view),
         OutputPath(_outputPath),
@@ -329,6 +332,7 @@ struct TPCLinesAlgoPsetType{
         std::cout << "MaxNeighbourDistance: " <<  MaxNeighbourDistance << std::endl;
         std::cout << "MinNeighboursHits: " <<  MinNeighboursHits << std::endl;
         std::cout << "CustomKinkPoint: " <<  CustomKinkPoint << std::endl;
+        std::cout << "ParallelTracksMaxD: " <<  ParallelTracksMaxD << std::endl;
         std::cout << "Verbose: " <<  Verbose << std::endl;
         std::cout << "DebugMode: " <<  DebugMode << std::endl;
 

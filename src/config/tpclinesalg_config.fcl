@@ -11,6 +11,7 @@ TPCLinesAlg:
     MinNeighboursHits: 2
     MinTrackGoodness: 10
     CustomKinkPoint: false
+    ParallelTracksMaxD: 7
     VertexAlgorithm: 1
     View: 2
 

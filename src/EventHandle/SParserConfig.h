@@ -244,6 +244,7 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string bloc
     fPsetTPCLines.MinNeighboursHits = pt.get<int>("MinNeighboursHits");
     fPsetTPCLines.MinTrackGoodness = pt.get<float>("MinTrackGoodness");
     fPsetTPCLines.CustomKinkPoint = pt.get<bool>("CustomKinkPoint");
+    fPsetTPCLines.ParallelTracksMaxD = pt.get<int>("ParallelTracksMaxD");
     fPsetTPCLines.VertexAlgorithm = pt.get<int>("VertexAlgorithm");
     fPsetTPCLines.View = pt.get<int>("View");
     fPsetTPCLines.OutputPath = pt.get<std::string>("OutputPath");
