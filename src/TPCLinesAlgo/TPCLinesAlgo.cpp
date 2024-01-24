@@ -552,6 +552,27 @@ std::vector<SHit> TPCLinesAlgo::GetHitsInCluster(int clusterId){
     return hits;
 }
 
+double GetClusterHitDensity(std::vector<SHit> hits){
+
+    std::map<int, int> occuppiedIDs;
+    for(SHit &h:hits){
+        if(occuppiedIDs.find(h.X())==occuppiedIDs.end()){
+            occuppiedIDs[h.X()]=1;
+        }
+        else{
+            occuppiedIDs[h.X()]++;
+        }
+    }
+
+    double meanOccupation = 0;
+    for(auto &occ:occuppiedIDs){
+        meanOccupation+=occ.second;
+    }
+    meanOccupation/=occuppiedIDs.size();
+
+    return meanOccupation;
+}
+
 
 //----------------------------------------------------------------------
 // Main function
@@ -566,8 +587,8 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             
         //std::vector<SHit> hitListForHough = fHitList;
         std::vector<SHit> hitListForHough = GetHitsInCluster(clusterPair.first);
-
-        std::cout<<" Ana cluster "<<clusterPair.first<<" "<<clusterPair.second<<std::endl;
+        double clusterMeanOccupation = GetClusterHitDensity(hitListForHough);
+        std::cout<<" Ana cluster "<<clusterPair.first<<" "<<clusterPair.second<<" MeanOccupation: "<<clusterMeanOccupation<<std::endl;
     
         int trkIterCluster = (int)hitListForHough.size()>=fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
         std::cout<<trkIterCluster<<" "<<fHitList.size()<<" "<<hitListForHough.size()<<std::endl;

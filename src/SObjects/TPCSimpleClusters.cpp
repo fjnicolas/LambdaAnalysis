@@ -285,9 +285,6 @@ SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
     }
     
 
-    fStartPoint = SPoint(fMinX, fYAtMinX);
-    fEndPoint = SPoint(fMaxX, fYAtMaxX);
-
     // fill track equations
     if(hitList.size()>2){
         TPCLinesPCA pcaAlgo;
@@ -303,7 +300,36 @@ SLinearCluster::SLinearCluster(std::vector<SHit> hitList){
             fTrackEquationEnd = fTrackEquation;
         }
     }
+
+    double yHypoAtMinX = fTrackEquationStart.EvaluateX(fMinX);
+    double yHypoAtMaxX = fTrackEquationEnd.EvaluateX(fMaxX);
+
+    float closestYAtMinX = fYAtMinX;
+    float closestYAtMaxX = fYAtMaxX;
+    float closestXAtMinX = fMinX;
+    float closestXAtMaxX = fMaxX;
+
+    // get closest hit to each edge
+    double dMinAtMinX = DefaultMax;
+    double dMinAtMaxX = DefaultMax;
+    for(SHit &h:GetHits()){
+        double d = std::hypot(fMinX-h.X(), 0.25*(yHypoAtMinX-h.Y()) );
+        if(d<dMinAtMinX){
+            dMinAtMinX = d;
+            closestYAtMinX = h.Y();
+            closestXAtMinX = h.X();
+        }
+        d = std::hypot(fMaxX-h.X(), 0.25*(yHypoAtMaxX-h.Y()) );
+        if(d<dMinAtMaxX){
+            dMinAtMaxX = d;
+            closestYAtMaxX = h.Y();
+            closestXAtMaxX = h.X();
+        }
+    }
     
+    fStartPoint = SPoint(closestXAtMinX, closestYAtMinX);
+    fEndPoint = SPoint(closestXAtMaxX, closestYAtMaxX);
+
     // members ro fill later
     fHasResidualHits = false;
     fHasStartEndPoints = false;

@@ -307,6 +307,7 @@ void RunEvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeigh
     float AngleNHitsTrack2;
     float AngleMinNHits;
     float NUnassociatedHits;
+    float AngleMainTrackOverlap;
     float ShowerEnergy;
     float FRANSScorePANDORA;
     float AngleCoveredArea;
@@ -359,6 +360,7 @@ void RunEvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeigh
     if(fVarLabels["FRANSScorePANDORA"]==true) fTMVAReader->AddVariable( "FRANSScorePANDORA", &FRANSScorePANDORA );
     if(fVarLabels["AngleCoveredArea"]==true) fTMVAReader->AddVariable( "AngleCoveredArea", &AngleCoveredArea );
     if(fVarLabels["AngleDirtHits"]==true) fTMVAReader->AddVariable( "AngleDirtHits", &AngleDirtHits );
+    if(fVarLabels["AngleMainTrackOverlap"]==true) fTMVAReader->AddVariable( "AngleMainTrackOverlap", &AngleMainTrackOverlap );
     if(fVarLabels["NShowers"]==true) fTMVAReader->AddVariable( "NShowers", &NShowers );
     if(fVarLabels["NShowerHits"]==true) fTMVAReader->AddVariable( "NShowerHits", &NShowerHits );
     if(fVarLabels["ShowerEnergy"]==true) fTMVAReader->AddVariable( "ShowerEnergy", &ShowerEnergy );
@@ -439,6 +441,7 @@ void RunEvaluateBDTAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fWeigh
         ShowerEnergy = fAnaTreeHandle.fShowerEnergy;
         AngleCoveredArea = fAnaTreeHandle.fAngleCoveredArea;
         AngleDirtHits = fAnaTreeHandle.fAngleDirtHits;
+        AngleMainTrackOverlap = fAnaTreeHandle.fAngleMainTrackOverlap;
         NShowers = fAnaTreeHandle.fNShowers;
         NShowerHits = fAnaTreeHandle.fNShowerHits;
         AngleLongestIsMain = fAnaTreeHandle.fAngleLongestIsMain;

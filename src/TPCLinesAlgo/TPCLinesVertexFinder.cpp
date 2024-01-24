@@ -892,11 +892,19 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
     for(SLinearCluster &trk:trackList) usedTrack[trk.GetId()]=false;
     std::vector<std::pair<int, int>> kinkTracks;
 
+    // Longest track ID
+    int longestTrackId = -1;
+    int longestTrackNHits = -1;
+    for(SLinearCluster &trk:trackList){
+        if(trk.NHits()>longestTrackNHits){
+            longestTrackNHits = trk.NHits();
+            longestTrackId = trk.GetId();
+        }
+    }
+
     // First create origins for the intersection within the edges
     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"\n\n MERGING ORIGINS\n";
     for(SOrigin & ori:allIntersections){
-        // Skip the intersection if it's not within the edges
-        if(ori.IsEdgeOrigin()== false) continue;
 
         // Get the intersection attributes
         SLinearCluster track1 = ori.GetTrackEntry(0);
@@ -905,51 +913,83 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         double intPYerror = ori.GetYError();
         std::cout<<"  Intersection "<<track1.GetId()<<" "<<track2.GetId()<<" X/Y="<<ori.GetPoint().X()<<" "<<ori.GetPoint().Y()<<std::endl;
 
-        // ------ Origin assigment
-        // Completeley new origin
-        if(usedTrack[track1.GetId()]==false && usedTrack[track2.GetId()]==false){
-            SOrigin newOr = SOrigin(intP, {track1, track2}, true, intPYerror);
-            originList.push_back( newOr );
-            // mark as used tracks
-            usedTrack[track1.GetId()]=true;
-            usedTrack[track2.GetId()]=true;
-            std::cout<<"   END = Adding completely new origin..."<<newOr;
-        }
-        // If some of the tracks already used or both used
-        else if(usedTrack[track1.GetId()]==false || usedTrack[track2.GetId()]==false || (usedTrack[track1.GetId()]==true && usedTrack[track2.GetId()]==true)){
+        // Edge intersection
+        bool edgeIntersection = ori.IsEdgeOrigin();
+        bool deltaRayIntersection = false;
 
-            SLinearCluster newTrack = (usedTrack[track1.GetId()]==false) ? track1 : track2;
-            SLinearCluster previousTrack = (usedTrack[track2.GetId()]==true) ? track1 : track2;
+        // Skip the intersection if it's not within the edge
+        // Delta ray check
+        if(!edgeIntersection){
 
-            bool merged=false;
-            for(SOrigin & oriAux:originList){
-                
-                bool intersectionCompatible = std::abs(oriAux.GetPoint().X() - intP.X())<=2;
-                intersectionCompatible = intersectionCompatible && std::abs(oriAux.GetPoint().Y() - intP.Y())<2*oriAux.GetYError();
-                if(intersectionCompatible){
-                    if(!oriAux.HasTrackIndex(newTrack.GetId())){
-                        oriAux.AddTrack(newTrack, intP, intPYerror);
-                        std::cout<<"   END = Adding new track to origin \n";
-                    }
-                    usedTrack[track1.GetId()]=true;
-                    usedTrack[track2.GetId()]=true;
-                    merged=true;
-                }
-                
+            std::cout<<"  Intersection not within edges\n";
+            
+            // delta ray check
+            int shortTrackId = (track1.NHits()<track2.NHits())? track1.GetId():track2.GetId();
+            int longTrackId = (track1.NHits()>track2.NHits())? track1.GetId():track2.GetId();
+            int shortTrackNHits = (track1.NHits()<track2.NHits())? track1.NHits():track2.NHits();
+            if(longTrackId==longestTrackId && shortTrackNHits<=5){
+                deltaRayIntersection=true;
             }
+            else{
+                std::cout<<"   Not a potential delta ray...nHits short track:"<<shortTrackNHits<<"\n";
+                continue;
+            }
+        }
 
-            std::cout<<" Merged? "<<merged<<std::endl;
-
-            if(!merged){
-                SOrigin newOr(intP, {track1, track2}, true, intPYerror);
-                std::cout<<"   END = Adding new origin..."<<newOr;
+        if(deltaRayIntersection){
+            std::cout<<"Adding delta ray origin\n";
+            SLinearCluster deltaTrack = (track1.NHits()<track2.NHits())? track1:track2;
+            SOrigin newOr(intP, {deltaTrack}, edgeIntersection, intPYerror);
+            originList.push_back( newOr );
+            std::cout<<"   END = Adding new origin..."<<newOr;
+        }
+        else{
+            // ------ Origin assigment
+            // Completeley new origin
+            if(usedTrack[track1.GetId()]==false && usedTrack[track2.GetId()]==false){
+                SOrigin newOr = SOrigin(intP, {track1, track2}, edgeIntersection, intPYerror);
                 originList.push_back( newOr );
+                // mark as used tracks
                 usedTrack[track1.GetId()]=true;
                 usedTrack[track2.GetId()]=true;
+                std::cout<<"   END = Adding completely new origin..."<<newOr;
             }
+            // If some of the tracks already used or both used
+            else if(usedTrack[track1.GetId()]==false || usedTrack[track2.GetId()]==false || (usedTrack[track1.GetId()]==true && usedTrack[track2.GetId()]==true)){
 
+                SLinearCluster newTrack = (usedTrack[track1.GetId()]==false) ? track1 : track2;
+                SLinearCluster previousTrack = (usedTrack[track2.GetId()]==true) ? track1 : track2;
+
+                bool merged=false;
+                for(SOrigin & oriAux:originList){
+                    
+                    bool intersectionCompatible = std::abs(oriAux.GetPoint().X() - intP.X())<=2;
+                    intersectionCompatible = intersectionCompatible && std::abs(oriAux.GetPoint().Y() - intP.Y())<2*oriAux.GetYError();
+                    if(intersectionCompatible){
+                        if(!oriAux.HasTrackIndex(newTrack.GetId())){
+                            oriAux.AddTrack(newTrack, intP, intPYerror);
+                            std::cout<<"   END = Adding new track to origin \n";
+                        }
+                        usedTrack[track1.GetId()]=true;
+                        usedTrack[track2.GetId()]=true;
+                        merged=true;
+                    }
+                    
+                }
+
+                std::cout<<" Merged? "<<merged<<std::endl;
+
+                if(!merged){
+                    SOrigin newOr(intP, {track1, track2}, edgeIntersection, intPYerror);
+                    std::cout<<"   END = Adding new origin..."<<newOr;
+                    originList.push_back( newOr );
+                    usedTrack[track1.GetId()]=true;
+                    usedTrack[track2.GetId()]=true;
+                }
+
+            }
         }
-    
+        
     }
 
     // Second create origins for the not within edges intersections
@@ -1112,16 +1152,23 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             if(trackLength<2) continue;
             std::cout<<"  MainTrackLength "<<trackLength<<std::endl;
             
-            //main track and the V tracks cannot be connected
+            // Origins associated to main track and the V tracks
             std::vector<SOrigin> mainTrackOrigins;
+            std::vector<SOrigin> VTracksDeltaOrigins;
             for(SOrigin &ori2:originList){
+                std::cout<<" OOOOOO \n";
                 for(int k=0; k<ori2.Multiplicity(); k++){
+                    std::cout<<"  "<<ori2.GetTrackEntry(k).GetId()<<std::endl;
                     if(mainTrack.GetId()==ori2.GetTrackEntry(k).GetId()){
                         mainTrackOrigins.push_back(ori2);
+                    }
+                    else if(ori2.IsEdgeOrigin()==false && (track1.GetId()==ori2.GetTrackEntry(k).GetId() || track2.GetId()==ori2.GetTrackEntry(k).GetId()) ){
+                        VTracksDeltaOrigins.push_back(ori2);
                     }
                 }
             }
 
+            //main track and the V tracks cannot be connected
             bool connectedThroughOthers = false;
             for(SOrigin &ori2:mainTrackOrigins){
                 for(int k=0; k<ori2.Multiplicity(); k++){
@@ -1133,6 +1180,15 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             std::cout<<" Connected through others "<<connectedThroughOthers<<std::endl;
             if(connectedThroughOthers==true)
                 continue;
+
+            // delta ray check
+            bool deltaRayIntersection = VTracksDeltaOrigins.size()>=1;
+            std::cout<<" Delta ray intersection "<<deltaRayIntersection<<std::endl;
+            if(deltaRayIntersection){
+                std::cout<<" SKIP... delta ray intersection\n";
+                continue;
+            }
+            
 
             // ------ Create the triangle object
             SPoint vertex1 = GetTracksEquationOppositePoint( track1, {track1}, ori.GetPoint() );

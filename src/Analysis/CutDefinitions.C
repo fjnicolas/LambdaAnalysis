@@ -57,6 +57,7 @@ std::vector<PlotDef> cutDefsTalk2 = {
     ,{"NUnOrigins",        "NUnOrigins",        CutType::kLeftInt,  0,   {0, 15, 15}, false,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
     ,{"NShowers", "NShowers", CutType::kLeft, 1, {0, 10, 10}, false, "# showers", "\\# \\ showers"}
     ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 5, {0, 200, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+    ,{"AngleMainTrackOverlap", "AngleMainTrackOverlap", CutType::kRight,  2, {0, 50, 50}, false, "OverlapWithMainTrack", "OverlapWithMainTrack"}
 
     ,{"NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0", "(NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0)", CutType::kCenter,  1,   {0, 2, 2}, true,  "topological cuts",  "\\ Topological \\ cuts"}
     //,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
@@ -69,6 +70,8 @@ std::vector<PlotDef> cutDefsTalk2 = {
 
     
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 200, 40}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
+
+    ,{"AngleMainTrackOverlap", "AngleMainTrackOverlap", CutType::kRight,  2, {0, 50, 50}, true, "OverlapWithMainTrack", "OverlapWithMainTrack"}
 
     ,{"AnglePassFit", "AnglePassFit", CutType::kRight, 1, {0, 2, 2}, false, "AnglePassFit", "AnglePassFit"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, false, "AnglePassChargeFit", "AnglePassChargeFit"}
@@ -171,7 +174,6 @@ std::vector<PlotDef> cutDefs2 = {
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 200, 40}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
     //,{"AngleNHitsTrack1", "AngleNHitsTrack1", CutType::kRight, 4, {0, 100, 50}, true, "track 1 # hits ", "Track1 \\ \\# \\ hits"}
     //,{"AngleNHitsTrack2", "AngleNHitsTrack2", CutType::kRight, 4, {0, 100, 50}, true, "track 2 # hits ", "Track2 \\ \\# \\ hits"}
-    
 
     
     ,{"AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio", CutType::kRight, 1.2, {0, 3, 20}, true, "AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio"}

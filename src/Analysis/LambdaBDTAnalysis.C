@@ -122,6 +122,7 @@ void RunLambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
     dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    dataloader->AddVariable( "AngleMainTrackOverlap", "Main Track Overlap", "", 'D' );
     dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
     //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
