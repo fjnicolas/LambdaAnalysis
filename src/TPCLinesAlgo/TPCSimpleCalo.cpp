@@ -1016,9 +1016,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     fXVertex = fTriangle.GetMainVertex().X();
     fYVertex = fTriangle.GetMainVertex().Y();
 
-    // drift to wire correction
-    double yCorrFactor = 0.25;
-
     // Hit coordinates for the first maxHits hits
     //maxHits = std::min( maxHits, (unsigned int)std::min(fTriangle.GetNHitsTrack1(), fTriangle.GetNHitsTrack2()) );
     std::cout<<" Set max hits\n";
