@@ -937,7 +937,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             std::cout<<"  Intersection not within edges\n";
             
             // delta ray check
-            int shortTrackId = (track1.NHits()<track2.NHits())? track1.GetId():track2.GetId();
             int longTrackId = (track1.NHits()>track2.NHits())? track1.GetId():track2.GetId();
             int shortTrackNHits = (track1.NHits()<track2.NHits())? track1.NHits():track2.NHits();
             if(longTrackId==longestTrackId && shortTrackNHits<=5){
