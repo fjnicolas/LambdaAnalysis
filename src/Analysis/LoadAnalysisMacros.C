@@ -5,7 +5,8 @@
 #include <TString.h>
 #include <TMath.h>
 
-#include "LambdaBDTAnalysis.C"
+#include "LambdaMVAAnalysis.C"
+#include "LambdaEvaluateMVAAnalysis.C"
 #include "LambdaAnalysis.C"
 
 
@@ -14,7 +15,7 @@ void LoadAnalysisMacros(){
     return;
 }
 
-void MacroEvaluateBDTAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void MacroEvaluateMVAAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
     //Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
@@ -30,19 +31,19 @@ void MacroEvaluateBDTAnalysis(std::string fInputFileName="", bool batchMode=1, s
     ReadPOT(fFile, 3.3e20, potScaling, potScalingSignal);
     std::cout<<"POT scaling: "<<potScaling<<" POT scaling signal: "<<potScalingSignal<<std::endl;
     
-    RunEvaluateBDTAnalysis(fTree, fTreeHeader, "dataset/weights/FRANSSelectionTMVA_BDT.weights.xml", potScaling, potScalingSignal, 3.3e20);
+    RunEvaluateMVAAnalysis(fTree, fTreeHeader, "BDT", "dataset/weights/", potScaling, potScalingSignal, 3.3e20);
 }
 
 
-void MacroBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1, bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
-    RunLambdaBDTAnalysis(fInputFileName, nTrainFrac, useBatchMode, fTreeDirName, fTreeName);
+void MacroMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1, std::string method="BDT", bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
+    RunLambdaMVAAnalysis(fInputFileName, nTrainFrac, method, useBatchMode, fTreeDirName, fTreeName);
 }
 
 
-void MacroRunAndEvaluateBDTAnalysis(std::string fInputFileName="", std::string fInputFileNameTest="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
+void MacroRunAndEvaluateMVAAnalysis(std::string fInputFileName, std::string fInputFileNameTest, std::string method="BDT", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
 
     // First make the training
-    RunLambdaBDTAnalysis(fInputFileName, -1, batchMode, fTreeDirName, fTreeName);
+    RunLambdaMVAAnalysis(fInputFileName, -1, method, batchMode, fTreeDirName, fTreeName);
 
     // Then evaluate the BDT
     //--------- Input TTrees
@@ -56,7 +57,7 @@ void MacroRunAndEvaluateBDTAnalysis(std::string fInputFileName="", std::string f
     ReadPOT(fFile, 3.3e20, potScaling, potScalingSignal);
     std::cout<<"POT scaling: "<<potScaling<<" POT scaling signal: "<<potScalingSignal<<std::endl;
     
-    RunEvaluateBDTAnalysis(fTree, fTreeHeader, "dataset/weights/FRANSSelectionTMVA_BDT.weights.xml", potScaling, potScalingSignal, 3.3e20);
+    RunEvaluateMVAAnalysis(fTree, fTreeHeader, method, "dataset/weights/", potScaling, potScalingSignal, 3.3e20);
 
 
 }

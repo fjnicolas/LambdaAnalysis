@@ -862,7 +862,7 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
     lambdaAnaTree.fNOriginsMult2 = fRecoEvent.GetNOriginsMult(2);
     lambdaAnaTree.fNOriginsMultGT3 = fRecoEvent.GetNOriginsMultGt(3);
     lambdaAnaTree.fNOriginsPairOneTwo = fRecoEvent.GetNOriginsMult(2) * fRecoEvent.GetNOriginsMult(1);
-    lambdaAnaTree.fNAngles = fRecoEvent.GetNAngles(); 
+    lambdaAnaTree.fNAngles = fRecoEvent.GetNAngles();
 
     // --- Best triangle variables ---
     if(bestTriangleIx!=-1){

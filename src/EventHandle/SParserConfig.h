@@ -187,6 +187,7 @@ VertexFinderAlgorithmPsetType ReadVertexFinderAlgorithmPset(std::string filename
     // Fill the parameter set
     fPsetVertexFinder.MaxDistToEdge = pt.get<double>("MaxDistToEdge");
     fPsetVertexFinder.RefineVertexIntersection = pt.get<bool>("RefineVertexIntersection");
+    fPsetVertexFinder.SlidingWindowN = pt.get<int>("SlidingWindowN");
     fPsetVertexFinder.UseEdgesDiscard = pt.get<bool>("UseEdgesDiscard");
     fPsetVertexFinder.MaxTrackFractionInMain = pt.get<float>("MaxTrackFractionInMain");
     fPsetVertexFinder.DecideMainTrack = pt.get<bool>("DecideMainTrack");

@@ -533,7 +533,90 @@ SPoint SLinearCluster::GetEdgeHit(SPoint p){
 
 double SLinearCluster::GetLength(){
     return std::hypot( 0.3*(fMaxX-fMinX), 0.075*(fYAtMaxX-fYAtMinX) );
-} 
+}
+
+// Function to get slope i¡of the track using Sliding window algorithm
+void SLinearCluster::FillSlidingWindowLineEquations(size_t N){
+    
+    // reset
+    fTrackEquationSlidingWindowV.clear();
+
+    // round N to be next even number
+    if(N%2!=0) N++;
+    size_t halfStep = N/2;
+
+    // sort hits in a map
+    std::vector<SHit> hits = GetHits();
+    std::map<int, std::vector<SHit>> hitsMap;
+
+    for(SHit & h:hits){
+        hitsMap[h.X()]={};
+    }
+    for(SHit & h:hits){
+        hitsMap[h.X()].push_back(h);
+    }
+
+    size_t dataSize = hitsMap.size();
+
+    std::vector<int> xValues;
+    for(auto & pos:hitsMap){
+        xValues.push_back(pos.first);
+    }
+
+
+    if (xValues.size() >= N + 2 + 1) {
+
+       
+        TPCLinesPCA pcaAlgo;
+
+        std::vector<double> slopesVector;
+        for (size_t i = halfStep; i < xValues.size() - halfStep; ++i) {
+            int xCenter = xValues[i];
+            std::vector<int> xSubset(xValues.begin() + (i - halfStep), xValues.begin() + (i + halfStep));
+            std::vector<SHit> hitsSubset;
+            for(int &x:xSubset){
+                for(SHit &h:hitsMap[x]){
+                    hitsSubset.push_back(h);
+                }
+            }
+
+            LineEquation pcaDir = pcaAlgo.PerformPCA2D(hitsSubset);
+            
+            /*double subSlope = pcaDir.Slope();
+            double subIntercept = pcaDir.Intercept();
+            std::cout<<" SubSlope "<<i<<" X="<<xCenter<<" "<<subSlope<<std::endl;*/
+
+            fTrackEquationSlidingWindowV[xCenter] = pcaDir;
+        }
+    
+    }
+    else{
+        fTrackEquationSlidingWindowV[fMinX] = fTrackEquationStart;
+        fTrackEquationSlidingWindowV[fMaxX] = fTrackEquationEnd;
+    }
+
+    
+    return;
+}
+
+LineEquation SLinearCluster::GetLineEquationAtX(int x){
+    // return the sliding window line equation at X or closest to x
+    if(fTrackEquationSlidingWindowV.find(x)!=fTrackEquationSlidingWindowV.end()){
+        return fTrackEquationSlidingWindowV[x];
+    }
+    else{//get closest X
+        int minD = 1e4;
+        int x = -1;
+        for(auto &lineEqs:fTrackEquationSlidingWindowV){
+            if( std::abs(lineEqs.first-x)<minD ){
+                minD = std::abs(lineEqs.first-x);
+                x = lineEqs.first;
+            }
+        }
+        if(x!=-1) return fTrackEquationSlidingWindowV[x];
+        else return fTrackEquation;
+    }
+}
 
 // instances
 template double SCluster::GetMinDistanceToCluster(const SHit& h);

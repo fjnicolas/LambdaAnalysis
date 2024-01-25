@@ -3,7 +3,8 @@ BEGIN_PROLOG
 VertexFinderAlg:
 {
     MaxDistToEdge: 4
-    RefineVertexIntersection: true 
+    RefineVertexIntersection: true
+    SlidingWindowN: 10
     UseEdgesDiscard: true 
     MaxTrackFractionInMain: 0.75
     DecideMainTrack: true 

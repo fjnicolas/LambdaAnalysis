@@ -110,6 +110,7 @@ struct VertexFinderAlgorithmPsetType {
  
     double MaxDistToEdge = 3;
     bool RefineVertexIntersection = true;
+    int SlidingWindowN = 10;
     bool UseEdgesDiscard = true;
     float MaxTrackFractionInMain = 0.75;
     bool DecideMainTrack = false;
@@ -132,6 +133,7 @@ struct VertexFinderAlgorithmPsetType {
     VertexFinderAlgorithmPsetType(
         double _maxDistToEdge,
         bool _refineVertexIntersection,
+        int _slidingWindowN,
         bool _useEdgesDiscard,
         float _maxTrackFractionInMain,
         bool _decideMainTrack,
@@ -149,6 +151,7 @@ struct VertexFinderAlgorithmPsetType {
         int _verbose): 
         MaxDistToEdge(_maxDistToEdge),
         RefineVertexIntersection(_refineVertexIntersection),
+        SlidingWindowN(_slidingWindowN),
         UseEdgesDiscard(_useEdgesDiscard),
         MaxTrackFractionInMain(_maxTrackFractionInMain),
         DecideMainTrack(_decideMainTrack),
@@ -169,6 +172,7 @@ struct VertexFinderAlgorithmPsetType {
     void Print() const {
         std::cout << "MaxDistToEdge: " << MaxDistToEdge << std::endl;
         std::cout << "RefineVertexIntersection: " << (RefineVertexIntersection ? "true" : "false") << std::endl;
+        std::cout << "SlidingWindowN: " << SlidingWindowN << std::endl;
         std::cout << "UseEdgesDiscard: " << (UseEdgesDiscard ? "true" : "false") << std::endl;
         std::cout << "MaxTrackFractionInMain: " << MaxTrackFractionInMain << std::endl;
         std::cout << "DecideMainTrack: " << (DecideMainTrack ? "true" : "false") << std::endl;

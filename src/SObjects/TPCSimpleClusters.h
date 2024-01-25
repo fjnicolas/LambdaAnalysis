@@ -102,6 +102,7 @@ class SLinearCluster {
         LineEquation fTrackEquation;
         LineEquation fTrackEquationStart;
         LineEquation fTrackEquationEnd;
+        std::map<int, LineEquation> fTrackEquationSlidingWindowV;
         
         SCluster fResidualHitCluster;
         SCluster fMainHitCluster;
@@ -169,6 +170,9 @@ class SLinearCluster {
         SPoint GetEdgeHit(SPoint p);
 
         double GetLength();
+
+        void FillSlidingWindowLineEquations(size_t N);
+        LineEquation GetLineEquationAtX(int x);
 };
 
 

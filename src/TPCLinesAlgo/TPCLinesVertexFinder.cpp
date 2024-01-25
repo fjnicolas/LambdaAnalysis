@@ -160,7 +160,7 @@ SPoint TPCLinesVertexFinder::GetTracksIntersection(SLinearCluster track1, SLinea
 
         intP = SPoint(xInt, yInt);
 
-        if (useEdgeSlopes == true) {
+        /*if (useEdgeSlopes == true) {
             if (std::abs(intP.X() - track1.GetMinX()) < std::abs(intP.X() - track1.GetMaxX())) {
                 lineEq1 = track1.GetTrackEquationStart();
             } else {
@@ -172,6 +172,15 @@ SPoint TPCLinesVertexFinder::GetTracksIntersection(SLinearCluster track1, SLinea
             } else {
                 lineEq2 = track2.GetTrackEquationEnd();
             }
+
+            xInt = (lineEq1.Intercept() - lineEq2.Intercept()) / (lineEq2.Slope() - lineEq1.Slope());
+            yInt = lineEq1.Slope() * xInt + lineEq1.Intercept();
+            intP = SPoint(xInt, yInt);
+        }*/
+
+        if (useEdgeSlopes == true) {
+            lineEq1 = track1.GetLineEquationAtX(intP.X());
+            lineEq2 = track2.GetLineEquationAtX(intP.X());
 
             xInt = (lineEq1.Intercept() - lineEq2.Intercept()) / (lineEq2.Slope() - lineEq1.Slope());
             yInt = lineEq1.Slope() * xInt + lineEq1.Intercept();
@@ -693,6 +702,10 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
     
 
     // ------- First look for all possible intersections
+    // Fill sliding window instersections
+    for(SLinearCluster &trk:trackList){
+        trk.FillSlidingWindowLineEquations(fTPCLinesVertexFinderPset.SlidingWindowN);
+    }
     // Vector to store the intersections
     std::vector<SOrigin> allIntersections;
     // ------ Loop 1
