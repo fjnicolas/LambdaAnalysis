@@ -131,18 +131,25 @@ public:
     double fAngleLengthTrack1;
     double fAngleLengthTrack2;
     double fAngleLengthMainTrack;
-    double fAngleDecayContainedDiff;
     bool fAngleLongestIsMain;
+    
+    // Angle cleaness
     double fAngleCoveredArea;
     int fAngleDirtHits;
     double fAngleDirtHitsRatio;
     int fAngleDirtHitsWires;
     double fAngleDirtHitsWiresRatio;
-    double fAngleOpeningAngle;
-    double fAngleMainTrackOverlap;
-
     int fNFreeHits;
     int fNUnassociatedHits;
+   
+    // Kinematics
+    double fAngleDecayContainedDiff;
+    double fAngleOpeningAngle;
+    double fAngleMainTrackOverlap;
+    int fAnglePzSignMuon;
+    int fAnglePzSignLambda;
+    int fAnglePzSign;
+    double fAngleGapOverlapWithAPAJuntion;
 
     // Calorimetry
     bool fAnglePassFit;

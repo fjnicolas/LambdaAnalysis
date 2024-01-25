@@ -25,10 +25,23 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, FRANSPsetType 
     fFRANSAlgo(fransPset, tpcLinesAlgoPset.View),
     fTriangleCalo(tpcLinesAlgoPset.CaloAlgorithmPset),
     fHasTriangle(false),
-    fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, tpcLinesAlgoPset.OutputPath))
+    fDisplay(TPCLinesDisplay(tpcLinesAlgoPset.Verbose>0, tpcLinesAlgoPset.OutputPath)),
+    fBadChannelsTPC0({4802, 4803, 4804, 4805, 4806, 4807}),
+    fBadChannelsTPC1({10440, 10441, 10442, 10443, 10444, 10445})
 {
 }
 
+// ---------------------------------------------------------------------
+// Overlap with APA
+int TPCLinesAlgo::GetNOverlappedChannelsWithAPABadChannels(int minCh, int maxCh){
+    int nOverlappedChannels = 0;
+    for(int ch=minCh; ch<=maxCh; ch++){
+        if(ch>=fBadChannelsTPC0.front() && ch<=fBadChannelsTPC0.back()) nOverlappedChannels++;
+        if(ch>=fBadChannelsTPC1.front() && ch<=fBadChannelsTPC1.back()) nOverlappedChannels++;
+    }
+
+    return nOverlappedChannels;
+}
 
 //----------------------------------------------------------------------
 // Display function
@@ -855,6 +868,9 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
     if(bestTriangleIx!=-1){
         fHasTriangle = true;
         STriangle bestTriangle = angleList[bestTriangleIx];
+        SOrigin bestOrigin = associatedOrigins[bestTriangleIx];
+        std::cout<<" Best triangle with tracks "<<bestTriangle.GetTrack1().GetId()<<" and "<<bestTriangle.GetTrack2().GetId()<<" with associated origin track "<<bestOrigin.GetTrack(0).GetId()<<std::endl;
+
 
         // --- Triangle variables ---
         lambdaAnaTree.fAngleFRANSScore = bestFRANSScore;
@@ -886,7 +902,23 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
 
         // Angle-main track overlap
         lambdaAnaTree.fAngleMainTrackOverlap = bestTriangle.GetOverlapWithMainTrack();
+        // Kinematics
+        int PzLambda = bestTriangle.GetMainVertex().X()-bestOrigin.GetPoint().X() > 0 ? 1 : -1;
+        SLinearCluster muonTrack = bestOrigin.GetTrack(0);
+        int PzMuon = muonTrack.GetMeanX() - bestOrigin.GetPoint().X() > 0 ? 1 : -1;
+        lambdaAnaTree.fAnglePzSignLambda = PzLambda;
+        lambdaAnaTree.fAnglePzSignMuon = PzMuon;
+        lambdaAnaTree.fAnglePzSign = PzLambda + PzMuon;
+        // APA gap
+        int lambdaVertexCh = bestTriangle.GetMainVertex().X() + ShiftX();
+        int muonVertexCh = bestOrigin.GetPoint().X() + ShiftX();
+        int gapMinCh = std::min(lambdaVertexCh, muonVertexCh);
+        int gapMaxCh = std::max(lambdaVertexCh, muonVertexCh);
+        int nOverlappedChannelsWithAPA = GetNOverlappedChannelsWithAPABadChannels(gapMinCh, gapMaxCh);
+        std::cout<<" Gap min/mac channels "<<gapMinCh<<" "<<gapMaxCh<<" # overlapped channels: "<<nOverlappedChannelsWithAPA<<std::endl;
+        lambdaAnaTree.fAngleGapOverlapWithAPAJuntion = 1.*nOverlappedChannelsWithAPA/(gapMaxCh-gapMinCh);
         
+
         // --- Triangle cleaness ---
         int nDirtHitsInTriangle = 0;
         double nFractionDirtHitsInTriangle = 0;
@@ -909,7 +941,7 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         fRecoEvent.GetUnassociatedHits(bestTriangle, nFreeHits, nUnassociatedHits);               
         lambdaAnaTree.fNUnassociatedHits = nUnassociatedHits;
         lambdaAnaTree.fNFreeHits = nFreeHits;
-                
+
         // --- Triangle calorimetry ---
         fTriangleCalo.SetTriangle(bestTriangle);
         fTriangleCalo.JointFitAnalysis();

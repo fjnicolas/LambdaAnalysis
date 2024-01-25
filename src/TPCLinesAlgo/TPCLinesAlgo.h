@@ -113,8 +113,14 @@ class TPCLinesAlgo {
 
         std::vector<SHit> GetHitsInCluster(int clusterId);
 
+        int GetNOverlappedChannelsWithAPABadChannels(int minCh, int maxCh);
+
         SEvent fRecoEvent;
         SPoint fMainVertex;
+
+        // APA gap
+        std::vector<int> fBadChannelsTPC0;
+        std::vector<int> fBadChannelsTPC1;
 
     public:
         // --- Constructor ---

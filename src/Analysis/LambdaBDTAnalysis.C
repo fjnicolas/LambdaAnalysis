@@ -108,7 +108,7 @@ void RunLambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
 
     dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
     //dataloader->AddVariable( "NUnOriginsMultGT3", "N^{2}", "", 'I' );
-    //dataloader->AddVariable( "NOrigins", "N_", "", 'I' );
+    dataloader->AddVariable( "NOrigins", "N_", "", 'I' );
     dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
     //dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
     dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
@@ -121,9 +121,9 @@ void RunLambdaBDTAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     //dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
     dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "AngleMainTrackOverlap", "Main Track Overlap", "", 'D' );
-    dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
+    //dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
     //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
     //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );

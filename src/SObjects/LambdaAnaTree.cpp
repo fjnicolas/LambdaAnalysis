@@ -146,17 +146,24 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleLengthTrack2", &fAngleLengthTrack2, readMode);
     SetBranch("AngleLengthMainTrack", &fAngleLengthMainTrack, readMode);
     SetBranch("AngleLongestIsMain", &fAngleLongestIsMain, readMode);
-    SetBranch("AngleDecayContainedDiff", &fAngleDecayContainedDiff, readMode);
+    
+    // Angle cleaness
     SetBranch("AngleCoveredArea", &fAngleCoveredArea, readMode);
-    SetBranch("AngleMainTrackOverlap", &fAngleMainTrackOverlap, readMode);
     SetBranch("AngleDirtHits", &fAngleDirtHits, readMode);
     SetBranch("AngleDirtHitsRatio", &fAngleDirtHitsRatio, readMode);
     SetBranch("AngleDirtHitsWires", &fAngleDirtHitsWires, readMode);
     SetBranch("AngleDirtHitsWiresRatio", &fAngleDirtHitsWiresRatio, readMode);
-    SetBranch("AngleOpeningAngle", &fAngleOpeningAngle, readMode);
-
     SetBranch("NFreeHits", &fNFreeHits, readMode);
     SetBranch("NUnassociatedHits", &fNUnassociatedHits, readMode);
+
+    // Kinematics
+    SetBranch("AngleDecayContainedDiff", &fAngleDecayContainedDiff, readMode);
+    SetBranch("AngleOpeningAngle", &fAngleOpeningAngle, readMode);
+    SetBranch("AngleMainTrackOverlap", &fAngleMainTrackOverlap, readMode);
+    SetBranch("AnglePzSignMuon", &fAnglePzSignMuon, readMode);
+    SetBranch("AnglePzSignLambda", &fAnglePzSignLambda, readMode);
+    SetBranch("AnglePzSign", &fAnglePzSign, readMode);
+    SetBranch("AngleGapOverlapWithAPAJuntion", &fAngleGapOverlapWithAPAJuntion, readMode);
 
     // Set branch addresses for charge ratio information
     SetBranch("AnglePassFit", &fAnglePassFit, readMode);
@@ -270,6 +277,7 @@ void LambdaAnaTree::ResetVars(){
     fNUnOriginsMult2 = -999;
     fNUnOriginsMultGT3 = -999;
 
+    // Angle information
     fNAngles = -999;
     fAngleFRANSScore = -999;
     fAngleGap = -999;
@@ -282,15 +290,26 @@ void LambdaAnaTree::ResetVars(){
     fAngleLengthTrack2 = -999;
     fAngleLengthMainTrack = -999;
     fAngleLongestIsMain = false;
-    fAngleDecayContainedDiff = -999;
+    
+    // Angle cleaness
     fAngleCoveredArea = -999;
-    fAngleMainTrackOverlap = -999;
     fAngleDirtHits = -999;
     fAngleDirtHitsRatio = -999;
     fAngleDirtHitsWires = -999;
     fAngleDirtHitsWiresRatio = -999;
-    fAngleOpeningAngle = -999;
+    fNFreeHits = -999;
+    fNUnassociatedHits = -999;
 
+    // Kinematics
+    fAngleOpeningAngle = -999;
+    fAngleDecayContainedDiff = -999;
+    fAngleMainTrackOverlap = -999;
+    fAnglePzSignMuon = -999;
+    fAnglePzSignLambda = -999;
+    fAnglePzSign = -999;
+    fAngleGapOverlapWithAPAJuntion = -999;
+
+    // Calorimetry
     fAnglePassFit = false;
     fAngleTwoLinesChi2 = -999;
     fAngleNVertexHits = -999;
@@ -316,10 +335,6 @@ void LambdaAnaTree::ResetVars(){
     fAngleChargeRatioFit = -999;
     fAngleChargeDifferenceFit = -999;
     fAngleChargeRelativeDifferenceFit = -999;
-
-
-    fNFreeHits = -999;
-    fNUnassociatedHits = -999;
 
 }
 
@@ -370,17 +385,27 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Angle Length Track 2: " << fAngleLengthTrack2 << std::endl;
         std::cout << " Angle Length Main Track: " << fAngleLengthMainTrack << std::endl;
         std::cout << " Angle Longest Is Main: " << fAngleLongestIsMain << std::endl;
-        std::cout << " Angle Decay Contained Diff: " << fAngleDecayContainedDiff << std::endl;
+    
+        // Angle cleaness
         std::cout << " Angle Covered Area: " << fAngleCoveredArea << std::endl;
-        std::cout << " Angle Main Track Overlap: " << fAngleMainTrackOverlap << std::endl;
         std::cout << " Angle Dirt Hits: " << fAngleDirtHits << std::endl;
         std::cout << " Angle Dirt Hits Ratio: " << fAngleDirtHitsRatio << std::endl;
         std::cout << " Angle Dirt Hits Wires: " << fAngleDirtHitsWires << std::endl;
         std::cout << " Angle Dirt Hits Wires Ratio: " << fAngleDirtHitsWiresRatio << std::endl;
-        std::cout << " Angle Opening Angle: " << fAngleOpeningAngle << std::endl;
         std::cout << " Angle Unassociated Hits: " << fNUnassociatedHits << std::endl;
         std::cout << " Angle Free Hits: " << fNFreeHits << std::endl;
 
+        // Kinematics
+        std::cout << " --- Kinematics Information --- " << std::endl;
+        std::cout << " Angle Opening Angle: " << fAngleOpeningAngle << std::endl;
+        std::cout << " Angle Decay Contained Diff: " << fAngleDecayContainedDiff << std::endl;
+        std::cout << " Angle Main Track Overlap: " << fAngleMainTrackOverlap << std::endl;
+        std::cout << " Angle Pz Sign Muon: " << fAnglePzSignMuon << std::endl;
+        std::cout << " Angle Pz Sign Lambda: " << fAnglePzSignLambda << std::endl;
+        std::cout << " Angle Pz Sign: " << fAnglePzSign << std::endl;
+        std::cout << " Angle Gap Overlap With APA Juntion: " << fAngleGapOverlapWithAPAJuntion << std::endl;
+
+        // Calorimetry
         std::cout << " --- Calorimetry Information --- " << std::endl;
         std::cout << " Angle Pass Fit: " << fAnglePassFit << std::endl;
         std::cout << " Angle Two Lines Chi2: " << fAngleTwoLinesChi2 << std::endl;

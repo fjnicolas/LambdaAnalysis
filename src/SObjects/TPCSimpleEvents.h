@@ -40,6 +40,7 @@ class SOrigin {
         SPoint GetPoint(){ return fVertex;};
         double GetYError(){ return fYError;};
         std::vector<SLinearCluster> GetTracks(){ return fTrackList; };
+        SLinearCluster GetTrack(int ix){ return fTrackList[ix];};
         std::vector<int> GetTracksIDs();
         std::vector<int> GetTracksConnectionsIDs();
         int Multiplicity(){return fMultiplicity;};
