@@ -556,8 +556,6 @@ void SLinearCluster::FillSlidingWindowLineEquations(size_t N){
         hitsMap[h.X()].push_back(h);
     }
 
-    size_t dataSize = hitsMap.size();
-
     std::vector<int> xValues;
     for(auto & pos:hitsMap){
         xValues.push_back(pos.first);
