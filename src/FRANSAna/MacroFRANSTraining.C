@@ -18,7 +18,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
 
-int MacroFRANSTraining(std::string fInputFileName="", int view = 2, int nTrain = -1, std::string fTreeDirName = "FRANSCheatedVx/", std::string fTreeName = "FRANSTree")
+int MacroFRANSTraining(std::string fInputFileName="", int view = 2, double nTrainFrac = -1, std::string fTreeDirName = "FRANSCheatedVx/", std::string fTreeName = "FRANSTree")
 {
 
   //--------- Configuration Parameters
@@ -59,8 +59,8 @@ int MacroFRANSTraining(std::string fInputFileName="", int view = 2, int nTrain =
 
 
   //---------  Add variables to the dataloader
-  dataloader->AddVariable( "FRANSObj"+fVw+".fAlpha", "#alpha", "", 'D' );
-  //dataloader->AddVariable( "FRANSObj"+fVw+".fIota", "#iota", "", 'D' );
+  //dataloader->AddVariable( "FRANSObj"+fVw+".fAlpha", "#alpha", "", 'D' );
+  dataloader->AddVariable( "FRANSObj"+fVw+".fIota", "#iota", "", 'D' );
   dataloader->AddVariable( "FRANSObj"+fVw+".fEta", "#eta", "", 'D' );
   dataloader->AddVariable( "FRANSObj"+fVw+".fDelta", "#Delta", "", 'D' );
   dataloader->AddVariable( "FRANSObj"+fVw+".fFitScore", "r", "", 'D' );
@@ -94,9 +94,18 @@ int MacroFRANSTraining(std::string fInputFileName="", int view = 2, int nTrain =
   else if(fBGLabel=="RES") bgCut = bgCutRES;
 
 
+
+
+  //--------- Set the training and testing fractions
+  int nMaxSignal = fTree->Draw(">>selectedEntries", signalCut, "entrylist")-1;
+  int nMaxBg = fTree->Draw(">>selectedEntries", bgCut, "entrylist")-1;
+  std::cout<<"nMaxSignal: "<<nMaxSignal<<std::endl;
+  std::cout<<"nMaxBg: "<<nMaxBg<<std::endl;
+
   //--------- Prepare training and test trees
-  std::string tmva_options = ""; 
-  if(nTrain!=-1) tmva_options+="nTrain_Signal="+std::to_string(nTrain)+":nTrain_Background="+to_string(nTrain);
+  std::string tmva_options = "";
+  if(nTrainFrac<0) tmva_options = "nTrain_Signal="+std::to_string(nMaxSignal)+":nTrain_Background="+to_string(nMaxBg);
+  else tmva_options = "nTrain_Signal="+std::to_string((int)nTrainFrac*nMaxSignal)+":nTrain_Background="+to_string((int)nTrainFrac*nMaxBg);
   tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";
   dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, tmva_options );
 

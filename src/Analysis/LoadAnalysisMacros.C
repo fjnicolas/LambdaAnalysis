@@ -15,7 +15,7 @@ void LoadAnalysisMacros(){
     return;
 }
 
-void MacroEvaluateMVAAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void MacroEvaluateMVAAnalysis(std::string fInputFileName="", bool batchMode=1, std::string method="BDT", std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
     //Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
@@ -31,7 +31,7 @@ void MacroEvaluateMVAAnalysis(std::string fInputFileName="", bool batchMode=1, s
     ReadPOT(fFile, 3.3e20, potScaling, potScalingSignal);
     std::cout<<"POT scaling: "<<potScaling<<" POT scaling signal: "<<potScalingSignal<<std::endl;
     
-    RunEvaluateMVAAnalysis(fTree, fTreeHeader, "BDT", "dataset/weights/", potScaling, potScalingSignal, 3.3e20);
+    RunEvaluateMVAAnalysis(fTree, fTreeHeader, method, "dataset/weights/", potScaling, potScalingSignal, 3.3e20);
 }
 
 

@@ -23,6 +23,7 @@ struct FRANSPsetType {
   int Verbose;
   bool CalculateScore;
   bool UseAlpha;
+  bool UseIota;
   std::string TMVAFilename;
   std::string OutputPath;
 
@@ -42,6 +43,7 @@ struct FRANSPsetType {
                 int verbose=0,
                 bool calculate=false,
                 bool useAlpha=false,
+                bool useIota=false,
                 const std::string& filename="",
                 const std::string& outputpath="" )
                   : ApplyRawSmoothing(rawSmoothing),
@@ -59,6 +61,7 @@ struct FRANSPsetType {
                     Verbose(verbose),
                     CalculateScore(calculate),
                     UseAlpha(useAlpha),
+                    UseIota(useIota),
                     TMVAFilename(filename),
                     OutputPath(outputpath)
   {}
@@ -79,6 +82,7 @@ struct FRANSPsetType {
     std::cout << "Verbose: " << Verbose << std::endl;
     std::cout << "CalculateScore: " << CalculateScore << std::endl;
     std::cout << "UseAlpha: " << UseAlpha << std::endl;
+    std::cout << "UseIota: " << UseIota << std::endl;
     std::cout << "TMVAFilename: " << TMVAFilename << std::endl;
     std::cout << "OutputPath: " << OutputPath << std::endl;
   }

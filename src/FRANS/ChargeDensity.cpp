@@ -25,6 +25,8 @@ ChargeDensity::ChargeDensity(FRANSPsetType const& config, int view)
   if(fFRANSPset.CalculateScore){
     if(fFRANSPset.UseAlpha)
       fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fAlpha", &fAlpha );
+    if(fFRANSPset.UseIota)
+      fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fIota", &fIota );
     fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fEta", &fEta );
     fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fDelta", &fDelta);
     fTMVAReader.AddVariable( "FRANSObj"+std::to_string(view)+".fFitScore", &fFitScore );

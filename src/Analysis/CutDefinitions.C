@@ -50,30 +50,42 @@ std::vector<PlotDef> cutDefsTalk2 = {
     //,{"NOriginsPairOneTwo>0", "NOriginsPairOneTwo>0", CutType::kCenter, 1, {0,2,2}, true, "# origins mult 1>0, # origins mult2>0", "\\#\\ origins\\ mult \\ 1>0, \\# \\ origins \\ mult \\ 2>0"}
 
     
+    /*,{"NAngles",               "NAngles",             CutType::kRight, fCutMinNAngles , {0,5,5}, true, "# V", "\\# \\ V" }
+    ,{"AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio", CutType::kNone, 1, {0, 3, 20}, false, "AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio"}
+    ,{"AngleChargeRatioIntegral", "AngleChargeRatioIntegral", CutType::kNone, 1, {0, 3, 20}, false, "AngleChargeRatioIntegral", "AngleChargeRatioIntegral"}
+    ,{"AngleBandCrossHits", "AngleBandCrossHits", CutType::kNone, 1, {0, 2, 50}, false, "AngleBandCrossHits", "AngleBandCrossHits"}*/
 
-    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
+
+
+    /*,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     ,{"NAngles",               "NAngles",             CutType::kRight, fCutMinNAngles , {0,5,5}, false, "# V", "\\# \\ V" }
     ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft, 1, {0, 15, 30}, false, "#Delta#alpha [#circ]", "\\Delta\\alpha\\ [\\circ]"}
     ,{"NUnOrigins",        "NUnOrigins",        CutType::kLeftInt,  0,   {0, 15, 15}, false,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
     ,{"NShowers", "NShowers", CutType::kLeft, 1, {0, 10, 10}, false, "# showers", "\\# \\ showers"}
     ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 5, {0, 200, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
-    ,{"AngleMainTrackOverlap", "AngleMainTrackOverlap", CutType::kRight,  2, {0, 50, 50}, false, "OverlapWithMainTrack", "OverlapWithMainTrack"}
-
+    ,{"AngleMainTrackOverlap", "AngleMainTrackOverlap", CutType::kRight,  2, {0, 50, 50}, false, "OverlapWithMainTrack", "OverlapWithMainTrack"}*/
+    ,{"NAngles",               "NAngles",             CutType::kRight, fCutMinNAngles , {0,5,5}, true, "# V", "\\# \\ V" }
+    ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kNone, 10, {0, 200, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+    ,{"AnglePzSign", "AnglePzSign", CutType::kNone,  1, {-4, 4, 8}, false, "AnglePzSign", "AnglePzSign"}
+    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kNone,  0, {0, 1, 20}, false, "AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion"}
     ,{"NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0", "(NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0)", CutType::kCenter,  1,   {0, 2, 2}, true,  "topological cuts",  "\\ Topological \\ cuts"}
+
     //,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
     //,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
+    ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 200, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
 
-
     ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 200, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
-
-
-    
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 200, 40}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
+    
 
-    ,{"AngleMainTrackOverlap", "AngleMainTrackOverlap", CutType::kRight,  2, {0, 50, 50}, true, "OverlapWithMainTrack", "OverlapWithMainTrack"}
+    /*,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, false, "AnglePzSign", "AnglePzSign"}
+    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kRight, 0, {0, 1, 20}, false, "AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion"}
 
-    ,{"AngleCoveredArea", "AngleCoveredArea", CutType::kLeft, 0.5, {0, 2, 40}, true, "Covered Area", "Covered \\ Area"}
+    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "AnglePzSign", "AnglePzSign"}
+    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kRight,  0, {0, 1, 20}, true, "AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion"}
+    ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 200, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}}*/
+    
 
     /*,{"AnglePassFit", "AnglePassFit", CutType::kRight, 1, {0, 2, 2}, false, "AnglePassFit", "AnglePassFit"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, false, "AnglePassChargeFit", "AnglePassChargeFit"}
@@ -89,8 +101,7 @@ std::vector<PlotDef> cutDefsTalk2 = {
     ,{"AngleNVertexHits", "AngleNVertexHits", CutType::kNone, 1, {0, 30, 30}, false, "AngleNVertexHits", "AngleNVertexHits"}
     ,{"AngleNBulkHits", "AngleNBulkHits", CutType::kNone, 1, {0, 100, 20}, false, "AngleNBulkHits", "AngleNBulkHits"}*/
 
-    
-
+    //,{"AngleMainTrackOverlap", "AngleMainTrackOverlap", CutType::kRight,  2, {0, 50, 50}, true, "OverlapWithMainTrack", "OverlapWithMainTrack"}
 
     /*,{"AnglePassFit", "AnglePassFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassFit", "AnglePassFit"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassChargeFit", "AnglePassChargeFit"}
