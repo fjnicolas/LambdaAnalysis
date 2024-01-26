@@ -138,6 +138,7 @@ FRANSPsetType ReadFRANSPset(std::string filename, std::string blockName){
     fPsetFRANS.Verbose = pt.get<int>("Verbose");
     fPsetFRANS.CalculateScore = pt.get<bool>("CalculateScore");
     fPsetFRANS.UseAlpha = pt.get<bool>("UseAlpha");
+    fPsetFRANS.UseIota = pt.get<bool>("UseIota");
     fPsetFRANS.TMVAFilename = pt.get<std::string>("TMVAFilename");
     fPsetFRANS.TMVAFilename = fPsetFRANS.TMVAFilename.substr(1, fPsetFRANS.TMVAFilename.size()-2);
     fPsetFRANS.OutputPath = pt.get<std::string>("OutputPath");

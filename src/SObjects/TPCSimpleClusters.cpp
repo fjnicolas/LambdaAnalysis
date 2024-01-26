@@ -581,10 +581,6 @@ void SLinearCluster::FillSlidingWindowLineEquations(size_t N){
             }
 
             LineEquation pcaDir = pcaAlgo.PerformPCA2D(hitsSubset);
-            
-            /*double subSlope = pcaDir.Slope();
-            double subIntercept = pcaDir.Intercept();
-            std::cout<<" SubSlope "<<i<<" X="<<xCenter<<" "<<subSlope<<std::endl;*/
 
             fTrackEquationSlidingWindowV[xCenter] = pcaDir;
         }
@@ -606,15 +602,19 @@ LineEquation SLinearCluster::GetLineEquationAtX(int x){
     }
     else{//get closest X
         int minD = 1e4;
-        int x = -1;
+        int xIt = -1;
         for(auto &lineEqs:fTrackEquationSlidingWindowV){
             if( std::abs(lineEqs.first-x)<minD ){
                 minD = std::abs(lineEqs.first-x);
-                x = lineEqs.first;
+                xIt = lineEqs.first;
             }
         }
-        if(x!=-1) return fTrackEquationSlidingWindowV[x];
-        else return fTrackEquation;
+        if(xIt!=-1){
+            return fTrackEquationSlidingWindowV[xIt];
+        }
+        else{
+            return fTrackEquation;
+        }
     }
 }
 

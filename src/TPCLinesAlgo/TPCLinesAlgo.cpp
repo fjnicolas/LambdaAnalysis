@@ -321,7 +321,8 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
 
     for(size_t k=0; k<recoTrackList.size(); k++){
         std::vector<SHit> newHitList = recoTrackList[k].GetHits();    
-       
+        SLinearCluster updatedTrack = recoTrackList[k];
+
         std::map<int, std::vector<SHit>> hitsToAddMap;
         for(SHit & h:newHitsMap[k]){
             if(hitsToAddMap.find(h.X())==hitsToAddMap.end()){
@@ -332,29 +333,27 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
             }
         }
 
-        std::cout<<" Track "<<recoTrackList[k].GetId()<<std::endl;
+        std::cout<<" \nTrack "<<updatedTrack.GetId()<<std::endl;
         
         // loop over the hits
-        int lastMinX = recoTrackList[k].GetMinX();
-        int lastMaxX = recoTrackList[k].GetMaxX();
+        int lastMinX = updatedTrack.GetMinX();
+        int lastMaxX = updatedTrack.GetMaxX();
         for(auto & hitMap:hitsToAddMap){
             int x = hitMap.first;
-            std::cout<<"    "<<x<<std::endl;
 
-            if(x>recoTrackList[k].GetMinX() && x<recoTrackList[k].GetMaxX()) continue;
+            if(x>updatedTrack.GetMinX() && x<updatedTrack.GetMaxX()) continue;
             
-           
-            LineEquation trackSlope = recoTrackList[k].GetTrackEquation();
+            //LineEquation trackSlope = updatedTrack.GetTrackEquation();
+            LineEquation trackSlope = updatedTrack.GetLineEquationAtX( x );
+
             bool tryToAdd = false;
-            if(x<recoTrackList[k].GetMinX() && std::abs(x-lastMinX)<=2 && x!=lastMinX){
+            if(x<updatedTrack.GetMinX() && std::abs(x-lastMinX)<=7 && x!=lastMinX){ // 6 is maximum APA junction
                 lastMinX = x;
-                tryToAdd = true;
-                trackSlope = recoTrackList[k].GetTrackEquationStart();
+                tryToAdd = true;        
             }
-            else if(x>recoTrackList[k].GetMaxX() && std::abs(x-lastMaxX)<=2 && x!=lastMaxX){
+            else if(x>updatedTrack.GetMaxX() && std::abs(x-lastMaxX)<=7 && x!=lastMaxX){
                 lastMaxX = x;
                 tryToAdd = true;
-                trackSlope = recoTrackList[k].GetTrackEquationEnd();
             }
 
             if(tryToAdd){
@@ -368,7 +367,13 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
                         selHit = h;
                     }
                 }
-                newHitList.push_back(selHit);
+                
+                //std::cout<<minD<<" COMP "<<updatedTrack.GetCompactness()<<std::endl;
+                if(minD<5*updatedTrack.GetCompactness()){
+                    newHitList.push_back(selHit);
+                    updatedTrack.AddHit(selHit);
+                    updatedTrack.FillSlidingWindowLineEquations(10);
+                }
             }
             
         }
@@ -768,6 +773,9 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         }
 
         // --- Out of ROI hits merger ---
+        // Fill sliding window instersections
+        for(SLinearCluster &trk:NewTrackList)   trk.FillSlidingWindowLineEquations(10);
+        
         std::vector<SHit> missingHits = discardedHits;
         missingHits.insert(missingHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
         NewTrackList = MergeOutOfROIHits(NewTrackList, missingHits);
@@ -918,7 +926,6 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         std::cout<<" Gap min/mac channels "<<gapMinCh<<" "<<gapMaxCh<<" # overlapped channels: "<<nOverlappedChannelsWithAPA<<std::endl;
         lambdaAnaTree.fAngleGapOverlapWithAPAJuntion = 1.*nOverlappedChannelsWithAPA/(gapMaxCh-gapMinCh);
         
-
         // --- Triangle cleaness ---
         int nDirtHitsInTriangle = 0;
         double nFractionDirtHitsInTriangle = 0;
@@ -929,7 +936,7 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
                                         nFractionDirtHitsInTriangle,
                                         nDirtHitsInTriangleWires,
                                         nFractionDirtHitsInTriangleWires);
-          
+        
         lambdaAnaTree.fAngleDirtHits = nDirtHitsInTriangle;
         lambdaAnaTree.fAngleDirtHitsWires = nDirtHitsInTriangleWires;
         lambdaAnaTree.fAngleDirtHitsRatio = nFractionDirtHitsInTriangle;

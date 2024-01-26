@@ -16,8 +16,9 @@ ChargeDensityAlg:
     UseHitWidth: true
     DebugMode: false
     CalculateScore: true
-    UseAlpha: true
-    TMVAFilename: "FRANSSelectionTMVA_BDT_ViewCWithWidth.weights.xml"
+    UseAlpha: false
+    UseIota: true
+    TMVAFilename: "FRANSSelectionTMVA_BDT_ViewCWithWidth_Iota.weights.xml"
     OutputPath: "OutputLambdaAna"
     Verbose: 0
 }
