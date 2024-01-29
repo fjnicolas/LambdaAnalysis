@@ -155,6 +155,27 @@ void SCalo::Display(){
 
 // ------ STriangleCalo class ------
 
+double CalculateMean( std::vector<double>& values) {
+
+    double sum = 0;
+    for ( double& value : values) {
+        sum += value;
+    }
+    return sum / values.size();
+}
+
+double CalculateStdDev( std::vector<double>& values) {
+
+    if(values.size()==0) return 0;
+    double mean = CalculateMean(values);
+    double sumSqDiff = 0;
+    for ( double& value : values) {
+        double diff = value - mean;
+        sumSqDiff += diff * diff;
+    }
+    return std::sqrt(sumSqDiff / values.size());
+}
+
 // --- Broken line fit ---
 Double_t BrokenLine(Double_t *x,Double_t *par) {
   
@@ -711,9 +732,9 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     TH1F *h1 = new TH1F("h2", "h2", 100, 0, maxLength);
     TH1F *h2 = new TH1F("h1", "h1", 100, 0, maxLength);
     // Fit functions
-    TF1 *fit1 = new TF1("fit1", "[0]", 0, calo1.GetTrackLength());
+    TF1 *fit1 = new TF1("fit1", "[0]+[1]*x", 0, calo1.GetTrackLength());
     TF1 *fit1Exp = new TF1("fit1Exp", "[0]*exp(x*[1])+[2]", 0, calo1.GetTrackLength());
-    TF1 *fit2 = new TF1("fit2", "[0]", 0, calo2.GetTrackLength());
+    TF1 *fit2 = new TF1("fit2", "[0]+[1]*x", 0, calo2.GetTrackLength());
     TF1 *fit2Exp = new TF1("fit2Exp", "[0]*exp(x*[1])+[2]", 0, calo2.GetTrackLength());
 
     // --- First track fitting
@@ -783,6 +804,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
                 h1->SetBinContent(i, hint1->GetBinContent(i));
                 h1->SetBinError(i, hint1->GetBinError(i));
             }
+            if( fit1->GetParameter(1)-fit1->GetParError(1) > 0 ) pass1 = false;
         }
 
     }
@@ -807,6 +829,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
                 h2->SetBinContent(i, hint2->GetBinContent(i));
                 h2->SetBinError(i, hint2->GetBinError(i));
             }
+            if( fit2->GetParameter(1)-fit2->GetParError(1) > 0 ) pass2 = false;
         }
     }
 
@@ -918,7 +941,7 @@ void SortSHitVectorByDistance(std::vector<SHit>& hits, double externalX, double 
         // Function to calculate the distance between two points
         auto calculateDistance = [](const SHit& point, double externalX, double externalY) {
             double deltaX = point.X() - externalX;
-            double deltaY = point.Y() - externalY;
+            double deltaY = 0.25*(point.Y() - externalY);
             return std::sqrt(deltaX * deltaX + deltaY * deltaY);
         };
 
@@ -1264,6 +1287,38 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     fCalo2 = calo2;
     std::cout<<" Set calo objects\n";
 
+
+    // Angle deviation
+    std::vector<double> anglesTrack1, anglesTrack2;
+    for(size_t k=0; k<fHitsTrack1.size()-1; k++){
+        SHit h1 = fHitsTrack1[k];
+        SHit h2 = fHitsTrack1[k+1];
+        double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
+        anglesTrack1.push_back(angle);
+        //std::cout<<"  angle: "<<angle<<std::endl;
+    }
+    for(size_t k=0; k<fHitsTrack2.size()-1; k++){
+        SHit h1 = fHitsTrack2[k];
+        SHit h2 = fHitsTrack2[k+1];
+        double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
+        anglesTrack2.push_back(angle);
+        //std::cout<<"  angle: "<<angle<<std::endl;
+    }
+
+    std::vector<double> anglesDiffTrack1;
+    std::vector<double> anglesDiffTrack2;
+    for(size_t k=0; k<anglesTrack1.size()-1; k++){
+        anglesDiffTrack1.push_back( anglesTrack1[k+1]-anglesTrack1[k] );
+    }
+    for(size_t k=0; k<anglesTrack2.size()-1; k++){
+        anglesDiffTrack2.push_back( anglesTrack2[k+1]-anglesTrack2[k] );
+    }
+
+    fResidualRange1AngleRMS = CalculateStdDev(anglesDiffTrack1);
+    fResidualRange2AngleRMS = CalculateStdDev(anglesDiffTrack2);
+    fResidualRangeMinAngleRMS = std::min(fResidualRange1AngleRMS, fResidualRange2AngleRMS);
+    fResidualRangeMaxAngleRMS = std::max(fResidualRange1AngleRMS, fResidualRange2AngleRMS);
+
     
     
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, nullptr);
@@ -1333,6 +1388,7 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     fResidualRange1RMS = calo1.GetResidualRangeRMS();
     fResidualRange2RMS = calo2.GetResidualRangeRMS();
     fResidualRangeMinRMS = std::min(fResidualRange1RMS, fResidualRange2RMS);
+    fResidualRangeMaxRMS = std::max(fResidualRange1RMS, fResidualRange2RMS);
 
     if(yAngle1>0){
         std::cout<<"YProton angle: "<<yAngle1<<" YPion angle: "<<yAngle2<<"\n";
@@ -1467,6 +1523,25 @@ void STriangleCalo::Display(TCanvas *c1){
         marker->SetMarkerStyle(24);
         marker->Draw("same");
     }
+    
+    // Draw arrows joining hits for each track
+    for(size_t k=0; k<fHitsTrack1.size()-1; k++){
+        SHit h1 = fHitsTrack1[k];
+        SHit h2 = fHitsTrack1[k+1];
+        TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
+        arrow->Draw();
+        
+    }
+    for(size_t k=0; k<fHitsTrack2.size()-1; k++){
+        SHit h1 = fHitsTrack2[k];
+        SHit h2 = fHitsTrack2[k+1];
+        TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
+        arrow->Draw();
+    }
+
+    pad1->cd();
+
+
 
     leg->Draw("same");
 

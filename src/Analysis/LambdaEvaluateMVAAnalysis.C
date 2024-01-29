@@ -324,6 +324,8 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     float AngleDecayContainedDiff;
     float AngleOpeningAngle;
     float AngleMainTrackOverlap;
+    float AnglePzSign;
+    float AngleGapOverlapWithAPAJuntion;
     // --- Calorimetry
     float AngleTwoLinesChi2;
     float AnglePassFit;
@@ -381,6 +383,8 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     if(fVarLabels["AngleDecayContainedDiff"]==true) fTMVAReader->AddVariable( "AngleDecayContainedDiff", &AngleDecayContainedDiff );
     if(fVarLabels["AngleOpeningAngle"]==true) fTMVAReader->AddVariable( "AngleOpeningAngle", &AngleOpeningAngle );
     if(fVarLabels["AngleMainTrackOverlap"]==true) fTMVAReader->AddVariable( "AngleMainTrackOverlap", &AngleMainTrackOverlap );
+    if(fVarLabels["AnglePzSign"]==true) fTMVAReader->AddVariable( "AnglePzSign", &AnglePzSign );
+    if(fVarLabels["AngleGapOverlapWithAPAJuntion"]==true) fTMVAReader->AddVariable( "AngleGapOverlapWithAPAJuntion", &AngleGapOverlapWithAPAJuntion );
     // --- Calorimetry
     if(fVarLabels["AngleTwoLinesChi2"]==true) fTMVAReader->AddVariable( "AngleTwoLinesChi2", &AngleTwoLinesChi2 );
     if(fVarLabels["AnglePassFit"]==true) fTMVAReader->AddVariable( "AnglePassFit", &AnglePassFit );
@@ -482,6 +486,8 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
         AngleDecayContainedDiff = fAnaTreeHandle.fAngleDecayContainedDiff;
         AngleOpeningAngle = fAnaTreeHandle.fAngleOpeningAngle;
         AngleMainTrackOverlap = fAnaTreeHandle.fAngleMainTrackOverlap;
+        AnglePzSign = fAnaTreeHandle.fAnglePzSign;
+        AngleGapOverlapWithAPAJuntion = fAnaTreeHandle.fAngleGapOverlapWithAPAJuntion;
         // --- Calorimetry
         AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
         AnglePassFit = fAnaTreeHandle.fAnglePassFit;

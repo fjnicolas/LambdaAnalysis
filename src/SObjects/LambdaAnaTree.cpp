@@ -166,6 +166,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleGapOverlapWithAPAJuntion", &fAngleGapOverlapWithAPAJuntion, readMode);
 
     // Set branch addresses for charge ratio information
+    // vertex
     SetBranch("AnglePassFit", &fAnglePassFit, readMode);
     SetBranch("AngleTwoLinesChi2", &fAngleTwoLinesChi2, readMode);
     SetBranch("AngleNVertexHits", &fAngleNVertexHits, readMode);
@@ -176,9 +177,16 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleTrackLength1", &fAngleTrackLength1, readMode);
     SetBranch("AngleTrackLength2", &fAngleTrackLength2, readMode);
     SetBranch("AngleTrackLengthRatio", &fAngleTrackLengthRatio, readMode);
+    // residual range
     SetBranch("AngleResidualRange1RMS", &fAngleResidualRange1RMS, readMode);
     SetBranch("AngleResidualRange2RMS", &fAngleResidualRange2RMS, readMode);
     SetBranch("AngleResidualRangeMinRMS", &fAngleResidualRangeMinRMS, readMode);
+    SetBranch("AngleResidualRangeMaxRMS", &fAngleResidualRangeMaxRMS, readMode);
+    SetBranch("AngleResidualRange1AngleRMS", &fAngleResidualRange1AngleRMS, readMode);
+    SetBranch("AngleResidualRange2AngleRMS", &fAngleResidualRange2AngleRMS, readMode);
+    SetBranch("AngleResidualRangeMinAngleRMS", &fAngleResidualRangeMinAngleRMS, readMode);
+    SetBranch("AngleResidualRangeMaxAngleRMS", &fAngleResidualRangeMaxAngleRMS, readMode);
+    // dQdx
     SetBranch("AngleChargeRatioAverage", &fAngleChargeRatioAverage, readMode);
     SetBranch("AngleChargeDifferenceAverage", &fAngleChargeDifferenceAverage, readMode);
     SetBranch("AngleChargeRelativeDifferenceAverage", &fAngleChargeRelativeDifferenceAverage, readMode);
@@ -323,6 +331,11 @@ void LambdaAnaTree::ResetVars(){
     fAngleResidualRange1RMS = -999;
     fAngleResidualRange2RMS = -999;
     fAngleResidualRangeMinRMS = -999;
+    fAngleResidualRangeMaxRMS = -999;
+    fAngleResidualRange1AngleRMS = -999;
+    fAngleResidualRange2AngleRMS = -999;
+    fAngleResidualRangeMinAngleRMS = -999;
+    fAngleResidualRangeMaxAngleRMS = -999;
     fAngleChargeRatioAverage = -999;
     fAngleChargeDifferenceAverage = -999;
     fAngleChargeRelativeDifferenceAverage = -999;
@@ -407,6 +420,7 @@ void LambdaAnaTree::PrintEventInfo() {
 
         // Calorimetry
         std::cout << " --- Calorimetry Information --- " << std::endl;
+        std::cout << "    --- Vertex --- " << std::endl;
         std::cout << " Angle Pass Fit: " << fAnglePassFit << std::endl;
         std::cout << " Angle Two Lines Chi2: " << fAngleTwoLinesChi2 << std::endl;
         std::cout << " Angle # Vertex Hits: " << fAngleNVertexHits << std::endl;
@@ -417,9 +431,17 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Angle Track Length 1: " << fAngleTrackLength1 << std::endl;
         std::cout << " Angle Track Length 2: " << fAngleTrackLength2 << std::endl;
         std::cout << " Angle Track Length Ratio: " << fAngleTrackLengthRatio << std::endl;
+        // residual range properties
+        std::cout << "    --- Residual range --- " << std::endl;
         std::cout << " Angle Residual Range 1 RMS: " << fAngleResidualRange1RMS << std::endl;
         std::cout << " Angle Residual Range 2 RMS: " << fAngleResidualRange2RMS << std::endl;
         std::cout << " Angle Residual Range Min RMS: " << fAngleResidualRangeMinRMS << std::endl;
+        std::cout << " Angle Residual Range Max RMS: " << fAngleResidualRangeMaxRMS << std::endl;
+        std::cout << " Angle Residual Range 1 Angle RMS: " << fAngleResidualRange1AngleRMS << std::endl;
+        std::cout << " Angle Residual Range 2 Angle RMS: " << fAngleResidualRange2AngleRMS << std::endl;
+        std::cout << " Angle Residual Range Min Angle RMS: " << fAngleResidualRangeMinAngleRMS << std::endl;
+        std::cout << " Angle Residual Range Max Angle RMS: " << fAngleResidualRangeMaxAngleRMS << std::endl;
+        std::cout << "    --- dQdx --- " << std::endl;
         std::cout << " Angle Charge Ratio Average: " << fAngleChargeRatioAverage << std::endl;
         std::cout << " Angle Charge Difference Average: " << fAngleChargeDifferenceAverage << std::endl;
         std::cout << " Angle Charge Relative Difference Average: " << fAngleChargeRelativeDifferenceAverage << std::endl;

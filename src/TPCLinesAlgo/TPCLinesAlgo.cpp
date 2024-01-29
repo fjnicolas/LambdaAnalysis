@@ -282,18 +282,22 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 
 //----------------------------------------------------------------------
 // Merge out of ROI hits
-std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList)
+std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, std::vector<SHit> & remainingHitList)
 {
     std::cout<<" --- In MergeOutOfROIHits function ---\n";
+    remainingHitList.clear();
 
-    // map of vector of hits 
+    // map of vector of hits
     std::map<int, std::vector<SHit>> newHitsMap;
+    std::map<int, bool> usedHitsMap;
     for(size_t k=0; k<recoTrackList.size(); k++){
         newHitsMap[k] = {};
     }
 
     // loop over the free hits
     for(SHit & h:hitList){
+        
+        usedHitsMap[h.Id()]=false;
 
         // get the potential tracks to be added
         double minD = 1e4;
@@ -311,7 +315,8 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
                 }
             }
         }
-        if(matchedTrackId!=-1) newHitsMap[matchedTrackId].push_back(h);
+        if(matchedTrackId!=-1)
+            newHitsMap[matchedTrackId].push_back(h);
     }
 
 
@@ -373,6 +378,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
                     newHitList.push_back(selHit);
                     updatedTrack.AddHit(selHit);
                     updatedTrack.FillSlidingWindowLineEquations(10);
+                    usedHitsMap[selHit.Id()]=true;
                 }
             }
             
@@ -382,11 +388,14 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
         SLinearCluster newCluster(newHitList);
         newRecoTrackList.push_back(newCluster);
     }
+
+    // fill unused hits
+    for(SHit &h:hitList){
+        if(usedHitsMap[h.Id()]==false){
+            remainingHitList.push_back(h);
+        }
+    }
         
-        
-        
-        
-    
     return newRecoTrackList;
 }
 
@@ -774,16 +783,19 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
 
         // --- Out of ROI hits merger ---
         // Fill sliding window instersections
-        for(SLinearCluster &trk:NewTrackList)   trk.FillSlidingWindowLineEquations(10);
+        for(SLinearCluster &trk:NewTrackList) trk.FillSlidingWindowLineEquations(10);
         
         std::vector<SHit> missingHits = discardedHits;
         missingHits.insert(missingHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
-        NewTrackList = MergeOutOfROIHits(NewTrackList, missingHits);
+        std::vector<SHit> remainingHitsAfterROIMerge;
+        NewTrackList = MergeOutOfROIHits(NewTrackList, missingHits, remainingHitsAfterROIMerge);    
         // Characterize the tracks
         for(size_t ix = 0; ix<NewTrackList.size(); ix++){
             NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
             NewTrackList[ix].AssignId(ix);
         }
+        discardedHits.clear();
+        discardedHits = remainingHitsAfterROIMerge;
 
         // --- Create Out of ROI clusters ---
         NewTrackList = CreateOutOfROIClusters(NewTrackList);
@@ -820,8 +832,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     double hitDensity = GetAverageHitDensity();
     std::cout<<"Hit density: "<<hitDensity<<std::endl;
 
-    discardedHits.insert(discardedHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
-    fUnmatchedHits = discardedHits;
+    // Save the reco event
     SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, associatedOrigins, hitDensity, discardedHits);
     fRecoEvent = recoEvent;
 
@@ -924,7 +935,13 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         int gapMaxCh = std::max(lambdaVertexCh, muonVertexCh);
         int nOverlappedChannelsWithAPA = GetNOverlappedChannelsWithAPABadChannels(gapMinCh, gapMaxCh);
         std::cout<<" Gap min/mac channels "<<gapMinCh<<" "<<gapMaxCh<<" # overlapped channels: "<<nOverlappedChannelsWithAPA<<std::endl;
-        lambdaAnaTree.fAngleGapOverlapWithAPAJuntion = 1.*nOverlappedChannelsWithAPA/(gapMaxCh-gapMinCh);
+        double gapSize = gapMaxCh - gapMinCh;
+        if(gapSize>0){
+            lambdaAnaTree.fAngleGapOverlapWithAPAJuntion = 1.*nOverlappedChannelsWithAPA/gapSize;
+        }
+        else{
+            lambdaAnaTree.fAngleGapOverlapWithAPAJuntion = 0;
+        }
         
         // --- Triangle cleaness ---
         int nDirtHitsInTriangle = 0;
@@ -966,6 +983,11 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         lambdaAnaTree.fAngleResidualRange1RMS = fTriangleCalo.ResidualRange1RMS();
         lambdaAnaTree.fAngleResidualRange2RMS = fTriangleCalo.ResidualRange2RMS();
         lambdaAnaTree.fAngleResidualRangeMinRMS = fTriangleCalo.ResidualRangeMinRMS();
+        lambdaAnaTree.fAngleResidualRangeMaxRMS = fTriangleCalo.ResidualRangeMaxRMS();
+        lambdaAnaTree.fAngleResidualRange1AngleRMS = fTriangleCalo.ResidualRange1AngleRMS();
+        lambdaAnaTree.fAngleResidualRange2AngleRMS = fTriangleCalo.ResidualRange2AngleRMS();
+        lambdaAnaTree.fAngleResidualRangeMinAngleRMS = fTriangleCalo.ResidualRangeMinAngleRMS();
+        lambdaAnaTree.fAngleResidualRangeMaxAngleRMS = fTriangleCalo.ResidualRangeMaxAngleRMS();
         lambdaAnaTree.fAngleChargeRatioAverage = fTriangleCalo.ChargeRatioAverage();
         lambdaAnaTree.fAngleChargeDifferenceAverage = fTriangleCalo.ChargeDifferenceAverage();
         lambdaAnaTree.fAngleChargeRelativeDifferenceAverage = fTriangleCalo.ChargeRelativeDifferenceAverage();

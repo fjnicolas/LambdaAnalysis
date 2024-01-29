@@ -107,7 +107,7 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
 
 
     // --- Angle variables
-    dataloader->AddVariable( "NAngles", "N_{#alpha}", "", 'I' );
+    //dataloader->AddVariable( "NAngles", "N_{#alpha}", "", 'I' );
     dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
     //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
     //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
@@ -135,7 +135,9 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     // --- Kinematics
     dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
     dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
-    dataloader->AddVariable( "AngleMainTrackOverlap", "Main Track Overlap", "", 'D' );
+    //dataloader->AddVariable( "AngleMainTrackOverlap", "Main Track Overlap", "", 'D' );
+    dataloader->AddVariable( "AnglePzSign", "AnglePzSign", "", 'D' );
+    dataloader->AddVariable( "AngleGapOverlapWithAPAJuntion", "Gap Overlap", "", 'D' );
 
     // --- Calorimetry
     //dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );

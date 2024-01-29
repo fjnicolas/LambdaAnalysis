@@ -164,9 +164,16 @@ public:
     double fAngleTrackLength1;
     double fAngleTrackLength2;
     double fAngleTrackLengthRatio;
+    
     double fAngleResidualRange1RMS;
     double fAngleResidualRange2RMS;
     double fAngleResidualRangeMinRMS;
+    double fAngleResidualRangeMaxRMS;
+
+    double fAngleResidualRange1AngleRMS;
+    double fAngleResidualRange2AngleRMS;
+    double fAngleResidualRangeMinAngleRMS;
+    double fAngleResidualRangeMaxAngleRMS;
 
     double fAngleChargeRatioAverage;
     double fAngleChargeDifferenceAverage;

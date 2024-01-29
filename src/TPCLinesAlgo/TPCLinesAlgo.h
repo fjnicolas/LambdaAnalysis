@@ -107,7 +107,7 @@ class TPCLinesAlgo {
 
         std::vector<SLinearCluster> MergeIsolatedHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, double dCleaning1D, std::vector<SHit> & discardedHits, double dTh = 3);
 
-        std::vector<SLinearCluster> MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList);
+        std::vector<SLinearCluster> MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, std::vector<SHit> & remainingHitList);
 
         std::vector<SLinearCluster> CreateOutOfROIClusters(std::vector<SLinearCluster> recoTrackList);
 

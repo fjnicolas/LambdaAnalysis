@@ -29,7 +29,7 @@
 #include <TVectorD.h>
 #include <TMatrixD.h>
 #include "TVirtualFitter.h"
-
+#include <TArrow.h>
 
 #if LAMBDAANA_LARSOFT == 1
 #include "sbndcode/LambdaAnalysis/src/SObjects/TPCSimpleHits.h"
@@ -153,6 +153,11 @@ class STriangleCalo {
         double fResidualRange1RMS;
         double fResidualRange2RMS;
         double fResidualRangeMinRMS;
+        double fResidualRangeMaxRMS;
+        double fResidualRange1AngleRMS;
+        double fResidualRange2AngleRMS;
+        double fResidualRangeMinAngleRMS;
+        double fResidualRangeMaxAngleRMS;
 
         double fTwoLinesChi2;
 
@@ -198,6 +203,11 @@ class STriangleCalo {
         double ResidualRange1RMS() {return fResidualRange1RMS;};
         double ResidualRange2RMS() {return fResidualRange2RMS;};
         double ResidualRangeMinRMS() {return fResidualRangeMinRMS;};
+        double ResidualRangeMaxRMS() {return fResidualRangeMaxRMS;};
+        double ResidualRange1AngleRMS() {return fResidualRange1AngleRMS;};
+        double ResidualRange2AngleRMS() {return fResidualRange2AngleRMS;};
+        double ResidualRangeMinAngleRMS() {return fResidualRangeMinAngleRMS;};
+        double ResidualRangeMaxAngleRMS() {return fResidualRangeMaxAngleRMS;};
 };
 
 

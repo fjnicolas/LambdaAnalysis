@@ -49,7 +49,8 @@ class TPCLinesVertexFinder {
 
         double GetAngle360(double x, double y);
         
-        bool TrackTriangleJunctionContained(SLinearCluster track, STriangle tri, double extraAngle);
+        //bool TrackTriangleJunctionContained(SLinearCluster track, STriangle tri, double extraAngle);
+        bool TrackTriangleJunctionContained(SOrigin ori, STriangle tri, double extraAngle);
         
         int GetNHitsBetweenJunction(SLinearCluster track, STriangle tri, std::vector<SLinearCluster> trackList, double tol);
         
@@ -73,7 +74,7 @@ class TPCLinesVertexFinder {
 
         std::vector<SLinearCluster> GetCollinearTracks(SLinearCluster mainTrack, std::vector<SLinearCluster> trackList);
 
-        bool LambdaDecayKinematicCheck(STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList);
+        bool LambdaDecayKinematicCheck(SOrigin mainOrigin, STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList);
 
 
     public:

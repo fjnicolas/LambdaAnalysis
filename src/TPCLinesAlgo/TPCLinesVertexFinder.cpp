@@ -35,13 +35,15 @@ double TPCLinesVertexFinder::GetAngle360(double x, double y) {
 }
 
 
-bool TPCLinesVertexFinder::TrackTriangleJunctionContained(SLinearCluster track, STriangle tri, double extraAngle){
+//bool TPCLinesVertexFinder::TrackTriangleJunctionContained(SLinearCluster track, STriangle tri, double extraAngle){
+bool TPCLinesVertexFinder::TrackTriangleJunctionContained(SOrigin ori, STriangle tri, double extraAngle){
     
-    SPoint p1(track.GetMinX(), track.GetYatMinX());
+    /*SPoint p1(track.GetMinX(), track.GetYatMinX());
     double d1 = TPCLinesDistanceUtils::GetHitDistance(p1, tri.GetMainVertex());
     SPoint p2(track.GetMaxX(), track.GetYatMaxX());
     double d2 = TPCLinesDistanceUtils::GetHitDistance(p2, tri.GetMainVertex());
-    SPoint mainTrackVertex = (d1 < d2) ? p1 : p2;
+    SPoint mainTrackVertex = (d1 < d2) ? p1 : p2;*/
+    SPoint mainTrackVertex = ori.GetPoint();
 
     double juntionDirection[] = {
         tri.GetMainVertex().X() - mainTrackVertex.X(),
@@ -519,7 +521,7 @@ SLinearCluster TPCLinesVertexFinder::GetMainDirection(std::vector<SLinearCluster
 
 
 
-bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList) {
+bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(SOrigin mainOrigin, STriangle Triangle, SLinearCluster MainDirection, SLinearCluster track1, SLinearCluster track2, std::vector<SLinearCluster> FreeTracksList) {
     if (fTPCLinesVertexFinderPset.Verbose >= 1) {
         std::cout << " - - - Performing kinematic checks - - - " << track1.GetId() << " " << track2.GetId() << std::endl;
     }
@@ -552,7 +554,7 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(STriangle Triangle, SLinear
         std::cout << " - - - Check 2: Junction between main direction origin and triangle vertex is contained - - - \n";
     }
 
-    bool junctionContained = TrackTriangleJunctionContained(MainDirection, Triangle, fTPCLinesVertexFinderPset.AngleTolerance);
+    bool junctionContained = TrackTriangleJunctionContained(mainOrigin, Triangle, fTPCLinesVertexFinderPset.AngleTolerance);
 
     if (fTPCLinesVertexFinderPset.Verbose >= 1) {
         std::cout << "  ** Pass: " << junctionContained << std::endl;
@@ -1220,7 +1222,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 if(trk.GetId()==track2.GetId()) continue;
                 otherTracks.push_back(trk);
             }
-            bool passKinemanicChecks = LambdaDecayKinematicCheck(triangle, ori1.GetTrackEntry(0), track1, track2, otherTracks);
+            bool passKinemanicChecks = LambdaDecayKinematicCheck(ori1, triangle, ori1.GetTrackEntry(0), track1, track2, otherTracks);
 
             //if(passKinemanicChecks) bool passCaloChecks = CalorimetryCheck(triangle);
             

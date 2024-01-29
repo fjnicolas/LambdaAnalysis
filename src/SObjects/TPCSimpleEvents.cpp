@@ -241,8 +241,8 @@ void SEvent::FreeHitsAroundTriangle(STriangle triangle,
 
 
     std::cout<<"Best triangle limits: \n";
-    std::cout<<"Min/Max X"<<triangle.GetMinX()<<" "<<triangle.GetMaxX()<<std::endl;
-    std::cout<<"Min/Max Y"<<triangle.GetMinY()<<" "<<triangle.GetMaxY()<<std::endl;
+    std::cout<<"Min/Max X "<<triangle.GetMinX()<<" "<<triangle.GetMaxX()<<std::endl;
+    std::cout<<"Min/Max Y "<<triangle.GetMinY()<<" "<<triangle.GetMaxY()<<std::endl;
     
     // vector with the hits not assocaited t the V+main track
     std::vector<SHit> otherHits;
@@ -266,16 +266,16 @@ void SEvent::FreeHitsAroundTriangle(STriangle triangle,
 
     
     // loop over hits, get the ones inside the triangle limits
+    double triangleYLength = triangle.GetMaxY() -  triangle.GetMinY();
     for(SHit & h:otherHits){
         if(h.X()>triangle.GetMinX() && h.X()<triangle.GetMaxX() 
             && h.Y()>triangle.GetMinY() && h.Y()<triangle.GetMaxY() ){
             nDirtHitsInTriangle++;
+            std::cout<<"    adding: "<<h.X()<<" "<<h.Y()<<std::endl;
         }
 
-        double triangleYLength = triangle.GetMaxY() -  triangle.GetMinY();
-
         if(h.X()>triangle.GetMinX() && h.X()<triangle.GetMaxX() 
-            && h.Y()>triangle.GetMinY()-triangleYLength/2. && h.Y()<triangle.GetMaxY() + +triangleYLength/2. ){
+            && h.Y()>triangle.GetMinY()-triangleYLength/2. && h.Y()<triangle.GetMaxY() + triangleYLength/2. ){
             nDirtHitsInTriangleWires++;
         }
         
