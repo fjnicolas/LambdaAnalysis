@@ -166,7 +166,7 @@ double CalculateMean( std::vector<double>& values) {
 
 double CalculateStdDev( std::vector<double>& values) {
 
-    if(values.size()==0) return 0;
+    if(values.size()==0) return -1;
     double mean = CalculateMean(values);
     double sumSqDiff = 0;
     for ( double& value : values) {
@@ -1290,28 +1290,37 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
 
     // Angle deviation
     std::vector<double> anglesTrack1, anglesTrack2;
-    for(size_t k=0; k<fHitsTrack1.size()-1; k++){
-        SHit h1 = fHitsTrack1[k];
-        SHit h2 = fHitsTrack1[k+1];
-        double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
-        anglesTrack1.push_back(angle);
-        //std::cout<<"  angle: "<<angle<<std::endl;
+    if(fHitsTrack1.size()>=2){
+        for(size_t k=0; k<fHitsTrack1.size()-1; k++){
+            SHit h1 = fHitsTrack1[k];
+            SHit h2 = fHitsTrack1[k+1];
+            double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
+            anglesTrack1.push_back(angle);
+            //std::cout<<"  angle: "<<angle<<std::endl;
+        }
     }
-    for(size_t k=0; k<fHitsTrack2.size()-1; k++){
-        SHit h1 = fHitsTrack2[k];
-        SHit h2 = fHitsTrack2[k+1];
-        double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
-        anglesTrack2.push_back(angle);
-        //std::cout<<"  angle: "<<angle<<std::endl;
+    
+    if(fHitsTrack2.size()>=2){
+        for(size_t k=0; k<fHitsTrack2.size()-1; k++){
+            SHit h1 = fHitsTrack2[k];
+            SHit h2 = fHitsTrack2[k+1];
+            double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
+            anglesTrack2.push_back(angle);
+            //std::cout<<"  angle: "<<angle<<std::endl;
+        }
     }
 
     std::vector<double> anglesDiffTrack1;
     std::vector<double> anglesDiffTrack2;
-    for(size_t k=0; k<anglesTrack1.size()-1; k++){
-        anglesDiffTrack1.push_back( anglesTrack1[k+1]-anglesTrack1[k] );
+    if(anglesTrack1.size()>=2){
+        for(size_t k=0; k<anglesTrack1.size()-1; k++){
+            anglesDiffTrack1.push_back( anglesTrack1[k+1]-anglesTrack1[k] );
+        }
     }
-    for(size_t k=0; k<anglesTrack2.size()-1; k++){
-        anglesDiffTrack2.push_back( anglesTrack2[k+1]-anglesTrack2[k] );
+    if(anglesTrack2.size()>=2){
+        for(size_t k=0; k<anglesTrack2.size()-1; k++){
+            anglesDiffTrack2.push_back( anglesTrack2[k+1]-anglesTrack2[k] );
+        }
     }
 
     fResidualRange1AngleRMS = CalculateStdDev(anglesDiffTrack1);
