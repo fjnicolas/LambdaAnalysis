@@ -4,7 +4,7 @@
 //--------- Cut definitions
 double fCutCRUMBS = -0.2;
 double fCutMinNAngles = 1;
-double fCutFRANS = 0.25;
+double fCutFRANS = 0.2;
 double fCutNOrigins = 4;
 double fCutNOriginsM3 = 0;
 double fCutFRANSPANDORA = 0.2;
@@ -69,9 +69,8 @@ std::vector<PlotDef> cutDefsTalk2 = {
     
     ,{"NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0", "(NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0)", CutType::kCenter,  1,   {0, 2, 2}, true,  "topological cuts",  "\\ Topological \\ cuts"}
 
-    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
-    //,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
-    //,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+    //,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
 
     ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 200, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 200, 40}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
@@ -87,8 +86,13 @@ std::vector<PlotDef> cutDefsTalk2 = {
 
 
     ,{"AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio", CutType::kRight, 1, {0, 5, 20}, false, "AngleVertexHitIntegralRatio", "AngleVertexHitIntegralRatio"}
-    ,{"AngleTwoLinesChi2", "AngleTwoLinesChi2", CutType::kNone, 1, {0, 10, 100}, false, "Chi2", "Chi2"}
-    ,{"AngleDirtHits", "AngleDirtHits", CutType::kLeft,  10, {0, 400, 25}, false, "#Dirt Hits", "Dirt \\ Hits"}
+   
+    ,{"AngleDirtHits", "AngleDirtHits", CutType::kLeft,  25, {0, 50, 25}, true, "#Dirt Hits", "Dirt \\ Hits"}
+    ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, true, "AnglePassChargeFit", "AnglePassChargeFit"}
+    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, true, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
+    ,{"AngleBandCrossHits", "AngleBandCrossHits", CutType::kNone, 1, {0, 2, 50}, false, "AngleBandCrossHits", "AngleBandCrossHits"}
+    
+    
     /*,{"AnglePassFit", "AnglePassFit", CutType::kRight, 1, {0, 2, 2}, false, "AnglePassFit", "AnglePassFit"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, false, "AnglePassChargeFit", "AnglePassChargeFit"}
     ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 5, {0, 200, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}

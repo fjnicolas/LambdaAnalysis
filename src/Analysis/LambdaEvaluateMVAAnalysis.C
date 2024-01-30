@@ -342,6 +342,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     float AngleResidualRange1RMS;
     float AngleResidualRange2RMS;
     float AngleResidualRangeMinRMS;
+    float AngleResidualRangeMaxAngleRMS;
     float AngleNVertexHits;
     float AngleNBulkHits;
     // --- Showers
@@ -401,6 +402,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     if(fVarLabels["AngleResidualRange1RMS"]==true) fTMVAReader->AddVariable( "AngleResidualRange1RMS", &AngleResidualRange1RMS );
     if(fVarLabels["AngleResidualRange2RMS"]==true) fTMVAReader->AddVariable( "AngleResidualRange2RMS", &AngleResidualRange2RMS );
     if(fVarLabels["AngleResidualRangeMinRMS"]==true) fTMVAReader->AddVariable( "AngleResidualRangeMinRMS", &AngleResidualRangeMinRMS );
+    if(fVarLabels["AngleResidualRangeMaxAngleRMS"]==true) fTMVAReader->AddVariable( "AngleResidualRangeMaxAngleRMS", &AngleResidualRangeMaxAngleRMS );
     if(fVarLabels["AngleNVertexHits"]==true) fTMVAReader->AddVariable( "AngleNVertexHits", &AngleNVertexHits );
     if(fVarLabels["AngleNBulkHits"]==true) fTMVAReader->AddVariable( "AngleNBulkHits", &AngleNBulkHits );
     // --- Showers
@@ -504,6 +506,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
         AngleResidualRange1RMS = fAnaTreeHandle.fAngleResidualRange1RMS;
         AngleResidualRange2RMS = fAnaTreeHandle.fAngleResidualRange2RMS;
         AngleResidualRangeMinRMS = fAnaTreeHandle.fAngleResidualRangeMinRMS;
+        AngleResidualRangeMaxAngleRMS = fAnaTreeHandle.fAngleResidualRangeMaxAngleRMS;
         AngleNVertexHits = fAnaTreeHandle.fAngleNVertexHits;
         AngleNBulkHits = fAnaTreeHandle.fAngleNBulkHits;
         // --- Showers

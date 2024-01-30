@@ -33,8 +33,10 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, FRANSPsetType 
 
 // ---------------------------------------------------------------------
 // Overlap with APA
-int TPCLinesAlgo::GetNOverlappedChannelsWithAPABadChannels(int minCh, int maxCh){
+int TPCLinesAlgo::GetNOverlappedChannelsWithAPABadChannels(int ch1, int ch2){
     int nOverlappedChannels = 0;
+    int minCh = std::min(ch1, ch2);
+    int maxCh = std::max(ch1, ch2);
     for(int ch=minCh; ch<=maxCh; ch++){
         if(ch>=fBadChannelsTPC0.front() && ch<=fBadChannelsTPC0.back()) nOverlappedChannels++;
         if(ch>=fBadChannelsTPC1.front() && ch<=fBadChannelsTPC1.back()) nOverlappedChannels++;
@@ -281,8 +283,20 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeIsolatedHits(std::vector<SLinearC
 
 
 //----------------------------------------------------------------------
+// Wire distance subtracting the APA gap
+int TPCLinesAlgo::GetWireDistance(int ch1, int ch2){
+    ch1+=fMinX;
+    ch2+=fMinX;
+    
+    // overlapped channels
+    int nOverlappedChannels = GetNOverlappedChannelsWithAPABadChannels(ch1, ch2);
+    
+    return std::abs(ch2-ch1)-nOverlappedChannels;
+}
+
+//----------------------------------------------------------------------
 // Merge out of ROI hits
-std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, std::vector<SHit> & remainingHitList)
+std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, std::vector<SHit> & remainingHitList, int xStepTol)
 {
     std::cout<<" --- In MergeOutOfROIHits function ---\n";
     remainingHitList.clear();
@@ -352,11 +366,11 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
             LineEquation trackSlope = updatedTrack.GetLineEquationAtX( x );
 
             bool tryToAdd = false;
-            if(x<updatedTrack.GetMinX() && std::abs(x-lastMinX)<=7 && x!=lastMinX){ // 6 is maximum APA junction
+            if(x<updatedTrack.GetMinX() && GetWireDistance(x, lastMinX)<=xStepTol && x!=lastMinX){ // 6 is maximum APA junction
                 lastMinX = x;
                 tryToAdd = true;        
             }
-            else if(x>updatedTrack.GetMaxX() && std::abs(x-lastMaxX)<=7 && x!=lastMaxX){
+            else if(x>updatedTrack.GetMaxX() && GetWireDistance(x, lastMaxX)<=xStepTol && x!=lastMaxX){
                 lastMaxX = x;
                 tryToAdd = true;
             }
@@ -373,7 +387,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
                     }
                 }
                 
-                //std::cout<<minD<<" COMP "<<updatedTrack.GetCompactness()<<std::endl;
+                //std::cout<<x<<" "<<minD<<" COMP "<<updatedTrack.GetCompactness()<<std::endl;
                 if(minD<5*updatedTrack.GetCompactness()){
                     newHitList.push_back(selHit);
                     updatedTrack.AddHit(selHit);
@@ -788,7 +802,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         std::vector<SHit> missingHits = discardedHits;
         missingHits.insert(missingHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
         std::vector<SHit> remainingHitsAfterROIMerge;
-        NewTrackList = MergeOutOfROIHits(NewTrackList, missingHits, remainingHitsAfterROIMerge);    
+        NewTrackList = MergeOutOfROIHits(NewTrackList, missingHits, remainingHitsAfterROIMerge, 3);    
         // Characterize the tracks
         for(size_t ix = 0; ix<NewTrackList.size(); ix++){
             NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);

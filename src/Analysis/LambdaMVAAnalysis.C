@@ -65,7 +65,7 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     TCut fTruthInAV("TruthIsAV==1");
 
     // ---- Minimal cut
-    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassChargeFit");
+    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassChargeFit==1");
     //TCut fSelCuts("FRANSScorePANDORA>=0.2 && AngleDecayContainedDiff<1 && NUnOrigins<1");
 
     // Batch mode
@@ -109,7 +109,7 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     // --- Angle variables
     //dataloader->AddVariable( "NAngles", "N_{#alpha}", "", 'I' );
     dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
-    //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
+    dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
     //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
     //dataloader->AddVariable( "AngleNHitsMainTrack", "Main track # hits", "", 'I' );
     //dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
@@ -129,7 +129,7 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     
     // --- Cleaness
     //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
-    //dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
     
     // --- Kinematics
@@ -155,6 +155,7 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     //dataloader->AddVariable( "AngleResidualRange1RMS", "Residuals Range 1 RMS", "", 'D' );
     //dataloader->AddVariable( "AngleResidualRange2RMS", "Residuals Range 2 RMS", "", 'D' );
     //dataloader->AddVariable( "AngleResidualRangeMinRMS", "Residuals Range Min RMS", "", 'D' );
+    dataloader->AddVariable( "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", "", 'D' );
     dataloader->AddVariable( "AngleNVertexHits", "N Vertex Hits", "", 'I' );
     dataloader->AddVariable( "AngleNBulkHits", "N Bulk Hits", "", 'I' );
 
