@@ -3,171 +3,6 @@
 
 #define WriteRelativeEfficiencies 0
 
-//--------- Create the LaTeX table (POT normalized)
-void GenerateAndCompileTeXTable(
-    const std::vector<SampleDef>& sampleDefs,
-    const std::vector<AnaPlot>& anaPlots,
-    size_t denominatorIndex,
-    const std::string& fileName,
-    const std::string& tableCaption,
-    double potNorm=1,
-    double potNormSignal=1,
-    double totalPOTNorm=1
-) {
-    // Open a file stream for writing the .tex file
-    std::ofstream texFile(fileName+".tex");
-
-    // Check if the file is open
-    if (!texFile.is_open()) {
-        std::cerr << "Failed to open the output file." << std::endl;
-        return;
-    }
-
-    // Write the LaTeX document preamble
-    
-    texFile << "\\documentclass{article}" << std::endl;
-    texFile << "\\usepackage{graphicx}" << std::endl;
-    texFile << "\\usepackage{pdflscape}"<<std::endl;
-    texFile << "\\begin{document}" << std::endl;
-    texFile << "\\begin{landscape}" << std::endl;
-
-
-    // Write the LaTeX code for the table
-    texFile << "\\begin{table}[h]" << std::endl;
-    texFile << "\\centering" << std::endl;
-    texFile << "\\begin{tabular}{|c|";
-    for(size_t k = 0; k<sampleDefs.size(); k++)
-        texFile<<"c|";
-    texFile << "}" << std::endl;
-    texFile << "\\hline" << std::endl;
-
-
-
-    std::map<std::string, int> histogramCounts0 = anaPlots[denominatorIndex].GetCountsV();
-
-    // Write the header row
-    texFile << " Cut & ";
-    int cont=0;
-    
-    for(auto& sampleName : histogramCounts0){
-        if( cont == sampleDefs.size()-1 )
-            texFile << sampleName.first;
-        else
-            texFile << sampleName.first << " & ";
-        
-        cont++;
-    }
-
-    texFile << "\\\\ \\hline" << std::endl;
-
-    std::map<std::string, double> potScalingMap;
-    for(auto& sampleName : histogramCounts0){
-        if(sampleName.first.find("Signal") != std::string::npos)
-            potScalingMap[sampleName.first] = potNormSignal;
-        else
-            potScalingMap[sampleName.first] = potNorm;
-    }
-
-    // Write the data rows
-    // last stored index
-    size_t lastStoredIndex = 0;
-    for (size_t i = 0; i < anaPlots.size(); ++i) {
-        if(anaPlots[i].GetPlotDef().GetAccumulateCut() == false) continue;
-        texFile << "$ {\\rm " << anaPlots[i].GetPlotDef().GetCutLabel() << "}$" << " & ";
-        std::map<std::string, int> histogramCounts = anaPlots[i].GetCountsV();
-        
-        std::map<std::string, int> histogramCountsPre = anaPlots[lastStoredIndex].GetCountsV();
-
-        cont=0;
-        for(auto& sampleName : histogramCounts){
-
-            double potScaling = potScalingMap[sampleName.first];
-            
-            std::ostringstream streamObjEff;
-            streamObjEff << " (" << std::fixed << std::setprecision(2) << 100.*sampleName.second/histogramCounts0[sampleName.first];
-            if(WriteRelativeEfficiencies==1){
-                streamObjEff << " \\%) \\ $\\epsilon_{r}$= " << std::setprecision(0) << 100.*sampleName.second/histogramCountsPre[sampleName.first] << "\\%";
-            }
-            else{
-                streamObjEff << " \\%)";
-            }
-            // Get string from out
-            if(  cont == sampleDefs.size()-1 )
-                texFile << potScaling*sampleName.second << streamObjEff.str();
-            else
-                texFile << potScaling*sampleName.second << streamObjEff.str() << " & ";
-            cont++;
-        }
-
-        texFile << "\\\\ \\hline" << std::endl;
-
-        lastStoredIndex = i;
-    }
-    
-
-
-
-    texFile << "$ {\\rm " << "Final eff" << "}$" << " & ";
-    
-    cont=0;
-    std::map<std::string, int> histogramCounts = anaPlots[ lastStoredIndex].GetCountsV();
-    std::map<std::string, int> initialCounts;
-    for(auto& sample:sampleDefs){
-        initialCounts[sample.GetLabelS()] = sample.GetNEvents();
-    }
-
-    for(auto& sampleName : histogramCounts){
-
-        double potScaling = potScalingMap[sampleName.first];
-
-        std::ostringstream streamObjEff;
-        streamObjEff <<  std::fixed << std::setprecision(2) << 100.*sampleName.second/initialCounts[sampleName.first];
-        // Get string from out
-        if(  cont == sampleDefs.size()-1 )
-            texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)";
-        else
-            texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)"  << " & ";
-        cont++;
-    }
-
-
-    texFile << "\\\\ \\hline" << std::endl;
-
-    
-    std::string newTableCaption = tableCaption;
-    if(totalPOTNorm!=1){
-        // total pot in scientific notation
-        std::ostringstream streamObj;
-        streamObj <<  std::scientific << std::setprecision(2) << totalPOTNorm;
-        // Get string from out
-        std::string totalPOTNormStr = streamObj.str();
-        newTableCaption += " (Normalized to "+totalPOTNormStr+" POT)";
-    }
-    texFile << "\\end{tabular}" << std::endl;
-    texFile << "\\caption{" << newTableCaption << "}" << std::endl;
-    texFile << "\\end{table}" << std::endl;
-
-    texFile << "\\end{landscape}" << std::endl;
-
-    // Close the LaTeX document
-    texFile << "\\end{document}" << std::endl;
-
-    // Close the file
-    texFile.close();
-
-    // Compile the .tex file
-    std::string compileCommand = "pdflatex " + fileName;
-    int compileResult = std::system(compileCommand.c_str());
-
-    if (compileResult != 0) {
-        std::cerr << "Failed to compile the .tex file." << std::endl;
-    }
-
-    gSystem->Exec( ("mv "+fileName+".pdf OutputPlots").c_str() );
-    gSystem->Exec( ("rm "+fileName+".{aux,log,tex,pdf}").c_str() );
-
-}
-
 
 //--------- Read the POT normalization
 void ReadPOT(TFile *fFile, double totalPOTNorm, double& potScaling, double& potScalingSignal, std::string fTreeName = "originsAna/pottree"){
@@ -300,6 +135,178 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
 
 
     handScanEvents.close();
+
+    return;
+
+}
+
+//--------- Generate and compile the LaTeX table
+void GenerateAndCompileTeXTable(
+    const std::vector<PlotDef> plotDefs,
+    const std::vector<SampleDef> sampleDefs,
+    const std::vector<std::vector<int>> matrixCounter,
+    const std::string fileName,
+    const std::string tableCaption,
+    const std::string dirLabel,
+    double potNorm=1,
+    double potNormSignal=1,
+    double totalPOTNorm=1,
+    int denominatorIndex=0
+) {
+    //--- Open a file stream for writing the .tex file
+    std::ofstream texFile(fileName+".tex");
+
+    //--- Check if the file is open
+    if (!texFile.is_open()) {
+        std::cerr << "Failed to open the output file." << std::endl;
+        return;
+    }
+
+    //--- Denominator weights
+    std::vector<int> counts0 = matrixCounter[denominatorIndex];
+
+    //--- POT scaling map weights
+    std::vector<double> potScalingMap;
+    for(auto& sampleName : sampleDefs){
+        if(sampleName.GetLabelS()=="Signal")
+            potScalingMap.push_back( potNormSignal );
+        else
+            potScalingMap.push_back( potNorm );
+    }
+
+    //--- Write the LaTeX document preamble
+    texFile << "\\documentclass{article}" << std::endl;
+    texFile << "\\usepackage{graphicx}" << std::endl;
+    texFile << "\\usepackage{pdflscape}"<<std::endl;
+    texFile << "\\begin{document}" << std::endl;
+    texFile << "\\begin{landscape}" << std::endl;
+
+
+    //--- Write the LaTeX code for the table
+    texFile << "\\begin{table}[h]" << std::endl;
+    texFile << "\\centering" << std::endl;
+    texFile << "\\begin{tabular}{|c|";
+    for(size_t k = 0; k<sampleDefs.size(); k++)
+        texFile<<"c|";
+    texFile << "}" << std::endl;
+    texFile << "\\hline" << std::endl;
+
+    
+
+    //--- Write the header row
+    texFile << " Cut & ";
+    int cont=0;  
+    for(auto& sampleName : sampleDefs){
+        if( cont == sampleDefs.size()-1 )
+            texFile << sampleName.GetLabelS();
+        else
+            texFile << sampleName.GetLabelS() << " & ";
+        
+        cont++;
+    }
+    texFile << "\\\\ \\hline" << std::endl;
+
+
+    // Write the data rows
+    // last stored index
+    size_t lastStoredIndex = 0;
+    for (size_t i = 0; i < matrixCounter.size(); ++i) {
+
+        texFile << "$ {\\rm " << plotDefs[i].GetCutLabelS() << "}$" << " & ";
+
+        std::vector<int> counts = matrixCounter[i];
+        std::vector<int> countsPre = matrixCounter[lastStoredIndex];
+
+        cont=0;
+        for (size_t j = 0; j < matrixCounter[i].size(); ++j) {
+        //for(auto& sampleName : histogramCounts){
+
+            double potScaling = potScalingMap[j];
+            std::string sampleName = sampleDefs[j].GetLabelS();
+            int counts = matrixCounter[i][j];
+            
+            std::ostringstream streamObjEff;
+            streamObjEff << " (" << std::fixed << std::setprecision(3) << 100.*counts/counts0[j];
+            if(WriteRelativeEfficiencies==1){
+                streamObjEff << " \\%) \\ $\\epsilon_{r}$= " << std::setprecision(0) << 100.*counts/countsPre[j] << "\\%";
+            }
+            else{
+                streamObjEff << " \\%)";
+            }
+
+            // Get string from out
+            if(  cont == sampleDefs.size()-1 )
+                texFile << potScaling*counts << streamObjEff.str();
+            else
+                texFile << potScaling*counts << streamObjEff.str() << " & ";
+            cont++;
+        }
+
+        texFile << "\\\\ \\hline" << std::endl;
+
+        lastStoredIndex = i;
+    }
+    
+
+
+    /*
+    texFile << "$ {\\rm " << "Final eff" << "}$" << " & ";
+    
+    cont=0;
+    std::map<std::string, int> histogramCounts = anaPlots[ lastStoredIndex].GetCountsV();
+    std::map<std::string, int> initialCounts;
+    for(auto& sample:sampleDefs){
+        initialCounts[sample.GetLabelS()] = sample.GetNEvents();
+    }
+
+    for(auto& sampleName : histogramCounts){
+
+        double potScaling = potScalingMap[sampleName.first];
+
+        std::ostringstream streamObjEff;
+        streamObjEff <<  std::fixed << std::setprecision(2) << 100.*sampleName.second/initialCounts[sampleName.first];
+        // Get string from out
+        if(  cont == sampleDefs.size()-1 )
+            texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)";
+        else
+            texFile << potScaling*sampleName.second <<" ("<< streamObjEff.str() <<" \\%)"  << " & ";
+        cont++;
+    }
+
+
+    texFile << "\\\\ \\hline" << std::endl;
+    */
+
+    // --- Write the caption and end the table    
+    std::string newTableCaption = tableCaption;
+    if(totalPOTNorm!=1){
+        // total pot in scientific notation
+        std::ostringstream streamObj;
+        streamObj <<  std::scientific << std::setprecision(2) << totalPOTNorm;
+        // Get string from out
+        std::string totalPOTNormStr = streamObj.str();
+        newTableCaption += " (Normalized to "+totalPOTNormStr+" POT)";
+    }
+    texFile << "\\end{tabular}" << std::endl;
+    texFile << "\\caption{" << newTableCaption << "}" << std::endl;
+    texFile << "\\end{table}" << std::endl;
+    texFile << "\\end{landscape}" << std::endl;
+
+
+    //--- Close the LaTeX document
+    texFile << "\\end{document}" << std::endl;
+
+    //--- Close the file
+    texFile.close();
+
+    //--- Compile the .tex file
+    std::string compileCommand = "pdflatex " + fileName;
+    int compileResult = std::system(compileCommand.c_str());
+    if (compileResult != 0) {
+        std::cerr << "Failed to compile the .tex file." << std::endl;
+    }
+    gSystem->Exec( ("mv "+fileName+".pdf "+dirLabel).c_str() );
+    gSystem->Exec( ("rm "+fileName+".{aux,log,tex,pdf}").c_str() );
 
     return;
 

@@ -198,6 +198,10 @@ public:
         return fCutLabel;
     }
 
+    TString GetCutLabelS() const {
+        return fCutLabel.Data();
+    }
+
     CutType GetCutType() const {
         return fCutType;
     }
@@ -249,6 +253,10 @@ public:
 
     void SetLog(bool log) {
         fLog = log;
+    }
+
+    bool operator<(const PlotDef& other) const {
+        return this->GetVarS() < other.GetVarS();
     }
 
 private:

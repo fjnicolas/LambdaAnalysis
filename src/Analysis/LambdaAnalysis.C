@@ -43,14 +43,21 @@ TCut fCounterCut = "SliceID==0";
 std::vector<PlotDef> cutDefs = cutDefsTalk2;
 
 
+//---------  Load function
+void LambdaAnalysis(){
+    std::cout<<"LambdaAnalysis function loaded"<<std::endl;
+    return;
+}
+
 //---------  Main function
-void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
 
     //---------  Remove all *.pdf with gSystem
-    gSystem->Exec("rm -rf OutputPlots");
-    gSystem->Exec("mkdir OutputPlots");
-    gSystem->Exec("mkdir OutputPlots/PhaseSpace");
+    std::string fOutputDirName = "OutputPlots";
+    gSystem->Exec(("rm -rf "+fOutputDirName).c_str());
+    gSystem->Exec(("mkdir "+fOutputDirName).c_str());
+    gSystem->Exec(("mkdir "+fOutputDirName+"/PhaseSpace").c_str());
 
     //Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
@@ -67,6 +74,9 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     double potScalingSignal = 1;
     ReadPOT(fFile, fPOTTotalNorm, potScaling, potScalingSignal);
 
+    //--------- Matrix to store the number of events
+    std::vector< std::vector<int> > nEventsMatrix;
+    std::vector<PlotDef> cutDefsForTable;
 
     //--------- Loop over the cuts
     std::vector<AnaPlot> anaPlots;
@@ -82,9 +92,18 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
         if(cutDefs[i].GetAccumulateCut()){
             previousCut = previousCut && currentCut;
             anaPlot.DrawHistograms(fTree, previousCut, 1);
-        }
-    }
 
+            cutDefsForTable.push_back(cutDefs[i]);
+            nEventsMatrix.push_back({});
+            size_t cutIndex = nEventsMatrix.size()-1;
+            std::map<std::string, int> nEventsMap = anaPlot.GetCountsV();
+            for(const auto& sample : sampleDefs){
+                nEventsMatrix[cutIndex].push_back(nEventsMap[sample.GetLabelS()]);
+            }
+            
+        }
+    
+    }
 
     //loop over the samples and set NEvents
     for(auto& sample : sampleDefs){
@@ -94,16 +113,83 @@ void LambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string
     }
     
     //--------- Create the LaTeX table
-    GenerateAndCompileTeXTable(sampleDefs, anaPlots, 0, fOutputFileName, "Cut efficiencies");
+    GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileName, "Cut efficiencies", fOutputDirName);
+
 
     //--------- Create the LaTeX table (POT normalized)
-    GenerateAndCompileTeXTable(sampleDefs, anaPlots, 0, fOutputFileNameNormalized, "Cut efficiencies", potScaling, potScalingSignal, fPOTTotalNorm);
+    GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileNameNormalized, "Cut efficiencies", fOutputDirName, potScaling, potScalingSignal, fPOTTotalNorm);
    
     //--------- Output hand scans
     CreateHandScanList(fTree, fTreeHeader, previousCut, sampleDefs);
-    
 
     return;
 }
 
 
+
+void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+{
+
+    //Batch mode
+    batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
+
+    //---------  Remove all *.pdf with gSystem
+    std::string fOutputDirName = "OutputCutsLoop";
+    gSystem->Exec(("rm -rf "+fOutputDirName).c_str());
+    gSystem->Exec(("mkdir "+fOutputDirName).c_str());
+
+    //--------- Input TTree
+    TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
+    TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
+    // Read TreeHeader 
+    TTree *fTreeHeader = (TTree *)fFile->Get( (fTreeDirName+"TreeHeader").c_str() );
+    
+    
+    //---------- Set of cuts to loop over
+    std::vector<PlotDef> loopCuts = cutDefsLoop;   
+    // Minimal cut
+    PlotDef minimalCut = minimalCutForLoop;
+    
+    // Loop over all possible orders using std::next_permutation
+    int permutationId = 0;
+    do {
+        
+        // Start Cut
+        TCut currentCut("");
+
+        // Vector of cuts including the minimal cut
+        std::vector<PlotDef> loopCutsWithMinimal = loopCuts;
+        loopCutsWithMinimal.insert(loopCutsWithMinimal.begin(), minimalCut);
+        loopCutsWithMinimal.insert(loopCutsWithMinimal.begin(), startCutForLoop);
+
+        //--------- Matrix to store the number of events
+        std::vector< std::vector<int> > nEventsMatrix;
+        nEventsMatrix.resize(loopCutsWithMinimal.size());
+        for (size_t i = 0; i < loopCutsWithMinimal.size(); ++i) {
+            nEventsMatrix[i].resize(sampleDefs.size());
+        }
+
+        for (const auto& cut : loopCutsWithMinimal) {
+            std::cout << "Adding cut: " << cut.GetCut() << "\n";
+            currentCut+=TCut(cut.GetCut());
+
+            for(const auto& sample : sampleDefs){
+                TCut currentSampleCut = TCut(sample.GetVar());
+
+                int n = fTree->Draw( "", currentCut+currentSampleCut, "goff");
+                nEventsMatrix[&cut - &loopCutsWithMinimal[0]][&sample - &sampleDefs[0]] = n;
+            }
+            
+        }
+
+
+        //--------- Create the LaTeX table
+        GenerateAndCompileTeXTable(loopCutsWithMinimal, sampleDefs, nEventsMatrix, fOutputFileName+std::to_string(permutationId), "Cut efficiencies "+std::to_string(permutationId), fOutputDirName);
+
+        permutationId++;
+
+
+    } while (std::next_permutation(loopCuts.begin(), loopCuts.end()));
+
+    return 0;
+}

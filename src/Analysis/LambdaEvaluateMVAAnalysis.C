@@ -524,10 +524,10 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
         bool fiducialCut = fAnaTreeHandle.fRecoIsFiducial;
         bool minimalCut =fiducialCut && fAnaTreeHandle.fNAngles>=1;
         bool passFitCuts = fAnaTreeHandle.fAnglePassChargeFit==1;//&& fAnaTreeHandle.fAnglePassFit==1;
-        bool selCuts = fAnaTreeHandle.fFRANSScorePANDORA>0.2 && fAnaTreeHandle.fAngleDecayContainedDiff<1 && fAnaTreeHandle.fNUnOrigins<=0;
+        bool selCuts = fAnaTreeHandle.fAngleFRANSScore>0.2 && fAnaTreeHandle.fAngleDecayContainedDiff<1 && fAnaTreeHandle.fNUnOrigins<=0;
         bool passCut;
 
-        passCut = minimalCut && passFitCuts;
+        passCut = minimalCut && passFitCuts && selCuts;
         if(fMethod=="Cuts") passCut = fiducialCut;
         if(!passCut) score = -0.95;
 
