@@ -14,11 +14,11 @@
 TPCLinesDisplay::TPCLinesDisplay(bool show, std::string outputPath):
             fOutputPath(outputPath)
 {
-    fColors = {kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5};
+    fColors = {kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5, kOrange+7, kGreen+2, kRed, kViolet+2, kOrange+3, kPink+9, kGray+2, kBlue+10, kBlue-4, kYellow+4, kRed-2, kGreen-5};
 
-    fColorsOrigins = {40, 42, 46, 30, 35, 40, 42, 46, 30, 35};
+    fColorsOrigins = {40, 42, 46, 30, 35, 40, 42, 46, 30, 35, 40, 42, 46, 30, 35, 40, 42, 46, 30, 35, 40, 42, 46, 30, 35, 40, 42, 46, 30, 35};
 
-    fHitsMarkers = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+    fHitsMarkers = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
     if(show==false){
         gROOT->SetBatch(true);

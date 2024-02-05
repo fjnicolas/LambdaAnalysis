@@ -1058,7 +1058,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         double trackLength = std::hypot( 0.3*(track.GetStartPoint().X() - track.GetEndPoint().X()), 0.075*(track.GetStartPoint().Y()-track.GetEndPoint().Y()) );
     
         std::cout<<" Track "<<track.GetId()<<" "<<trackLength<<" "<<d<<"\n";
-        if(d > fTPCLinesVertexFinderPset.VertexDistanceROI) continue;
+        //if(d > fTPCLinesVertexFinderPset.VertexDistanceROI) continue;
         if(trackLength<2) continue;
         
         // add single origin if completely unmatched
@@ -1081,6 +1081,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             usedTrack[track.GetId()]=true;
             
         }
+
         // in matched, but its a long track and the closest hit is not matched, add origin
         else if(usedTrack[track.GetId()]==true && track.NHits()>=10){
     
@@ -1223,8 +1224,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 otherTracks.push_back(trk);
             }
             bool passKinemanicChecks = LambdaDecayKinematicCheck(ori1, triangle, ori1.GetTrackEntry(0), track1, track2, otherTracks);
-
-            //if(passKinemanicChecks) bool passCaloChecks = CalorimetryCheck(triangle);
             
             if(passKinemanicChecks){
                 if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"FOUND ORIGIN!\n";    
@@ -1250,23 +1249,3 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
     return originList;
 
 }
-
-
-// Get the min connectednesss between the vertex hits and the tracks
-/*double minDConnectednessVertexHits1 = 1e5;
-double minDConnectednessVertexHits2 = 1e5;
-for(SHit & h:vertexHits){
-    double d1 = track1.GetHitCluster().GetMinDistanceToClusterW(h);
-    if(d1<minDConnectednessVertexHits1)
-        minDConnectednessVertexHits1=d1;
-    double d2 = track2.GetHitCluster().GetMinDistanceToClusterW(h);
-    if(d2<minDConnectednessVertexHits2)
-        minDConnectednessVertexHits2=d2;
-}
-
-if(minDConnectednessVertexHits1>3*track1.GetConnectedness() || minDConnectednessVertexHits2>3*track2.GetConnectedness() ){
-    std::cout<<" SKIP... VERTEX HITS not connected ro tracks\n";
-    continue;
-}
-std::cout<<" VERTEX HITS connectedness "<<minDConnectednessVertexHits1<<" "<<minDConnectednessVertexHits2<<std::endl;
-*/
