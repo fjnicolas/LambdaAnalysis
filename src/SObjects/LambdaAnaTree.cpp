@@ -86,6 +86,21 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("SliceCompleteness", &fSliceCompleteness, readMode);
     SetBranch("SlicePurity", &fSlicePurity, readMode);
 
+    // Set branch addresses for main MC particle information
+    SetBranch("MainMCParticlePDG", &fMainMCParticlePDG, readMode);
+    SetBranch("MainMCParticleEnergy", &fMainMCParticleEnergy, readMode);
+    SetBranch("MainMCParticleStartX", &fMainMCParticleStartX, readMode);
+    SetBranch("MainMCParticleStartY", &fMainMCParticleStartY, readMode);
+    SetBranch("MainMCParticleStartZ", &fMainMCParticleStartZ, readMode);
+    SetBranch("MainMCParticleStartT", &fMainMCParticleStartT, readMode);
+    SetBranch("MainMCParticleEndX", &fMainMCParticleEndX, readMode);
+    SetBranch("MainMCParticleEndY", &fMainMCParticleEndY, readMode);
+    SetBranch("MainMCParticleEndZ", &fMainMCParticleEndZ, readMode);
+    SetBranch("MainMCParticleEndT", &fMainMCParticleEndT, readMode);
+    SetBranch("MainMCParticleLength", &fMainMCParticleLength, readMode);
+    SetBranch("MainMCParticleNDaughters", &fMainMCParticleNDaughters, readMode);
+    SetBranch("MainMCParticleMichelDecay", &fMainMCParticleMichelDecay, readMode);
+
     // Set branch addresses for lambda true information
     SetBranch("Gap", &fGap, readMode);
     SetBranch("LambdaKE", &fLambdaKE, readMode);
@@ -244,6 +259,20 @@ void LambdaAnaTree::ResetVars(){
 
     fSliceCompleteness = -999;
     fSlicePurity = -999;
+
+    fMainMCParticlePDG = -999;
+    fMainMCParticleEnergy = -999;
+    fMainMCParticleStartX = -999;
+    fMainMCParticleStartY = -999;
+    fMainMCParticleStartZ = -999;
+    fMainMCParticleStartT = -999;
+    fMainMCParticleEndX = -999;
+    fMainMCParticleEndY = -999;
+    fMainMCParticleEndZ = -999;
+    fMainMCParticleEndT = -999;
+    fMainMCParticleLength = -999;
+    fMainMCParticleNDaughters = -999;
+    fMainMCParticleMichelDecay = false;
 
     fGap = -999;
     fLambdaKE = -999;

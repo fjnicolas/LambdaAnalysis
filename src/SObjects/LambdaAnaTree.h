@@ -72,6 +72,21 @@ public:
     double fSliceCompleteness;
     double fSlicePurity;
 
+    // Slice main MCParticle
+    int fMainMCParticlePDG;
+    double fMainMCParticleEnergy;
+    double fMainMCParticleStartX;
+    double fMainMCParticleStartY;
+    double fMainMCParticleStartZ;
+    double fMainMCParticleStartT;
+    double fMainMCParticleEndX;
+    double fMainMCParticleEndY;
+    double fMainMCParticleEndZ;
+    double fMainMCParticleEndT;
+    double fMainMCParticleLength;
+    int fMainMCParticleNDaughters;
+    bool fMainMCParticleMichelDecay;
+
     // Lambda decay true information
     double fGap;
     double fLambdaKE;
