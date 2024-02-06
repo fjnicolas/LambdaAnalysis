@@ -24,6 +24,7 @@
 using namespace TMVA::Experimental;
 
 
+// ----- Function to print hand scan events
 void PrintHandScanEvents(TTree *treeHeader, std::string outputFilename, std::vector<int> highestScoreEventID, std::vector<std::string> highestScoreEventLabels, std::vector<double> highestScoreEventScores, std::string fileKeyLabel=""){
     
     // Read TreeHeader 
@@ -105,6 +106,47 @@ void PrintHandScanEvents(TTree *treeHeader, std::string outputFilename, std::vec
     return;
 }
 
+
+// ----- Function to extract labels from the xml file
+std::map<std::string, bool> extractLabels(const std::string& xmlDataFile) {
+    std::map<std::string, bool> labelVector;
+
+    std::ifstream file(xmlDataFile);
+
+    if (!file.is_open()) {
+        std::cerr << "Error opening the file." << std::endl;
+        return labelVector;
+    }
+
+    std::string xmlData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    file.close();
+
+    size_t pos = 0;
+
+    // Search for the beginning of the <Variable> tags
+    while ((pos = xmlData.find("<Variable", pos)) != std::string::npos) {
+        // Find the Label attribute within the current <Variable> tag
+        size_t labelPos = xmlData.find("Label=\"", pos);
+        if (labelPos != std::string::npos) {
+            labelPos += 7; // Move past the "Label=\"" part
+            // Find the closing quote of the Label attribute
+            size_t endQuotePos = xmlData.find("\"", labelPos);
+            if (endQuotePos != std::string::npos) {
+                // Extract the Label value and add it to the vector
+                std::string label = xmlData.substr(labelPos, endQuotePos - labelPos);
+                labelVector[label] = true;
+            }
+        }
+
+        // Move to the next position after the current <Variable> tag
+        pos += 1;
+    }
+
+    return labelVector;
+}
+
+
+// ----- Color map for signal and background histograms
 std::map<std::string, int> fColorMap = {
     {"Signal", kBlue},
     {"Background", kRed},
@@ -112,7 +154,7 @@ std::map<std::string, int> fColorMap = {
 };
 
 
-
+// ----- Function to plot histograms
 void PlotHistograms(std::map<std::string, TH1F*>& histogramMap, const std::string& outputDir, double potNormSignal, double potNorm, double totalPOTNorm) {
     std::cout << " Plotting histograms" << std::endl;
 
@@ -266,8 +308,6 @@ void PlotHistograms(std::map<std::string, TH1F*>& histogramMap, const std::strin
     cScore->Update();
     cScore->SaveAs((outputDir + "BDTResponseZoom.pdf").c_str());
 
-    
-
     fEffFile.close();
 }
 
@@ -277,9 +317,6 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     double potNorm=1, double potNormSignal=1, double totalPOTNorm=1)
 {
     fWeightFilePath = fWeightFilePath + "FRANSSelectionTMVA_" + fMethod + ".weights.xml";
-
-    TCut fTruthInFV("TruthIsFiducial==1");
-    TCut fTruthInAV("TruthIsAV==1");
 
     int fNHighestScoreEvents = 5;
     double fCutsTargetEfficiency = 0.5;
@@ -452,101 +489,111 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     std::vector<int> highestScoreEventID;
     std::vector<std::string> highestScoreEventLabels;
     std::vector<double> highestScoreEventScores;
+
+    TString cutString = "RecoIsFiducial==1 && NAngles>=1 && AnglePassChargeFit==1";
     
     // loop over the TTree
     std::cout<<"Looping over the TTree"<<std::endl;
     std::cout<<"Number of entries: "<<fAnaTreeHandle.GetEntries()<<std::endl;
     for (int ievt=0; ievt<fAnaTreeHandle.GetEntries();ievt++) {
-        
+
         fAnaTreeHandle.GetEntry(ievt);
-
-        // Assign the variables
-        // --- Angle variables
-        NAngles = fAnaTreeHandle.fNAngles;
-        AngleFRANSScore = fAnaTreeHandle.fAngleFRANSScore;
-        FRANSScorePANDORA = fAnaTreeHandle.fFRANSScorePANDORA;
-        AngleGap = fAnaTreeHandle.fAngleGap;
-        AngleNHitsMainTrack = fAnaTreeHandle.fAngleNHitsMainTrack;
-        AngleNHitsTrack1 = fAnaTreeHandle.fAngleNHitsTrack1;
-        AngleNHitsTrack2 = fAnaTreeHandle.fAngleNHitsTrack2;
-        AngleMinNHits = fAnaTreeHandle.fAngleMinNHits;
-        AngleLengthTrack1 = fAnaTreeHandle.fAngleLengthTrack1;
-        AngleLengthTrack2 = fAnaTreeHandle.fAngleLengthTrack2;
-        AngleLengthMainTrack = fAnaTreeHandle.fAngleLengthMainTrack;
-        AngleLongestIsMain = fAnaTreeHandle.fAngleLongestIsMain;
-        // --- Origin variables
-        CRUMBSScore = fAnaTreeHandle.fCRUMBSScore;
-        NUnOrigins = fAnaTreeHandle.fNUnOrigins;
-        NUnOriginsMultGT3 = fAnaTreeHandle.fNUnOriginsMultGT3;
-        NOrigins = fAnaTreeHandle.fNOrigins;
-        NOriginsMultGT3 = fAnaTreeHandle.fNOriginsMultGT3;
-        // --- Cleaness
-        AngleCoveredArea = fAnaTreeHandle.fAngleCoveredArea;
-        AngleDirtHits = fAnaTreeHandle.fAngleDirtHits;
-        NUnassociatedHits = fAnaTreeHandle.fNUnassociatedHits;
-        // --- Kinematics
-        AngleDecayContainedDiff = fAnaTreeHandle.fAngleDecayContainedDiff;
-        AngleOpeningAngle = fAnaTreeHandle.fAngleOpeningAngle;
-        AngleMainTrackOverlap = fAnaTreeHandle.fAngleMainTrackOverlap;
-        AnglePzSign = fAnaTreeHandle.fAnglePzSign;
-        AngleGapOverlapWithAPAJuntion = fAnaTreeHandle.fAngleGapOverlapWithAPAJuntion;
-        // --- Calorimetry
-        AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
-        AnglePassFit = fAnaTreeHandle.fAnglePassFit;
-        AnglePassChargeFit = fAnaTreeHandle.fAnglePassChargeFit;
-        AngleBandOverlap = fAnaTreeHandle.fAngleBandOverlap;
-        AngleBandCrossHits = fAnaTreeHandle.fAngleBandCrossHits;
-        AngleChargeRatioFit = fAnaTreeHandle.fAngleChargeRatioFit;
-        AngleChargeDifferenceFit = fAnaTreeHandle.fAngleChargeDifferenceFit;
-        AngleChargeRatioIntegral = fAnaTreeHandle.fAngleChargeRatioIntegral;
-        AngleChargeDifferenceIntegral = fAnaTreeHandle.fAngleChargeDifferenceIntegral;
-        AngleChargeRatioAverage = fAnaTreeHandle.fAngleChargeRatioAverage;
-        AngleVertexHitIntegralRatio = fAnaTreeHandle.fAngleVertexHitIntegralRatio;
-        AngleTrackLengthRatio = fAnaTreeHandle.fAngleTrackLengthRatio;
-        AngleResidualRange1RMS = fAnaTreeHandle.fAngleResidualRange1RMS;
-        AngleResidualRange2RMS = fAnaTreeHandle.fAngleResidualRange2RMS;
-        AngleResidualRangeMinRMS = fAnaTreeHandle.fAngleResidualRangeMinRMS;
-        AngleResidualRangeMaxAngleRMS = fAnaTreeHandle.fAngleResidualRangeMaxAngleRMS;
-        AngleNVertexHits = fAnaTreeHandle.fAngleNVertexHits;
-        AngleNBulkHits = fAnaTreeHandle.fAngleNBulkHits;
-        // --- Showers
-        NShowers = fAnaTreeHandle.fNShowers;
-        NShowerHits = fAnaTreeHandle.fNShowerHits;
-        ShowerEnergy = fAnaTreeHandle.fShowerEnergy;
         
-        // check active volume
-        bool fTruthIsActive = 1;// fAnaTreeHandle.fTruthIsAV;
-        
-        // retrieve the corresponding MVA output
-        double score = fTMVAReader->EvaluateMVA( fMethodName.c_str() );
-       
-        // check minimal cut
-        bool fiducialCut = fAnaTreeHandle.fRecoIsFiducial;
-        bool minimalCut =fiducialCut && fAnaTreeHandle.fNAngles>=1;
-        bool passFitCuts = fAnaTreeHandle.fAnglePassChargeFit==1;//&& fAnaTreeHandle.fAnglePassFit==1;
-        bool selCuts = fAnaTreeHandle.fAngleFRANSScore>0.2 && fAnaTreeHandle.fAngleDecayContainedDiff<1 && fAnaTreeHandle.fNUnOrigins<=0;
-        bool passCut;
-
-        passCut = minimalCut && passFitCuts && selCuts;
-        if(fMethod=="Cuts") passCut = fiducialCut;
-        if(!passCut) score = -0.95;
-
         bool isSignal = fAnaTreeHandle.fIntOrigin==1 && fAnaTreeHandle.fIntDirt==0 && (fAnaTreeHandle.fIntNLambda>0 && fAnaTreeHandle.fIntMode==0 && std::abs(fAnaTreeHandle.fIntNuPDG)!=12);
         bool isNuBG = fAnaTreeHandle.fIntOrigin==1 && fAnaTreeHandle.fIntDirt==0 && !(fAnaTreeHandle.fIntNLambda>0 && fAnaTreeHandle.fIntMode==0 && std::abs(fAnaTreeHandle.fIntNuPDG)!=12);
         
+        double score = -0.95;
+
+        bool passMinimalCut = fTree->Draw( "", cutString, "goff", 1, ievt)==1;
+
+        if(passMinimalCut){
+            
+            // Assign the variables
+            // --- Angle variables
+            NAngles = fAnaTreeHandle.fNAngles;
+            AngleFRANSScore = fAnaTreeHandle.fAngleFRANSScore;
+            FRANSScorePANDORA = fAnaTreeHandle.fFRANSScorePANDORA;
+            AngleGap = fAnaTreeHandle.fAngleGap;
+            AngleNHitsMainTrack = fAnaTreeHandle.fAngleNHitsMainTrack;
+            AngleNHitsTrack1 = fAnaTreeHandle.fAngleNHitsTrack1;
+            AngleNHitsTrack2 = fAnaTreeHandle.fAngleNHitsTrack2;
+            AngleMinNHits = fAnaTreeHandle.fAngleMinNHits;
+            AngleLengthTrack1 = fAnaTreeHandle.fAngleLengthTrack1;
+            AngleLengthTrack2 = fAnaTreeHandle.fAngleLengthTrack2;
+            AngleLengthMainTrack = fAnaTreeHandle.fAngleLengthMainTrack;
+            AngleLongestIsMain = fAnaTreeHandle.fAngleLongestIsMain;
+            // --- Origin variables
+            CRUMBSScore = fAnaTreeHandle.fCRUMBSScore;
+            NUnOrigins = fAnaTreeHandle.fNUnOrigins;
+            NUnOriginsMultGT3 = fAnaTreeHandle.fNUnOriginsMultGT3;
+            NOrigins = fAnaTreeHandle.fNOrigins;
+            NOriginsMultGT3 = fAnaTreeHandle.fNOriginsMultGT3;
+            // --- Cleaness
+            AngleCoveredArea = fAnaTreeHandle.fAngleCoveredArea;
+            AngleDirtHits = fAnaTreeHandle.fAngleDirtHits;
+            NUnassociatedHits = fAnaTreeHandle.fNUnassociatedHits;
+            // --- Kinematics
+            AngleDecayContainedDiff = fAnaTreeHandle.fAngleDecayContainedDiff;
+            AngleOpeningAngle = fAnaTreeHandle.fAngleOpeningAngle;
+            AngleMainTrackOverlap = fAnaTreeHandle.fAngleMainTrackOverlap;
+            AnglePzSign = fAnaTreeHandle.fAnglePzSign;
+            AngleGapOverlapWithAPAJuntion = fAnaTreeHandle.fAngleGapOverlapWithAPAJuntion;
+            // --- Calorimetry
+            AngleTwoLinesChi2 = fAnaTreeHandle.fAngleTwoLinesChi2;
+            AnglePassFit = fAnaTreeHandle.fAnglePassFit;
+            AnglePassChargeFit = fAnaTreeHandle.fAnglePassChargeFit;
+            AngleBandOverlap = fAnaTreeHandle.fAngleBandOverlap;
+            AngleBandCrossHits = fAnaTreeHandle.fAngleBandCrossHits;
+            AngleChargeRatioFit = fAnaTreeHandle.fAngleChargeRatioFit;
+            AngleChargeDifferenceFit = fAnaTreeHandle.fAngleChargeDifferenceFit;
+            AngleChargeRatioIntegral = fAnaTreeHandle.fAngleChargeRatioIntegral;
+            AngleChargeDifferenceIntegral = fAnaTreeHandle.fAngleChargeDifferenceIntegral;
+            AngleChargeRatioAverage = fAnaTreeHandle.fAngleChargeRatioAverage;
+            AngleVertexHitIntegralRatio = fAnaTreeHandle.fAngleVertexHitIntegralRatio;
+            AngleTrackLengthRatio = fAnaTreeHandle.fAngleTrackLengthRatio;
+            AngleResidualRange1RMS = fAnaTreeHandle.fAngleResidualRange1RMS;
+            AngleResidualRange2RMS = fAnaTreeHandle.fAngleResidualRange2RMS;
+            AngleResidualRangeMinRMS = fAnaTreeHandle.fAngleResidualRangeMinRMS;
+            AngleResidualRangeMaxAngleRMS = fAnaTreeHandle.fAngleResidualRangeMaxAngleRMS;
+            AngleNVertexHits = fAnaTreeHandle.fAngleNVertexHits;
+            AngleNBulkHits = fAnaTreeHandle.fAngleNBulkHits;
+            // --- Showers
+            NShowers = fAnaTreeHandle.fNShowers;
+            NShowerHits = fAnaTreeHandle.fNShowerHits;
+            ShowerEnergy = fAnaTreeHandle.fShowerEnergy;
+            
+            // retrieve the corresponding MVA output
+            score = fTMVAReader->EvaluateMVA( fMethodName.c_str() );
+        
+            // check minimal cut
+            /*bool fiducialCut = fAnaTreeHandle.fRecoIsFiducial;
+            bool minimalCut =fiducialCut && fAnaTreeHandle.fNAngles>=1;
+            bool passFitCuts = fAnaTreeHandle.fAnglePassChargeFit==1;//&& fAnaTreeHandle.fAnglePassFit==1;
+            bool selCuts = fAnaTreeHandle.fAngleFRANSScore>0.2 && fAnaTreeHandle.fAngleDecayContainedDiff<1 && fAnaTreeHandle.fNUnOrigins<=0;
+            bool passCut;
+
+            passCut = minimalCut && passFitCuts && selCuts;
+            if(fMethod=="Cuts") passCut = fiducialCut;
+            if(!passCut) score = -0.95;*/ 
+            
+        
+            //std::cout<<ievt<<" event "<<fAnaTreeHandle.fEventID<<" score: "<<score<<" pass: "<<pass<<std::endl;
+
+        }
+
         // Fill histogram for signals
-        if(fTruthIsActive){
+        if(fAnaTreeHandle.fTruthIsAV){
             if(isSignal)
                 hScoreMap["Signal"]->Fill(score);
             else if(isNuBG)
                 hScoreMap["Background"]->Fill(score);
         }
-        else if(!fTruthIsActive && (fAnaTreeHandle.fIntOrigin==1 || fAnaTreeHandle.fIntDirt==1) ){
+        else if(!fAnaTreeHandle.fTruthIsAV && (fAnaTreeHandle.fIntOrigin==1 || fAnaTreeHandle.fIntDirt==1) ){
             hScoreMap["Cosmic"]->Fill(score);
         }
 
         // Fill highest score events
-        if(passCut && !isSignal){
+        if(passMinimalCut && !isSignal){
             //fAnaTreeHandle.PrintEventInfo();
             if(highestScoreEventID.size()<fNHighestScoreEvents){
                 highestScoreEventID.push_back(fAnaTreeHandle.fEventID);
@@ -573,7 +620,6 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
                 }
             }
         }
-
       
     } // end of event loop
 

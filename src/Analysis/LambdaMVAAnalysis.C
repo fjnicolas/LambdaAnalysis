@@ -20,72 +20,104 @@
 
 using namespace TMVA::Experimental;
 
-std::map<std::string, bool> extractLabels(const std::string& xmlDataFile) {
-    std::map<std::string, bool> labelVector;
 
-    std::ifstream file(xmlDataFile);
+// ---- Function to add variables to the dataloader and get the minimal cut
+void GetMVAConfigurationVariables(TMVA::DataLoader *dataloader, TCut &minimalCut, std::string configFileMVA) {
+    // Open config file
+    std::ifstream configFile(configFileMVA);
+    std::string line;
 
-    if (!file.is_open()) {
-        std::cerr << "Error opening the file." << std::endl;
-        return labelVector;
+    // Minimal cut: first line of the file        
+    std::getline(configFile, line);
+    minimalCut = line.c_str();
+    std::cout<<" Minimal cut: "<<minimalCut<<std::endl;
+
+    // Loop over the rest of the lines and save to vector
+    std::vector<std::string> variables;
+    while (std::getline(configFile, line)) {
+        variables.push_back(line);
+        std::cout<<" Variable: "<<line<<std::endl;
     }
 
-    std::string xmlData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    file.close();
+    // Function to check if a variable is in the vector
+    auto is_in = [](const std::vector<std::string> &v, const std::string &value) {
+        return std::find(v.begin(), v.end(), value) != v.end();
+    };
 
-    size_t pos = 0;
-
-    // Search for the beginning of the <Variable> tags
-    while ((pos = xmlData.find("<Variable", pos)) != std::string::npos) {
-        // Find the Label attribute within the current <Variable> tag
-        size_t labelPos = xmlData.find("Label=\"", pos);
-        if (labelPos != std::string::npos) {
-            labelPos += 7; // Move past the "Label=\"" part
-            // Find the closing quote of the Label attribute
-            size_t endQuotePos = xmlData.find("\"", labelPos);
-            if (endQuotePos != std::string::npos) {
-                // Extract the Label value and add it to the vector
-                std::string label = xmlData.substr(labelPos, endQuotePos - labelPos);
-                labelVector[label] = true;
-            }
-        }
-
-        // Move to the next position after the current <Variable> tag
-        pos += 1;
-    }
-
-    return labelVector;
+    // Add variables to the dataloader
+    // --- Angle variables
+    if (is_in(variables, "NAngles")) dataloader->AddVariable( "NAngles", "N_{angles}", "", 'I' );
+    if (is_in(variables, "AngleFRANSScore")) dataloader->AddVariable( "AngleFRANSScore", "FRANSScore Angle", "", 'D' );
+    if (is_in(variables, "FRANSScorePANDORA")) dataloader->AddVariable( "FRANSScorePANDORA", "FRANSScore PANDORA", "", 'D' );
+    if (is_in(variables, "AngleGap")) dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
+    if (is_in(variables, "AngleNHitsMainTrack")) dataloader->AddVariable( "AngleNHitsMainTrack", "Main track # hits", "", 'I' );
+    if (is_in(variables, "AngleNHitsTrack1")) dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
+    if (is_in(variables, "AngleNHitsTrack2")) dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
+    if (is_in(variables, "AngleMinNHits")) dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
+    if (is_in(variables, "AngleLengthTrack1")) dataloader->AddVariable( "AngleLengthTrack1", "Track 1 Length [cm]", "", 'I' );
+    if (is_in(variables, "AngleLengthTrack2")) dataloader->AddVariable( "AngleLengthTrack2", "Track 2 Length [cm]", "", 'I' );
+    if (is_in(variables, "AngleLengthMainTrack")) dataloader->AddVariable( "AngleLengthMainTrack", "Main track Length [cm]", "", 'I' );
+    if (is_in(variables, "AngleLongestIsMain")) dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
+    if (is_in(variables, "CRUMBSScore")) dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
+    // --- Origin variables
+    if (is_in(variables, "NUnOrigins")) dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
+    if (is_in(variables, "NUnOriginsMultGT3")) dataloader->AddVariable( "NUnOriginsMultGT3", "N^{2}", "", 'I' );
+    if (is_in(variables, "NOrigins")) dataloader->AddVariable( "NOrigins", "N_", "", 'I' );
+    if (is_in(variables, "NOriginsMultGT3")) dataloader->AddVariable( "NOriginsMultGT3", "N^{2}", "", 'I' );
+    // --- Cleaness
+    if (is_in(variables, "AngleCoveredArea")) dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
+    if (is_in(variables, "AngleDirtHits")) dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
+    if (is_in(variables, "NUnassociatedHits")) dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
+    // --- Kinematics
+    if (is_in(variables, "AngleDecayContainedDiff")) dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
+    if (is_in(variables, "AngleOpeningAngle")) dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
+    if (is_in(variables, "AngleMainTrackOverlap")) dataloader->AddVariable( "AngleMainTrackOverlap", "Main Track Overlap", "", 'D' );
+    if (is_in(variables, "AnglePzSign")) dataloader->AddVariable( "AnglePzSign", "AnglePzSign", "", 'D' );
+    if (is_in(variables, "AngleGapOverlapWithAPAJuntion")) dataloader->AddVariable( "AngleGapOverlapWithAPAJuntion", "Gap Overlap", "", 'D' );
+    // --- Calorimetry
+    if (is_in(variables, "AngleTwoLinesChi2")) dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
+    if (is_in(variables, "AnglePassFit")) dataloader->AddVariable( "AnglePassFit", "PassFit", "", 'I' );
+    if (is_in(variables, "AnglePassChargeFit")) dataloader->AddVariable( "AnglePassChargeFit", "Pass Charge Fit", "", 'I' );
+    if (is_in(variables, "AngleBandOverlap")) dataloader->AddVariable( "AngleBandOverlap", "B and Overlap", "", 'D' );
+    if (is_in(variables, "AngleBandCrossHits")) dataloader->AddVariable( "AngleBandCrossHits", "Band Overlap", "", 'D' );
+    if (is_in(variables, "AngleChargeRatioFit")) dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio Fit", "", 'D' );
+    if (is_in(variables, "AngleChargeDifferenceFit")) dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference Fit", "", 'D' );
+    if (is_in(variables, "AngleChargeRatioIntegral")) dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio Integral", "", 'D' );
+    if (is_in(variables, "AngleChargeDifferenceIntegral")) dataloader->AddVariable( "AngleChargeDifferenceIntegral", "Charge Difference", "", 'D' );
+    if (is_in(variables, "AngleChargeRatioAverage")) dataloader->AddVariable( "AngleChargeRatioAverage", "Charge Ratio Average", "", 'D' );
+    if (is_in(variables, "AngleVertexHitIntegralRatio")) dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
+    if (is_in(variables, "AngleTrackLengthRatio")) dataloader->AddVariable( "AngleTrackLengthRatio", "Track Length Ratio", "", 'D' );
+    if (is_in(variables, "AngleResidualRange1RMS")) dataloader->AddVariable( "AngleResidualRange1RMS", "Residuals Range 1 RMS", "", 'D' );
+    if (is_in(variables, "AngleResidualRange2RMS")) dataloader->AddVariable( "AngleResidualRange2RMS", "Residuals Range 2 RMS", "", 'D' );
+    if (is_in(variables, "AngleResidualRangeMinRMS")) dataloader->AddVariable( "AngleResidualRangeMinRMS", "Residuals Range Min RMS", "", 'D' );
+    if (is_in(variables, "AngleResidualRangeMaxAngleRMS")) dataloader->AddVariable( "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", "", 'D' );
+    if (is_in(variables, "AngleNVertexHits")) dataloader->AddVariable( "AngleNVertexHits", "N Vertex Hits", "", 'I' );
+    if (is_in(variables, "AngleNBulkHits")) dataloader->AddVariable( "AngleNBulkHits", "N Bulk Hits", "", 'I' );
+    // --- Showers
+    if (is_in(variables, "NShowers")) dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
+    if (is_in(variables, "NShowerHits")) dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
+    if (is_in(variables, "ShowerEnergy")) dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );   
 }
 
+
 //---------  Main function
-void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1, std::string method="BDT", bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1, std::string configFile="configMVA.txt", std::string method="BDT", std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
 {
-   
-    TCut fTruthInFV("TruthIsFiducial==1");
-    TCut fTruthInAV("TruthIsAV==1");
 
-    // ---- Minimal cut
-    TCut fMinimalCut("RecoIsFiducial && NAngles>=1 && AnglePassChargeFit==1");
-    TCut fSelCuts("AngleFRANSScore>=0.2 && AngleDecayContainedDiff<1 && NUnOrigins<1 && AnglePassChargeFit");
-    fMinimalCut = fMinimalCut && fSelCuts;
-
-    // Batch mode
-    useBatchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
-
-    //--------- Output file
+    // ---- Output file
     gSystem->Exec( "rm -rf TMVAResultsTest" );
     gSystem->Exec( "mkdir TMVAResultsTest" );
     std::string fOutputTMVAROOtFileName = "TMVAResultsTest/TMVAResults.root";
     TFile* outputFile = TFile::Open( fOutputTMVAROOtFileName.c_str(), "CREATE" );
 
-    // Input file
+    // ---- Input file
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
     TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
 
-    // This loads the library
+    // ---- Load the library
     TMVA::Tools::Instance();
 
-    // Default MVA methods to be trained
+    // ---- Define the MVA methods to be trained
     std::map<std::string,int> Use;
     // Rectangular cut optimisation
     if(method=="Cuts") Use["Cuts"] = 1;
@@ -99,79 +131,25 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     // Neural network (MLP)
     if(method=="MLP") Use["MLP"] = 1;
     else Use["MLP"] = 0;
-
     
-    // Define factory and data loader
+    // ---- Define factory and data loader
     TMVA::Factory *factory = new TMVA::Factory( "FRANSSelectionTMVA", outputFile,
                                                 "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
     TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
 
-
-    // --- Angle variables
-    //dataloader->AddVariable( "NAngles", "N_{#alpha}", "", 'I' );
-    //dataloader->AddVariable( "AngleFRANSScore", "AngleFRANSScore", "", 'D' );
-    //dataloader->AddVariable( "FRANSScorePANDORA", "FRANS PANDORA", "", 'D' );
-    //dataloader->AddVariable( "AngleGap", "Gap", "", 'D' );
-    //dataloader->AddVariable( "AngleNHitsMainTrack", "Main track # hits", "", 'I' );
-    //dataloader->AddVariable( "AngleNHitsTrack1", "Track 1 # hits", "", 'I' );
-    //dataloader->AddVariable( "AngleNHitsTrack2", "Track 2 # hits", "", 'I' );
-    //dataloader->AddVariable( "AngleMinNHits", "# hits min", "", 'I' );
-    //dataloader->AddVariable( "AngleLengthTrack1", "Track 1 Length [cm]", "", 'I' );
-    //dataloader->AddVariable( "AngleLengthTrack2", "Track 2 Length [cm]", "", 'I' );
-    dataloader->AddVariable( "AngleLengthMainTrack", "Main track Length [cm]", "", 'I' );
-    //dataloader->AddVariable( "AngleLongestIsMain", "LongestIsMain", "", 'I' );
-
-    // --- Origin variables
-    //dataloader->AddVariable( "CRUMBSScore", "CRUMBS", "", 'D' );
-    //dataloader->AddVariable( "NUnOrigins", "N", "", 'I' );
-    //dataloader->AddVariable( "NUnOriginsMultGT3", "N^{2}", "", 'I' );
-    //dataloader->AddVariable( "NOrigins", "N_", "", 'I' );
-    //dataloader->AddVariable( "NOriginsMultGT3", "N^{2}", "", 'I' );
+    // ---- Add variables from configuration file
+    TCut fMinimalCut;
+    GetMVAConfigurationVariables(dataloader, fMinimalCut, configFile);
     
-    // --- Cleaness
-    //dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
-    dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
-    dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
-    
-    // --- Kinematics
-    //dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
-    //dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
-    //dataloader->AddVariable( "AngleMainTrackOverlap", "Main Track Overlap", "", 'D' );
-    dataloader->AddVariable( "AnglePzSign", "AnglePzSign", "", 'D' );
-    //dataloader->AddVariable( "AngleGapOverlapWithAPAJuntion", "Gap Overlap", "", 'D' );
-
-    // --- Calorimetry
-    //dataloader->AddVariable( "AngleTwoLinesChi2", "Two Lines Chi2", "", 'D' );
-    //dataloader->AddVariable( "AnglePassFit", "PassFit", "", 'I' );
-    //dataloader->AddVariable( "AnglePassChargeFit", "Pass Charge Fit", "", 'I' );
-    //dataloader->AddVariable( "AngleBandOverlap", "B and Overlap", "", 'D' );
-    //dataloader->AddVariable( "AngleBandCrossHits", "Band Overlap", "", 'D' );
-    //dataloader->AddVariable( "AngleChargeRatioFit", "Charge Ratio Fit", "", 'D' );
-    //dataloader->AddVariable( "AngleChargeDifferenceFit", "Charge Difference Fit", "", 'D' );
-    //dataloader->AddVariable( "AngleChargeRatioIntegral", "Charge Ratio Integral", "", 'D' );
-    //dataloader->AddVariable( "AngleChargeDifferenceIntegral", "Charge Difference", "", 'D' );
-    //dataloader->AddVariable( "AngleChargeRatioAverage", "Charge Ratio Average", "", 'D' );
-    //dataloader->AddVariable( "AngleVertexHitIntegralRatio", "Vertex Hit Integral Ratio", "", 'D' );
-    //dataloader->AddVariable( "AngleTrackLengthRatio", "Track Length Ratio", "", 'D' );
-    //dataloader->AddVariable( "AngleResidualRange1RMS", "Residuals Range 1 RMS", "", 'D' );
-    //dataloader->AddVariable( "AngleResidualRange2RMS", "Residuals Range 2 RMS", "", 'D' );
-    //dataloader->AddVariable( "AngleResidualRangeMinRMS", "Residuals Range Min RMS", "", 'D' );
-    dataloader->AddVariable( "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", "", 'D' );
-    //dataloader->AddVariable( "AngleNVertexHits", "N Vertex Hits", "", 'I' );
-    //dataloader->AddVariable( "AngleNBulkHits", "N Bulk Hits", "", 'I' );
-
-    // --- Showers
-    //dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
-    //dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
-    //dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );
-
     Double_t signalWeight     = 1.0;
     Double_t backgroundWeight = 1.0;
     dataloader->AddSignalTree    ( fTree,     signalWeight );
     dataloader->AddBackgroundTree( fTree, backgroundWeight );
     dataloader->AddCut(fMinimalCut);
 
-    // define signal and background cuts
+    // ----  Define signal and background cuts
+    TCut fTruthInFV("TruthIsFiducial==1");
+    TCut fTruthInAV("TruthIsAV==1");
     TCut signalCut = fTruthInFV + TCut("IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");
     TCut bgCut = fTruthInFV && TCut("IntOrigin==1 && IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)");
     int nMaxSignal = fTree->Draw(">>selectedEntries", signalCut + fMinimalCut, "entrylist")-1;
@@ -179,16 +157,14 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
     std::cout<<"nMaxSignal: "<<nMaxSignal<<std::endl;
     std::cout<<"nMaxBg: "<<nMaxBg<<std::endl;
 
+    // ---- Prepare the training and test trees
     std::string tmva_options = "";
     if(nTrainFrac<0) tmva_options = "nTrain_Signal="+std::to_string(nMaxSignal)+":nTrain_Background="+to_string(nMaxBg);
     else tmva_options = "nTrain_Signal="+std::to_string((int)nTrainFrac*nMaxSignal)+":nTrain_Background="+to_string((int)nTrainFrac*nMaxBg);
     tmva_options+=":SplitMode=Random:NormMode=NumEvents:!V";
     dataloader->PrepareTrainingAndTestTree( signalCut, bgCut, tmva_options );
 
-    std::cout<<"Training and test trees prepared\n";
-
-
-    // Cut optimisation
+    // ---- Cut optimisation
     if (Use["Cuts"])
         factory->BookMethod( dataloader, TMVA::Types::kCuts, "Cuts",
                             "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart" );
@@ -210,29 +186,29 @@ void RunLambdaMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1,
         factory->BookMethod( dataloader, TMVA::Types::kBDT, "RandomForest",
                              "!H:!V:NTrees=2500:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20" );
 
-    // Train MVAs using the set of training events
+    // ---- Train MVAs using the set of training events
     factory->TrainAllMethods();
 
-    // Evaluate all MVAs using the set of test events
+    // ---- Evaluate all MVAs using the set of test events
     factory->TestAllMethods();
 
-    // Evaluate and compare performance of all configured MVAs
+    // ---- Evaluate and compare performance of all configured MVAs
     factory->EvaluateAllMethods();
 
 
-    // Save the output
+    // ---- Save the output
     outputFile->Close();
 
     delete factory;
     delete dataloader;
 
-    // Print cuts
+    // ---- Print cuts
     if(Use["Cuts"]) {
         std::cout<<"Cuts: "<<std::endl;
     }
     
-    // Launch the GUI for the root macros
-    if (!gROOT->IsBatch()) TMVA::TMVAGui( fOutputTMVAROOtFileName.c_str() );
+    // ---- Launch the GUI for the root macros
+    TMVA::TMVAGui( fOutputTMVAROOtFileName.c_str() );
 
 
 }

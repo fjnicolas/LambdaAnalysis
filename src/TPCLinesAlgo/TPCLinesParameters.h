@@ -264,6 +264,7 @@ struct TPCLinesAlgoPsetType{
 
     double MaxRadius;
     double DriftConversion;
+    double MaxMeanOccupation;
     int MaxHoughTracks;
     int MinTrackHits;
     bool RemoveIsolatedHits;
@@ -288,6 +289,7 @@ struct TPCLinesAlgoPsetType{
     TPCLinesAlgoPsetType(
         double _maxRadius,
         double _driftConversion,
+        double _maxMeanOccupation,
         int _maxHoughTracks,
         int _minTrackHits,
         bool _removeIsolatedHits,
@@ -307,6 +309,7 @@ struct TPCLinesAlgoPsetType{
         CaloAlgorithmPsetType _caloAlgorithmPset) :
         MaxRadius(_maxRadius),
         DriftConversion(_driftConversion),
+        MaxMeanOccupation(_maxMeanOccupation),
         MaxHoughTracks(_maxHoughTracks),
         MinTrackHits(_minTrackHits),
         RemoveIsolatedHits(_removeIsolatedHits),
@@ -330,6 +333,7 @@ struct TPCLinesAlgoPsetType{
     void Print() {
         std::cout << "MaxRadius: " <<  MaxRadius << std::endl;
         std::cout << "DriftConversion: " <<  DriftConversion << std::endl;
+        std::cout << "MaxMeanOccupation: " <<  MaxMeanOccupation << std::endl;
         std::cout << "MaxHoughTracks: " <<  MaxHoughTracks << std::endl;
         std::cout << "MinTrackHits: " <<  MinTrackHits << std::endl;
         std::cout << "RemoveIsolatedHits: " <<  RemoveIsolatedHits << std::endl;

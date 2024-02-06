@@ -35,15 +35,18 @@ void MacroEvaluateMVAAnalysis(std::string fInputFileName="", bool batchMode=1, s
 }
 
 
-void MacroMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1, std::string method="BDT", bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
-    RunLambdaMVAAnalysis(fInputFileName, nTrainFrac, method, useBatchMode, fTreeDirName, fTreeName);
+void MacroMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1, std::string configFile="configMVA.txt", std::string method="BDT", bool useBatchMode=false, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
+    RunLambdaMVAAnalysis(fInputFileName, nTrainFrac, configFile, method, fTreeDirName, fTreeName);
 }
 
 
-void MacroRunAndEvaluateMVAAnalysis(std::string fInputFileName, std::string fInputFileNameTest, std::string method="BDT", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
+void MacroRunAndEvaluateMVAAnalysis(std::string fInputFileName, std::string fInputFileNameTest, std::string configFile="configMVA.txt", std::string method="BDT", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
+
+    //Batch mode
+    batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
 
     // First make the training
-    RunLambdaMVAAnalysis(fInputFileName, -1, method, batchMode, fTreeDirName, fTreeName);
+    RunLambdaMVAAnalysis(fInputFileName, -1, configFile, method, fTreeDirName, fTreeName);
 
     // Then evaluate the BDT
     //--------- Input TTrees
@@ -58,6 +61,4 @@ void MacroRunAndEvaluateMVAAnalysis(std::string fInputFileName, std::string fInp
     std::cout<<"POT scaling: "<<potScaling<<" POT scaling signal: "<<potScalingSignal<<std::endl;
     
     RunEvaluateMVAAnalysis(fTree, fTreeHeader, method, "dataset/weights/", potScaling, potScalingSignal, 3.3e20);
-
-
 }

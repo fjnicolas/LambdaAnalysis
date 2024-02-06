@@ -239,6 +239,7 @@ TPCLinesAlgoPsetType ReadTPCLinesAlgoPset(std::string filename, std::string bloc
     // Fill the parameter set
     fPsetTPCLines.MaxRadius = pt.get<double>("MaxRadius");
     fPsetTPCLines.DriftConversion = pt.get<double>("DriftConversion");
+    fPsetTPCLines.MaxMeanOccupation = pt.get<double>("MaxMeanOccupation");
     fPsetTPCLines.MaxHoughTracks = pt.get<int>("MaxHoughTracks");
     fPsetTPCLines.MinTrackHits = pt.get<int>("MinTrackHits");
     fPsetTPCLines.RemoveIsolatedHits = pt.get<bool>("RemoveIsolatedHits");

@@ -1058,7 +1058,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         double trackLength = std::hypot( 0.3*(track.GetStartPoint().X() - track.GetEndPoint().X()), 0.075*(track.GetStartPoint().Y()-track.GetEndPoint().Y()) );
     
         std::cout<<" Track "<<track.GetId()<<" "<<trackLength<<" "<<d<<"\n";
-        //if(d > fTPCLinesVertexFinderPset.VertexDistanceROI) continue;
+        if(d > fTPCLinesVertexFinderPset.VertexDistanceROI) continue;
         if(trackLength<2) continue;
         
         // add single origin if completely unmatched

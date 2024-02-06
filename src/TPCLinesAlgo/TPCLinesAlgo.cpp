@@ -630,6 +630,12 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         std::vector<SHit> hitListForHough = GetHitsInCluster(clusterPair.first);
         double clusterMeanOccupation = GetClusterHitDensity(hitListForHough);
         std::cout<<" Ana cluster "<<clusterPair.first<<" "<<clusterPair.second<<" MeanOccupation: "<<clusterMeanOccupation<<std::endl;
+
+        if(clusterMeanOccupation>3){
+            SLinearCluster track(hitListForHough);
+            finalLinearClusterV.push_back(track);
+            continue;
+        }
     
         int trkIterCluster = (int)hitListForHough.size()>=fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
         std::cout<<trkIterCluster<<" "<<fHitList.size()<<" "<<hitListForHough.size()<<std::endl;

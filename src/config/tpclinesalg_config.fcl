@@ -5,6 +5,7 @@ TPCLinesAlg:
     MinTrackHits: 3
     MaxRadius: 250
     DriftConversion: 1. 
+    MaxMeanOccupation: 2.5
     MaxHoughTracks: 15
     RemoveIsolatedHits: true
     MaxNeighbourDistance: 2
@@ -14,7 +15,6 @@ TPCLinesAlg:
     ParallelTracksMaxD: 7
     VertexAlgorithm: 1
     View: 2
-
     OutputPath: OutputLambdaAna
     Verbose: 0
     DebugMode: -1 
