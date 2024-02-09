@@ -529,7 +529,8 @@ bool TPCLinesAlgo::SetHitList(int view,
                 fHitList[i] = SHit(i, h.X() - minX, h.Y() - minY,
                                     h.Width(), h.Integral(),
                                     h.StartT() - minY, h.EndT() - minY,
-                                    h.Chi2(), h.ClusterId()
+                                    h.Chi2(), h.ClusterId(),
+                                    h.SPX(), h.SPY(), h.SPZ()
                                     );
                 fClusterIdCounter[h.ClusterId()]++;
 

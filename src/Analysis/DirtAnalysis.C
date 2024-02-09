@@ -32,9 +32,9 @@ TCut fCounterCut = "SliceID==0";
 
 std::vector<PlotDef> cutDefsProtons = {
     {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kNone, 1, {0,2,2}, false, "Truth in FV",  "Truth \\ in \\ FV"}
-    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
+    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ slice \\ in \\ FV"}
     ,{"MainMCParticleEnergy", "MainMCParticleEnergy", CutType::kNone, 1, {0,4,20}, false, "Main MCParticle E [GeV]",  "Main \\ MCParticle \\ E [GeV]"}
-    ,{"MainMCParticlePDG", "MainMCParticlePDG", CutType::kCenter, 2212, {0,2500,100}, true, "Main MCParticle PDG",  "Main \\ MCParticle PDG"}
+    ,{"MainMCParticlePDG", "MainMCParticlePDG", CutType::kCenter, 2212, {0,2500,100}, true, "Main MCParticle PDG",  "Main \\ MCParticle PDG \\ = \\ 2212"}
     ,{"!(IntOrigin==1 && IntDirt==0)",  "!(IntOrigin==1 && IntDirt==0)", CutType::kCenter, 1, {0,2,2}, true, "Dirt||Cosmic",  "Dirt||Cosmic"}
 
     ,{"MainMCParticleEnergy", "MainMCParticleEnergy", CutType::kNone, 1, {0.8,2.,40}, false, "Main MCParticle E [GeV]",  "Main \\ MCParticle \\ E [GeV]"}    
@@ -42,7 +42,7 @@ std::vector<PlotDef> cutDefsProtons = {
     ,{"MainMCParticleStartY", "MainMCParticleStartY", CutType::kNone, 1, {-200,200,20}, false, "Main MCParticle Start Y [cm]",  "Main \\ MCParticle \\ Start \\ Y [cm]"}
     ,{"MainMCParticleStartZ", "MainMCParticleStartZ", CutType::kNone, 1, {0,500,25}, false, "Main MCParticle Start Z [cm]",  "Main \\ MCParticle \\ Start \\ Z [cm]"}
 
-    ,{"MainMCParticleEnergy", "MainMCParticleEnergy", CutType::kLeft, 1.1, {0.8,2.,40}, true, "Main MCParticle E [GeV]",  "Main \\ MCParticle \\ KE<100 MeV"}    
+    ,{"MainMCParticleEnergy", "MainMCParticleEnergy", CutType::kLeft, 1.1, {0.8,2.,40}, true, "Main MCParticle E [GeV]",  "Main \\ MCParticle \\ E \\ (GeV)"}    
     ,{"MainMCParticleStartX", "MainMCParticleStartX", CutType::kNone, 1, {-200,200,20}, false, "Main MCParticle Start X [cm]",  "Main \\ MCParticle \\ Start \\ X [cm]"}
     ,{"MainMCParticleStartY", "MainMCParticleStartY", CutType::kNone, 1, {-200,200,20}, false, "Main MCParticle Start Y [cm]",  "Main \\ MCParticle \\ Start \\ Y [cm]"}
     ,{"MainMCParticleStartZ", "MainMCParticleStartZ", CutType::kNone, 1, {0,500,25}, false, "Main MCParticle Start Z [cm]",  "Main \\ MCParticle \\ Start \\ Z [cm]"}
@@ -51,9 +51,9 @@ std::vector<PlotDef> cutDefsProtons = {
 
 std::vector<PlotDef> cutDefsMichel = {
     {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kNone, 1, {0,2,2}, false, "Truth in FV",  "Truth \\ in \\ FV"}
-    //,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
+    ,{"abs(RecnuvX)<210 && abs(RecnuvY)<210 && RecnuvZ>-10 && RecnuvZ<510", "(abs(RecnuvX)<210 && abs(RecnuvY)<210 && RecnuvZ>-10 && RecnuvZ<510)", CutType::kCenter, 1, {0,2,2}, true, "Reco in AV",   "Reco \\ slice \\ in \\ AV"} 
     ,{"MainMCParticleEnergy", "MainMCParticleEnergy", CutType::kNone, 1, {0,4,20}, false, "Main MCParticle E [GeV]",  "Main \\ MCParticle \\ E [GeV]"}
-    ,{"abs(MainMCParticlePDG)", "abs(MainMCParticlePDG)", CutType::kCenter, 13, {0,2500,100}, true, "Main MCParticle PDG",  "Main \\ MCParticle PDG"}
+    ,{"abs(MainMCParticlePDG)", "abs(MainMCParticlePDG)", CutType::kCenter, 13, {0,2500,100}, true, "Main MCParticle PDG",  "Main \\ MCParticle PDG \\ = \\ 13"}
     //,{"!(IntOrigin==1 && IntDirt==0)",  "!(IntOrigin==1 && IntDirt==0)", CutType::kCenter, 1, {0,2,2}, true, "Dirt||Cosmic",  "Dirt||Cosmic"}
 
     ,{"MainMCParticleEnergy", "MainMCParticleEnergy", CutType::kNone, 1, {0.8,2.,40}, false, "Main MCParticle E [GeV]",  "Main \\ MCParticle \\ E [GeV]"}    
@@ -81,9 +81,12 @@ void RunDirtAnalysis(std::string fInputFileName="", bool batchMode=1, std::strin
 {
 
     //---------  Remove all *.pdf with gSystem
-    gSystem->Exec("rm -rf OutputPlots");
-    gSystem->Exec("mkdir OutputPlots");
-    gSystem->Exec("mkdir OutputPlots/PhaseSpace");
+    std::string fOutputDirName = "OutputPlots";
+    gSystem->Exec(("rm -rf "+fOutputDirName).c_str());
+    gSystem->Exec(("mkdir "+fOutputDirName).c_str());
+    gSystem->Exec(("mkdir "+fOutputDirName+"/PhaseSpace").c_str());
+
+
 
     //Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
@@ -101,6 +104,10 @@ void RunDirtAnalysis(std::string fInputFileName="", bool batchMode=1, std::strin
     ReadPOT(fFile, fPOTTotalNorm, potScaling, potScalingSignal);
 
 
+    //--------- Matrix to store the number of events
+    std::vector< std::vector<int> > nEventsMatrix;
+    std::vector<PlotDef> cutDefsForTable;
+
     //--------- Loop over the cuts
     std::vector<AnaPlot> anaPlots;
     TCut previousCut("");
@@ -115,6 +122,14 @@ void RunDirtAnalysis(std::string fInputFileName="", bool batchMode=1, std::strin
         if(cutDefs[i].GetAccumulateCut()){
             previousCut = previousCut && currentCut;
             anaPlot.DrawHistograms(fTree, previousCut, 1);
+
+            cutDefsForTable.push_back(cutDefs[i]);
+            nEventsMatrix.push_back({});
+            size_t cutIndex = nEventsMatrix.size()-1;
+            std::map<std::string, int> nEventsMap = anaPlot.GetCountsV();
+            for(const auto& sample : sampleDefs){
+                nEventsMatrix[cutIndex].push_back(nEventsMap[sample.GetLabelS()]);
+            }
         }
     }
 
@@ -127,10 +142,10 @@ void RunDirtAnalysis(std::string fInputFileName="", bool batchMode=1, std::strin
     }
     
     //--------- Create the LaTeX table
-    GenerateAndCompileTeXTable(sampleDefs, anaPlots, 0, fOutputFileName, "Cut efficiencies");
+    GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileName, "Cut efficiencies", fOutputDirName, 1, 1, 1, 0);
 
     //--------- Create the LaTeX table (POT normalized)
-    GenerateAndCompileTeXTable(sampleDefs, anaPlots, 0, fOutputFileNameNormalized, "Cut efficiencies", potScaling, potScalingSignal, fPOTTotalNorm);
+    GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileNameNormalized, "Cut efficiencies POT normalized", fOutputDirName, potScaling, potScalingSignal, fPOTTotalNorm, 0);
    
     //--------- Output hand scans
     CreateHandScanList(fTree, fTreeHeader, previousCut, sampleDefs);

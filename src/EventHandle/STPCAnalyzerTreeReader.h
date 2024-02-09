@@ -72,6 +72,9 @@ public:
     std::vector<double> *hitsChi2 = new std::vector<double>;
     std::vector<double> *hitsNDF = new std::vector<double>;
     std::vector<int> *hitsClusterID = new std::vector<int>;
+    std::vector<double> *hitsX = new std::vector<double>;
+    std::vector<double> *hitsY = new std::vector<double>;
+    std::vector<double> *hitsZ = new std::vector<double>;
     std::vector<double> *lambdaProtonPDir = new std::vector<double>;
     std::vector<double> *lambdaPionPDir = new std::vector<double>;
 

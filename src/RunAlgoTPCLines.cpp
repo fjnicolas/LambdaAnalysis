@@ -179,7 +179,6 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             fAnaTreeHandleDirectory->cd();
             fAnaTreeHandle.FillTree();
 
-            std::cout<<"JJJJJ "<<foundTriangle.GetMainVertex()<<std::endl;
             
             // --- Run for the other views
             if(parser.getThreeViews() && foundTriangle.GetMainVertex().X()!=-1 && foundTriangle.GetMainVertex().Y()!=-1){
@@ -188,7 +187,7 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
                 double triangleYlower = foundTriangle.GetMinY()+_TPCLinesAlgo.ShiftY();
                 double triangleYupper = foundTriangle.GetMaxY()+_TPCLinesAlgo.ShiftY();
                 // add porch
-                double porch = 0.05*(triangleYupper-triangleYlower);
+                double porch = 0.2*(triangleYupper-triangleYlower);
                 triangleYlower -= porch;
                 triangleYupper += porch;
 

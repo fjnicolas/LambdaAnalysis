@@ -279,7 +279,7 @@ class AnaPlot{
     public:
         AnaPlot(int plotIndex, PlotDef plotDef, std::vector<SampleDef> intTypes, std::vector<PlotDef> phaseSpaceVaribles={});
 
-        void DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut=0);
+        void DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut=0, double signalScale=1, double backgroundScale=1);
 
         PlotDef GetPlotDef() const {
             return fPlotDef;
@@ -458,7 +458,7 @@ void DrawVerticalLineWithArrow(double x, double x1, double x2, double y1, double
 }
 
 
-void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
+void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, double signalScale, double backgroundScale){
 
     // --- Frame histograms and legend
     std::string plotIndex = std::to_string(fPlotIndex);
@@ -570,7 +570,12 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut){
         pad1->cd();
         fTree->Draw( (fPlotDef.GetVarS()+">>"+plotLabel).c_str(), sampelCut && currentCut );
         
-        
+        // Scale distribution
+        if(fIntTypes[j].IsSignal())
+            fHistV[intTypeLabel]->Scale(signalScale);
+        else
+            fHistV[intTypeLabel]->Scale(backgroundScale);
+ 
         // --- Draw cumulative distribution
         pad3->cd();
 

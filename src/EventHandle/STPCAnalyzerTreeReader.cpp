@@ -69,6 +69,9 @@ MyTPCTreeReader::MyTPCTreeReader(TString fileName, std::string treeName) {
     tree->SetBranchAddress("HitsChi2", &hitsChi2);
     tree->SetBranchAddress("HitsNDF", &hitsNDF);
     tree->SetBranchAddress("HitsClusterID", &hitsClusterID);
+    tree->SetBranchAddress("HitsX", &hitsX);
+    tree->SetBranchAddress("HitsY", &hitsY);
+    tree->SetBranchAddress("HitsZ", &hitsZ);
 
     tree->SetBranchAddress("LambdaProtonPDir", &lambdaProtonPDir);
     tree->SetBranchAddress("LambdaPionPDir", &lambdaPionPDir);
@@ -102,8 +105,12 @@ std::vector<SHit> MyTPCTreeReader::GetHitsInView(int view)
         // filter channels for the view        
         if ( hitsView->at(i)==view ) {
             //SHit hit(-1, _X->at(i), _Y->at(i), _Wi->at(i), _Int->at(i), _ST->at(i), _ET->at(i), _Chi2->at(i), _ClusterId->at(i));
-            SHit hit(i, hitsChannel->at(i), hitsPeakTime->at(i), hitsRMS->at(i), hitsIntegral->at(i), hitsStartT->at(i), hitsEndT->at(i), hitsChi2->at(i), hitsClusterID->at(i));
+            SHit hit(i, hitsChannel->at(i), hitsPeakTime->at(i), hitsRMS->at(i), hitsIntegral->at(i),
+                    hitsStartT->at(i), hitsEndT->at(i), hitsChi2->at(i), hitsClusterID->at(i),
+                    hitsX->at(i), hitsY->at(i), hitsZ->at(i) );
             hitList.push_back(hit);
+
+            std::cout<<" HITS X "<<hit.SPX()<<std::endl;
         }
     }
 

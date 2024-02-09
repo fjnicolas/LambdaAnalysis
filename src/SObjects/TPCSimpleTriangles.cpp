@@ -399,19 +399,23 @@ double STriangle::ComputeCoveredArea() {
 }
 
 double STriangle::GetMinX(){
-    return std::min(fMainVertex.X(), std::min(fVertexB.X(), fVertexC.X())  );
+    //return std::min(fMainVertex.X(), std::min(fVertexB.X(), fVertexC.X())  );
+    return std::min( fTrack1.GetMinX(), fTrack2.GetMinX() );
 }
 
 double STriangle::GetMaxX(){
-    return std::max(fMainVertex.X(), std::max(fVertexB.X(), fVertexC.X())  );
+    //return std::max(fMainVertex.X(), std::max(fVertexB.X(), fVertexC.X())  );
+    return std::max( fTrack1.GetMaxX(), fTrack2.GetMaxX() );
 }
 
 double STriangle::GetMinY(){
-    return std::min(fMainVertex.Y(), std::min(fVertexB.Y(), fVertexC.Y())  );
+    //return std::min(fMainVertex.Y(), std::min(fVertexB.Y(), fVertexC.Y())  );
+    return std::min( fTrack1.GetMinY(), fTrack2.GetMinY() );
 }
 
 double STriangle::GetMaxY(){
-    return std::max(fMainVertex.Y(), std::max(fVertexB.Y(), fVertexC.Y())  );
+    //return std::max(fMainVertex.Y(), std::max(fVertexB.Y(), fVertexC.Y())  );
+    return std::max( fTrack1.GetMaxY(), fTrack2.GetMaxY() );
 }
 
 double STriangle::GetOverlapWithMainTrack(){

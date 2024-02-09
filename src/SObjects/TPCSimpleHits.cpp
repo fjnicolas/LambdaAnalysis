@@ -54,7 +54,7 @@ std::ostream& operator<<(std::ostream& out, SVertex const& v)
 }
 
 // SHit class functions
-SHit::SHit(int id, float x, float y, float w, float integral, float st, float et, float chi2, int clusterId)
+SHit::SHit(int id, float x, float y, float w, float integral, float st, float et, float chi2, int clusterId, float spx, float spy, float spz)
     : fId(id),
     fP( SPoint(x, y) ),
     fWidth(w),
@@ -63,6 +63,9 @@ SHit::SHit(int id, float x, float y, float w, float integral, float st, float et
     fIntegral(integral),
     fChi2(chi2),
     fClusterId(clusterId),
+    fSPX(spx),
+    fSPY(spy),
+    fSPZ(spz),
     fXProj(-1000),
     fYProj(-1000),
     fCompactness(-1000),

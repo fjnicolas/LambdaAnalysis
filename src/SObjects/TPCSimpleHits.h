@@ -67,6 +67,9 @@ class SHit {
         float fIntegral;
         float fChi2;
         int fClusterId;
+        float fSPX;
+        float fSPY;
+        float fSPZ;
         float fXProj;
         float fYProj;
         float fCompactness;
@@ -75,7 +78,7 @@ class SHit {
 
     public:
         // Constructor
-        SHit(int id=-1, float x=0, float y=0, float w=0, float integral=0, float st=0, float et=0, float chi2=0, int clusterID=-1);
+        SHit(int id=-1, float x=0, float y=0, float w=0, float integral=0, float st=0, float et=0, float chi2=0, int clusterID=-1, float spx=0, float spy=0, float spz=0);
         SHit(float x, float y);
 
         // Getters
@@ -88,6 +91,9 @@ class SHit {
         float Integral() const {return fIntegral;}
         float Chi2() const {return fChi2;}
         int ClusterId() const {return fClusterId;}
+        float SPX() const {return fSPX;}
+        float SPY() const {return fSPY;}
+        float SPZ() const {return fSPZ;}
         float XProj() const {return fXProj;}
         float YProj() const {return fYProj;}
         float Compactness() const {return fCompactness;}

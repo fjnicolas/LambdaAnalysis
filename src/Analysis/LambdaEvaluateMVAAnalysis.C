@@ -106,6 +106,54 @@ void PrintHandScanEvents(TTree *treeHeader, std::string outputFilename, std::vec
     return;
 }
 
+bool PassMinimalCut(LambdaAnaTree lambdaAnaTree, TCut minimalCut){
+
+    std::string cutName = std::string(minimalCut.GetTitle());
+    // check RecoIsFiducial is in minimalCut.data
+    bool pass = true;
+    if(cutName.find("RecoIsFiducial")!=std::string::npos){
+        //std::cout<<"RecoIsFiducial"<<std::endl;
+        pass = pass && lambdaAnaTree.fRecoIsFiducial==1;
+    }
+    if(cutName.find("NAngles")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fNAngles>=1;
+        //std::cout<<"NAngles"<<std::endl;
+    }
+    if(cutName.find("AngleFRANSScore")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fAngleFRANSScore>0.2;
+        //std::cout<<"AngleFRANSScore"<<std::endl;
+    }
+    if(cutName.find("AngleDecayContainedDiff")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fAngleDecayContainedDiff<1;
+        //std::cout<<"AngleDecayContainedDiff"<<std::endl;
+    }
+    if(cutName.find("NUnOrigins")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fNUnOrigins<1;
+        //std::cout<<"NUnOrigins"<<std::endl;
+    }
+    else if(cutName.find("AnglePassChargeFit")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fAnglePassChargeFit==1;
+        //std::cout<<"AnglePassChargeFit"<<std::endl;
+    }
+    
+
+    return pass;
+}
+
+
+// ---- Function to add variables to the dataloader and get the minimal cut
+TCut GetMVAConfigurationMinimalCut(std::string configFileMVA) {
+    // Open config file
+    std::ifstream configFile(configFileMVA);
+    std::string line;
+
+    // Minimal cut: first line of the file        
+    std::getline(configFile, line);
+    TCut minimalCut(line.c_str());
+    std::cout<<" Minimal cut: "<<minimalCut<<std::endl;
+    return minimalCut;
+}
+
 
 // ----- Function to extract labels from the xml file
 std::map<std::string, bool> extractLabels(const std::string& xmlDataFile) {
@@ -314,7 +362,7 @@ void PlotHistograms(std::map<std::string, TH1F*>& histogramMap, const std::strin
 
 //---------  Main function
 void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMethod = "BDT", std::string fWeightFilePath = "dataset/weights/",
-    double potNorm=1, double potNormSignal=1, double totalPOTNorm=1)
+    std::string configFile = "configMVA.txt", double potNorm=1, double potNormSignal=1, double totalPOTNorm=1)
 {
     fWeightFilePath = fWeightFilePath + "FRANSSelectionTMVA_" + fMethod + ".weights.xml";
 
@@ -456,7 +504,6 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
         TMVA::MethodCuts* methodCuts = dynamic_cast<TMVA::MethodCuts*>(fTMVAReader->FindMVA(fMethodName.c_str()));
         methodCuts->PrintCuts(fCutsTargetEfficiency);
     }
-    
 
 
     // --- Set style
@@ -490,7 +537,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     std::vector<std::string> highestScoreEventLabels;
     std::vector<double> highestScoreEventScores;
 
-    TString cutString = "RecoIsFiducial==1 && NAngles>=1 && AnglePassChargeFit==1";
+    TCut minimalCut = GetMVAConfigurationMinimalCut(configFile);
     
     // loop over the TTree
     std::cout<<"Looping over the TTree"<<std::endl;
@@ -504,7 +551,8 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
         
         double score = -0.95;
 
-        bool passMinimalCut = fTree->Draw( "", cutString, "goff", 1, ievt)==1;
+        //bool passMinimalCut = fTree->Draw( "", minimalCut, "goff", 1, ievt)==1;
+        bool passMinimalCut = PassMinimalCut(fAnaTreeHandle, minimalCut);
 
         if(passMinimalCut){
             
@@ -588,9 +636,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
             else if(isNuBG)
                 hScoreMap["Background"]->Fill(score);
         }
-        else if(!fAnaTreeHandle.fTruthIsAV && (fAnaTreeHandle.fIntOrigin==1 || fAnaTreeHandle.fIntDirt==1) ){
-            hScoreMap["Cosmic"]->Fill(score);
-        }
+        //else if(!fAnaTreeHandle.fTruthIsAV && (fAnaTreeHandle.fIntOrigin==1 || fAnaTreeHandle.fIntDirt==1) ){hScoreMap["Cosmic"]->Fill(score);}
 
         // Fill highest score events
         if(passMinimalCut && !isSignal){

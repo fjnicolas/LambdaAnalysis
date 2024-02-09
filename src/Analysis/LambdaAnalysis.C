@@ -59,8 +59,11 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     gSystem->Exec(("mkdir "+fOutputDirName).c_str());
     gSystem->Exec(("mkdir "+fOutputDirName+"/PhaseSpace").c_str());
 
-    //Batch mode
+    //--------- Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
+
+    //--------- Scale POT
+    bool fScaleHistogramsToPOT = false; fScaleHistogramsToPOT = true;
 
     //--------- Input TTree
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
@@ -68,11 +71,12 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     // Read TreeHeader 
     TTree *fTreeHeader = (TTree *)fFile->Get( (fTreeDirName+"TreeHeader").c_str() );
     
-
     //----------------- POT normalization
-    double potScaling = 1;
+    double potScalingBg = 1;
     double potScalingSignal = 1;
-    ReadPOT(fFile, fPOTTotalNorm, potScaling, potScalingSignal);
+    ReadPOT(fFile, fPOTTotalNorm, potScalingBg, potScalingSignal);
+    double potScaleBg = fScaleHistogramsToPOT? 1.*potScalingBg/fPOTTotalNorm: 1;
+    double potScaleSignal = fScaleHistogramsToPOT? 1.*potScalingSignal/fPOTTotalNorm: 1;
 
     //--------- Matrix to store the number of events
     std::vector< std::vector<int> > nEventsMatrix;
@@ -86,12 +90,12 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
         TCut currentCut = TCut(cutDefs[i].GetCut());
         AnaPlot anaPlot(i, cutDefs[i], sampleDefs, phaseSpaceDefs);
 
-        anaPlot.DrawHistograms(fTree, previousCut);
+        anaPlot.DrawHistograms(fTree, previousCut, 0, potScaleSignal, potScaleBg);
         anaPlots.push_back(anaPlot);
 
         if(cutDefs[i].GetAccumulateCut()){
             previousCut = previousCut && currentCut;
-            anaPlot.DrawHistograms(fTree, previousCut, 1);
+            anaPlot.DrawHistograms(fTree, previousCut, 1, potScaleSignal, potScaleBg);
 
             cutDefsForTable.push_back(cutDefs[i]);
             nEventsMatrix.push_back({});
@@ -100,7 +104,6 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
             for(const auto& sample : sampleDefs){
                 nEventsMatrix[cutIndex].push_back(nEventsMap[sample.GetLabelS()]);
             }
-            
         }
     
     }
@@ -115,9 +118,8 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     //--------- Create the LaTeX table
     GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileName, "Cut efficiencies", fOutputDirName);
 
-
     //--------- Create the LaTeX table (POT normalized)
-    GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileNameNormalized, "Cut efficiencies", fOutputDirName, potScaling, potScalingSignal, fPOTTotalNorm);
+    GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileNameNormalized, "Cut efficiencies", fOutputDirName, potScalingBg, potScalingSignal, fPOTTotalNorm);
    
     //--------- Output hand scans
     CreateHandScanList(fTree, fTreeHeader, previousCut, sampleDefs);
