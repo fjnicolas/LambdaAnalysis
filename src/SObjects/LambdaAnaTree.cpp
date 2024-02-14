@@ -170,6 +170,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleDirtHitsWiresRatio", &fAngleDirtHitsWiresRatio, readMode);
     SetBranch("NFreeHits", &fNFreeHits, readMode);
     SetBranch("NUnassociatedHits", &fNUnassociatedHits, readMode);
+    SetBranch("NMaxDirtUnassociatedHits", &fNMaxDirtUnassociatedHits, readMode);
 
     // Kinematics
     SetBranch("AngleDecayContainedDiff", &fAngleDecayContainedDiff, readMode);
@@ -336,6 +337,7 @@ void LambdaAnaTree::ResetVars(){
     fAngleDirtHitsWiresRatio = -999;
     fNFreeHits = -999;
     fNUnassociatedHits = -999;
+    fNMaxDirtUnassociatedHits = -999;
 
     // Kinematics
     fAngleOpeningAngle = -999;
@@ -436,6 +438,7 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Angle Dirt Hits Wires Ratio: " << fAngleDirtHitsWiresRatio << std::endl;
         std::cout << " Angle Unassociated Hits: " << fNUnassociatedHits << std::endl;
         std::cout << " Angle Free Hits: " << fNFreeHits << std::endl;
+        std::cout << " Angle Max Dirt Unassociated Hits: " << fNMaxDirtUnassociatedHits << std::endl;
 
         // Kinematics
         std::cout << " --- Kinematics Information --- " << std::endl;

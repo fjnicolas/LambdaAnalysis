@@ -987,6 +987,9 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         lambdaAnaTree.fNUnassociatedHits = nUnassociatedHits;
         lambdaAnaTree.fNFreeHits = nFreeHits;
 
+        lambdaAnaTree.fNMaxDirtUnassociatedHits = std::max(nUnassociatedHits, nDirtHitsInTriangle);
+
+
         // --- Triangle calorimetry ---
         fTriangleCalo.SetTriangle(bestTriangle);
         fTriangleCalo.JointFitAnalysis();

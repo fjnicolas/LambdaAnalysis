@@ -1476,7 +1476,7 @@ void STriangleCalo::Display(TCanvas *c1){
     marker->Draw("same");
     pt->Draw("same");
     
-    std::cout<<" Drawing calorimetry...track length: "<<fHitsTrack1.size()<<"\n";
+    std::cout<<" Drawing calorimetry...track length: "<<fHitsTrack1.size()<<" "<<fHitsTrack2.size()<<"\n";
     // --- Draw xV and yV markers after assignment ---
 
     // TH1F histogram around the vertex
@@ -1508,6 +1508,8 @@ void STriangleCalo::Display(TCanvas *c1){
         if (&h == &fHitsTrack1.front()) leg->AddEntry(marker, "Track 1 hits", "p");
     }
 
+    std::cout<<" Track 1 filled\n";
+
     for(SHit &h:fHitsTrack2){
         double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
         TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 23);
@@ -1516,6 +1518,8 @@ void STriangleCalo::Display(TCanvas *c1){
         marker->Draw("same");
         if (&h == &fHitsTrack2.front()) leg->AddEntry(marker, "Track 2 hits",  "p");
     }
+
+    std::cout<<" Track 2 filled\n";
 
     for(SHit &h:fVertexHits){
         double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
@@ -1526,6 +1530,8 @@ void STriangleCalo::Display(TCanvas *c1){
         if (&h == &fVertexHits.front()) leg->AddEntry(marker, "Vertex hits",  "p");
     }
 
+     std::cout<<" Vertex hits filled\n";
+
     for(SHit &h:fFitHits){
         double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
         TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
@@ -1535,109 +1541,117 @@ void STriangleCalo::Display(TCanvas *c1){
         marker->Draw("same");
     }
     
+     std::cout<<" Fits hits filled\n";
     // Draw arrows joining hits for each track
-    for(size_t k=0; k<fHitsTrack1.size()-1; k++){
-        SHit h1 = fHitsTrack1[k];
-        SHit h2 = fHitsTrack1[k+1];
-        TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
-        arrow->Draw();
-        
+    if(fHitsTrack1.size()>=2){
+        for(size_t k=0; k<fHitsTrack1.size()-1; k++){
+            std::cout<<k<<std::endl;
+            SHit h1 = fHitsTrack1[k];
+            SHit h2 = fHitsTrack1[k+1];
+            TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
+            arrow->Draw();
+            
+        }
     }
-    for(size_t k=0; k<fHitsTrack2.size()-1; k++){
-        SHit h1 = fHitsTrack2[k];
-        SHit h2 = fHitsTrack2[k+1];
-        TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
-        arrow->Draw();
+    if(fHitsTrack2.size()>=2){
+        for(size_t k=0; k<fHitsTrack2.size()-1; k++){
+            std::cout<<k<<std::endl;
+            SHit h1 = fHitsTrack2[k];
+            SHit h2 = fHitsTrack2[k+1];
+            TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
+            arrow->Draw();
+        }
     }
+    std::cout<<" Filled al arrows\n";
 
     leg->Draw("same");
 
 
     // ---- Plot 3D points
-    pad3->cd();
-    
-    // Add points to the graph
-    std::vector<double> spx, spy, spz;
-    std::vector<double> spxV, spyV, spzV;
-    for(size_t k=0; k<fHitsTrack1.size(); k++){
-        std::cout<<fHitsTrack1[k].SPX()<<"-"<<fHitsTrack1[k].SPY()<<"-"<<fHitsTrack1[k].SPZ()<<"\n";
-        if(fHitsTrack1[k].SPZ()<-100 || fHitsTrack1[k].SPY()==0) continue;
+    bool make3DPlot = false;
+    std::cout<<" Making 3D Plot? "<<make3DPlot<<std::endl;
+    if(make3DPlot){
+        pad3->cd();
         
-        // -- Y
-        spy.push_back( fHitsTrack1[k].SPY() );
-        spyV.push_back( fHitsTrack1[k].SPY() );
-        // -- X
-        //spx.push_back( fHitsTrack1[k].SPX() );
-        //spxV.push_back( fHitsTrack1[k].SPX() );
-        spx.push_back( fHitsTrack1[k].Y() );
-        spxV.push_back( fHitsTrack1[k].Y() );
-        // -- Z
-        //spz.push_back( fHitsTrack1[k].SPZ() );
-        //spzV.push_back( fHitsTrack1[k].SPZ() );
-        spz.push_back( fHitsTrack1[k].X() );
-        spzV.push_back( fHitsTrack1[k].X() );
+        // Add points to the graph
+        std::vector<double> spx, spy, spz;
+        std::vector<double> spxV, spyV, spzV;
+        for(size_t k=0; k<fHitsTrack1.size(); k++){
+            std::cout<<fHitsTrack1[k].SPX()<<"-"<<fHitsTrack1[k].SPY()<<"-"<<fHitsTrack1[k].SPZ()<<"\n";
+            if(fHitsTrack1[k].SPZ()<-100 || fHitsTrack1[k].SPY()==0) continue;
+            
+            // -- Y
+            spy.push_back( fHitsTrack1[k].SPY() );
+            spyV.push_back( fHitsTrack1[k].SPY() );
+            // -- X
+            //spx.push_back( fHitsTrack1[k].SPX() );
+            //spxV.push_back( fHitsTrack1[k].SPX() );
+            spx.push_back( fHitsTrack1[k].Y() );
+            spxV.push_back( fHitsTrack1[k].Y() );
+            // -- Z
+            //spz.push_back( fHitsTrack1[k].SPZ() );
+            //spzV.push_back( fHitsTrack1[k].SPZ() );
+            spz.push_back( fHitsTrack1[k].X() );
+            spzV.push_back( fHitsTrack1[k].X() );
+        }
+        TGraph2D *graph1 = new TGraph2D(spx.size(), &spz[0], &spx[0], &spy[0]);
+    
+        spx.clear(); spy.clear(); spz.clear();
+        for(size_t k=0; k<fHitsTrack2.size(); k++){
+            std::cout<<fHitsTrack2[k].SPX()<<"-"<<fHitsTrack2[k].SPY()<<"-"<<fHitsTrack2[k].SPZ()<<"\n";
+            if(fHitsTrack2[k].SPZ()<-100 || fHitsTrack2[k].SPY()==0) continue;
+            // -- Y
+            spy.push_back( fHitsTrack2[k].SPY() );
+            spyV.push_back( fHitsTrack2[k].SPY() );
+            // -- X
+            //spx.push_back( fHitsTrack2[k].SPX() );
+            //spxV.push_back( fHitsTrack2[k].SPX() );
+            spx.push_back( fHitsTrack2[k].Y() );
+            spxV.push_back( fHitsTrack2[k].Y() );
+            // -- Z
+            //spz.push_back( fHitsTrack2[k].SPZ() );
+            //spzV.push_back( fHitsTrack2[k].SPZ() );
+            spz.push_back( fHitsTrack2[k].X() );
+            spzV.push_back( fHitsTrack2[k].X() );
+        }
+        TGraph2D *graph2 = new TGraph2D(spx.size(), &spz[0], &spx[0], &spy[0]);
+        spx.clear(); spy.clear(); spz.clear();
+        for(size_t k=0; k<fVertexHits.size(); k++){
+            std::cout<<fVertexHits[k].SPX()<<"-"<<fVertexHits[k].SPY()<<"-"<<fVertexHits[k].SPZ()<<"\n";
+            if(fVertexHits[k].SPZ()<-100 || fVertexHits[k].SPY()==0) continue;
+            spyV.push_back( fVertexHits[k].SPY() );
+            //spxV.push_back( fVertexHits[k].SPX() );
+            spxV.push_back( fVertexHits[k].Y() );
+            //spzV.push_back( fVertexHits[k].SPZ() );
+            spzV.push_back( fVertexHits[k].X() );
+        }
+        TGraph2D *graphVertex = new TGraph2D(spxV.size(), &spzV[0], &spxV[0], &spyV[0]);
+        graphVertex->SetTitle("Graph title; X axis title; Y axis title; Z axis title"); 
+
+
+        graph1->SetMarkerStyle(20);
+        graph2->SetMarkerStyle(20);
+        graphVertex->SetMarkerStyle(20);
+        graph1->SetMarkerColor(fColor1);
+        graph2->SetMarkerColor(fColor2);
+        graphVertex->SetMarkerColor(kViolet-6);
+
+        
+        // Draw the graph
+        graphVertex->SetTitle("Graph title; X axis title; Y axis title; Z axis title"); 
+        graphVertex->GetHistogram()->GetZaxis()->SetRangeUser(graphVertex->GetZmin(), graphVertex->GetZmax());
+        graphVertex->Draw("P");
+        graphVertex->GetHistogram()->GetXaxis()->SetTitle("z [cm]");
+        graphVertex->GetHistogram()->GetYaxis()->SetTitle("x [cm]");
+        graphVertex->GetHistogram()->GetZaxis()->SetTitle("y [cm]");
+        // graph Z limits
+        
+        
+
+
+        graph1->Draw("P same");
+        graph2->Draw("P same");
     }
-    TGraph2D *graph1 = new TGraph2D(spx.size(), &spz[0], &spx[0], &spy[0]);
-   
-    spx.clear(); spy.clear(); spz.clear();
-    for(size_t k=0; k<fHitsTrack2.size(); k++){
-        std::cout<<fHitsTrack2[k].SPX()<<"-"<<fHitsTrack2[k].SPY()<<"-"<<fHitsTrack2[k].SPZ()<<"\n";
-        if(fHitsTrack2[k].SPZ()<-100 || fHitsTrack2[k].SPY()==0) continue;
-        // -- Y
-        spy.push_back( fHitsTrack2[k].SPY() );
-        spyV.push_back( fHitsTrack2[k].SPY() );
-        // -- X
-        //spx.push_back( fHitsTrack2[k].SPX() );
-        //spxV.push_back( fHitsTrack2[k].SPX() );
-        spx.push_back( fHitsTrack2[k].Y() );
-        spxV.push_back( fHitsTrack2[k].Y() );
-        // -- Z
-        //spz.push_back( fHitsTrack2[k].SPZ() );
-        //spzV.push_back( fHitsTrack2[k].SPZ() );
-        spz.push_back( fHitsTrack2[k].X() );
-        spzV.push_back( fHitsTrack2[k].X() );
-    }
-    TGraph2D *graph2 = new TGraph2D(spx.size(), &spz[0], &spx[0], &spy[0]);
-    spx.clear(); spy.clear(); spz.clear();
-    for(size_t k=0; k<fVertexHits.size(); k++){
-        std::cout<<fVertexHits[k].SPX()<<"-"<<fVertexHits[k].SPY()<<"-"<<fVertexHits[k].SPZ()<<"\n";
-        if(fVertexHits[k].SPZ()<-100 || fVertexHits[k].SPY()==0) continue;
-        spyV.push_back( fVertexHits[k].SPY() );
-        //spxV.push_back( fVertexHits[k].SPX() );
-        spxV.push_back( fVertexHits[k].Y() );
-        //spzV.push_back( fVertexHits[k].SPZ() );
-        spzV.push_back( fVertexHits[k].X() );
-    }
-    TGraph2D *graphVertex = new TGraph2D(spxV.size(), &spzV[0], &spxV[0], &spyV[0]);
-    graphVertex->SetTitle("Graph title; X axis title; Y axis title; Z axis title"); 
-
-
-    graph1->SetMarkerStyle(20);
-    graph2->SetMarkerStyle(20);
-    graphVertex->SetMarkerStyle(20);
-    graph1->SetMarkerColor(fColor1);
-    graph2->SetMarkerColor(fColor2);
-    graphVertex->SetMarkerColor(kViolet-6);
-
-    
-    // Draw the graph
-    graphVertex->SetTitle("Graph title; X axis title; Y axis title; Z axis title"); 
-    graphVertex->GetHistogram()->GetZaxis()->SetRangeUser(graphVertex->GetZmin(), graphVertex->GetZmax());
-    graphVertex->Draw("P");
-    graphVertex->GetHistogram()->GetXaxis()->SetTitle("z [cm]");
-    graphVertex->GetHistogram()->GetYaxis()->SetTitle("x [cm]");
-    graphVertex->GetHistogram()->GetZaxis()->SetTitle("y [cm]");
-    // graph Z limits
-    
-    
-
-
-    graph1->Draw("P same");
-    graph2->Draw("P same");
-    
-    
-    
-
     
 
     pad4->cd();

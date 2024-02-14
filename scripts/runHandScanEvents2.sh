@@ -9,6 +9,7 @@ fi
 EventFileList=$1
 FindFilePath=$2
 OutDir=$3
+FhiclFile=$4
 
 # Check if the input file exists
 if [ ! -f "$EventFileList" ]; then
@@ -25,6 +26,10 @@ counter=1
 
 echo "Input file $EventFileList"
 
+# remove output path
+rm -r $OutDir
+mkdir $OutDir
+
 # Use a while loop to process the file
 while IFS=' ' read -r line1 line2; do
     # Check if line2 exists in the external file
@@ -39,8 +44,10 @@ while IFS=' ' read -r line1 line2; do
     fi
 
     # Process lines from the second file
-    echo "lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1"
-    lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1
+    #echo "lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1"
+    #lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1
+    echo "lar -c $FhiclFile $fullXRootDPath -e $line1 -n 1"
+    lar -c $FhiclFile $fullXRootDPath -e $line1 -n 1
     mv analyze*.root "$OutDir/analyzeTPC_${counter}_${line1}.root"
 
     # Increment counter

@@ -141,6 +141,9 @@ class STriangle {
 
         double GetOverlapWithMainTrack();
         
+        std::vector<int> GetClusterIDs();
+
+        void GetVertexXYZ(double &x, double &y, double &z);
         
 };
 

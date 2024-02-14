@@ -156,6 +156,7 @@ public:
     double fAngleDirtHitsWiresRatio;
     int fNFreeHits;
     int fNUnassociatedHits;
+    int fNMaxDirtUnassociatedHits;
    
     // Kinematics
     double fAngleDecayContainedDiff;

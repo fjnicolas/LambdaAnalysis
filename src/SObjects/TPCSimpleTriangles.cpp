@@ -432,3 +432,42 @@ double STriangle::GetOverlapWithMainTrack(){
 
 }
 
+
+std::vector<int> STriangle::GetClusterIDs(){
+
+    std::vector<int> clusterIDs;
+    std::vector<int> clusterIDsAux = fTrack1.GetHitCluster().GetClusterIDs();
+    clusterIDs.insert(clusterIDs.end(), clusterIDsAux.begin(), clusterIDsAux.end());
+    clusterIDsAux.clear();
+    clusterIDsAux = fTrack2.GetHitCluster().GetClusterIDs();
+    clusterIDs.insert(clusterIDs.end(), clusterIDsAux.begin(), clusterIDsAux.end());
+
+    return clusterIDs;
+
+}
+
+
+void STriangle::GetVertexXYZ(double &x, double &y, double &z){
+
+    x = 0;
+    y = 0;
+    z = 250;
+
+    double minDToVertex = 1e9;
+    for(SHit& h:GetAllHits()){
+        
+        if(h.SPZ()>0){
+            double d = std::hypot( fMainVertex.X() - h.X(), fMainVertex.Y() - h.Y() );
+
+            if(d<minDToVertex){
+                minDToVertex = d;
+                x = h.SPX();
+                y = h.SPY();
+                z = h.SPZ();
+            }
+        }
+
+    }
+
+    
+}
