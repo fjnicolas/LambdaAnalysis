@@ -206,6 +206,14 @@ public:
     double fAngleChargeDifferenceFit;
     double fAngleChargeRelativeDifferenceFit;
 
+    // Calorimetry
+    int fNTracksLI;
+    int fNTracksHI;
+    double fKEHI;
+    double fKELI;
+    double fInvariantMass;
+    double fOpeningAngle;
+
 
 
     void FillTree() { fTree->Fill(); }

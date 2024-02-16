@@ -17,18 +17,14 @@ if [ ! -f "$EventFileList" ]; then
   return 1
 fi
 
-# Check if the output directory exists, create it if not
-mkdir -p $OutDir
-rm -f $OutDir/crtEventDisplay_*.root
-
 # Initialize counter
 counter=1
 
 echo "Input file $EventFileList"
 
 # remove output path
-rm -r $OutDir
-mkdir $OutDir
+rm -r "$OutDir"
+mkdir "$OutDir"
 
 # Use a while loop to process the file
 while IFS=' ' read -r line1 line2; do
@@ -47,8 +43,8 @@ while IFS=' ' read -r line1 line2; do
     #echo "lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1"
     #lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1
     echo "lar -c $FhiclFile $fullXRootDPath -e $line1 -n 1"
-    lar -c $FhiclFile $fullXRootDPath -e $line1 -n 1
-    mv analyze*.root "$OutDir/analyzeTPC_${counter}_${line1}.root"
+    lar -c $FhiclFile $fullXRootDPath -e $line1 -n 1 -T debugArtFile.root
+    mv debugArtFile.root "$OutDir/debug_${counter}_${line1}.root"
 
     # Increment counter
     ((counter++))

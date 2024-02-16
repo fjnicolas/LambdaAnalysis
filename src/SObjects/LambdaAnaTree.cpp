@@ -216,6 +216,14 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleChargeDifferenceFit", &fAngleChargeDifferenceFit, readMode);
     SetBranch("AngleChargeRelativeDifferenceFit", &fAngleChargeRelativeDifferenceFit, readMode);
 
+    // Set branch addresses for calorimetry information
+    SetBranch("NTracksLI", &fNTracksLI, readMode);
+    SetBranch("NTracksHI", &fNTracksHI, readMode);
+    SetBranch("KEHI", &fKEHI, readMode);
+    SetBranch("KELI", &fKELI, readMode);
+    SetBranch("OpeningAngle", &fOpeningAngle, readMode);
+    SetBranch("InvariantMass", &fInvariantMass, readMode);
+
 
     if(readMode==false)
         SetBranch("InputFileName", &fInputFileName, readMode);
@@ -380,6 +388,14 @@ void LambdaAnaTree::ResetVars(){
     fAngleChargeDifferenceFit = -999;
     fAngleChargeRelativeDifferenceFit = -999;
 
+    // Calorimetry
+    fNTracksLI = -999;
+    fNTracksHI = -999;
+    fKEHI = -999;
+    fKELI = -999;
+    fOpeningAngle = -999;
+    fInvariantMass = -999;
+
 }
 
 
@@ -486,5 +502,13 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Angle Charge Ratio Fit: " << fAngleChargeRatioFit << std::endl;
         std::cout << " Angle Charge Difference Fit: " << fAngleChargeDifferenceFit << std::endl;
         std::cout << " Angle Charge Relative Difference Fit: " << fAngleChargeRelativeDifferenceFit << std::endl;
+        // PID
+        std::cout << " --- PID Information --- " << std::endl;
+        std::cout << " NTracks LI: " << fNTracksLI << std::endl;
+        std::cout << " NTracks HI: " << fNTracksHI << std::endl;
+        std::cout << " KE HI: " << fKEHI << std::endl;
+        std::cout << " KE LI: " << fKELI << std::endl;
+        std::cout << " Opening Angle: " << fOpeningAngle << std::endl;
+        std::cout << " Invariant Mass: " << fInvariantMass << std::endl;
 
     }
