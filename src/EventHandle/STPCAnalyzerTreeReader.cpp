@@ -109,8 +109,6 @@ std::vector<SHit> MyTPCTreeReader::GetHitsInView(int view)
                     hitsStartT->at(i), hitsEndT->at(i), hitsChi2->at(i), hitsClusterID->at(i),
                     hitsX->at(i), hitsY->at(i), hitsZ->at(i) );
             hitList.push_back(hit);
-
-            std::cout<<" HITS X "<<hit.SPX()<<std::endl;
         }
     }
 

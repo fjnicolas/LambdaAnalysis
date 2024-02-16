@@ -175,6 +175,9 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
             fAnaTreeHandle.fRecoIsFiducial = true;
             // Reco vars
             STriangle foundTriangle = _TPCLinesAlgo.FillLambdaAnaTree(fAnaTreeHandle);
+            double fHyperonVertexX, fHyperonVertexY, fHyperonVertexZ;
+            foundTriangle.GetVertexXYZ(fHyperonVertexX, fHyperonVertexY, fHyperonVertexZ);
+            std::cout<<"  - Lambda reco vertex (X, Y, Z) " << fHyperonVertexX << " " << fHyperonVertexY << " " << fHyperonVertexZ << std::endl;
             // Fill the tree
             fAnaTreeHandleDirectory->cd();
             fAnaTreeHandle.FillTree();

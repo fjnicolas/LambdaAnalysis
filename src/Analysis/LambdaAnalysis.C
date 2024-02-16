@@ -63,7 +63,7 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
 
     //--------- Scale POT
-    bool fScaleHistogramsToPOT = false; fScaleHistogramsToPOT = true;
+    bool fScaleHistogramsToPOT = false; //fScaleHistogramsToPOT = true;
 
     //--------- Input TTree
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
@@ -74,7 +74,7 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     //----------------- POT normalization
     double potScalingBg = 1;
     double potScalingSignal = 1;
-    ReadPOT(fFile, fPOTTotalNorm, potScalingBg, potScalingSignal);
+    ReadPOT(fFile, fPOTTotalNorm, potScalingBg, potScalingSignal, (fTreeDirName+"pottree").c_str());
     double potScaleBg = fScaleHistogramsToPOT? 1.*potScalingBg/fPOTTotalNorm: 1;
     double potScaleSignal = fScaleHistogramsToPOT? 1.*potScalingSignal/fPOTTotalNorm: 1;
 

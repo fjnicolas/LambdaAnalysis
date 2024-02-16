@@ -8,9 +8,13 @@
 void ReadPOT(TFile *fFile, double totalPOTNorm, double& potScaling, double& potScalingSignal, std::string fTreeName = "originsAna/pottree"){
     
     // Read TreePOT
+    std::cout<<"Reading POT tree "<<fTreeName<<std::endl;
     TTree *fTreePOT = (TTree *)fFile->Get( fTreeName.c_str() );
-
-
+    if (!fTreePOT) {
+        std::cerr << "Failed to read the POT tree." << std::endl;
+        return;
+    }
+    
     // -------- Get the accumulated POT
     double pot = 0;
     double averageintmode;

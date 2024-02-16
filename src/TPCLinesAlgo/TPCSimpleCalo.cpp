@@ -1411,6 +1411,70 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
 
 }
 
+// Define a function to add points to the graph and create a TGraph2D
+void addPointsAndCreateGraph(TGraph2D *graph, const std::vector<SHit>& hits) {
+
+    int n=0;
+    for(size_t k = 0; k < hits.size(); k++) {
+        if(hits[k].SPZ() < -100 || hits[k].SPY() == 0) continue;
+        graph->SetPoint(n, hits[k].X(), hits[k].Y(), hits[k].SPY());
+        n++;
+    }
+
+    //if(n==0) graph->SetPoint(0, 0, 0, 0);
+
+    return;
+}
+
+
+// Define a function to draw the graph
+void drawGraph(TGraph2D *graph, const char* title, Color_t color){
+    graph->SetMarkerColor(color);
+    graph->SetMarkerStyle(20);
+    graph->SetTitle(title);
+    graph->Draw("P same");
+}
+
+
+// Define a function to create a TH3 histogram with limits set by the limits of three graphs
+TH3* createTH3WithGraphLimits(const TGraph2D* graph1, const TGraph2D* graph2, const TGraph2D* graph3) {
+    // Get the minimum and maximum values for X, Y, and Z from the three graphs
+
+    // get minimum for each graph, if points are available
+    double min1X = (graph1->GetN()>=1)? graph1->GetXmin():1e3;    
+    double min2X = (graph2->GetN()>=1)? graph2->GetXmin():1e3;   
+    double min3X = (graph3->GetN()>=1)? graph3->GetXmin():1e3;
+    double min1Y = (graph1->GetN()>=1)? graph1->GetYmin():1e3;
+    double min2Y = (graph2->GetN()>=1)? graph2->GetYmin():1e3;
+    double min3Y = (graph3->GetN()>=1)? graph3->GetYmin():1e3;
+    double min1Z = (graph1->GetN()>=1)? graph1->GetZmin():1e3;
+    double min2Z = (graph2->GetN()>=1)? graph2->GetZmin():1e3;
+    double min3Z = (graph3->GetN()>=1)? graph3->GetZmin():1e3;
+
+    double xmin = std::min({min1X, min2X, min3X});
+    double ymin = std::min({min1Y, min2Y, min3Y});
+    double zmin = std::min({min1Z, min2Z, min3Z});
+
+    // get maximum for each graph, if points are available
+    double max1X = (graph1->GetN()>=1)? graph1->GetXmax():-1e3;
+    double max2X = (graph2->GetN()>=1)? graph2->GetXmax():-1e3;
+    double max3X = (graph3->GetN()>=1)? graph3->GetXmax():-1e3;
+    double max1Y = (graph1->GetN()>=1)? graph1->GetYmax():-1e3;
+    double max2Y = (graph2->GetN()>=1)? graph2->GetYmax():-1e3;
+    double max3Y = (graph3->GetN()>=1)? graph3->GetYmax():-1e3;
+    double max1Z = (graph1->GetN()>=1)? graph1->GetZmax():-1e3;
+    double max2Z = (graph2->GetN()>=1)? graph2->GetZmax():-1e3;
+    double max3Z = (graph3->GetN()>=1)? graph3->GetZmax():-1e3;
+
+    double xmax = std::max({max1X, max2X, max3X});
+    double ymax = std::max({max1Y, max2Y, max3Y});
+    double zmax = std::max({max1Z, max2Z, max3Z});
+
+    // Create the TH3 histogram with limits set by the minimum and maximum values
+    TH3* hist = new TH3D("hist", ";Z [cm]; X [cm]; Y [cm]", 100, xmin, xmax, 100, ymin, ymax, 100, zmin, zmax);
+
+    return hist;
+}
 
 // --- Display function ---
 void STriangleCalo::Display(TCanvas *c1){
@@ -1568,98 +1632,35 @@ void STriangleCalo::Display(TCanvas *c1){
 
 
     // ---- Plot 3D points
-    bool make3DPlot = false;
+    bool make3DPlot = true;
     std::cout<<" Making 3D Plot? "<<make3DPlot<<std::endl;
     if(make3DPlot){
         pad3->cd();
-        
-        // Add points to the graph
-        std::vector<double> spx, spy, spz;
-        std::vector<double> spxV, spyV, spzV;
-        for(size_t k=0; k<fHitsTrack1.size(); k++){
-            std::cout<<fHitsTrack1[k].SPX()<<"-"<<fHitsTrack1[k].SPY()<<"-"<<fHitsTrack1[k].SPZ()<<"\n";
-            if(fHitsTrack1[k].SPZ()<-100 || fHitsTrack1[k].SPY()==0) continue;
-            
-            // -- Y
-            spy.push_back( fHitsTrack1[k].SPY() );
-            spyV.push_back( fHitsTrack1[k].SPY() );
-            // -- X
-            //spx.push_back( fHitsTrack1[k].SPX() );
-            //spxV.push_back( fHitsTrack1[k].SPX() );
-            spx.push_back( fHitsTrack1[k].Y() );
-            spxV.push_back( fHitsTrack1[k].Y() );
-            // -- Z
-            //spz.push_back( fHitsTrack1[k].SPZ() );
-            //spzV.push_back( fHitsTrack1[k].SPZ() );
-            spz.push_back( fHitsTrack1[k].X() );
-            spzV.push_back( fHitsTrack1[k].X() );
-        }
-        TGraph2D *graph1 = new TGraph2D(spx.size(), &spz[0], &spx[0], &spy[0]);
+
+        // Frame TH3
+
+        TGraph2D *graphVertex = new TGraph2D();
+        TGraph2D *graph1 = new TGraph2D();
+        TGraph2D *graph2 = new TGraph2D();
+        addPointsAndCreateGraph(graphVertex, fVertexHits);
+        addPointsAndCreateGraph(graph1, fHitsTrack1);
+        addPointsAndCreateGraph(graph2, fHitsTrack2);
+
+        // Draw the frame
+        TH3* h3Frame = createTH3WithGraphLimits(graphVertex, graph1, graph2);
+        h3Frame->Draw();
     
-        spx.clear(); spy.clear(); spz.clear();
-        for(size_t k=0; k<fHitsTrack2.size(); k++){
-            std::cout<<fHitsTrack2[k].SPX()<<"-"<<fHitsTrack2[k].SPY()<<"-"<<fHitsTrack2[k].SPZ()<<"\n";
-            if(fHitsTrack2[k].SPZ()<-100 || fHitsTrack2[k].SPY()==0) continue;
-            // -- Y
-            spy.push_back( fHitsTrack2[k].SPY() );
-            spyV.push_back( fHitsTrack2[k].SPY() );
-            // -- X
-            //spx.push_back( fHitsTrack2[k].SPX() );
-            //spxV.push_back( fHitsTrack2[k].SPX() );
-            spx.push_back( fHitsTrack2[k].Y() );
-            spxV.push_back( fHitsTrack2[k].Y() );
-            // -- Z
-            //spz.push_back( fHitsTrack2[k].SPZ() );
-            //spzV.push_back( fHitsTrack2[k].SPZ() );
-            spz.push_back( fHitsTrack2[k].X() );
-            spzV.push_back( fHitsTrack2[k].X() );
-        }
-        TGraph2D *graph2 = new TGraph2D(spx.size(), &spz[0], &spx[0], &spy[0]);
-        spx.clear(); spy.clear(); spz.clear();
-        for(size_t k=0; k<fVertexHits.size(); k++){
-            std::cout<<fVertexHits[k].SPX()<<"-"<<fVertexHits[k].SPY()<<"-"<<fVertexHits[k].SPZ()<<"\n";
-            if(fVertexHits[k].SPZ()<-100 || fVertexHits[k].SPY()==0) continue;
-            spyV.push_back( fVertexHits[k].SPY() );
-            //spxV.push_back( fVertexHits[k].SPX() );
-            spxV.push_back( fVertexHits[k].Y() );
-            //spzV.push_back( fVertexHits[k].SPZ() );
-            spzV.push_back( fVertexHits[k].X() );
-        }
-        TGraph2D *graphVertex = new TGraph2D(spxV.size(), &spzV[0], &spxV[0], &spyV[0]);
-        graphVertex->SetTitle("Graph title; X axis title; Y axis title; Z axis title"); 
-
-
-        graph1->SetMarkerStyle(20);
-        graph2->SetMarkerStyle(20);
-        graphVertex->SetMarkerStyle(20);
-        graph1->SetMarkerColor(fColor1);
-        graph2->SetMarkerColor(fColor2);
-        graphVertex->SetMarkerColor(kViolet-6);
-
+        // Set marker style and color for graphs
+        drawGraph(graphVertex, "Graph title", kViolet-6);
+        drawGraph(graph1, "Track1", fColor1);
+        drawGraph(graph2, "Track2", fColor2);
         
-        // Draw the graph
-        graphVertex->SetTitle("Graph title; X axis title; Y axis title; Z axis title"); 
-        graphVertex->GetHistogram()->GetZaxis()->SetRangeUser(graphVertex->GetZmin(), graphVertex->GetZmax());
-        graphVertex->Draw("P");
-        graphVertex->GetHistogram()->GetXaxis()->SetTitle("z [cm]");
-        graphVertex->GetHistogram()->GetYaxis()->SetTitle("x [cm]");
-        graphVertex->GetHistogram()->GetZaxis()->SetTitle("y [cm]");
-        // graph Z limits
-        
-        
-
-
-        graph1->Draw("P same");
-        graph2->Draw("P same");
     }
     
 
-    pad4->cd();
-    h1->Draw();
 
-    
-    
-    
+    pad4->cd();
+    h1->Draw();    
 
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, pad2); 
 
@@ -1670,69 +1671,3 @@ void STriangleCalo::Display(TCanvas *c1){
 
     return;
 }
-
-
-
-
-    /*TF1 fit = new TF1("fit","[0]", 0, calo1.GetTrackLength() );
-    ROOT::Math::WrappedMultiTF1 fitFunction(fit, fit->GetNdim() );
-    fit->SetParameters(1);
-    ROOT::Fit::Fitter myFitter;
-    myFitter.SetFCN(fitFunction, 1);
-    // Get the fit result
-    myFitter.Fit(graph1, "S");
-    auto result = myFitter.Result();
-    std::cout<<"Fit status: "<<result.Status()<<std::endl;*/
-
-
-
-    /*
-    fitter = TVirtualFitter::GetFitter();
-    if(fitter){
-        fitter->GetConfidenceIntervals(hint1Exp, fCondifenceLevel);
-        passFit1Exp = true;
-        std::cout<<"Pass fit 1 exp"<<std::endl;
-    }
-    */
-
-
-    /*
-        // Accessing parameter estimates and errors
-    double a_est = fit1Exp->GetParameter(0);
-    double b_est = fit1Exp->GetParameter(1);
-    double c_est = fit1Exp->GetParameter(2);
-    double a_err = fit1Exp->GetParError(0);
-    double b_err = fit1Exp->GetParError(1);
-    double c_err = fit1Exp->GetParError(2);
-
-    // Accessing covariance matrix
-    TMatrixDSym covarianceMatrix = fitResult->GetCovarianceMatrix();
-
-    // Define a function to calculate f(x) with uncertainty
-    auto calculateFWithUncertainty = [&](double x_value, double alpha) {
-        double f_x = a_est * exp(b_est * x_value) + c_est;
-
-        double term1 = a_err * a_err * exp(2 * b_est * x_value);
-        double term2 = b_err * b_err * x_value * x_value * exp(2 * b_est * x_value);
-        double term3 = covarianceMatrix(0, 1) * x_value * exp(b_est * x_value);
-        double uncertainty = sqrt(term1 + term2 + 2 * term3);
-
-        // Calculate the confidence interval with significance level alpha
-        double z_alpha_over_2 = TMath::NormQuantile(1 - alpha / 2.0);
-        double interval = z_alpha_over_2 * uncertainty;
-
-        return std::make_pair(f_x, interval);
-    };
-
-
-    // Example: Calculate a confidence interval for f(x) at x = 11 with a 95% confidence level
-    double x_value = 2.0;
-    double alpha = 0.01;  // 1 - confidence level
-
-    auto result = calculateFWithUncertainty(x_value, alpha);
-
-    std::cout << "Confidence Interval for f(" << x_value << "): ["
-              << result.first - result.second << ", " << result.first + result.second << "]" << std::endl;
-
-    
-    */

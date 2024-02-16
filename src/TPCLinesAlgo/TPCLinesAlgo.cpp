@@ -533,7 +533,6 @@ bool TPCLinesAlgo::SetHitList(int view,
                                     h.SPX(), h.SPY(), h.SPZ()
                                     );
                 fClusterIdCounter[h.ClusterId()]++;
-
             }
 
             for (size_t i = 0; i < fHitListOutROI.size(); i++) {

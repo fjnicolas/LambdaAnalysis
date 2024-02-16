@@ -462,8 +462,8 @@ void STriangle::GetVertexXYZ(double &x, double &y, double &z){
             if(d<minDToVertex){
                 minDToVertex = d;
                 x = h.SPX();
-                y = h.SPY();
                 z = h.SPZ();
+                y = h.SPY();
             }
         }
 
