@@ -9,38 +9,28 @@
 #include "CutDefinitions.C"
 #include "CutEfficienciesLATeXInterface.C"
 
-std::string fTruthInFV = "TruthIsFiducial==1 &&";
-std::string fTruthInAV = "abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500 && ";
-
-//--------- Signal and BG definitions
-std::vector<SampleDef> sampleDefs = {
-    {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true}
-    ,{fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Background  Nu", false}
-    //,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false}
-    //,{"IntOrigin==1 && IntDirt==1", "Dirt", false}
-    //,{"IntOrigin==2", "Cosmic", false}
-    /*,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
-    ,{fTruthInFV+"IntMode==1 && abs(IntNuPDG)!=12", "RES", false}
-    ,{fTruthInFV+"IntMode==2 && abs(IntNuPDG)!=12", "DIS", false}
-    ,{fTruthInFV+"(IntMode==3 || IntMode==10) && abs(IntNuPDG)!=12", "COH and MEC", false}
-    ,{fTruthInFV+"abs(IntNuPDG)==12", "NuE", false} */
-    //,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
-    //,{fTruthInFV+"IntMode==1 && abs(IntNuPDG)!=12", "RES", false}
-};
-
+//--------- Settings ---------
+//--------- Scale POT
+bool fScaleHistogramsToPOT = 0;
+//--------- Plot all the variables
+bool fPlotAllVars = 0;
 //-------- POT normalization
 double fPOTTotalNorm = 3.3e20;
-
-//---------  Phase space cuts
-std::vector<PlotDef> phaseSpaceDefs = {};// phaseSpaceVars;
-
 //---------  LATeX output file
 std::string fOutputFileName = "CutEfficiencies";
 std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 
-TCut fCounterCut = "SliceID==0";
+//--------- Signal and BG definitions
+std::vector<SampleDef> sampleDefs = {
+    {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true, "Signal"}
+    ,{fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "BG  #nu", false, "BG BNB"}
+};
 
-std::vector<PlotDef> cutDefs = cutDefsTalk2;
+//---------  Phase space cuts
+std::vector<PlotDef> fPhaseSpaceDefs = {};//psLambdaKinematics;
+
+//---------  Cuts
+std::vector<PlotDef> fCutDefs = cutDefsPID;
 
 
 //---------  Load function
@@ -50,7 +40,7 @@ void LambdaAnalysis(){
 }
 
 //---------  Main function
-void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTreePost")
 {
 
     //---------  Remove all *.pdf with gSystem
@@ -58,12 +48,11 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     gSystem->Exec(("rm -rf "+fOutputDirName).c_str());
     gSystem->Exec(("mkdir "+fOutputDirName).c_str());
     gSystem->Exec(("mkdir "+fOutputDirName+"/PhaseSpace").c_str());
+    gSystem->Exec(("mkdir "+fOutputDirName+"/OtherDistributions").c_str());
 
     //--------- Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
 
-    //--------- Scale POT
-    bool fScaleHistogramsToPOT = false; //fScaleHistogramsToPOT = true;
 
     //--------- Input TTree
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
@@ -75,40 +64,63 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     double potScalingBg = 1;
     double potScalingSignal = 1;
     ReadPOT(fFile, fPOTTotalNorm, potScalingBg, potScalingSignal, (fTreeDirName+"pottree").c_str());
-    double potScaleBg = fScaleHistogramsToPOT? 1.*potScalingBg/fPOTTotalNorm: 1;
-    double potScaleSignal = fScaleHistogramsToPOT? 1.*potScalingSignal/fPOTTotalNorm: 1;
+    if(!fScaleHistogramsToPOT){
+        potScalingBg = 1;
+        potScalingSignal = 1;
+    }
+    std::cout<<"POT scaling: "<<potScalingBg<<" POT scaling signal: "<<potScalingSignal<<std::endl;
 
     //--------- Matrix to store the number of events
     std::vector< std::vector<int> > nEventsMatrix;
     std::vector<PlotDef> cutDefsForTable;
 
+    //--------- Get vector with the cuts to accumulate
+    std::vector<PlotDef> cutsToAccumulate;
+    if(fPlotAllVars){
+        for (size_t i = 0; i < fCutDefs.size(); ++i) {
+            if(fCutDefs[i].GetAccumulateCut()){
+                cutsToAccumulate.push_back(fCutDefs[i]);
+            }
+        }
+    }
+
     //--------- Loop over the cuts
     std::vector<AnaPlot> anaPlots;
     TCut previousCut("");
-    for (size_t i = 0; i < cutDefs.size(); ++i) {
+    for (size_t i = 0; i < fCutDefs.size(); ++i) {
+        
+        // Get the current cut
+        TCut currentCut = TCut(fCutDefs[i].GetCut());
 
-        TCut currentCut = TCut(cutDefs[i].GetCut());
-        AnaPlot anaPlot(i, cutDefs[i], sampleDefs, phaseSpaceDefs);
+        // Create the plot handle
+        AnaPlot anaPlot(i, fCutDefs[i], sampleDefs, fPhaseSpaceDefs, cutsToAccumulate);
 
-        anaPlot.DrawHistograms(fTree, previousCut, 0, potScaleSignal, potScaleBg);
+        // Draw the histograms
+        anaPlot.DrawHistograms(fTree, previousCut, 0, potScalingSignal, potScalingBg);
         anaPlots.push_back(anaPlot);
 
-        if(cutDefs[i].GetAccumulateCut()){
+        // Id the cut is to be accumulated
+        if(fCutDefs[i].GetAccumulateCut()){
+            // Store the previous cut
             previousCut = previousCut && currentCut;
-            anaPlot.DrawHistograms(fTree, previousCut, 1, potScaleSignal, potScaleBg);
 
-            cutDefsForTable.push_back(cutDefs[i]);
+            // Draw the histograms again
+            anaPlot.DrawHistograms(fTree, previousCut, 1, potScalingSignal, potScalingBg);
+
+            // Store the numbers for final efficiency table
+            cutDefsForTable.push_back(fCutDefs[i]);
             nEventsMatrix.push_back({});
             size_t cutIndex = nEventsMatrix.size()-1;
             std::map<std::string, int> nEventsMap = anaPlot.GetCountsV();
             for(const auto& sample : sampleDefs){
                 nEventsMatrix[cutIndex].push_back(nEventsMap[sample.GetLabelS()]);
             }
+
         }
     
     }
 
-    //loop over the samples and set NEvents
+    // --- Loop over the samples and set NEvents
     for(auto& sample : sampleDefs){
         int nEvents = fTree->Draw( "", TCut(sample.GetVar())+fCounterCut, "goff");
         sample.SetNEvents(nEvents);

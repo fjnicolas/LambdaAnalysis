@@ -170,7 +170,7 @@ void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend * leg, s
         }
 
         TGraph *g = new TGraph(x.size(),&x[0],&y[0]); 
-        std::cout<<"Drawing cluster color: "<<color<<" ID"<<cluster.GetId()<<std::endl;
+
         //g->SetMarkerColorAlpha(color, 0.5);
         g->SetMarkerColor(color);
         g->SetMarkerStyle(style);;
@@ -263,7 +263,6 @@ void TPCLinesDisplay::Show(
     // triangles
     if(originAngles.size()>0){
         for(size_t oIx=0; oIx<originAngles.size(); oIx++){
-            std::cout<<"Drawing origin angle "<<oIx<<std::endl;
             std::string VLabel = "V_{"+std::to_string(oIx)+"} ";
             VLabel = VLabel + originAngles[oIx].GetTrack1().GetId()+"-"+originAngles[oIx].GetTrack2().GetId()+"#rightarrow";
             VLabel = VLabel + originAngles[oIx].GetMainTrack().GetId();
@@ -275,7 +274,6 @@ void TPCLinesDisplay::Show(
 
     if(origins.size()>0){
         for(size_t oIx=0; oIx<origins.size(); oIx++){
-            std::cout<<"Drawing origin "<<oIx<<std::endl;
             std::string originLabel = "#omicron_{"+std::to_string(oIx)+"} (m="+std::to_string(origins[oIx].Multiplicity())+"),";
             for(SLinearCluster & trk:origins[oIx].GetTracks()){
                 int sign = (origins[oIx].IsEdgeOrigin())? 1:-1;

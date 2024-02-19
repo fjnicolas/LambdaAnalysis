@@ -202,9 +202,9 @@ void GenerateAndCompileTeXTable(
     int cont=0;  
     for(auto& sampleName : sampleDefs){
         if( cont == sampleDefs.size()-1 )
-            texFile << sampleName.GetLabelS();
+            texFile << sampleName.GetLatexLabel();
         else
-            texFile << sampleName.GetLabelS() << " & ";
+            texFile << sampleName.GetLatexLabel() << " & ";
         
         cont++;
     }
