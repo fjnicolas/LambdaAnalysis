@@ -30,7 +30,7 @@ std::vector<SampleDef> sampleDefs = {
 std::vector<PlotDef> fPhaseSpaceDefs = {};//psLambdaKinematics;
 
 //---------  Cuts
-std::vector<PlotDef> fCutDefs = cutDefsPID;
+std::vector<PlotDef> fCutDefs = cutDefsTalk2;
 
 
 //---------  Load function
