@@ -213,6 +213,13 @@ public:
     double fKELI;
     double fInvariantMass;
     double fOpeningAngle;
+    double fKEDecayedMother;
+    double fEDecayedMother;
+    double fRecoGap;
+    double fRecoBeta;
+    double fRecoGamma;
+    double fRecoTau;
+
 
 
 

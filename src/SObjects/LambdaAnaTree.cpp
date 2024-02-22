@@ -223,6 +223,12 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("KELI", &fKELI, readMode);
     SetBranch("OpeningAngle", &fOpeningAngle, readMode);
     SetBranch("InvariantMass", &fInvariantMass, readMode);
+    SetBranch("KEDecayedMother", &fKEDecayedMother, readMode);
+    SetBranch("EDecayedMother", &fEDecayedMother, readMode);
+    SetBranch("RecoGap", &fRecoGap, readMode);
+    SetBranch("RecoBeta", &fRecoBeta, readMode);
+    SetBranch("RecoGamma", &fRecoGamma, readMode);
+    SetBranch("RecoTau", &fRecoTau, readMode);
 
 
     if(readMode==false)
@@ -395,6 +401,13 @@ void LambdaAnaTree::ResetVars(){
     fKELI = -999;
     fOpeningAngle = -999;
     fInvariantMass = -999;
+    fKEDecayedMother = -999;
+    fEDecayedMother = -999;
+    fRecoGap = -999;
+    fRecoBeta = -999;
+    fRecoGamma = -999;
+    fRecoTau = -999;
+    
 
 }
 
@@ -510,5 +523,11 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " KE LI: " << fKELI << std::endl;
         std::cout << " Opening Angle: " << fOpeningAngle << std::endl;
         std::cout << " Invariant Mass: " << fInvariantMass << std::endl;
+        std::cout << " KE Decayed Mother: " << fKEDecayedMother << std::endl;
+        std::cout << " E Decayed Mother: " << fEDecayedMother << std::endl;
+        std::cout << " Reco Gap: " << fRecoGap << std::endl;
+        std::cout << " Reco Beta: " << fRecoBeta << std::endl;
+        std::cout << " Reco Gamma: " << fRecoGamma << std::endl;
+        std::cout << " Reco Tau: " << fRecoTau << std::endl;
 
     }
