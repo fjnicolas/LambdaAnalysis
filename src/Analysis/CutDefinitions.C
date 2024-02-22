@@ -16,7 +16,7 @@ std::vector<PlotDef> psLambdaKinematics = {
     {"NuvZ",  "0==0", CutType::kNone,  0, {-10,510,50}, false, "Z_{#nu} [cm]"}
     ,{"LambdaKE", "0==0", CutType::kNone,  0, {0, 0.4, 30}, false, "KE_{#Lambda} [GeV]"}
     ,{"NuvE", "0==0", CutType::kNone,  0, {0,3, 30}, false, "E_{#nu} [GeV]"}
-    //,{"Gap", "0==0", CutType::kNone, 0, {0, 20, 30}, false, "Gap [cm]"}
+    ,{"Gap", "0==0", CutType::kNone, 0, {0, 20, 30}, false, "Gap [cm]"}
 };
 
 //---------Volume cuts
@@ -31,17 +31,20 @@ std::vector<PlotDef> cutDefsTalk2 = {
     {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
 
-    // FRANS (all events)
+    // Pre FRANS (all events)
     ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
     
-    // Topological cuts
-    ,{"NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0", "(NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=0)", CutType::kCenter,  1,   {0, 2, 2}, true,  "topological cuts",  "\\ Topological \\ cuts"}
+    // Secondary vertices
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# seconday vertices",  "\\ Secondary \\ vertex"}
 
     // FRANS
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+    //,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
 
     // CLEANESS
+    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  1.5, {0, 20, 40}, true, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
+    ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, true,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
     ,{"AnglePassChargeFit==1 && AngleResidualRangeMaxAngleRMS<=50", "(AnglePassChargeFit==1 && AngleResidualRangeMaxAngleRMS<=50)", CutType::kCenter, 1, {0, 2, 2}, true, "PreCalorimetryCut", "PreCalorimetryCut"}
     ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "AnglePzSign", "AnglePzSign"}  
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
@@ -49,7 +52,6 @@ std::vector<PlotDef> cutDefsTalk2 = {
     //,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
    
     // After Cuts Distributions
-    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, false, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
     ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
@@ -60,56 +62,117 @@ std::vector<PlotDef> cutDefsTalk2 = {
 }; 
 
 
-std::vector<PlotDef> cutDefsPID = {
+std::vector<PlotDef> cutDefsTalk2Induction = {
     
     {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
 
-    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
+    // FRANS (all events)
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
-
-    //,{"NVertexTracks", "NVertexTracks", CutType::kLeft, 3, {0, 10, 10}, true, "# vertex tracks", "NVertexTracks"}
+    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, 0.1, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     
-    // Topological cuts
-    ,{"NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=10", "(NAngles>=1 && AngleDecayContainedDiff<=1 && NUnOrigins<=10)", CutType::kCenter,  1, {0, 2, 2}, true,  "topological cuts",  "\\ Topological \\ cuts"}
+    // Secondary vertices
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# seconday vertices",  "\\ Secondary \\ vertex"}
 
-    //,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
-    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, 0.2, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+    // FRANS
+    //,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, 0.1, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score" }
 
-
-    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, false, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
-    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, false, "AnglePzSign", "AnglePzSign"}
-    ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
-    ,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
-    ,{"AngleDirtHits", "AngleDirtHits", CutType::kLeft,  25, {0, 50, 25}, false, "#Dirt Hits", "Dirt \\ Hits"}
-
-    //PID
-    ,{"NTracksLI", "NTracksLI", CutType::kRight, 1, {0, 5, 5}, false, "# tracks LI", "\\# \\ tracks \\ LI"}
-    ,{"NTracksHI", "NTracksHI", CutType::kRight, 1, {0, 5, 5}, false, "# tracks HI", "\\# \\ tracks \\ HI"}
-    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "NTracksLI>0 && NTracksHI>0", "NTracksLI>0 \\ \\&\\& \\ NTracksHI>0"}
-
-
-    //,{"AnglePassChargeFit==1 && AngleResidualRangeMaxAngleRMS<=50", "(AnglePassChargeFit==1 && AngleResidualRangeMaxAngleRMS<=50)", CutType::kCenter, 1, {0, 2, 2}, true, "PreCalorimetryCut", "PreCalorimetryCut"}
-    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "AnglePzSign", "AnglePzSign"}  
+    // CLEANESS
+    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  1.5, {0, 20, 40}, true, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
+    ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, true,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
+    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 300, 30}, true, "AngleRMS", "AngleRMS"}
+    //,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "AnglePzSign", "AnglePzSign"}  
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
     ,{"AngleDirtHits<=10 && NUnassociatedHits<=10", "(AngleDirtHits<=10 && NUnassociatedHits<=10)", CutType::kCenter, 1, {0, 2, 2}, true, "# unnassociated hits<10", "unnassociated hits<10"}
-    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, true, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
-    //,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
-    //,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+    //,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
    
-    
     // After Cuts Distributions
-    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, false, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
     ,{"NUnassociatedHits", "NUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
     ,{"AngleDirtHits", "AngleDirtHits", CutType::kLeft,  25, {0, 50, 25}, false, "#Dirt Hits", "Dirt \\ Hits"}
     ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, false, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
     ,{"AnglePassChargeFit", "AnglePassChargeFit", CutType::kRight, 1, {0, 2, 2}, false, "AnglePassChargeFit", "AnglePassChargeFit"}
+    
+}; 
 
+
+std::vector<PlotDef> cutDefsPIDFull = {
+    
+    {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
+    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}    
+    
+    // Secondary vertices
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# seconday vertices",  "\\ Secondary \\ vertex"}
+
+    // FRANS
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+
+    // V characterization
+    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "AnglePzSign", "AnglePzSign"}
+    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  2.5, {0, 20, 40}, true, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
+    ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, true,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
+    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, true, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
+    ,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+
+   
+    // Additional fiducial volume cuts
+    ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
+    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kLeft,  0.1, {0, 1, 10}, true, "AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion"}
+
+    //PID
+    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "NTracksLI>0 && NTracksHI>0", "NTracksLI>0 \\ \\&\\& \\ NTracksHI>0"}
+
+    
 
     ,{"InvariantMass", "InvariantMass", CutType::kCenter, 1115, {1000, 1500, 10}, false, "Invariant Mass [MeV]", "Invariant \\ Mass"}
+    
+}; 
 
+
+std::vector<PlotDef> cutDefsPID = {
+    
+    {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
+    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
+
+    // Pre FRANS (all events)
+    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
+    
+    // Secondary vertices
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# seconday vertices",  "\\ Secondary \\ vertex"}
+
+    // FRANS
+    //,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+
+    // V characterization
+    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, false, "AnglePzSign", "AnglePzSign"}
+    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  2.5, {0, 20, 40}, false, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
+    ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, false,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
+    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, false, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
+    ,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+
+    // Joint topological cut
+    ,{"AnglePzSign>=1 && AngleDecayContainedDiff<=1. && NUnOrigins<=0 && AngleResidualRangeMaxAngleRMS<=50 && AngleLengthMainTrack>=10 && NMaxDirtUnassociatedHits<=10", 
+    "(AnglePzSign>=1 && AngleDecayContainedDiff<=1. && NUnOrigins<=0 && AngleResidualRangeMaxAngleRMS<=50 && AngleLengthMainTrack>=10 && NMaxDirtUnassociatedHits<=10)", CutType::kCenter, 1, {0, 2, 2}, true, "V characterization", "V characterization"}
+
+
+    // Additional fiducial volume cuts
+    ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, false, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
+    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kLeft,  0.1, {0, 1, 10}, false, "AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion"}
+    // Joint additional fiducial volume cut
+    ,{"AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1", "(AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1)", CutType::kCenter, 1, {0, 2, 2}, true, "Fiducial cut", "Fiducial \\ cut"}
+    
+    //PID
+    ,{"NTracksLI", "NTracksLI", CutType::kRight, 1, {0, 5, 5}, false, "# tracks LI", "\\# \\ tracks \\ LI"}
+    ,{"NTracksHI", "NTracksHI", CutType::kRight, 1, {0, 5, 5}, false, "# tracks HI", "\\# \\ tracks \\ HI"}
+    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "NTracksLI>0 && NTracksHI>0", "NTracksLI>0 \\ \\&\\& \\ NTracksHI>0"}
+
+    
+
+    ,{"InvariantMass", "InvariantMass", CutType::kCenter, 1115, {1000, 1500, 10}, false, "Invariant Mass [MeV]", "Invariant \\ Mass"}
     
 }; 
 
@@ -136,7 +199,7 @@ std::vector<PlotDef> cutDefsBrazilCM = {
     
     ,{"NAngles",               "NAngles",             CutType::kRight, fCutMinNAngles , {0,5,5}, false, "# V", "\\# \\ V" }
     ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft, 1, {0, 15, 30}, false, "#Delta#alpha [#circ]", "\\Delta\\alpha\\ [\\circ]"}
-    ,{"NUnOrigins",        "NUnOrigins",        CutType::kLeftInt,  0,   {0, 15, 15}, false,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
+    ,{"NUnOriginas",        "NUnOrigins",        CutType::kLeftInt,  0,   {0, 15, 15}, false,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
     ,{"NShowers", "NShowers", CutType::kLeft, 1, {0, 10, 10}, false, "# showers", "\\# \\ showers"}
     ,{"NShowerHits", "NShowerHits", CutType::kLeft, 20, {0, 200, 20}, false, "# shower hits", "\\# \\ shower \\ hits"}
 
@@ -172,6 +235,7 @@ std::vector<PlotDef> cutDefsRepository = {
     ,{"NAngles",               "NAngles",             CutType::kRight, fCutMinNAngles , {0,5,5}, true, "# V", "\\# \\ V" }
     ,{"NUnOriginsMultGT3", "NUnOriginsMultGT3", CutType::kLeft,  0, {0, 5, 5}, false, "# origins mult 3", "\\# \\ origins \\ mult \\ 3"}
     ,{"NUnOrigins",        "NUnOrigins",        CutType::kLeft,  0,   {0, 15, 15}, true,  "# origins",  "\\#  \\ origins"}
+    ,{"NVertexTracks", "NVertexTracks", CutType::kLeft, 3, {0, 10, 10}, true, "# vertex tracks", "NVertexTracks"}
 
     // FRANS
     ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}

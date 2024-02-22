@@ -35,7 +35,7 @@ void drawGraph(TGraph2D *graph, const char* title, Color_t color){
 
 
 //---------  Main function
-void RunCalorimetryDisplay(std::string fInputFileName="", int mode=0, std::string fTreeDirName = "lambdaPidPandoraAna/", std::string fTreeName = "CalorimetryTree")
+void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::string fTreeDirName = "lambdaPidPandoraAna/", std::string fTreeName = "CalorimetryTree")
 {
 
     //--------- Input TTree
@@ -49,7 +49,9 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int mode=0, std::strin
     Double_t yMin = 0;
     Double_t yMax = 40;
     Double_t yMaxCharge = 10000;;
-
+    // Stats to 0
+    gStyle->SetOptStat(0);
+    
     //--------- Set Branches 
     Int_t RunID;
     Int_t SubRunID;
@@ -106,8 +108,9 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int mode=0, std::strin
         
         fTree->GetEntry(i);
         std::cout<<i<<" RunID: "<<RunID<<", SubRunID: "<<SubRunID<<", EventID: "<<EventID<<std::endl;
-        
-        if( (mode==2 || mode==1) && RecoStatus!=1) continue;
+
+        if(event!=-1 && EventID!=event) continue;
+        if( event==-2 && RecoStatus!=1) continue;
 
         std::cout<<"InvariantMass: "<<InvariantMass<<std::endl;
         std::cout<<"KELI: "<<KELI<<" KEPion: "<<1000*PionKE<<std::endl;
@@ -256,18 +259,11 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int mode=0, std::strin
             }
             pad4->Update();     
         }
-        
 
-        if(mode==1 && InvariantMass>1250){
-            c1->cd();
-            c1->Update();
-            c1->WaitPrimitive();
-        }
-        else{
-            c1->cd();
-            c1->Update();
-            c1->WaitPrimitive();
-        }
+        c1->cd();
+        c1->Update();
+        c1->WaitPrimitive();
+        
     }
 
 

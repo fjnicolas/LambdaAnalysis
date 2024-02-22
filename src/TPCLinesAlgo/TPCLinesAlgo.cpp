@@ -856,6 +856,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, associatedOrigins, hitDensity, discardedHits);
     fRecoEvent = recoEvent;
 
+
     return;
 }
 
@@ -938,6 +939,8 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
             lambdaAnaTree.fAngleLongestIsMain = false;
         }
         lambdaAnaTree.fAngleCoveredArea = bestTriangle.ComputeCoveredArea();
+        // Print track connections
+        fRecoEvent.PrintTrackConnections();
 
         // Angle-main track overlap
         lambdaAnaTree.fAngleMainTrackOverlap = bestTriangle.GetOverlapWithMainTrack();

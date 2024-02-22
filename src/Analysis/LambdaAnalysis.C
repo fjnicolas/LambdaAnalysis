@@ -27,10 +27,14 @@ std::vector<SampleDef> sampleDefs = {
 };
 
 //---------  Phase space cuts
-std::vector<PlotDef> fPhaseSpaceDefs = {};//psLambdaKinematics;
+std::vector<PlotDef> fPhaseSpaceDefs = psLambdaKinematics;
 
 //---------  Cuts
-std::vector<PlotDef> fCutDefs = cutDefsTalk2;
+std::vector<PlotDef> fCutDefs = cutDefsPIDFull;
+
+
+std::vector<PlotDef> fCutDefsCol = cutDefsTalk2;
+std::vector<PlotDef> fCutDefsInd = cutDefsTalk2Induction;
 
 
 //---------  Load function
@@ -63,10 +67,13 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     //----------------- POT normalization
     double potScalingBg = 1;
     double potScalingSignal = 1;
+    double potScalingBgForPlots = 1;
+    double potScalingSignalForPlots = 1;
+
     ReadPOT(fFile, fPOTTotalNorm, potScalingBg, potScalingSignal, (fTreeDirName+"pottree").c_str());
-    if(!fScaleHistogramsToPOT){
-        potScalingBg = 1;
-        potScalingSignal = 1;
+    if(fScaleHistogramsToPOT){
+        potScalingBgForPlots = potScalingBg;
+        potScalingSignalForPlots = potScalingSignal;
     }
     std::cout<<"POT scaling: "<<potScalingBg<<" POT scaling signal: "<<potScalingSignal<<std::endl;
 
@@ -84,6 +91,7 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
         }
     }
 
+    fTree->Print();
     //--------- Loop over the cuts
     std::vector<AnaPlot> anaPlots;
     TCut previousCut("");
@@ -96,7 +104,7 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
         AnaPlot anaPlot(i, fCutDefs[i], sampleDefs, fPhaseSpaceDefs, cutsToAccumulate);
 
         // Draw the histograms
-        anaPlot.DrawHistograms(fTree, previousCut, 0, potScalingSignal, potScalingBg);
+        anaPlot.DrawHistograms(fTree, previousCut, 0, potScalingSignalForPlots, potScalingBgForPlots);
         anaPlots.push_back(anaPlot);
 
         // Id the cut is to be accumulated
@@ -105,7 +113,7 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
             previousCut = previousCut && currentCut;
 
             // Draw the histograms again
-            anaPlot.DrawHistograms(fTree, previousCut, 1, potScalingSignal, potScalingBg);
+            anaPlot.DrawHistograms(fTree, previousCut, 1, potScalingSignalForPlots, potScalingBgForPlots);
 
             // Store the numbers for final efficiency table
             cutDefsForTable.push_back(fCutDefs[i]);
@@ -206,4 +214,157 @@ void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::st
     } while (std::next_permutation(loopCuts.begin(), loopCuts.end()));
 
     return 0;
+}
+
+
+
+//---------  Main function
+void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTreePost")
+{
+
+
+    //--------- Batch mode
+    batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);
+    
+
+    //--------- Input TTree list
+    std::vector<std::string> treeNames{
+        "originsAna/LambdaAnaTree",
+        "originsAnaU/LambdaAnaTree",
+        "originsAnaV/LambdaAnaTree"
+    };
+
+
+    //---------  Maps to store number of events per signal type
+    std::map<std::string, int> nEventsMap;
+    for(const auto& sample : sampleDefs){
+        nEventsMap[sample.GetLabelS()] = 0;
+    }
+
+    //--------- Map to store the entries per sample and initialize it
+    std::map<std::string, std::set<int>> entriesMapU;
+    std::map<std::string, std::set<int>> entriesMapV;
+    std::map<std::string, std::set<int>> entriesMapC;
+
+    for(const auto& sample : sampleDefs){
+        entriesMapU[sample.GetLabelS()] = {};
+        entriesMapV[sample.GetLabelS()] = {};
+        entriesMapC[sample.GetLabelS()] = {};
+    }
+
+    //--------- Input TFile
+    TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
+
+    //--------- Loop over the TTrees
+    for(const auto& treeName : treeNames){
+        TTree *fTree = (TTree *)fFile->Get(treeName.c_str());
+        std::cout<<"\n\n Tree: "<<treeName<<std::endl;
+
+
+        // Fill the nEventsMap, no Cut
+        for(const auto& sample : sampleDefs){
+            int nEvents = fTree->Draw( "", TCut(sample.GetVar())+TCut("TruthIsFiducial==1"), "goff");
+            nEventsMap[sample.GetLabelS()] = nEvents;
+            std::cout<<"Sample: "<<sample.GetLabelS()<<" NEvents: "<<nEvents<<std::endl;
+        }
+
+
+        //--------- Get the accumulated cut   
+        std::vector<PlotDef> thisCutDefs = fCutDefsCol;
+        if(treeName.find("originsAnaU")!=std::string::npos || treeName.find("originsAnaV")!=std::string::npos){
+            std::cout<<"Using induction cuts"<<std::endl;
+            thisCutDefs = fCutDefsInd;
+        }
+        TCut fAllCuts("");
+        for (size_t i = 0; i < thisCutDefs.size(); ++i) {
+            if(thisCutDefs[i].GetAccumulateCut()){
+                fAllCuts+=TCut(thisCutDefs[i].GetCut());
+            }
+        }
+
+        std::cout<<"Accumulated cuts: "<<fAllCuts<<std::endl;
+
+        //--------- Get the entry list for each sample
+        for(const auto& sample : sampleDefs){
+            fTree->Draw(">>elist", fAllCuts+TCut(sample.GetVar()), "entrylist");
+            TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
+            // Cout the entries
+
+            std::cout<<"Entries for "<<sample.GetLabelS()<<": "<<elist->GetN()<<std::endl;
+            for (size_t i = 0; i < elist->GetN(); ++i) {
+                if(treeName.find("originsAnaU")!=std::string::npos){
+                    entriesMapU[sample.GetLabelS()].insert(elist->GetEntry(i));
+                }
+                else if(treeName.find("originsAnaV")!=std::string::npos){
+                    entriesMapV[sample.GetLabelS()].insert(elist->GetEntry(i));
+                }
+                else if(treeName.find("originsAna")!=std::string::npos){
+                    entriesMapC[sample.GetLabelS()].insert(elist->GetEntry(i));
+                    // fill nEventsMap, no Cut
+
+
+                }
+            }
+        }
+    }
+
+    // cout summary
+    std::cout<<"\n\n Summary: \n\n";
+    for(const auto& sample : sampleDefs){
+        std::cout<<"Sample: "<<sample.GetLabelS()<<" --- NEvents: "<<nEventsMap[sample.GetLabelS()]<<std::endl;
+        std::cout<<"Sample: "<<sample.GetLabelS()<<" --- Entries U: "<<entriesMapU[sample.GetLabelS()].size()<<"   eff: "<<100.*entriesMapU[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()]<<std::endl;
+        std::cout<<"Sample: "<<sample.GetLabelS()<<" --- Entries V: "<<entriesMapV[sample.GetLabelS()].size()<<"   eff: "<<100.*entriesMapV[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()]<<std::endl;
+        std::cout<<"Sample: "<<sample.GetLabelS()<<" --- Entries C: "<<entriesMapC[sample.GetLabelS()].size()<<"   eff: "<<100.*entriesMapC[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()]<<std::endl;
+    }
+
+
+    std::cout<<"\n\n Intersection sets: \n\n";
+
+    // Get intersection of entries for U and V
+    std::map<std::string, std::set<int>> intersectionMap;
+    for(const auto& sample : sampleDefs){  
+        std::set<int> intersection;
+        std::set_intersection(entriesMapU[sample.GetLabelS()].begin(), entriesMapU[sample.GetLabelS()].end(), entriesMapV[sample.GetLabelS()].begin(), entriesMapV[sample.GetLabelS()].end(), std::inserter(intersection, intersection.begin()));
+        std::cout<<"Sample: "<<sample.GetLabelS()<<" Entries U and V: "<<intersection.size()<<"   eff: "<<100.*intersection.size()/nEventsMap[sample.GetLabelS()]<<std::endl;
+        intersectionMap[sample.GetLabelS()] = intersection;
+    }
+
+
+    std::cout<<"\n\n Union sets: \n\n";
+    // Get union with C
+    std::map<std::string, std::set<int>> unionMap;
+    for(const auto& sample : sampleDefs){  
+        // union between intersection and C
+        std::set<int> unionSet;
+        std::set_union(entriesMapC[sample.GetLabelS()].begin(), entriesMapC[sample.GetLabelS()].end(), intersectionMap[sample.GetLabelS()].begin(), intersectionMap[sample.GetLabelS()].end(), std::inserter(unionSet, unionSet.begin()));
+
+        std::cout<<"Sample: "<<sample.GetLabelS()<<" Entries U and V || C: "<<unionSet.size()<<"   eff: "<<100.*unionSet.size()/nEventsMap[sample.GetLabelS()]<<std::endl;
+        unionMap[sample.GetLabelS()] = unionSet;
+    }
+
+    // Make all the above a LaTeX table
+    /*std::ofstream latexFile;
+    latexFile.open("OutputPlots/EntriesTable.tex");
+    latexFile<<"\\begin{table}[h!]\n";
+    latexFile<<"\\begin{center}\n";
+    latexFile<<"\\begin{tabular}{|c|c|c|c|c|}\n";
+    latexFile<<"\\hline\n";
+    latexFile<<"Sample & NEvents & Entries U & Entries V & Entries U and V \\\\ \n";
+    latexFile<<"\\hline\n";
+    for(const auto& sample : sampleDefs){
+        latexFile<<sample.GetLabelS()<<" & "<<nEventsMap[sample.GetLabelS()]<<" & "<<entriesMapU[sample.GetLabelS()].size()<<" & "<<entriesMapV[sample.GetLabelS()].size()<<" & "<<intersectionMap[sample.GetLabelS()].size()<<" \\\\ \n";
+    }
+    latexFile<<"\\hline\n";
+    latexFile<<"\\end{tabular}\n";
+    latexFile<<"\\end{center}\n";
+    latexFile<<"\\caption{Entries in U and V}\n";
+    latexFile<<"\\label{table:1}\n";
+    latexFile<<"\\end{table}\n";
+    latexFile.close();
+    // compile
+    gSystem->Exec("pdflatex -output-directory=OutputPlots OutputPlots/EntriesTable.tex");*/
+
+    
+    
+
 }

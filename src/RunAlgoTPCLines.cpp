@@ -67,11 +67,17 @@ void RunAlgoTPCLines(const CommandLineParser& parser)
     fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
     fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
     fPsetAnaView.CaloAlgorithmPset = fPsetCalo;
+    //fPsetAnaView.View = parser.getView();
     fPsetAnaView.Print();
     // ---- FRANS parameters ----------------------------------------
     FRANSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
     fPsetFRANS.Verbose = Debug;
     fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
+    if(parser.getView()==0)
+        fPsetFRANS.TMVAFilename = FindFile("FRANSSelectionTMVA_BDT_ViewUWithWidth_Iota.weights.xml");
+    else if(parser.getView()==1)
+        fPsetFRANS.TMVAFilename = FindFile("FRANSSelectionTMVA_BDT_ViewVWithWidth_Iota.weights.xml");
+    std::cout<<"FRANS TMVA file: "<<fPsetFRANS.TMVAFilename<<std::endl;
     fPsetFRANS.Print();
 
     // ---- Output files ----------------------------------------
