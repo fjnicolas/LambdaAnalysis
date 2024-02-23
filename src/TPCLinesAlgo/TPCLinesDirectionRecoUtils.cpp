@@ -172,7 +172,6 @@ namespace TPCLinesDirectionUtils{
     bool check_overlap_and_find_region(int a1, int a2, int b1, int b2, int & overlapStart, int & overlapEnd) {
         overlapEnd=0;
         overlapStart=0;
-        std::cout << "        Checking overlap: "<<a1<<" "<<a2<<" - "<<b1<<" "<<b2<<std::endl; 
         //if ((a1 <= b1 && b1 <= a2) || (a1 <= b2 && b2 <= a2)) {
         if( (a1 <= b1 && b1 <= a2) || (b1 <= a1 && a1 <= b2)) {
             int overlap_start = std::max(a1, b1);
@@ -252,23 +251,18 @@ namespace TPCLinesDirectionUtils{
         shortToLongMap.clear();
         connectionsMap.clear();
 
-        std::cout<<" COntrol check\n";
         // Check slope and y position
         for (SLinearCluster& sTrack : shortTracks2) {
 
-            std::cout<<" COntrol check\n";
             SLinearCluster lTrack1 = trackList[shortToLongDict[sTrack.GetId()][0]];
             SLinearCluster lTrack2 = trackList[shortToLongDict[sTrack.GetId()][1]];
             
-            std::cout<<" COntrol check\n";
             float minSlope = std::min(lTrack1.GetTrackEquation().Slope(), lTrack2.GetTrackEquation().Slope());
             float maxSlope = std::max(lTrack1.GetTrackEquation().Slope(), lTrack2.GetTrackEquation().Slope());
-            std::cout<<" COntrol check\n";
+
             float minY = std::min(lTrack1.GetMeanY(), lTrack2.GetMeanY());
             float maxY = std::max(lTrack1.GetMeanY(), lTrack2.GetMeanY());
             float sTrackSlope = sTrack.GetTrackEquation().Slope();
-
-            std::cout<<" COntrol check\n";
             
             if(verbose>=1) std::cout << " Short Track Candidate ID: "<<sTrack.GetId() <<" , slope analysis: "<< std::endl;
             if(verbose>=1) std::cout << "minSlope " << minSlope << " maxSlope " << maxSlope << " shortSlope " << sTrackSlope << " Min/Max Y:"<< minY<<" "<<maxY << std::endl;

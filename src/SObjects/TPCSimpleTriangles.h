@@ -118,6 +118,7 @@ class STriangle {
 
         // Get all hits function
         std::vector<SHit> GetAllHits();
+        std::vector<SHit> GetMainTrackAllHits();
 
         // Get Length functions
         double GetLengthTrack1();
@@ -144,6 +145,7 @@ class STriangle {
         std::vector<int> GetClusterIDs();
 
         void GetVertexXYZ(double &x, double &y, double &z);
+        void GetPrimaryLeptonVertexXYZ(double &x, double &y, double &z);
         
 };
 

@@ -298,7 +298,7 @@ int TPCLinesAlgo::GetWireDistance(int ch1, int ch2){
 // Merge out of ROI hits
 std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearCluster> recoTrackList, std::vector<SHit> hitList, std::vector<SHit> & remainingHitList, int xStepTol)
 {
-    std::cout<<" --- In MergeOutOfROIHits function ---\n";
+    if(fTPCLinesPset.Verbose>=1) std::cout<<" --- Ina MergeOutOfROIHits function ---\n";
     remainingHitList.clear();
 
     // map of vector of hits
@@ -321,7 +321,6 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
             if( h.ClusterId()==recoTrackList[k].GetHitCluster().GetMainClusterID() ){
                 
                 // calculate the min distance to the track
-
                 double d = recoTrackList[k].GetHitCluster().GetMinDistanceToCluster(h);
                 if(d<minD){
                     minD = d;
@@ -351,8 +350,6 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
                 hitsToAddMap[h.X()].push_back(h);
             }
         }
-
-        std::cout<<" \nTrack "<<updatedTrack.GetId()<<std::endl;
         
         // loop over the hits
         int lastMinX = updatedTrack.GetMinX();
@@ -419,7 +416,7 @@ std::vector<SLinearCluster> TPCLinesAlgo::MergeOutOfROIHits(std::vector<SLinearC
 std::vector<SLinearCluster> TPCLinesAlgo::CreateOutOfROIClusters(std::vector<SLinearCluster> recoTrackList)
 {
 
-    std::cout<<"--- In CreateOutOfROIClusters function ---\n";
+    if(fTPCLinesPset.Verbose>=1)  std::cout<<"--- In CreateOutOfROIClusters function ---\n";
 
     // get the used clusters IDs
     std::unordered_set<int> usedClusterID;
@@ -427,7 +424,6 @@ std::vector<SLinearCluster> TPCLinesAlgo::CreateOutOfROIClusters(std::vector<SLi
         std::vector<int> clusterIDs = cluster.GetHitCluster().GetClusterIDs();
         for(int &id:clusterIDs){
             usedClusterID.insert(id);
-            std::cout<<   "Used cluster: "<<id<<" with "<<cluster.NHits()<<std::endl;
         }
     }
 
@@ -446,7 +442,6 @@ std::vector<SLinearCluster> TPCLinesAlgo::CreateOutOfROIClusters(std::vector<SLi
     std::map<int, std::vector<SHit>> newHitsMap;
     for (const auto& id:freeClusterIDs){
         newHitsMap[id] = {};
-        std::cout<<" Unused cluster IDs "<<id<<std::endl;
     }
 
     for(SHit &h:hitsToAdd){
@@ -457,7 +452,6 @@ std::vector<SLinearCluster> TPCLinesAlgo::CreateOutOfROIClusters(std::vector<SLi
     for(auto& clusterPair:newHitsMap){
         SLinearCluster newCluster(clusterPair.second);
         newRecoTrackList.push_back(newCluster);
-        std::cout<<" New Cluster Added: "<<clusterPair.second.size()<<" hits\n";
     }
 
 
@@ -544,15 +538,8 @@ bool TPCLinesAlgo::SetHitList(int view,
                                     );
             }
 
-
             fNTotalHits = fHitList.size();
-            // cout cluster ID counter
-            std::cout<<" CLM  "<<maxClusterId<<std::endl;
-            for(auto & co:fClusterIdCounter){
-                std::cout<<co.first<<":"<<co.second<<"  ";
-            }
-
-
+    
             // create vertex with common origin
             vertexX = vertexX - minX;
             vertexY = vertexY - minY;
@@ -565,13 +552,12 @@ bool TPCLinesAlgo::SetHitList(int view,
             fMaxX = maxX - minX;
             fMinX = minX;
             fMinY = minY;
-            std::cout << "  ** Origin vertex: " << fVertex;
-            std::cout << "  ** NInputHits:"<<fNTotalHits<<std::endl;
+            if(fTPCLinesPset.Verbose>=1) std::cout << "  ** Origin vertex: " << fVertex << "  NInputHits:"<<fNTotalHits<<std::endl;
 
             return true;
         }
         else {
-            std::cout << "   SKIPPED NHits selected near the vertex " << fHitList.size() << std::endl;
+            if(fTPCLinesPset.Verbose>=1) std::cout << "   SKIPPED NHits selected near the vertex " << fHitList.size() << std::endl;
             return false;
         }
 
@@ -629,7 +615,10 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         //std::vector<SHit> hitListForHough = fHitList;
         std::vector<SHit> hitListForHough = GetHitsInCluster(clusterPair.first);
         double clusterMeanOccupation = GetClusterHitDensity(hitListForHough);
-        std::cout<<" Ana cluster "<<clusterPair.first<<" "<<clusterPair.second<<" MeanOccupation: "<<clusterMeanOccupation<<std::endl;
+        if(fTPCLinesPset.Verbose>=1){
+            std::cout<<"   Analyzing cluster "<<clusterPair.first<<" with "<<clusterPair.second<<" hits \n";
+            std::cout<<"    MeanOccupation: "<<clusterMeanOccupation<<std::endl;
+        }
 
         if(clusterMeanOccupation>3){
             SLinearCluster track(hitListForHough);
@@ -638,7 +627,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         }
     
         int trkIterCluster = (int)hitListForHough.size()>=fTPCLinesPset.MinTrackHits ? 0 : fTPCLinesPset.MaxHoughTracks;
-        std::cout<<trkIterCluster<<" "<<fHitList.size()<<" "<<hitListForHough.size()<<std::endl;
+ 
         // --- Loop over the hough tracks
         while(trkIterCluster<fTPCLinesPset.MaxHoughTracks){
 
@@ -698,12 +687,8 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
 
         discardedHits.insert(discardedHits.end(), hitListForHough.begin(), hitListForHough.end());
 
-    }
+    } // -- end cluster loop
 
-
-    for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
-        std::cout<<" ix:"<<ix<<" Min/MaxX:"<<finalLinearClusterV[ix].GetMinX()<<" "<<finalLinearClusterV[ix].GetMaxX()<<std::endl;
-    }
     
     
     // Slope track merger
@@ -773,12 +758,9 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, fTPCLinesPset.ParallelTracksMaxD, fTPCLinesPset.Verbose);
         NewTrackList.clear();
 
-        std::cout<<" Final tracks for origin finder: \n";
         for(size_t ix = 0; ix<parallelTracks.size(); ix++){ 
-            std::cout<<"\n "<<parallelTracks[ix][0].GetId();
             std::vector<SHit> hitList = parallelTracks[ix][0].GetHits();
             for(size_t jx = 1; jx<parallelTracks[ix].size(); jx++){
-                std::cout<<" "<<parallelTracks[ix][jx].GetId();
                 std::vector<SHit> moreHits = parallelTracks[ix][jx].GetHits();
                 hitList.insert(hitList.end(), moreHits.begin(), moreHits.end());
             }
@@ -825,8 +807,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList[ix].AssignId(ix);
         }
 
-        //Find secondary vertexes
-        std::cout<<" We have "<<NewTrackList.size()<<" tracks\n";
+        //Find secondary vertices
         if(NewTrackList.size()>0){
             intersectionsInBall = fVertexFinder.GetAngleVertices(NewTrackList, fVertex.Point(), vertexList, associatedOrigins, mainDirection);
         }
@@ -850,7 +831,6 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     }
 
     double hitDensity = GetAverageHitDensity();
-    std::cout<<"Hit density: "<<hitDensity<<std::endl;
 
     // Save the reco event
     SEvent recoEvent(NewTrackList, intersectionsInBall, vertexList, associatedOrigins, hitDensity, discardedHits);
@@ -872,7 +852,6 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         allHits.insert(allHits.end(), fHitListOutROI.begin(), fHitListOutROI.end());
     
     // --- FRANS with PANDORA vertex ---
-    std::cout<<" FRANS PANDORA with "<<allHits.size()<<" hits\n";
     fFRANSAlgo.Fill(allHits, fVertex);
     double FRANSScorePANDORA = fFRANSAlgo.Score();
     lambdaAnaTree.fFRANSScorePANDORA = FRANSScorePANDORA;
@@ -885,8 +864,7 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
     fHasTriangle = false;
     for(size_t orix=0; orix<angleList.size(); orix++){
         SVertex fVertexMine(associatedOrigins[orix].GetPoint(), "");
-        
-        std::cout<<" FRANS with "<<allHits.size()<<" hits\n";
+
         fFRANSAlgo.Fill(allHits, fVertexMine);
         double score = fFRANSAlgo.Score();
 
@@ -909,7 +887,7 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         fHasTriangle = true;
         STriangle bestTriangle = angleList[bestTriangleIx];
         SOrigin bestOrigin = associatedOrigins[bestTriangleIx];
-        std::cout<<" Best triangle with tracks "<<bestTriangle.GetTrack1().GetId()<<" and "<<bestTriangle.GetTrack2().GetId()<<" with associated origin track "<<bestOrigin.GetTrack(0).GetId()<<std::endl;
+        std::cout<<" --- Best triangle with tracks "<<bestTriangle.GetTrack1().GetId()<<" and "<<bestTriangle.GetTrack2().GetId()<<" with associated origin track "<<bestOrigin.GetTrack(0).GetId()<<std::endl;
 
 
         // --- Triangle variables ---
@@ -957,7 +935,6 @@ STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
         int gapMinCh = std::min(lambdaVertexCh, muonVertexCh);
         int gapMaxCh = std::max(lambdaVertexCh, muonVertexCh);
         int nOverlappedChannelsWithAPA = GetNOverlappedChannelsWithAPABadChannels(gapMinCh, gapMaxCh);
-        std::cout<<" Gap min/mac channels "<<gapMinCh<<" "<<gapMaxCh<<" # overlapped channels: "<<nOverlappedChannelsWithAPA<<std::endl;
         double gapSize = gapMaxCh - gapMinCh;
         if(gapSize>0){
             lambdaAnaTree.fAngleGapOverlapWithAPAJuntion = 1.*nOverlappedChannelsWithAPA/gapSize;

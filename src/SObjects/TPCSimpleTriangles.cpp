@@ -156,6 +156,22 @@ std::vector<SHit> STriangle::GetAllHits(){
 }
 
 
+// Get all hits function for main track
+std::vector<SHit> STriangle::GetMainTrackAllHits(){
+    
+    std::vector<SHit> hitList;
+    
+    for(SHit &h:GetMainTrack().GetHits()){
+        hitList.push_back(h);
+    }
+
+    return hitList;
+}
+
+
+
+
+
 // Get Length functions
 double STriangle::GetLengthTrack1(){
     return fTrack1.GetLength();
@@ -399,22 +415,18 @@ double STriangle::ComputeCoveredArea() {
 }
 
 double STriangle::GetMinX(){
-    //return std::min(fMainVertex.X(), std::min(fVertexB.X(), fVertexC.X())  );
     return std::min( fTrack1.GetMinX(), fTrack2.GetMinX() );
 }
 
 double STriangle::GetMaxX(){
-    //return std::max(fMainVertex.X(), std::max(fVertexB.X(), fVertexC.X())  );
     return std::max( fTrack1.GetMaxX(), fTrack2.GetMaxX() );
 }
 
 double STriangle::GetMinY(){
-    //return std::min(fMainVertex.Y(), std::min(fVertexB.Y(), fVertexC.Y())  );
     return std::min( fTrack1.GetMinY(), fTrack2.GetMinY() );
 }
 
 double STriangle::GetMaxY(){
-    //return std::max(fMainVertex.Y(), std::max(fVertexB.Y(), fVertexC.Y())  );
     return std::max( fTrack1.GetMaxY(), fTrack2.GetMaxY() );
 }
 
@@ -469,5 +481,37 @@ void STriangle::GetVertexXYZ(double &x, double &y, double &z){
 
     }
 
-    
+    return;
+}
+
+
+void STriangle::GetPrimaryLeptonVertexXYZ(double &x, double &y, double &z){
+
+    x = 0;
+    y = 0;
+    z = 250;
+
+    SPoint p1(fMainTrack.GetMinX(), fMainTrack.GetYatMinX());
+    double d1 = TPCLinesDistanceUtils::GetHitDistance(p1, fMainVertex);
+    SPoint p2(fMainTrack.GetMaxX(), fMainTrack.GetYatMaxX());
+    double d2 = TPCLinesDistanceUtils::GetHitDistance(p2, fMainVertex);
+    SPoint mainTrackVertex = (d1 < d2) ? p1 : p2;
+
+    double minDToVertex = 1e9;
+    for(SHit& h:GetMainTrackAllHits()){
+        
+        if(h.SPZ()>0){
+            double d = std::hypot( mainTrackVertex.X() - h.X(), mainTrackVertex.Y() - h.Y() );
+
+            if(d<minDToVertex){
+                minDToVertex = d;
+                x = h.SPX();
+                z = h.SPZ();
+                y = h.SPY();
+            }
+        }
+
+    }
+
+    return;
 }

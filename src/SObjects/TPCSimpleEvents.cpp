@@ -212,12 +212,6 @@ SEvent SEvent::UnassociatedOrigins(STriangle triangle){
         }
     }
 
-    // Print origins not associated to the V+single track
-    std::cout<<"  - Not associated origins: "<<notAssociatedOrigins.size()<<std::endl;
-    for(SOrigin &ori:notAssociatedOrigins){
-        std::cout<<ori;
-    }
-
     SEvent notAddociatedRecoEvent({}, notAssociatedOrigins, {}, {}, 0, {});
 
     return notAddociatedRecoEvent;
@@ -238,11 +232,6 @@ void SEvent::FreeHitsAroundTriangle(STriangle triangle,
     int track1ID = triangle.GetTrack1().GetId();
     int track2ID = triangle.GetTrack2().GetId();
     int mainTrackID = triangle.GetMainTrack().GetId();
-
-
-    std::cout<<"Best triangle limits: \n";
-    std::cout<<"Min/Max X "<<triangle.GetMinX()<<" "<<triangle.GetMaxX()<<std::endl;
-    std::cout<<"Min/Max Y "<<triangle.GetMinY()<<" "<<triangle.GetMaxY()<<std::endl;
     
     // vector with the hits not assocaited t the V+main track
     std::vector<SHit> otherHits;
@@ -257,12 +246,10 @@ void SEvent::FreeHitsAroundTriangle(STriangle triangle,
         if(IsTrackAssociatedToTrack(track.GetId(), track1ID)) continue;
         if(IsTrackAssociatedToTrack(track.GetId(), track2ID)) continue;
 
-        std::cout<<"    Adding hits from track "<<track.GetId()<<std::endl;
         auxHits.clear();
         auxHits = track.GetHits();
         otherHits.insert(otherHits.end(), auxHits.begin(), auxHits.end());
     }
-    std::cout<< " OTHER HITS "<<otherHits.size()<<std::endl;
 
     
     // loop over hits, get the ones inside the triangle limits
@@ -271,7 +258,6 @@ void SEvent::FreeHitsAroundTriangle(STriangle triangle,
         if(h.X()>triangle.GetMinX() && h.X()<triangle.GetMaxX() 
             && h.Y()>triangle.GetMinY() && h.Y()<triangle.GetMaxY() ){
             nDirtHitsInTriangle++;
-            std::cout<<"    adding: "<<h.X()<<" "<<h.Y()<<std::endl;
         }
 
         if(h.X()>triangle.GetMinX() && h.X()<triangle.GetMaxX() 
@@ -283,10 +269,6 @@ void SEvent::FreeHitsAroundTriangle(STriangle triangle,
 
     nFractionDirtHitsInTriangle = 1.*nDirtHitsInTriangle/triangle.GetNHitsTriangle();
     nFractionDirtHitsInTriangleWires = 1.*nDirtHitsInTriangleWires/triangle.GetNHitsTriangle();
-
-    
-    std::cout<<" NDirt hits in triangle: "<<nDirtHitsInTriangle<<" Fraction: "<<nFractionDirtHitsInTriangle<<std::endl;
-    std::cout<<" NDirt hits in triangle wires: "<<nDirtHitsInTriangleWires<<" Fraction: "<<nFractionDirtHitsInTriangleWires<<std::endl;
 
     return;
    
@@ -355,7 +337,6 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
             muonEndHit = h;
         }
     }
-    std::cout<< " Muon end hit: "<<muonEndHit.X()<<" "<<muonEndHit.Y()<<std::endl;
 
     // check min distance of the other cluster to the end hit (not already in the veto)
     for(auto &clusterHits:hitCluterIDMap){
@@ -372,11 +353,6 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
             if(minD<2) vetoClusterIDs.insert(clusterHits.first);
         }
     }
-
-
-    // cout the veto cluster IDs
-    std::cout<<"Veto clusters IDs: ";
-    for(auto &id:vetoClusterIDs) std::cout<<id<<std::endl;
     
     for(SLinearCluster & track:GetTracks()){
         if( vetoTrackIDs.find(track.GetId()) != vetoTrackIDs.end() ) continue;
@@ -394,21 +370,5 @@ void SEvent::GetUnassociatedHits(STriangle triangle, int &nFreeHits, int &nUnass
     }
     nUnassociatedHits+=nFreeHits;
 
-    // Pintout
-    std::cout<<"Unassociated results: \n";
-    std::cout<<"NFree Hits "<<nFreeHits<<"  NUnassociatedHits "<<nUnassociatedHits<<std::endl;
-    std::cout<<"End unassociated results \n";
-
     return;
 }
-
-
-
-
-
-/*// Get the limits of the V+line
-int minX = std::min((float)triangle.GetMinX(), triangle.GetMainTrack().GetMinX());
-int maxX = std::max((float)triangle.GetMaxX(), triangle.GetMainTrack().GetMaxX());
-double minY = std::min((float)triangle.GetMinY(), triangle.GetMainTrack().GetMinY());
-double maxY = std::max((float)triangle.GetMaxY(), triangle.GetMainTrack().GetMaxY());
-std::cout<<"Limits: "<<minX<<" "<<maxX<<" "<<minY<<" "<<maxY<<std::endl;*/

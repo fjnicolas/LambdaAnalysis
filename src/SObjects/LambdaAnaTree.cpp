@@ -228,6 +228,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("RecoGap", &fRecoGap, readMode);
     SetBranch("RecoBeta", &fRecoBeta, readMode);
     SetBranch("RecoGamma", &fRecoGamma, readMode);
+    SetBranch("RecoTauLab", &fRecoTauLab, readMode);
     SetBranch("RecoTau", &fRecoTau, readMode);
 
 
@@ -406,7 +407,9 @@ void LambdaAnaTree::ResetVars(){
     fRecoGap = -999;
     fRecoBeta = -999;
     fRecoGamma = -999;
+    fRecoTauLab = -999;
     fRecoTau = -999;
+
     
 
 }
@@ -528,6 +531,6 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Reco Gap: " << fRecoGap << std::endl;
         std::cout << " Reco Beta: " << fRecoBeta << std::endl;
         std::cout << " Reco Gamma: " << fRecoGamma << std::endl;
-        std::cout << " Reco Tau: " << fRecoTau << std::endl;
+        std::cout << " Reco TauLab: " << fRecoTauLab << " Reco Tau: " << fRecoTau << std::endl;
 
     }

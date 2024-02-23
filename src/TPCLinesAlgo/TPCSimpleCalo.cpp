@@ -88,7 +88,6 @@ void SCalo::CalculateResidualRange() {
     fResidualRange.clear();
 
     fTrackLength = 0;
-    std::cout<<" fHitList.size() "<<fHitList.size()<<" PP: "<<fPathLengths.size()<<std::endl;
     if(fPathLengths.size()>1){
         fTrackLength = std::accumulate(fPathLengths.begin(), fPathLengths.end(), fTrackLength);
 
@@ -102,7 +101,6 @@ void SCalo::CalculateResidualRange() {
 
         // Check last points
         double minE = *std::min_element(fDepositedEnergy.begin(), fDepositedEnergy.end());
-        std::cout << " minE " << minE << " " << fDepositedEnergy.front() << " " << fDepositedEnergy.back() << std::endl;
 
         if(fResidualRange.size()>3){
             while (!fDepositedEnergy.empty() && fDepositedEnergy.back() <= minE) {
@@ -115,7 +113,6 @@ void SCalo::CalculateResidualRange() {
         }
 
         double lastResidualRange = fResidualRange.back();
-        std::cout << " lastResidualRange " << lastResidualRange << std::endl;
         // reshift 
         for(size_t i=0; i<fResidualRange.size(); i++){
             fResidualRange[i] = fResidualRange[i] - lastResidualRange;
@@ -137,11 +134,7 @@ void SCalo::CalculateResidualRange() {
     else{
         fResidualRangeRMS = -1;
     }
-
-
-
     
-
 }
 
 
@@ -477,7 +470,7 @@ void STriangleCalo::JointFitAnalysisFisher(){
     brokenLine->SetParNames("breakPoint","y0","slope1","slope2");
     brokenLine->SetLineColor(kRed);
     brokenLine->SetLineWidth(2);
-    gr->Fit(brokenLine,"R");
+    gr->Fit(brokenLine,"RQ");
 
     // Draw the fitted function
     brokenLine->Draw("same");
@@ -570,7 +563,6 @@ double CheckCrossHits(TH1F *h1, TH1F *h2, TGraph *gr1, TGraph *gr2){
         }
     }
 
-    std::cout<<" nPointsCross: "<<nPointsCross<<" nPoints: "<<nPoints<<std::endl;
     return (double)nPointsCross/(double)nPoints;
 }
 
@@ -619,13 +611,12 @@ double CheckOverlapRegion(TH1F *h1, TH1F *h2, double x1Max, double x2Max){
         // Calculate the overlap integral
         double overlap = ( std::min(y1High, y2High) - std::max(y1Low, y2Low) ) * x1BinWidth;
         if (overlap < 0.0) overlap = 0.0;
-        //std::cout<<" x1: "<<x1<<" x2: "<<x2<<" Y1: "<<y1Low<<":"<<y1High<<" Y2: "<<y2Low<<":"<<y2High<<" overlap: "<<overlap<<std::endl;
 
         x1+=x1BinWidth;
         x2+=x2BinWidth;
         overlapArea+=2*overlap; // overlap counts to the two ranges
     }
-    std::cout<<" overlapArea: "<<overlapArea<<" area1: "<<area1<<" area2: "<<area2<<std::endl;
+    
     return overlapArea/(area1+area2);
 }
 
@@ -744,7 +735,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         // Constant
         fit1->SetLineColor(fColor1);
         fit1->SetLineWidth(2);
-        TFitResultPtr fitResult1 = graph1->Fit(fit1, "RS");
+        TFitResultPtr fitResult1 = graph1->Fit(fit1, "RSQ");
         passFit1 = GetFitConfidenceInterval(hint1, fit1, fitResult1, fCondifenceLevel, calo1.GetTrackLength());
         
         // Exponential
@@ -753,7 +744,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         fit1Exp->SetParameters(maxY, -1, fit1->GetParameter(0));
         fit1Exp->SetParLimits(1, -1e6, 0);
         fit1Exp->SetParLimits(2, 0, 1e6);
-        TFitResultPtr fitResult1Exp = graph1->Fit(fit1Exp, "BRS");    
+        TFitResultPtr fitResult1Exp = graph1->Fit(fit1Exp, "BRSQ");    
         passFit1Exp = GetFitConfidenceInterval(hint1Exp, fit1Exp, fitResult1Exp, fCondifenceLevel, calo1.GetTrackLength());
     }    
 
@@ -762,7 +753,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         // Constant
         fit2->SetLineColor(fColor2);
         fit2->SetLineWidth(2);
-        TFitResultPtr fitResult2 = graph2->Fit(fit2, "RS");
+        TFitResultPtr fitResult2 = graph2->Fit(fit2, "RSQ");
         passFit2 = GetFitConfidenceInterval(hint2, fit2, fitResult2, fCondifenceLevel, calo2.GetTrackLength());
 
         // Exponential
@@ -771,13 +762,13 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         fit2Exp->SetParameters(maxY, -1, fit2->GetParameter(0));
         fit2Exp->SetParLimits(1, -1e6, 0);
         fit2Exp->SetParLimits(2, 0, 1e6);
-        TFitResultPtr fitResult2Exp = graph2->Fit(fit2Exp, "BRS");
+        TFitResultPtr fitResult2Exp = graph2->Fit(fit2Exp, "BRSQ");
         passFit2Exp = GetFitConfidenceInterval(hint2Exp, fit2Exp, fitResult2Exp, fCondifenceLevel, calo2.GetTrackLength());
     
     }
 
     // --- Draw the fitted functions
-    std::cout<<" *** Fits status: "<<passFit1<<" "<<passFit1Exp<<" "<<passFit2<<" "<<passFit2Exp<<std::endl;
+    // std::cout<<" *** Fits status: "<<passFit1<<" "<<passFit1Exp<<" "<<passFit2<<" "<<passFit2Exp<<std::endl;
     bool pass1 = passFit1 || passFit1Exp;
     bool pass2 = passFit2 || passFit2Exp;
 
@@ -788,7 +779,7 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
         fit1->Draw("same");
         fit1Exp->Draw("same");
 
-        std::cout<<" *** "<<fit1Exp->GetParameter(0)<<" "<<fit1Exp->GetParameter(1)<<" "<<hint1Exp->Integral()<<std::endl;
+        //std::cout<<" *** "<<fit1Exp->GetParameter(0)<<" "<<fit1Exp->GetParameter(1)<<" "<<hint1Exp->Integral()<<std::endl;
         if(fit1Exp->GetParameter(0)>0 && fit1Exp->GetParameter(1)<0 && hint1Exp->Integral()>0){
             hint1Exp->Draw("e3 same");
             p0Fit_1 = fit1Exp->GetParameter(2);
@@ -859,13 +850,11 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
     double length2 = fEndTrackLength;
     if(calo1.GetTrackLength()<fEndTrackLength) length1 = calo1.GetTrackLength();
     if(calo2.GetTrackLength()<fEndTrackLength) length2 = calo2.GetTrackLength();
-    std::cout<<" bin1_End: "<<bin1_End<<" bin2_End: "<<bin2_End<<std::endl;
-    std::cout<<" length1: "<<length1<<" length2: "<<length2<<std::endl;
+    
     double charge1Integral = 0;
     double charge2Integral = 0;
     if(pass1) charge1Integral = h1->Integral(1, bin1_End, "width");
     if(pass2) charge2Integral = h2->Integral(1, bin2_End, "width");
-    std::cout<<" charge1Integral: "<<charge1Integral<<" charge2Integral: "<<charge2Integral<<std::endl;
     
     if(length1>0)
         charge1Integral/=length1;
@@ -901,14 +890,12 @@ void STriangleCalo::MakeEnergyLossVsResidualRangePlot(SCalo calo1, SCalo calo2, 
 
         // Check the overlap
         double overlap = CheckOverlapRegion(h1, h2, calo1.GetTrackLength(), calo2.GetTrackLength());
-        std::cout<<"Overlap: "<<overlap<<std::endl;
         // check overlap is not a nan
         if(isnan(std::abs(overlap))) overlap = 1;
 
         fBandOverlap = overlap;
 
         double crossHitsFraction = CheckCrossHits(h1, h2, graph1, graph2);
-        std::cout<<"CrossHits: "<<crossHitsFraction<<std::endl;
         // check overlap is not a nan
         if(isnan(std::abs(crossHitsFraction))) crossHitsFraction = 1;
 
@@ -1042,13 +1029,10 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     fYVertex = fTriangle.GetMainVertex().Y();
 
     // Hit coordinates for the first maxHits hits
-    //maxHits = std::min( maxHits, (unsigned int)std::min(fTriangle.GetNHitsTrack1(), fTriangle.GetNHitsTrack2()) );
-    std::cout<<" Set max hits\n";
     std::vector<double> xV, yV, widthV;
     size_t n = 0;
 
     // Get tracks start/end slope based on distance to main vertex
-
     SLinearCluster track1 = fTriangle.GetTrack1();
     SLinearCluster track2 = fTriangle.GetTrack2();
     SPoint mainVertex = fTriangle.GetMainVertex();
@@ -1156,7 +1140,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
         bool ok = fitter.FitFCN();
         if (!ok) {
             fPassFit = false;
-            std::cout << "TPCSimpleCalo: 2Lines fit failed!" << std::endl;
         }
         else{
             fPassFit = true;
@@ -1185,7 +1168,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
         fYFitVtx = fM1*fXFitVtx+fN1;
         fTwoLinesChi2 = 0;
     }
-
 
 
     // --- Assing each hit to a track ---
@@ -1287,8 +1269,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     SCalo calo2(fHitsTrack2, std::atan(fM2), yAngle2);
     fCalo1 = calo1;
     fCalo2 = calo2;
-    std::cout<<" Set calo objects\n";
-
 
     // Angle deviation
     std::vector<double> anglesTrack1, anglesTrack2;
@@ -1298,7 +1278,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
             SHit h2 = fHitsTrack1[k+1];
             double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
             anglesTrack1.push_back(angle);
-            //std::cout<<"  angle: "<<angle<<std::endl;
         }
     }
     
@@ -1308,7 +1287,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
             SHit h2 = fHitsTrack2[k+1];
             double angle = 180 * std::atan2((h2.Y()-h1.Y()), (h2.X()-h1.X())) / TMath::Pi();
             anglesTrack2.push_back(angle);
-            //std::cout<<"  angle: "<<angle<<std::endl;
         }
     }
 
@@ -1335,8 +1313,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     MakeEnergyLossVsResidualRangePlot(fCalo1, fCalo2, nullptr);
    
     // --- Return values ---
-   
-
     fMinX-=0.1*(fMaxX-fMinX);
     fMaxX+=0.1*(fMaxX-fMinX);
     fMinY-=0.1*(fMaxY-fMinY);
@@ -1400,12 +1376,6 @@ void STriangleCalo::JointFitAnalysis(std::vector<double> *pProton, std::vector<d
     fResidualRange2RMS = calo2.GetResidualRangeRMS();
     fResidualRangeMinRMS = std::min(fResidualRange1RMS, fResidualRange2RMS);
     fResidualRangeMaxRMS = std::max(fResidualRange1RMS, fResidualRange2RMS);
-
-    if(yAngle1>0){
-        std::cout<<"YProton angle: "<<yAngle1<<" YPion angle: "<<yAngle2<<"\n";
-        std::cout<<" YProtonCos: "<<std::abs(pProton->at(1))<<" YPionCos: "<<std::abs(pPion->at(1))<<"\n";
-        std::cout<<" Ratio: "<<std::max(std::abs(pProton->at(1)), std::abs(pPion->at(1)))/std::min(std::abs(pProton->at(1)), std::abs(pPion->at(1)))<<"\n";
-    }
     
     return;
 
@@ -1540,7 +1510,6 @@ void STriangleCalo::Display(TCanvas *c1){
     marker->Draw("same");
     pt->Draw("same");
     
-    std::cout<<" Drawing calorimetry...track length: "<<fHitsTrack1.size()<<" "<<fHitsTrack2.size()<<"\n";
     // --- Draw xV and yV markers after assignment ---
 
     // TH1F histogram around the vertex
@@ -1572,8 +1541,6 @@ void STriangleCalo::Display(TCanvas *c1){
         if (&h == &fHitsTrack1.front()) leg->AddEntry(marker, "Track 1 hits", "p");
     }
 
-    std::cout<<" Track 1 filled\n";
-
     for(SHit &h:fHitsTrack2){
         double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
         TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 23);
@@ -1582,8 +1549,6 @@ void STriangleCalo::Display(TCanvas *c1){
         marker->Draw("same");
         if (&h == &fHitsTrack2.front()) leg->AddEntry(marker, "Track 2 hits",  "p");
     }
-
-    std::cout<<" Track 2 filled\n";
 
     for(SHit &h:fVertexHits){
         double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
@@ -1594,8 +1559,6 @@ void STriangleCalo::Display(TCanvas *c1){
         if (&h == &fVertexHits.front()) leg->AddEntry(marker, "Vertex hits",  "p");
     }
 
-     std::cout<<" Vertex hits filled\n";
-
     for(SHit &h:fFitHits){
         double size = (h.Integral()/fMaxIntegral) * fMaxMarkerSize;
         TMarker *marker = new TMarker(h.X()-fXVertex, h.Y()-fYVertex, 20);
@@ -1605,11 +1568,9 @@ void STriangleCalo::Display(TCanvas *c1){
         marker->Draw("same");
     }
     
-     std::cout<<" Fits hits filled\n";
     // Draw arrows joining hits for each track
     if(fHitsTrack1.size()>=2){
         for(size_t k=0; k<fHitsTrack1.size()-1; k++){
-            std::cout<<k<<std::endl;
             SHit h1 = fHitsTrack1[k];
             SHit h2 = fHitsTrack1[k+1];
             TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
@@ -1619,21 +1580,18 @@ void STriangleCalo::Display(TCanvas *c1){
     }
     if(fHitsTrack2.size()>=2){
         for(size_t k=0; k<fHitsTrack2.size()-1; k++){
-            std::cout<<k<<std::endl;
             SHit h1 = fHitsTrack2[k];
             SHit h2 = fHitsTrack2[k+1];
             TArrow *arrow = new TArrow(h1.X()-fXVertex, h1.Y()-fYVertex, h2.X()-fXVertex, h2.Y()-fYVertex, 0.01, "|>");
             arrow->Draw();
         }
     }
-    std::cout<<" Filled al arrows\n";
 
     leg->Draw("same");
 
 
     // ---- Plot 3D points
     bool make3DPlot = true;
-    std::cout<<" Making 3D Plot? "<<make3DPlot<<std::endl;
     if(make3DPlot){
         pad3->cd();
 

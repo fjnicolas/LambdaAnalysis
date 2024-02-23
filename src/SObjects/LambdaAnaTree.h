@@ -218,6 +218,7 @@ public:
     double fRecoGap;
     double fRecoBeta;
     double fRecoGamma;
+    double fRecoTauLab;
     double fRecoTau;
 
 
