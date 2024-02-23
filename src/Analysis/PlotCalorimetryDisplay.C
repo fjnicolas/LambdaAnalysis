@@ -98,9 +98,11 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
     std::vector<std::vector<double>> *ResidualRange = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *DepositedEnergy = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *DepositedCharge = new std::vector<std::vector<double>>;
+    std::vector<int> *BestPIDAll = new std::vector<int>;
     fTree->SetBranchAddress("ResidualRangeAll", &ResidualRange);
     fTree->SetBranchAddress("DepositedEnergyAll", &DepositedEnergy);
     fTree->SetBranchAddress("DepositedChargeAll", &DepositedCharge);
+    fTree->SetBranchAddress("BestPIDAll", &BestPIDAll);
 
 
     //--------- Tree loop
@@ -205,7 +207,8 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
 
             TLegend *leg = new TLegend(0.1,0.7,0.3,0.9);
             for(int j=0; j<h_dEdxAll.size(); j++){
-                leg->AddEntry(h_dEdxAll.at(j),("Track "+std::to_string(j)).c_str(),"p");
+                std::string pidLabel = "Track "+std::to_string(j)+" PDG="+std::to_string(BestPIDAll->at(j));
+                leg->AddEntry(h_dEdxAll.at(j), pidLabel.c_str(),"p");
             }
             leg->Draw("same");
             h_dEdxAll.at(0)->GetYaxis()->SetTitle("dE/dx [MeV]");
