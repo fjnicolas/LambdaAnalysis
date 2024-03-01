@@ -33,7 +33,7 @@ std::vector<PlotDef> cutDefsTalk2 = {
 
     // Pre FRANS (all events)
     ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
-    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     
     // Secondary vertices
     ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# seconday vertices",  "\\ Secondary \\ vertex"}
@@ -68,7 +68,7 @@ std::vector<PlotDef> cutDefsTalk2Induction = {
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
 
     // FRANS (all events)
-    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, 0.1, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     
     // Secondary vertices
@@ -127,7 +127,6 @@ std::vector<PlotDef> cutDefsPIDFull = {
     
 
     ,{"InvariantMass", "InvariantMass", CutType::kCenter, 1115, {1000, 1500, 10}, false, "Invariant Mass [MeV]", "Invariant \\ Mass"}
-    
 }; 
 
 

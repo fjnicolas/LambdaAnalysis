@@ -24,6 +24,7 @@ std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 std::vector<SampleDef> sampleDefs = {
     {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true, "Signal"}
     ,{fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "BG  #nu", false, "BG BNB"}
+    ,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false, "Dirt+Cosmic"}
 };
 
 //---------  Phase space cuts
@@ -31,6 +32,7 @@ std::vector<PlotDef> fPhaseSpaceDefs = psLambdaKinematics;
 
 //---------  Cuts
 std::vector<PlotDef> fCutDefs = cutDefsPIDFull;
+//std::vector<PlotDef> fCutDefs = cutDefsTalk2Induction;
 
 
 std::vector<PlotDef> fCutDefsCol = cutDefsTalk2;
@@ -44,7 +46,7 @@ void LambdaAnalysis(){
 }
 
 //---------  Main function
-void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTreePost")
+void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTree")
 {
 
     //---------  Remove all *.pdf with gSystem

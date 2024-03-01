@@ -13,6 +13,8 @@ void PlotCalorimetryDisplay(){
 
 //---------  Color list
 std::vector<int> fColorList = {kRed, kBlue, kGreen, kMagenta, kCyan, kYellow, kOrange, kViolet, kTeal, kAzure, kGray, kPink, kSpring, kWhite, kBlack};
+int fColorLI = kAzure+7;
+int fColorHI = kRed+2;
 
 //--------- Define a function to add points to the graph and create a TGraph2D
 void addPointsAndCreateGraph(TGraph2D *graph, std::vector<double> x, std::vector<double> y, std::vector<double> z){
@@ -33,6 +35,13 @@ void drawGraph(TGraph2D *graph, const char* title, Color_t color){
     graph->Draw("P same");
 }
 
+
+// Function to get minimum and maximum XYZ values of the vector of vectors
+auto getMinMax = [](std::vector<double> v){
+    double min = *std::min_element(v.begin(), v.end());
+    double max = *std::max_element(v.begin(), v.end());
+    return std::make_pair(min, max);
+};
 
 //---------  Main function
 void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::string fTreeDirName = "lambdaPidPandoraAna/", std::string fTreeName = "CalorimetryTree")
@@ -61,16 +70,22 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
     fTree->SetBranchAddress("EventID", &EventID);
     Bool_t RecoStatus;
     fTree->SetBranchAddress("RecoStatus", &RecoStatus);
-    Double_t InvariantMass, KELI, KEHI, OpeningAngle;
+    Double_t InvariantMass, KELI, KEHI, OpeningAngle, LambdaEnergy, LambdaKE;
     fTree->SetBranchAddress("InvariantMass", &InvariantMass);
     fTree->SetBranchAddress("KELI", &KELI);
     fTree->SetBranchAddress("KEHI", &KEHI);
     fTree->SetBranchAddress("OpeningAngle", &OpeningAngle);
+    fTree->SetBranchAddress("LambdaEnergy", &LambdaEnergy);
+    fTree->SetBranchAddress("LambdaKE", &LambdaKE);
+
     // True variables
-    Double_t ProtonKE, PionKE, DecayCosOpeningAngle;
-    fTree->SetBranchAddress("ProtonKE", &ProtonKE);
-    fTree->SetBranchAddress("PionKE", &PionKE);
-    fTree->SetBranchAddress("DecayCosOpeningAngle", &DecayCosOpeningAngle);
+    Double_t TrueProtonKE, TruePionKE, TrueOpeningAngle, TrueLambdaE, TrueLambdaKE;
+    fTree->SetBranchAddress("TrueProtonKE", &TrueProtonKE);
+    fTree->SetBranchAddress("TruePionKE", &TruePionKE);
+    fTree->SetBranchAddress("TrueOpeningAngle", &TrueOpeningAngle);
+    fTree->SetBranchAddress("TrueLambdaE", &TrueLambdaE);
+    fTree->SetBranchAddress("TrueLambdaKE", &TrueLambdaKE);
+
     // Space points
     std::vector<std::vector<double>> *SpacePointsX = new std::vector<std::vector<double>>;
     std::vector<std::vector<double>> *SpacePointsY = new std::vector<std::vector<double>>;
@@ -78,6 +93,15 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
     fTree->SetBranchAddress("SpacePointsX", &SpacePointsX);
     fTree->SetBranchAddress("SpacePointsY", &SpacePointsY);
     fTree->SetBranchAddress("SpacePointsZ", &SpacePointsZ);
+
+    // Space points (all)
+    std::vector<double> *AllSpacePointsX = new std::vector<double>;
+    std::vector<double> *AllSpacePointsY = new std::vector<double>;
+    std::vector<double> *AllSpacePointsZ = new std::vector<double>;
+    fTree->SetBranchAddress("AllSpacePointsX", &AllSpacePointsX);
+    fTree->SetBranchAddress("AllSpacePointsY", &AllSpacePointsY);
+    fTree->SetBranchAddress("AllSpacePointsZ", &AllSpacePointsZ);
+    
     // Residual range LI
     std::vector<double> *ResidualRangeLI = new std::vector<double>;
     std::vector<double> *DepositedEnergyLI = new std::vector<double>;
@@ -111,26 +135,34 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
         fTree->GetEntry(i);
         std::cout<<i<<" RunID: "<<RunID<<", SubRunID: "<<SubRunID<<", EventID: "<<EventID<<std::endl;
 
-        if(event!=-1 && EventID!=event) continue;
+        if( event>0 && EventID!=event) continue;
         if( event==-2 && RecoStatus!=1) continue;
 
         std::cout<<"InvariantMass: "<<InvariantMass<<std::endl;
-        std::cout<<"KELI: "<<KELI<<" KEPion: "<<1000*PionKE<<std::endl;
-        std::cout<<"KEHI: "<<KEHI<<" KEProton: "<<1000*ProtonKE<<std::endl;
-        std::cout<<"CosOpeningAngle: "<<OpeningAngle<<" DecayCosOpeningAngle: "<<std::acos(DecayCosOpeningAngle)*TMath::RadToDeg()<<std::endl;
+        std::cout<<"KELI: "<<KELI<<" KEPion: "<<1000*TruePionKE<<std::endl;
+        std::cout<<"KEHI: "<<KEHI<<" KEProton: "<<1000*TrueProtonKE<<std::endl;
+        std::cout<<"OpeningAngle: "<<OpeningAngle<<" TrueOpeningAngle: "<<180*TrueOpeningAngle/TMath::Pi()<<std::endl;
+        std::cout<<"TrueLambdaE: "<<1000*TrueLambdaE<<" TrueLambdaKE: "<<1000*TrueLambdaKE<<std::endl;
+        std::cout<<"LambdaE: "<<LambdaEnergy<<" LambdaKE: "<<LambdaKE<<std::endl;
+
 
 
         //-------- Canvas
         std::string canvasTitle = "RunID: "+std::to_string(RunID)+", SubRunID: "+std::to_string(SubRunID)+", EventID: "+std::to_string(EventID);
-        TCanvas *c1 = new TCanvas("c1",canvasTitle.c_str(),800,600);
-        TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.52,0.48,0.98);
-        TPad *pad2 = new TPad("pad2","This is pad2",0.02,0.02,0.48,0.48);
-        TPad *pad3 = new TPad("pad3","This is pad3",0.52,0.52,0.98,0.98);
-        TPad *pad4 = new TPad("pad4","This is pad4",0.52,0.02,0.98,0.48);
+        TCanvas *c1 = new TCanvas("c1",canvasTitle.c_str(),1200,650);
+        gStyle->SetPadBottomMargin(0.2);
+        TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.5,0.31,1);
+        TPad *pad2 = new TPad("pad2","This is pad2",0.35,0.5,0.64,1);
+        TPad *pad3 = new TPad("pad3","This is pad3",0.68,0.5,0.98,1);
+        TPad *pad4 = new TPad("pad4","This is pad4",0.02,0.0,0.31,0.5);
+        TPad *pad5 = new TPad("pad5","This is pad5",0.35,0.0,0.64,0.5);
+        TPad *pad6 = new TPad("pad6","This is pad6",0.68,0.0,0.98,0.5);
         pad1->Draw();
         pad2->Draw();
         pad3->Draw();
         pad4->Draw();
+        pad5->Draw();
+        pad6->Draw();
 
 
         //-------- Plot dEdx from TTree
@@ -143,8 +175,8 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
             fTree->Draw("DepositedEnergyHI:ResidualRangeHI>>h_dEdxHI","","colz", 1, i);
 
             // Colors and markers
-            h_dEdxLI->SetMarkerColor(kRed);
-            h_dEdxHI->SetMarkerColor(kBlue);
+            h_dEdxLI->SetMarkerColor(fColorLI);
+            h_dEdxHI->SetMarkerColor(fColorHI);
             h_dEdxLI->SetMarkerStyle(20);
             h_dEdxHI->SetMarkerStyle(20);
             
@@ -169,8 +201,8 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
             fTree->Draw("DepositedChargeHI:ResidualRangeHI>>h_dQdxHI","","colz", 1, i);
 
             // Colors and markers
-            h_dQdxLI->SetMarkerColor(kRed);
-            h_dQdxHI->SetMarkerColor(kBlue);
+            h_dQdxLI->SetMarkerColor(fColorLI);
+            h_dQdxHI->SetMarkerColor(fColorHI);
             h_dQdxLI->SetMarkerStyle(20);
             h_dQdxHI->SetMarkerStyle(20);
 
@@ -211,6 +243,8 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
                 leg->AddEntry(h_dEdxAll.at(j), pidLabel.c_str(),"p");
             }
             leg->Draw("same");
+            // fontsize
+            leg->SetTextSize(0.04);
             h_dEdxAll.at(0)->GetYaxis()->SetTitle("dE/dx [MeV]");
             h_dEdxAll.at(0)->GetXaxis()->SetTitle("Residual Range [cm]");
         }
@@ -218,23 +252,39 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
 
         //-------- Draw SpacePoints
         pad4->cd();
+
+        std::vector<TGraph2D*> graphList;
+        std::vector<int> graphColorList;
+
+        // Global min and max values
+        std::pair<double, double> xMinMaxGlobal = {200, -200};
+        std::pair<double, double> yMinMaxGlobal = {200, -200};
+        std::pair<double, double> zMinMaxGlobal = {500, 0};
+        
+        // Draw AllSpacePoints
+        if(AllSpacePointsX->size()>0){
+            TGraph2D *graphAll = new TGraph2D();
+            addPointsAndCreateGraph(graphAll, *AllSpacePointsZ, *AllSpacePointsX, *AllSpacePointsY);
+            graphAll->SetMarkerColorAlpha(kBlack, 0.5);
+            graphAll->SetMarkerStyle(20);
+            graphAll->Draw("P");
+            graphList.push_back(graphAll);
+            graphColorList.push_back(kBlack);
+
+            // Get min and max values of X, Y and Z
+            std::pair<double, double> xMinMax = getMinMax(*AllSpacePointsX);
+            std::pair<double, double> yMinMax = getMinMax(*AllSpacePointsY);
+            std::pair<double, double> zMinMax = getMinMax(*AllSpacePointsZ);
+            // Update global min and max values
+            xMinMaxGlobal = std::make_pair(std::min(xMinMax.first, xMinMaxGlobal.first), std::max(xMinMax.second, xMinMaxGlobal.second));
+            yMinMaxGlobal = std::make_pair(std::min(yMinMax.first, yMinMaxGlobal.first), std::max(yMinMax.second, yMinMaxGlobal.second));
+            zMinMaxGlobal = std::make_pair(std::min(zMinMax.first, zMinMaxGlobal.first), std::max(zMinMax.second, zMinMaxGlobal.second));
+        }
+
+        // Draw Calo SpacePoints
         std::cout<<" SpacePoints Size: "<<SpacePointsX->size()<<std::endl;
         if(SpacePointsX->size()>0){
-            // Function to get minimum and maximum XYZ values of the vector of vectors
-            auto getMinMax = [](std::vector<double> v){
-                double min = *std::min_element(v.begin(), v.end());
-                double max = *std::max_element(v.begin(), v.end());
-                return std::make_pair(min, max);
-            };
-        
-
-            // Global min and max values
-            std::pair<double, double> xMinMaxGlobal = {200, -200};
-            std::pair<double, double> yMinMaxGlobal = {200, -200};
-            std::pair<double, double> zMinMaxGlobal = {500, 0};
-
-        
-            std::vector<TGraph2D*> graphList;
+            // Graphs
             int graphCounter = 0;
             for(int j=0; j<SpacePointsX->size(); j++){
                 std::cout<<"SpacePointsX size: "<<SpacePointsX->at(j).size()<<std::endl;
@@ -252,16 +302,43 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
                 TGraph2D *graph = new TGraph2D();
                 addPointsAndCreateGraph(graph, SpacePointsZ->at(j), SpacePointsX->at(j), SpacePointsY->at(j));    
                 graphList.push_back(graph);
+                graphColorList.push_back(fColorList.at(j));
             
             }
-
-            TH3F *hFrame = new TH3F("frame",";Z [cm]; X [cm]; Y [cm]", nBins,zMinMaxGlobal.first,zMinMaxGlobal.second, nBins, xMinMaxGlobal.first,xMinMaxGlobal.second, nBins,yMinMaxGlobal.first,yMinMaxGlobal.second);
-            hFrame->Draw();
-            for(int j=0; j<graphList.size(); j++){
-                drawGraph(graphList.at(j), "SpacePoints", fColorList.at(j));
-            }
-            pad4->Update();     
         }
+
+        TH3F *hFrame = new TH3F("frame",";Z [cm]; X [cm]; Y [cm]", nBins,zMinMaxGlobal.first,zMinMaxGlobal.second, nBins, xMinMaxGlobal.first,xMinMaxGlobal.second, nBins,yMinMaxGlobal.first,yMinMaxGlobal.second);
+        hFrame->Draw();
+        for(int j=0; j<graphList.size(); j++){
+            drawGraph(graphList.at(j), "SpacePoints", graphColorList.at(j));
+        }
+        pad4->Update();
+
+        
+        //-------- Draw ZX projections
+        pad5->cd();
+        TH2F *hZX = new TH2F("hZX",";Z [cm]; X [cm]", nBins,zMinMaxGlobal.first,zMinMaxGlobal.second, nBins,xMinMaxGlobal.first,xMinMaxGlobal.second);
+        hZX->Draw();
+        if(AllSpacePointsX->size()>0){
+            TGraph *graphZX = new TGraph(AllSpacePointsZ->size(), &AllSpacePointsZ->at(0), &AllSpacePointsX->at(0));
+            graphZX->SetMarkerColor(kBlack);
+            graphZX->SetMarkerStyle(20);
+            graphZX->Draw("P same");
+        }
+
+        //-------- Draw ZY projections
+        pad6->cd();
+        TH2F *hZY = new TH2F("hZY",";Z [cm]; Y [cm]", nBins,zMinMaxGlobal.first,zMinMaxGlobal.second, nBins,yMinMaxGlobal.first,yMinMaxGlobal.second);
+        hZY->Draw();
+        if(AllSpacePointsZ->size()>0){
+            TGraph *graphZY = new TGraph(AllSpacePointsZ->size(), &AllSpacePointsZ->at(0), &AllSpacePointsY->at(0));
+            graphZY->SetMarkerColor(kBlack);
+            graphZY->SetMarkerStyle(20);
+            graphZY->Draw("P same");
+        }
+
+
+
 
         c1->cd();
         c1->Update();

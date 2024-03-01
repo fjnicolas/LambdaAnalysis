@@ -20,8 +20,14 @@ alias runtpclines='$LAMBDAANA_BUILD/src/RunAlgoTPCLines'
 alias runfrans='$LAMBDAANA_BUILD/src/RunAlgoFRANS'
 alias runHandScan='sh $LAMBDAANA_DIR/scripts/runHandScanEvents.sh'
 alias runHandScan2='sh $LAMBDAANA_DIR/scripts/runHandScanEvents2.sh'
-#alias runLAMBDAANA='sh $LAMBDAANA_DIR/runLAMBDAANA.sh'
-#alias runFRANS='sh $LAMBDAANA_DIR/runFRANS.sh'
+alias loadHypana='root $LAMBDAANA_DIR/src/Analysis/LoadAnalysisMacros.C'
+alias loadLambdaAna='root $LAMBDAANA_DIR/src/Analysis/LoadAnalysisMacros.C'
+alias loadLambdaAna2D='root $LAMBDAANA_DIR/src/Analysis/LambdaPlot2DDistributions.C'
+alias loadLambdaCalo='root $LAMBDAANA_DIR/src/Analysis/PlotCalorimetryDisplay.C'
+alias loadLambdaAnaKinematics='root $LAMBDAANA_DIR/src/Analysis/PlotRecoKinematics.C'
+
+
+
 
 #Search Paths
 export LAMBDAANA_SEARCHPATH=$LAMBDAANA_DIR/scripts:.:$LAMBDAANA_DIR/src/config/
