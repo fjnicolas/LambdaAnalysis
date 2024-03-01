@@ -94,6 +94,10 @@ public:
     double fPionKE;
     bool fHasLambda;
     bool fHasLambdaVDecayed;
+    double fLambdaDecayTransverseMomentum;
+    double fLambdaDecayLongitudinalAsymmetry;
+    double fLambdaBeta;
+    double fLambdaGamma;
 
     // Cosmic rejection
     double fCRUMBSScore;
@@ -220,6 +224,11 @@ public:
     double fRecoGamma;
     double fRecoTauLab;
     double fRecoTau;
+    double fRecoDecayTransverseMomentum;
+    double fRecoDecayLongitudinalAsymmetry;
+    double fRecoDecayTransverseMomentumFromGap;
+    double fRecoDecayLongitudinalAsymmetryFromGap;
+    double fRecoDecayGapAngleDifference;
 
 
 

@@ -844,8 +844,6 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
 
 STriangle TPCLinesAlgo::FillLambdaAnaTree(LambdaAnaTree &lambdaAnaTree){
 
-
-
     // --- Hits for FRANS ---
     std::vector<SHit> allHits = fHitList;
     if(fHitListOutROI.size()>0)

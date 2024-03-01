@@ -106,6 +106,10 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("LambdaKE", &fLambdaKE, readMode);
     SetBranch("ProtonKE", &fProtonKE, readMode);
     SetBranch("PionKE", &fPionKE, readMode);
+    SetBranch("LambdaBeta", &fLambdaBeta, readMode);
+    SetBranch("LambdaGamma", &fLambdaGamma, readMode);
+    SetBranch("LambdaDecayTransverseMomentum", &fLambdaDecayTransverseMomentum, readMode);
+    SetBranch("LambdaDecayLongitudinalAsymmetry", &fLambdaDecayLongitudinalAsymmetry, readMode);
     SetBranch("HasLambda", &fHasLambda, readMode);
     SetBranch("HasLambdaVDecayed", &fHasLambdaVDecayed, readMode);
 
@@ -230,6 +234,11 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("RecoGamma", &fRecoGamma, readMode);
     SetBranch("RecoTauLab", &fRecoTauLab, readMode);
     SetBranch("RecoTau", &fRecoTau, readMode);
+    SetBranch("RecoDecayTransverseMomentum", &fRecoDecayTransverseMomentum, readMode);
+    SetBranch("RecoDecayLongitudinalAsymmetry", &fRecoDecayLongitudinalAsymmetry, readMode);
+    SetBranch("RecoDecayTransverseMomentumFromGap", &fRecoDecayTransverseMomentumFromGap, readMode);
+    SetBranch("RecoDecayLongitudinalAsymmetryFromGap", &fRecoDecayLongitudinalAsymmetryFromGap, readMode);
+    SetBranch("RecoDecayGapAngleDifference", &fRecoDecayGapAngleDifference, readMode);
 
 
     if(readMode==false)
@@ -294,6 +303,10 @@ void LambdaAnaTree::ResetVars(){
     fLambdaKE = -999;
     fProtonKE = -999;
     fPionKE = -999;
+    fLambdaBeta = -999;
+    fLambdaGamma = -999;
+    fLambdaDecayTransverseMomentum = -999;
+    fLambdaDecayLongitudinalAsymmetry = -999;
     fHasLambda = false;
     fHasLambdaVDecayed = false;
 
@@ -409,6 +422,11 @@ void LambdaAnaTree::ResetVars(){
     fRecoGamma = -999;
     fRecoTauLab = -999;
     fRecoTau = -999;
+    fRecoDecayTransverseMomentum = -999;
+    fRecoDecayLongitudinalAsymmetry = -999;
+    fRecoDecayTransverseMomentumFromGap = -999;
+    fRecoDecayLongitudinalAsymmetryFromGap = -999;
+    fRecoDecayGapAngleDifference = -999;
 
     
 
@@ -532,5 +550,6 @@ void LambdaAnaTree::PrintEventInfo() {
         std::cout << " Reco Beta: " << fRecoBeta << std::endl;
         std::cout << " Reco Gamma: " << fRecoGamma << std::endl;
         std::cout << " Reco TauLab: " << fRecoTauLab << " Reco Tau: " << fRecoTau << std::endl;
+
 
     }
