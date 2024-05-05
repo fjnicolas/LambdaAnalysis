@@ -43,7 +43,7 @@ while IFS=' ' read -r line1 line2; do
     #echo "lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1"
     #lar -c run_tpcana_hypana_MC.fcl $fullXRootDPath -e $line1 -n 1
     echo "lar -c $FhiclFile $fullXRootDPath -e $line1 -n 1"
-    lar -c $FhiclFile $fullXRootDPath -e $line1 -n 1 -T debugArtFile.root
+    lar -c $FhiclFile -s $fullXRootDPath -e $line1 -n 1 -T debugArtFile.root
     mv debugArtFile.root "$OutDir/debug_${counter}_${line1}.root"
 
     # Increment counter

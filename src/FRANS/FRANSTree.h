@@ -20,7 +20,9 @@ public:
     void SetTree(TTree* tree, bool readMode);
 
     // Fill functions
-    void FillDataMC(int runID, int subRunID, int eventID, int nnuints, int inttype,  int intmode, double gap, int issignal, double keproton, double kepion, double kelambda);
+    void FillDataMC(int runID, int subRunID, int eventID, int nnuints, int inttype,  int intmode,
+                    double trueVx, double trueVy, double trueVz,
+                    double gap, int issignal, double keproton, double kepion, double kelambda);
     
     void FillData(int view, FRANSObj fransObj);
     
@@ -52,6 +54,9 @@ private:
     double fProtonKE;
     double fPionKE;
     int fIsSignal;
+    double fTrueVx;
+    double fTrueVy;
+    double fTrueVz;
 
     // FRANS objects
     FRANSObj fFRANSObj0;
