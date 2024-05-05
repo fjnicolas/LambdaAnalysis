@@ -42,14 +42,22 @@ void FRANSTree::SetTree(TTree* tree, bool readMode)
 }
 
 
-void FRANSTree::FillDataMC(int runID, int subRunID, int eventID, int nnuints, int inttype,  int intmode, double gap, int issignal, double keproton, double kepion, double kelambda){
+void FRANSTree::FillDataMC( int runID, int subRunID, int eventID, int nnuints, int inttype, int intmode,
+                            double trueVx, double trueVy, double trueVz,
+                            double gap, int issignal, double keproton, double kepion, double kelambda)
+{
     fRunID = runID;
     fSubRunID = subRunID;
     fEventID = eventID;
-
+    
     fNNuInts = nnuints;
     fIntType = inttype;
     fIntMode = intmode;
+
+    fTrueVx = trueVx;
+    fTrueVy = trueVy;
+    fTrueVz = trueVz;
+    
     fGap = gap;
     fIsSignal = issignal;
     fProtonKE=keproton;
@@ -78,6 +86,9 @@ void FRANSTree::InitializeTree(bool readMode)
     SetBranch("NNuInts", &fNNuInts, readMode);
     SetBranch("IntType", &fIntType, readMode);
     SetBranch("IntMode", &fIntMode, readMode);
+    SetBranch("TrueVx", &fTrueVx, readMode);
+    SetBranch("TrueVy", &fTrueVy, readMode);
+    SetBranch("TrueVz", &fTrueVz, readMode);
     SetBranch("Gap", &fGap, readMode);
     SetBranch("IsSignal", &fIsSignal, readMode);
     SetBranch("ProtonKE", &fProtonKE, readMode);
