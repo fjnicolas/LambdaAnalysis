@@ -468,9 +468,10 @@ void STriangle::GetVertexXYZ(double &x, double &y, double &z){
     double minDToVertex = 1e9;
     for(SHit& h:GetAllHits()){
         
+        std::cout<<" XYZ Hit "<<h.SPX()<<" "<<h.SPY()<<" "<<h.SPZ()<<std::endl;
         if(h.SPZ()>0){
             double d = std::hypot( fMainVertex.X() - h.X(), fMainVertex.Y() - h.Y() );
-
+        
             if(d<minDToVertex){
                 minDToVertex = d;
                 x = h.SPX();
