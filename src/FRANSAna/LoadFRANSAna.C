@@ -1,3 +1,4 @@
+#include "FRANSPlotUtils.C"
 #include "MacroCompareROCs.C"
 #include "MacroFRANSTraining.C"
 #include "MacroFRANSEvaluate.C"

@@ -133,9 +133,16 @@ bool PassMinimalCut(LambdaAnaTree lambdaAnaTree, TCut minimalCut){
     }
     else if(cutName.find("AnglePassChargeFit")!=std::string::npos){
         pass = pass && lambdaAnaTree.fAnglePassChargeFit==1;
-        //std::cout<<"AnglePassChargeFit"<<std::endl;
     }
-    
+    else if(cutName.find("AngleGapOverlapWithAPAJuntion")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fAngleGapOverlapWithAPAJuntion<=0.1;
+    }
+    else if(cutName.find("NTracksLI")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fNTracksLI>=1;
+    }
+    else if(cutName.find("NTracksHI")!=std::string::npos){
+        pass = pass && lambdaAnaTree.fNTracksHI>=1;
+    }
 
     return pass;
 }
@@ -405,6 +412,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     float AngleCoveredArea;
     float AngleDirtHits;
     float NUnassociatedHits;
+    float NMaxDirtUnassociatedHits;
     // --- Kinematics
     float AngleDecayContainedDiff;
     float AngleOpeningAngle;
@@ -434,7 +442,9 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     float NShowers;
     float NShowerHits;
     float ShowerEnergy;
-
+    // --- PID
+    float NTracksLI;
+    float NTracksHI;
     // Add variables to the reader
     std::map<std::string, bool> fVarLabels = extractLabels(fWeightFilePath);
     std::cout << "Variables to use:" << std::endl;
@@ -465,6 +475,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     if(fVarLabels["AngleCoveredArea"]==true) fTMVAReader->AddVariable( "AngleCoveredArea", &AngleCoveredArea );
     if(fVarLabels["AngleDirtHits"]==true) fTMVAReader->AddVariable( "AngleDirtHits", &AngleDirtHits );
     if(fVarLabels["NUnassociatedHits"]==true) fTMVAReader->AddVariable( "NUnassociatedHits", &NUnassociatedHits );
+    if(fVarLabels["NMaxDirtUnassociatedHits"]==true) fTMVAReader->AddVariable( "NMaxDirtUnassociatedHits", &NMaxDirtUnassociatedHits );
     // --- Kinematics
     if(fVarLabels["AngleDecayContainedDiff"]==true) fTMVAReader->AddVariable( "AngleDecayContainedDiff", &AngleDecayContainedDiff );
     if(fVarLabels["AngleOpeningAngle"]==true) fTMVAReader->AddVariable( "AngleOpeningAngle", &AngleOpeningAngle );
@@ -494,8 +505,10 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
     if(fVarLabels["NShowers"]==true) fTMVAReader->AddVariable( "NShowers", &NShowers );
     if(fVarLabels["NShowerHits"]==true) fTMVAReader->AddVariable( "NShowerHits", &NShowerHits );
     if(fVarLabels["ShowerEnergy"]==true) fTMVAReader->AddVariable( "ShowerEnergy", &ShowerEnergy );
-
-
+    // --- PID
+    if(fVarLabels["NTracksLI"]==true) fTMVAReader->AddVariable( "NTracksLI", &NTracksLI );
+    if(fVarLabels["NTracksHI"]==true) fTMVAReader->AddVariable( "NTracksHI", &NTracksHI );
+    
 
     // Load the BDT
     fTMVAReader->BookMVA( fMethodName.c_str(), fWeightFilePath.c_str() );
@@ -553,6 +566,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
 
         //bool passMinimalCut = fTree->Draw( "", minimalCut, "goff", 1, ievt)==1;
         bool passMinimalCut = PassMinimalCut(fAnaTreeHandle, minimalCut);
+        //std::cout<<ievt<<" event "<<fAnaTreeHandle.fEventID<<" passMinimalCut: "<<passMinimalCut<<std::endl;
 
         if(passMinimalCut){
             
@@ -580,6 +594,7 @@ void RunEvaluateMVAAnalysis(TTree *fTree, TTree *fTreeHeader, std::string fMetho
             AngleCoveredArea = fAnaTreeHandle.fAngleCoveredArea;
             AngleDirtHits = fAnaTreeHandle.fAngleDirtHits;
             NUnassociatedHits = fAnaTreeHandle.fNUnassociatedHits;
+            NMaxDirtUnassociatedHits = fAnaTreeHandle.fNMaxDirtUnassociatedHits;
             // --- Kinematics
             AngleDecayContainedDiff = fAnaTreeHandle.fAngleDecayContainedDiff;
             AngleOpeningAngle = fAnaTreeHandle.fAngleOpeningAngle;

@@ -2,7 +2,7 @@
 
 
 //--------- Cut definitions
-double fCutCRUMBS = -0.2;
+double fCutCRUMBS = 0.;
 double fCutMinNAngles = 1;
 double fCutFRANS = 0.2;
 double fCutNOrigins = 4;
@@ -21,7 +21,8 @@ std::vector<PlotDef> psLambdaKinematics = {
 
 //---------Volume cuts
 std::string fTruthInFV = "TruthIsFiducial==1 &&";
-std::string fTruthInAV = "abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500 && ";
+//std::string fTruthInAV = "abs(NuvX)<200 && abs(NuvY)<200 && NuvZ>0 && NuvZ<500 && ";
+std::string fTruthInAV = "TruthIsAV && ";
 
 //---------Counter cut
 TCut fCounterCut = "SliceID==0";
@@ -102,31 +103,84 @@ std::vector<PlotDef> cutDefsPIDFull = {
     
     {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}    
-    
+
     // Secondary vertices
-    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# seconday vertices",  "\\ Secondary \\ vertex"}
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# V^{2}-V^{1} pairs",  "V^{2}-V^{1} \\ pairs"}
+
+    // FRANS
+    ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+
+    //PID
+    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "NTracksLI>0 && NTracksHI>0", "PID"}
+    
+    // V characterization
+    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "Sign(Pz)", "Sign(Pz)"}
+    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  2.5, {0, 20, 40}, true, "#Phi [#circ]", "Phi \\ [\\circ]"}
+    ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, true,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
+    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, true, "VTracksRMS [#circ]", "VTracksRMS \\ [\\circ]"}
+    ,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+   
+    //,{"NMaxDirtUnassociatedHits", "(NMaxDirtUnassociatedHits<10 && AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1)", CutType::kCenter, 1, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+   
+    // Additional fiducial volume cuts
+    ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
+    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kLeft,  0.1, {0, 1, 10}, true, "verlapWithAPAJuntion", "OverlapWithAPAJuntion"}
+
+    //PID
+    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "NTracksLI>0 && NTracksHI>0", "NTracksLI>0 \\ \\&\\& \\ NTracksHI>0"}
+
+    ,{"InvariantMass", "InvariantMass", CutType::kCenter, 1115, {1000, 1500, 10}, false, "Invariant Mass [MeV]", "Invariant \\ Mass"}
+
+    ,{"CRUMBSScore",  "CRUMBSScore",         CutType::kNone,   fCutCRUMBS, {-1,1,20}, true, "CRUMBSScore",  "CRUMBSScore"}
+};
+
+
+std::vector<PlotDef> cutDefsCol = {
+    
+    {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
+    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}    
+
+    // Secondary vertices
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# V^{2}-V^{1} pairs",  "V^{2}-V^{1} \\ pairs"}
 
     // FRANS
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
 
     // V characterization
-    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "AnglePzSign", "AnglePzSign"}
-    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  2.5, {0, 20, 40}, true, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
+    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "Sign(Pz)", "Sign(Pz)"}
+    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  2.5, {0, 20, 40}, true, "#Phi [#circ]", "Phi \\ [\\circ]"}
     ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, true,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
     ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, true, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
     ,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
-
    
     // Additional fiducial volume cuts
     ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
-    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kLeft,  0.1, {0, 1, 10}, true, "AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion"}
+    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kLeft,  0.1, {0, 1, 10}, true, "verlapWithAPAJuntion", "OverlapWithAPAJuntion"}
+}; 
 
-    //PID
-    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "NTracksLI>0 && NTracksHI>0", "NTracksLI>0 \\ \\&\\& \\ NTracksHI>0"}
 
+std::vector<PlotDef> cutDefsInd = {
     
+    {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
+    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}    
 
-    ,{"InvariantMass", "InvariantMass", CutType::kCenter, 1115, {1000, 1500, 10}, false, "Invariant Mass [MeV]", "Invariant \\ Mass"}
+    // Secondary vertices
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# V^{2}-V^{1} pairs",  "V^{2}-V^{1} \\ pairs"}
+
+    // FRANS
+    //,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
+    ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, 0.1, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score" }
+    
+    // V characterization
+    //,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, true, "Sign(Pz)", "Sign(Pz)"}
+    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  2.5, {0, 20, 40}, true, "#Phi [#circ]", "Phi \\ [\\circ]"}
+    ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, true,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
+    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, true, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
+    ,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, true, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+   
+    // Additional fiducial volume cuts
+    ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, true, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
+    //,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kLeft,  0.1, {0, 1, 10}, true, "verlapWithAPAJuntion", "OverlapWithAPAJuntion"}
 }; 
 
 
@@ -134,56 +188,43 @@ std::vector<PlotDef> cutDefsPID = {
     
     {"TruthIsFiducial || (IntOrigin==2 || IntDirt==1) ",  "TruthIsFiducial || (IntOrigin==2 || IntDirt==1)", CutType::kCenter, 1, {0,2,2}, true, "Truth in FV",  "Truth \\ in \\ FV"}
     ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
+    
+    ,{"CRUMBSScore",  "CRUMBSScore",         CutType::kNone,   fCutCRUMBS, {-1,1,20}, true, "CRUMBSScore",  "CRUMBSScore"}
 
     // Pre FRANS (all events)
     ,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kNone, fCutFRANSPANDORA, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score", true}
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, false, "FRANS score", "FRANS \\ score"}
     
     // Secondary vertices
-    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# seconday vertices",  "\\ Secondary \\ vertex"}
+    ,{"NAngles", "NAngles", CutType::kRight, 1, {0, 10, 10}, true,  "# V^{2}-V^{1} pairs",  "V^{2}-V^{1} \\ pairs"}
 
     // FRANS
     //,{"FRANSScorePANDORA", "FRANSScorePANDORA", CutType::kRight, fCutFRANSPANDORA, {-.5,.5,40}, true, "FRANS score PANDORA", "FRANS \\ score \\ PANDORA"}
     ,{"AngleFRANSScore", "AngleFRANSScore", CutType::kRight, fCutFRANS, {-.5,.5,40}, true, "FRANS score", "FRANS \\ score"}
 
-    // V characterization
-    ,{"AnglePzSign", "AnglePzSign", CutType::kRight,  1, {-4, 4, 8}, false, "AnglePzSign", "AnglePzSign"}
-    ,{"AngleDecayContainedDiff", "AngleDecayContainedDiff", CutType::kLeft,  2.5, {0, 20, 40}, false, "#Delta OpeningAngle [#circ]", "DeltaOpeningAngle"}
-    ,{"NUnOrigins", "NUnOrigins", CutType::kLeftInt, 0, {0, 15, 15}, false,  "# extra vertices ",  "\\#  \\ extra \\ vertices"}    
-    ,{"AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS", CutType::kLeft, 50, {0, 360, 36}, false, "AngleResidualRangeMaxAngleRMS", "AngleResidualRangeMaxAngleRMS"}
-    ,{"NMaxDirtUnassociatedHits", "NMaxDirtUnassociatedHits", CutType::kLeft, 10, {0, 400, 40}, false, "# unassociated hits", "\\# \\ unassociated \\ hits"}
+    //PID
+    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "PID", "PID"}
 
     // Joint topological cut
-    ,{"AnglePzSign>=1 && AngleDecayContainedDiff<=1. && NUnOrigins<=0 && AngleResidualRangeMaxAngleRMS<=50 && AngleLengthMainTrack>=10 && NMaxDirtUnassociatedHits<=10", 
-    "(AnglePzSign>=1 && AngleDecayContainedDiff<=1. && NUnOrigins<=0 && AngleResidualRangeMaxAngleRMS<=50 && AngleLengthMainTrack>=10 && NMaxDirtUnassociatedHits<=10)", CutType::kCenter, 1, {0, 2, 2}, true, "V characterization", "V characterization"}
-
+    ,{"AnglePzSign>=1 && AngleDecayContainedDiff<=2.5 && NUnOrigins<=0 && AngleResidualRangeMaxAngleRMS<=50 && NMaxDirtUnassociatedHits<=10 && AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1", 
+    "(AnglePzSign>=1 && AngleDecayContainedDiff<=2.5 && NUnOrigins<=0 && AngleResidualRangeMaxAngleRMS<=50 && NMaxDirtUnassociatedHits<=10 && AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1)", CutType::kCenter, 1, {0, 2, 2}, true, "V characterization", "V characterization"}
 
     // Additional fiducial volume cuts
-    ,{"AngleLengthMainTrack", "AngleLengthMainTrack", CutType::kRight,  10, {0, 300, 60}, false, "Main track length [cm]", "Main \\ track \\ length \\ [cm]"}
-    ,{"AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion", CutType::kLeft,  0.1, {0, 1, 10}, false, "AngleGapOverlapWithAPAJuntion", "AngleGapOverlapWithAPAJuntion"}
-    // Joint additional fiducial volume cut
-    ,{"AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1", "(AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1)", CutType::kCenter, 1, {0, 2, 2}, true, "Fiducial cut", "Fiducial \\ cut"}
-    
-    //PID
-    ,{"NTracksLI", "NTracksLI", CutType::kRight, 1, {0, 5, 5}, false, "# tracks LI", "\\# \\ tracks \\ LI"}
-    ,{"NTracksHI", "NTracksHI", CutType::kRight, 1, {0, 5, 5}, false, "# tracks HI", "\\# \\ tracks \\ HI"}
-    ,{"NTracksLI>=1 && NTracksHI>=1", "(NTracksLI>=1 && NTracksHI>=1)", CutType::kCenter, 1, {0, 2, 2}, true, "NTracksLI>0 && NTracksHI>0", "NTracksLI>0 \\ \\&\\& \\ NTracksHI>0"}
+    //,{"AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1", "(AngleLengthMainTrack>=10 && AngleGapOverlapWithAPAJuntion<=0.1)", CutType::kCenter, 1, {0, 2, 2}, true, "Fiducial cut 2", "Fiducial \\ cut \\ 2"}
 
-    
-
+    //,{"CRUMBSScore",  "CRUMBSScore",         CutType::kRight,   fCutCRUMBS, {-1,1,20}, true, "CRUMBSScore",  "CRUMBSScore"}    
     ,{"InvariantMass", "InvariantMass", CutType::kCenter, 1115, {1000, 1500, 10}, false, "Invariant Mass [MeV]", "Invariant \\ Mass"}
-    
 }; 
 
 
 // --------- CUTS TO PLOT ORIGINS DISTRIBUTIONS ------------
 std::vector<PlotDef> cutDefsOriginsDistributions = {
-    {"TruthIsFiducial",  "0==0",            CutType::kNone,   0, {0,2,2}, true, "Truth in FV",  "No \\ cut"}
-    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0,2,2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
-    ,{"NOrigins",        "NOrigins",        CutType::kNone,  fCutNOrigins,   {0, 5,  5}, false, "# vertices",        "\\#  \\ vertices", true}
-    ,{"NOriginsMult1",    "NOriginsMult1",        CutType::kNone,  fCutNOrigins,   {0, 5, 5}, false, "# vertices multiplicity 1", "\\#  \\ vertices \\ mult \\ 1", true}
-    ,{"NOriginsMult2",    "NOriginsMult2",        CutType::kNone,  fCutNOrigins,   {0, 5, 5}, false, "# vertices multiplicity 2", "\\#  \\ vertices \\ mult \\ 2", true}  
-    ,{"NOriginsMultGT3", "NOriginsMultGT3", CutType::kNone,  fCutNOriginsM3, {0, 5, 5}  , true, "# vertices mult > 3", "\\# \\ vertices \\ mult \\ \\ > \\ 3", true}
+    {"TruthIsFiducial",   "0==0",            CutType::kNone,   0, {0, 2, 2}, true, "Truth in FV",  "No \\ cut"}
+    ,{"RecoIsFiducial",   "RecoIsFiducial",  CutType::kCenter, 1, {0, 2, 2}, true, "Reco in FV",   "Reco \\ in \\ FV"}
+    ,{"NOrigins",         "NOrigins",        CutType::kNone,   0, {0, 5, 5}, false, "# V",         "\\#  \\ vertices", true}
+    ,{"NOriginsMult1",    "NOriginsMult1",   CutType::kNone,   0, {0, 5, 5}, false, "# V^{1}",     "\\#  \\ vertices \\ mult \\ 1", true}
+    ,{"NOriginsMult2",    "NOriginsMult2",   CutType::kNone,   0, {0, 5, 5}, false, "# V^{2}",     "\\#  \\ vertices \\ mult \\ 2", true}  
+    ,{"NOriginsMultGT3",  "NOriginsMultGT3", CutType::kNone,   0, {0, 5, 5}, false, "# V^{>=3}",   "\\# \\ vertices \\ mult \\ \\ > \\ 3", true}
 };
 
 
@@ -285,17 +326,30 @@ std::vector<PlotDef> cutDefsRepository = {
 };
 
 //--------- SIGNAL AND BG DEFINITIONS REPOSITORY ------------
-std::vector<SampleDef> sampleDefsRepository = {
-    {fTruthInAV+"IntOrigin==1 && IntDirt==0 && (IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "Signal", true, "Signal"}
-    ,{fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)!=12)", "BG  #nu", false, "BG \\ \nu"}
-    //,{"IntOrigin==2 || IntDirt==1", "Dirt+Cosmic", false}
-    //,{"IntOrigin==1 && IntDirt==1", "Dirt", false}
-    //,{"IntOrigin==2", "Cosmic", false}
-    /*,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
-    ,{fTruthInFV+"IntMode==1 && abs(IntNuPDG)!=12", "RES", false}
-    ,{fTruthInFV+"IntMode==2 && abs(IntNuPDG)!=12", "DIS", false}
-    ,{fTruthInFV+"(IntMode==3 || IntMode==10) && abs(IntNuPDG)!=12", "COH and MEC", false}
-    ,{fTruthInFV+"abs(IntNuPDG)==12", "NuE", false} */
-    //,{fTruthInFV+"IntNLambda==0 && IntMode==0 && abs(IntNuPDG)!=12", "QE", false}
-    //,{fTruthInFV+"IntMode==1 && abs(IntNuPDG)!=12", "RES", false}
-};
+std::string fLambdaQE = "(IntNLambda>0 && IntMode==0)";
+std::string fLambdaQENuMu = "(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)==14)";
+std::string fLambdaQENuE = "(IntNLambda>0 && IntMode==0 && abs(IntNuPDG)==12)";
+// -- Lambda QE
+SampleDef fSaLambdaQENuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && "+fLambdaQENuMu, "Signal", true, "Signal");
+SampleDef fSaLambdaQENuE(fTruthInAV+"IntOrigin==1 && IntDirt==0 && "+fLambdaQENuE, "#Lambda QE #bar{#nu}_{e}", false, "Lambda QE NuE");
+SampleDef fSaLambdaNoSignal(fTruthInAV+"IntOrigin==1 && IntDirt==0 && IntNLambda>0 && !"+fLambdaQENuMu, "#Lambda Inclusive", false, "Lambda Inclusive");
+SampleDef fSaLambdaResNuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && IntNLambda>0 && IntMode==1 && abs(IntNuPDG)==14", "#Lambda Res #bar{#nu}_{#mu}", false, "Lambda Res NuMu");
+SampleDef fSaLambdaDisNuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && IntNLambda>0 && IntMode==2 && abs(IntNuPDG)==14", "#Lambda Dis #bar{#nu}_{#mu}", false, "Lambda Dis NuMu");
+SampleDef fSaLambdaCohMecNuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && IntNLambda>0 && (IntMode==3 || IntMode==10) && abs(IntNuPDG)==14", "#Lambda CohMec #bar{#nu}_{#mu}", false, "Lambda CohMec NuMu");
+// -- BNB inclusive
+SampleDef fSaBNBInclusive(fTruthInAV+"IntOrigin==1 &&  IntDirt==0 && !"+fLambdaQENuMu, "BG  #nu", false, "BG BNB");
+SampleDef fSaBNBInclusiveNoLambda(fTruthInAV+"IntOrigin==1 && IntDirt==0 && IntNLambda==0", "BG  #nu", false, "BG BNB");
+// -- Dirt
+SampleDef fSaDirt("IntOrigin==1 && IntDirt==1", "Dirt", false, "Dirt");
+// -- Cosmic
+SampleDef fSaCosmic("IntOrigin==2", "Cosmic", false, "Cosmic");
+// -- Dirt and Cosmics
+SampleDef fSaCosmicDirt("IntOrigin==2 || IntDirt==1", "Dirt+cosmic", false, "Dirt+Cosmic");
+// --- BNB (exclusive)
+// QE
+SampleDef fSaBNBQENuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && abs(IntNuPDG)==14 && IntDirt==0 && IntMode==0 && !"+fLambdaQENuMu, "BNB #nu_{#mu} QE", false, "BNB NuMu QE");
+SampleDef fSaBNBResNuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && abs(IntNuPDG)==14 && IntDirt==0 && IntMode==1", "BNB #nu_{#mu} Res", false, "BNB NuMu Res");
+SampleDef fSaBNBDisNuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && abs(IntNuPDG)==14 && IntDirt==0 && IntMode==2", "BNB #nu_{#mu} Dis", false, "BNB NuMu Dis");
+SampleDef fSaBNBCohMecNuMu(fTruthInAV+"IntOrigin==1 && IntDirt==0 && abs(IntNuPDG)==14 && IntDirt==0 && (IntMode==3 || IntMode==10)", "BNB #nu_{#mu} CohMec", false, "BNB NuMu CohMec");
+SampleDef fSaBNBNuE(fTruthInAV+"IntOrigin==1 && IntDirt==0 && abs(IntNuPDG)==12", "BNB #nu_e", false, "BNB NuE");
+

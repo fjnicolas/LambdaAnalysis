@@ -80,8 +80,8 @@ void TPCLinesDisplay::DrawLine(LineEquation line, double xmin, double xmax, TLeg
         leg->AddEntry(horizontalLine, label.c_str(), "l");
 }
 
-void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std::string label, int color, int style, double size, double errorAlpha, bool markerByCluster){
-
+void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std::string label, int color, int style, double size, double errorAlpha, bool markerByCluster, bool addClusterIDLabels){
+    
     if(hitsV.size()>0){
         // map with vector of hits by ClusterID
         std::map<int, std::vector<SHit>> hitMap;
@@ -92,6 +92,7 @@ void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std
                 hitMap[hitsV[ix].ClusterId()].push_back(hitsV[ix]);
         }
 
+        int clusterCounter = 0;
         for(auto & cluster:hitMap){
             std::vector<SHit> hits = cluster.second;
             std::vector<double> x, y, err;
@@ -109,8 +110,15 @@ void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std
             g->SetLineColorAlpha(kGray, errorAlpha);
             g->Draw("p");
             
-            if(label!="" && cluster.first<=0)
-                leg->AddEntry(g, label.c_str(), "p");
+            if(!addClusterIDLabels){
+                if(label!="" && clusterCounter==0)
+                    leg->AddEntry(g, label.c_str(), "p");
+            }
+            else{
+                leg->AddEntry(g, ("Cluster "+std::to_string(cluster.first)).c_str(), "p");
+            }
+
+            clusterCounter++;
         }
     }
 
@@ -241,15 +249,16 @@ void TPCLinesDisplay::Show(
     }
 
     // all hits scatter
-    DrawHitScatter(allHitsV, legend, "AllHits", 65, 8, 1.5, 0.6, true);
+    bool addClusterIDLabels = clustersV.size()>0? false:true;
+    DrawHitScatter(allHitsV, legend, "AllHits", 65, 8, 1.5, 0.6, true, addClusterIDLabels);
     
     // selected hits
     if(selectedHitsV.size()!=0){
         // selected hits scatter
-        DrawHitScatter(selectedHitsV, legend, "HoughHits", kRed, 24, 1.1, 0);
+        DrawHitScatter(selectedHitsV, legend, "Selected hits", kRed, 24, 1.1, 0);
 
         // hough line
-        DrawLine(houghLine, hFrame->GetXaxis()->GetXmin(), hFrame->GetXaxis()->GetXmax(), legend, "Hough line", kBlack, kDashed);
+        DrawLine(houghLine, hFrame->GetXaxis()->GetXmin(), hFrame->GetXaxis()->GetXmax(), legend, "Track line", kBlack, kDashed);
     }
    
     // linear clusters

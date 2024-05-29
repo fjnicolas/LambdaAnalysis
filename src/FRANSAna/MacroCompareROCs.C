@@ -7,6 +7,8 @@
 
 std::vector<int> colors = {kAzure-3, kOrange+7, kRed, kGreen+3, kMagenta, kBlack, kBlue, kOrange, kRed+2, kGreen+2, kMagenta+2, kBlack+2, kBlue+2, kOrange-3, kRed-3, kGreen-3, kMagenta-3, kBlack-3, kBlue-3, kOrange-6, kRed-6, kGreen-6, kMagenta-6, kBlack-6, kBlue-6, kOrange-9, kRed-9, kGreen-9, kMagenta-9, kBlack-9, kBlue-9};
 
+std::vector<int> lines = {1, 2, 3, 4, 5, 6, 7, 8};
+
 //std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsNew2.root", "TMVAResultsFinal/TMTMVAResultsNew4.root", "TMVAResultsFinal/TMTMVAResultsOld.root", "TMVAResultsFinal/TMTMVAResultsNew4NoAlpha.root"}; std::vector<std::string> myLabels = {"New2", "New4", "Old", "New4 no alpha"};
 
 //std::vector<std::string> myFiles = {"TMVAResultsFinal/TMTMVAResultsResNew4Alpha.root", "TMVAResultsFinal/TMTMVAResultsResNew4NoAlpha.root", "TMVAResultsFinal/TMTMVAResultsResOld.root"};
@@ -19,6 +21,19 @@ std::vector<int> colors = {kAzure-3, kOrange+7, kRed, kGreen+3, kMagenta, kBlack
 
 /*std::vector<std::string> myFiles = {"TMTMVAResults_C.root", "TMTMVAResults_C_Reco.root", "TMTMVAResults_C_WithWidth.root", "TMTMVAResults_C_Iota.root", "TMTMVAResults_C_NoAlpha.root", "TMTMVAResults_C_WithWidthIota.root", "TMTMVAResults_C_WithWidthIota_Inclusive.root"};
 std::vector<std::string> myLabels = {"C", "C Reco", "C wWidth", "C Iota", "C NoAlpha", "C wWidthIota", "C wWidthIota Inclusive"};*/
+
+
+TString GetLabel(std::string label){
+    
+    // replace eta, delta, alpha, iota, fitscore
+    if (label.find("Eta") != std::string::npos) label.replace(label.find("Eta"), 3, ": #eta");
+    if (label.find("Delta") != std::string::npos) label.replace(label.find("Delta"), 5, ": #Delta");
+    if (label.find("Alpha") != std::string::npos) label.replace(label.find("Alpha"), 5, ": #alpha");
+    if (label.find("Iota") != std::string::npos) label.replace(label.find("Iota"), 4, ": #iota");
+    if (label.find("FitScore") != std::string::npos) label.replace(label.find("FitScore"), 8, ": FitScore");
+
+    return label.c_str();
+}
 
 
 void CompareROCCurves(std::string path="./", std::string keyLabel="") {
@@ -43,7 +58,6 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
                 label.erase(0, 11);
                 label.erase(label.size()-5, label.size());
                 fileMap[label] = fname.Data();
-                std::cout<<label<<" "<<fname.Data()<<std::endl;
             }
         }
     }
@@ -73,7 +87,13 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
             roc = (TH1F*)file1->Get(fPlotName.c_str());
             rocs[it->first] = roc;
         }
-        else{
+        else if(it->first.find("Cuts") != std::string::npos) {
+            std::cout<<"Cuts"<<std::endl;
+            fPlotName = "dataset/Method_Cuts/Cuts/MVA_Cuts_rejBvsS";
+            roc = (TH1F*)file1->Get(fPlotName.c_str());
+            rocs[it->first] = roc;
+        }
+        else if(it->first.find("BDT") != std::string::npos) {
             std::cout<<"BDT"<<std::endl;
             fPlotName = "dataset/Method_BDT/BDT/MVA_BDT_rejBvsS";
             roc = (TH1F*)file1->Get(fPlotName.c_str());
@@ -81,7 +101,7 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
         }
     }
 
-    TH2F hFrame("hFrame", "ROC Comparison;Signal efficiency; BG rejection", 500, 0, 1, 500, 0, 1);
+    TH2F hFrame("hFrame", ";Signal efficiency; BG rejection", 500, 0, 1, 500, 0, 1);
     hFrame.SetStats(0);
     hFrame.Draw();
     hFrame.GetXaxis()->SetTitleOffset(1.2);
@@ -93,11 +113,13 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
     for (auto it = rocs.begin(); it != rocs.end(); ++it) {
 
         rocs[it->first]->SetLineColor(colors.at(rocCounter));
+        rocs[it->first]->SetLineStyle(lines.at(rocCounter));
         rocs[it->first]->SetLineWidth(3);
         rocs[it->first]->Draw("L SAME");        
 
         std::cout<<it->first<<" "<<it->second->Integral()<<std::endl;
-        legend->AddEntry(it->second, it->first.c_str(), "l");
+        std::cout<<GetLabel(it->first)<<std::endl;
+        legend->AddEntry(it->second, GetLabel(it->first), "l");
         legend->Draw();
         rocCounter++;
     }

@@ -541,8 +541,6 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
             TCut sampelCut(fIntTypes[j].GetVar());
             std::string plotLabel = "hAux2D";
 
-             // --- Interaction type
-            std::cout<<j<<" "<<sampelCut<<std::endl;
             // --- Draw distribution
             pad1->cd();
             fTree->Draw( (fPlotDef.GetVarS()+">>"+std::to_string(fPlotIndex)+"_"+std::to_string(j)).c_str(), sampelCut && currentCut );
@@ -584,12 +582,20 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     plotLabel = "hCounter"+std::to_string(fPlotIndex);
     TH1F *hCounter = new TH1F( plotLabel.c_str(), plotAxisLabels.c_str(), 1, 0, 1);
 
-    TLegend *legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+    double legX1 = 0.6;
+    double legX2 = 0.9;
+    double legY1 = 0.6;
+    double legY2 = 0.9;
+    TLegend *legend = new TLegend(legX1, legY1, legX2, legY2);
+    legend->SetLineColorAlpha(0, 0);
+    legend->SetFillColorAlpha(0, 0);
        
     padV[1]->cd();
     hAux->Draw();
-    int maxVal=0;
-    int maxValInt=0;
+    double maxVal=0;
+    double maxValInt=0;
+    double minVal=1000000;
+    double minValInt=0;
 
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         
@@ -621,7 +627,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
                 fHistCumulativeV[intTypeLabel] = (TH1F*)fHistV[intTypeLabel]->GetCumulative(false);
             }
             else{
-                fHistCumulativeV[intTypeLabel] = (TH1F*)fHistV[intTypeLabel]->GetCumulative();
+                fHistCumulativeV[intTypeLabel] = (TH1F*)fHistV[intTypeLabel]->GetCumulative(false);
             }
         }
         else{
@@ -629,20 +635,16 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
                 fHistCumulativeV[intTypeLabel] = (TH1F*)fHistV[intTypeLabel]->GetCumulative();
             }
             else{
-                fHistCumulativeV[intTypeLabel] = (TH1F*)fHistV[intTypeLabel]->GetCumulative(false);
+                fHistCumulativeV[intTypeLabel] = (TH1F*)fHistV[intTypeLabel]->GetCumulative();
             }
         }
 
 
-
-        padV[1]->cd();
         // --- Get counts
+        padV[1]->cd();
         plotLabel = "hCounter"+std::to_string(fPlotIndex);
         fTree->Draw( ("0>>"+plotLabel).c_str(), fIntTypes[j].GetWeight()*TCut(sampelCut && currentCut && fPlotDef.GetCut()), "hist");
-        std::cout<<hCounter->Integral()<<std::endl;
         fCountsV[intTypeLabel] = hCounter->Integral();
-        //fCountsV[intTypeLabel] = fTree->Draw( "", "4"*TCut(sampelCut && currentCut && fPlotDef.GetCut()), "hist").GetIntegral();
-        //fCountsV[intTypeLabel] = fTree->Draw( "", "4*RecoIsFiducial", "goff");
 
 
         // --- Set styles
@@ -670,6 +672,11 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
         if(fHistV[intTypeLabel]->GetMaximum()>maxVal){
             maxVal = fHistV[intTypeLabel]->GetMaximum();
             maxValInt = fHistV[intTypeLabel]->Integral();
+        }
+
+        if(fHistV[intTypeLabel]->GetMinimum(0)<minVal){
+            minVal = fHistV[intTypeLabel]->GetMinimum(0);
+            minValInt = fHistV[intTypeLabel]->Integral();
         }
 
         // --- Draw phase space
@@ -700,51 +707,50 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
     // ------ Draw histograms ------ 
     padV[1]->cd();
-
-    hAux->SetStats(0);
-    // check hAux number of bins is the same as the range of the plot
-    if( std::abs( fPlotDef.GetBins().GetX1()-fPlotDef.GetBins().GetX2() ) == fPlotDef.GetBins().GetNBins()){
-        hAux->SetNdivisions(hAux->GetXaxis()->GetNbins());
-    }
-    legend->SetFillColorAlpha(0, 0);
-    
     bool fNormalize = fPlotDef.GetNormalize();
-    if(fNormalize)
-        hAux->GetYaxis()->SetRangeUser(0.,  1.1*(1.*maxVal/maxValInt));
-    else
-        hAux->GetYaxis()->SetRangeUser(0., maxVal*1.1);
-    hAux->Draw();
-
+    
+    // Frame histogram
+    plotLabel = "hAuxFrame"+std::to_string(fPlotIndex);
+    double frameYMin = fNormalize? 0.9*(1.*minVal/minValInt):0;
+    double frameYMax = fNormalize? 1.1*(1.*maxVal/maxValInt):maxVal*1.1;
+    TH2F *hAuxFrame = new TH2F( plotLabel.c_str(), plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2(), 100, frameYMin, frameYMax);
+    hAuxFrame->SetStats(0);
+    hAuxFrame->Draw();
+    
+    // Draw histograms
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
-        if(fNormalize){
+        if(fNormalize)
             fHistV[fIntTypes[j].GetLabelS()]->Scale(1./fHistV[fIntTypes[j].GetLabelS()]->Integral());
-        }
-        std::cout<<"Integral "<<fHistV[fIntTypes[j].GetLabelS()]->Integral()<<std::endl;
         fHistV[fIntTypes[j].GetLabelS()]->Draw("same hist");
     }
     
-
+    // Legend and vertical lines
     DrawVerticalLineWithArrow( fPlotDef.GetCutValue(), hAux->GetXaxis()->GetXmin(),  hAux->GetXaxis()->GetXmax(), 0, maxVal*1.1, fPlotDef.GetCutType() );
+    legend->SetFillColorAlpha(0, 0);
     legend->Draw("same");
-   
+
+    // ------ Draw histograms (log) ------ 
     padV[2]->cd();
-    hAux->Draw();
-    if(fNormalize)
-        hAux->GetYaxis()->SetRangeUser(0.005, 1.1*(1.*maxVal/maxValInt));
-    else
-        hAux->GetYaxis()->SetRangeUser(0.5, maxVal*1.1);
+
+    // Frame histogram and log scale
+    hAuxFrame->Draw();
     padV[2]->SetLogy();
+
+    // Draw histograms
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         fHistV[fIntTypes[j].GetLabelS()]->Draw("same hist");
     }
+    
+    // Legend and vertical lines
     DrawVerticalLineWithArrow( fPlotDef.GetCutValue(), hAux->GetXaxis()->GetXmin(),  hAux->GetXaxis()->GetXmax(), 0, maxVal*1.1, fPlotDef.GetCutType() );
+    legend->SetFillColorAlpha(0, 0);
     legend->Draw("same"); 
     
 
     // ------ Draw efficiency curves ------ 
     padV[3]->cd();
     hAuxEff->GetYaxis()->SetRangeUser(-0.1, 101);
-    hAuxEff->GetYaxis()->SetTitle("Efficiency [%]");
+    hAuxEff->GetYaxis()->SetTitle("#varepsilon [%]");
     hAuxEff->SetStats(0);
     hAuxEff->Draw();
 
@@ -775,7 +781,9 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     }
 
     // Legend for significance
-    TLegend *legendSig = new TLegend(0.7, 0.7, 0.9, 0.9);
+    TLegend *legendSig = new TLegend(legX1, legY1, legX2, legY2);
+    legendSig->SetLineColorAlpha(0, 0);
+    legendSig->SetFillColorAlpha(0, 0);
 
     // now draw all the other backgrounds
     // vector to store TGrapsh
@@ -790,7 +798,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
             std::vector<double> x;
             std::vector<double> y;
             for (int i = 1; i <= fPlotDef.GetBins().GetNBins(); i++) {
-                double binValueBG = (100-fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i));
+                double binValueBG = (fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i));
                 double binValueSignal = hAuxSigSignal->GetBinContent(i);
                 double binCenter = fHistV[fIntTypes[j].GetLabelS()]->GetBinCenter(i);
                 if(binValueBG>0){
@@ -831,73 +839,74 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     padV[4]->Update();
 
     // ------ Draw ROC curve ------ 
-    padV[5]->cd();
+    bool fDrawROC = false;
+    if(fDrawROC){
+        padV[5]->cd();
 
-    // TH1 to sotre the signal
-    TH1F *hAuxEffSignal = new TH1F("hAuxEffSignal", plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
-    for (size_t j = 0; j < fIntTypes.size(); ++j) {
-        if(fIntTypes[j].IsSignal()){
-            hAuxEffSignal->Add(fHistCumulativeV[fIntTypes[j].GetLabelS()]);
-        }
-    }
-
-    TH1F *hAuxROC = new TH1F("hAuxROC", "ROC;;", 200, 0, 100);
-    hAuxROC->SetStats(0);
-    hAuxROC->GetXaxis()->SetTitle("Signal efficiency [%]");
-    hAuxROC->GetYaxis()->SetTitle("BG rejection [%]");
-    hAuxROC->GetYaxis()->SetRangeUser(-0.1, 101);
-    hAuxROC->Draw();
-
-    std::vector<TGraph*> grVROC;
-    for (size_t j = 0; j < fIntTypes.size(); ++j) {
-
-        if(!fIntTypes[j].IsSignal()){
-            //create x and y vectors and loop over bins, add signal/sqrt(bg)
-            std::vector<double> x;
-            std::vector<double> y;
-            for (int i = 1; i <= fPlotDef.GetBins().GetNBins(); i++) {
-                double binValueBG = (fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i));
-                double binValueSignal = hAuxEffSignal->GetBinContent(i);
-                
-                if(binValueBG>0){
-                    x.push_back(binValueSignal);
-                    y.push_back(binValueBG);
-                }
+        // TH1 to sotre the signal
+        TH1F *hAuxEffSignal = new TH1F("hAuxEffSignal", plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
+        for (size_t j = 0; j < fIntTypes.size(); ++j) {
+            if(fIntTypes[j].IsSignal()){
+                hAuxEffSignal->Add(fHistCumulativeV[fIntTypes[j].GetLabelS()]);
             }
-
-            // create TGraph
-            TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
-            gr->SetLineColor(fStyler->GetColor(j));
-            gr->SetLineWidth(2);
-            gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-            gr->SetMarkerColor(fStyler->GetColor(j));
-            gr->SetMarkerSize(1);
-            gr->SetLineStyle(fStyler->GetLineStyle(j));
-
-            grVROC.push_back(gr);   
         }
-    }
-    hAuxROC->Draw();
-    legend->Draw("same");
 
-    for (size_t j = 0; j < grVROC.size(); ++j) {
-        grVROC[j]->Draw("same l");
-    }
-    padV[5]->Update();
+        TH1F *hAuxROC = new TH1F("hAuxROC", "ROC;;", 200, 0, 100);
+        hAuxROC->SetStats(0);
+        hAuxROC->GetXaxis()->SetTitle("Signal efficiency [%]");
+        hAuxROC->GetYaxis()->SetTitle("BG rejection [%]");
+        hAuxROC->GetYaxis()->SetRangeUser(-0.1, 101);
+        hAuxROC->Draw();
 
+        std::vector<TGraph*> grVROC;
+        for (size_t j = 0; j < fIntTypes.size(); ++j) {
+
+            if(!fIntTypes[j].IsSignal()){
+                //create x and y vectors and loop over bins, add signal/sqrt(bg)
+                std::vector<double> x;
+                std::vector<double> y;
+                for (int i = 1; i <= fPlotDef.GetBins().GetNBins(); i++) {
+                    double binValueBG = (fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i));
+                    double binValueSignal = hAuxEffSignal->GetBinContent(i);
+                    
+                    if(binValueBG>0){
+                        x.push_back(binValueSignal);
+                        y.push_back(binValueBG);
+                    }
+                }
+
+                // create TGraph
+                TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
+                gr->SetLineColor(fStyler->GetColor(j));
+                gr->SetLineWidth(2);
+                gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
+                gr->SetMarkerColor(fStyler->GetColor(j));
+                gr->SetMarkerSize(1);
+                gr->SetLineStyle(fStyler->GetLineStyle(j));
+
+                grVROC.push_back(gr);   
+            }
+        }
+        hAuxROC->Draw();
+        legend->Draw("same");
+
+        for (size_t j = 0; j < grVROC.size(); ++j) {
+            grVROC[j]->Draw("same l");
+        }
+        padV[5]->Update();
+    }
 
     // ------ Draw purity curve ------
     padV[6]->cd();
     TH1F *hAuxPurity = new TH1F("hAuxPurity", plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
     hAuxPurity->SetStats(0);
-    hAuxPurity->GetYaxis()->SetTitle("Purity [%]");
+    hAuxPurity->GetYaxis()->SetTitle("#rho [%]");
     hAuxPurity->Draw();
 
     // Map to store the events from hits integral
     std::map<std::string, double> events;
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         events[fIntTypes[j].GetLabelS()] = fHistV[fIntTypes[j].GetLabelS()]->Integral();
-        std::cout<<" Integral: "<<fIntTypes[j].GetLabelS()<<" "<<events[fIntTypes[j].GetLabelS()]<<std::endl;
     }
 
     std::vector<TGraph*> grVPurity;
@@ -906,13 +915,19 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
             //create x and y vectors and loop over bins, add signal/sqrt(bg)
             std::vector<double> x;
             std::vector<double> y;
-            for (int i = 1; i <= fPlotDef.GetBins().GetNBins(); i++) {
-                double binValueBG = (1. - 0.01 * fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i) ) * events[fIntTypes[j].GetLabelS()];
-                double binValueSignal = 0.01 * fHistCumulativeV["Signal"]->GetBinContent(i) * events["Signal"];
-                std::cout<<fHistV[fIntTypes[j].GetLabelS()]->GetBinCenter(i) <<" "<<binValueBG<<" "<<binValueSignal<<std::endl;
+            double bgIntegral = fHistV[fIntTypes[j].GetLabelS()]->Integral();
+            double signalIntegral = fHistV["Signal"]->Integral();
+            for (int i = 0; i <= fPlotDef.GetBins().GetNBins(); i++) {
+                
+                double binValueBG = 0.01*fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i) * bgIntegral;
+                double binValueSignal = 0.01*fHistCumulativeV["Signal"]->GetBinContent(i) * signalIntegral;
+                double binCenter = fHistV[fIntTypes[j].GetLabelS()]->GetBinCenter(i);
+                std::cout<<i<<" "<<binCenter<<" binValueBG "<<binValueBG<<" binValueSignal "<<binValueSignal<<std::endl;
                 if(binValueBG+binValueSignal>0){
-                    x.push_back( fHistV[fIntTypes[j].GetLabelS()]->GetBinCenter(i) );
-                    y.push_back(binValueSignal/(binValueSignal+binValueBG));
+                    double purity = 100*binValueSignal/(binValueSignal+binValueBG);
+                    x.push_back( binCenter );
+                    y.push_back( purity );
+                    std::cout<<"  purity="<<purity<<std::endl;
                 }
             }
 
@@ -930,13 +945,84 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     }
 
     hAuxPurity->Draw();
-    legend->Draw("same");
+    legendSig->Draw("same");
     
+    double minYPurity = 1000000;
+    double maxYPurity = 0;
     for (size_t j = 0; j < grVPurity.size(); ++j) {
         grVPurity[j]->Draw("same l");
+        double min = grVPurity[j]->GetYaxis()->GetXmin();
+        double max = grVPurity[j]->GetYaxis()->GetXmax();
+        if(min<minYPurity) minYPurity = min;
+        if(max>maxYPurity) maxYPurity = max;
     }
+    hAuxPurity->GetYaxis()->SetRangeUser(minYPurity*0.9, maxYPurity*1.1);
 
     padV[6]->Update();
+
+
+    // ------ Draw efficiency times purity curve ------
+    padV[5]->cd();
+    TH1F *hAuxEffPurity = new TH1F("hAuxEffPurity", plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2());
+    hAuxEffPurity->SetStats(0);
+    hAuxEffPurity->GetYaxis()->SetTitle("#varepsilon#rho");
+    hAuxEffPurity->Draw();
+
+    std::vector<TGraph*> grVEffPurity;
+    for (size_t j = 0; j < fIntTypes.size(); ++j) {
+        if(!fIntTypes[j].IsSignal()){
+            //create x and y vectors and loop over bins, add signal/sqrt(bg)
+            std::vector<double> x;
+            std::vector<double> y;
+            double bgIntegral = fHistV[fIntTypes[j].GetLabelS()]->Integral();
+            double signalIntegral = fHistV["Signal"]->Integral();
+
+            for (int i = 1; i <= fPlotDef.GetBins().GetNBins(); i++) {
+                
+                double binValueBG = 0.01*fHistCumulativeV[fIntTypes[j].GetLabelS()]->GetBinContent(i) * bgIntegral;
+                double binValueSignal = 0.01*fHistCumulativeV["Signal"]->GetBinContent(i) * signalIntegral;
+                double binCenter = fHistV[fIntTypes[j].GetLabelS()]->GetBinCenter(i);
+
+                if(binValueBG+binValueSignal>0){
+                    double purity = binValueSignal/(binValueSignal+binValueBG);
+                    double eff = binValueSignal/signalIntegral;
+                    x.push_back( binCenter );
+                    y.push_back( eff*purity );
+                }
+            }
+
+            // create TGraph
+            TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
+            gr->SetLineColor(fStyler->GetColor(j));
+            gr->SetLineWidth(2);
+            gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
+            gr->SetMarkerColor(fStyler->GetColor(j));
+            gr->SetMarkerSize(1);
+            gr->SetLineStyle(fStyler->GetLineStyle(j));
+
+            grVEffPurity.push_back(gr);
+        }
+    }
+
+    
+   
+
+    hAuxEffPurity->Draw();
+    legendSig->Draw("same");
+    // Range to maximum of gr
+    double minYEffPurity = 1000000;
+    double maxYEffPurity = 0;
+    for (size_t j = 0; j < grVEffPurity.size(); ++j) {
+        grVEffPurity[j]->Draw("same l");
+        double min = grVEffPurity[j]->GetYaxis()->GetXmin();
+        double max = grVEffPurity[j]->GetYaxis()->GetXmax();
+        if(min<minYEffPurity) minYEffPurity = min;
+        if(max>maxYEffPurity) maxYEffPurity = max;
+    }
+
+    hAuxEffPurity->GetYaxis()->SetRangeUser(minYEffPurity*0.9, maxYEffPurity*1.1);
+
+    padV[5]->Update();
 
 
     // ------ Draw phase space ------ 
@@ -947,11 +1033,12 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
         int nRows = std::ceil(std::sqrt( fPhaseSpaceVars.size() ));
         std::vector<TPad*> padVPhaseSpace = buildpadcanvas( nRows, nRows);
 
-        TLegend *legendRP = new TLegend(0.7,0.7,0.9,0.9);
+        TLegend *legendRP = new TLegend(legX1, legY1, legX2, legY2);
+        legendRP->SetLineColorAlpha(0, 0);
+        legendRP->SetFillColorAlpha(0, 0);
 
         // Draw each plot
         for(int i=0; i<fPhaseSpaceVars.size(); i++){
-            std::cout<<i<<std::endl;
             padVPhaseSpace[i+1]->cd();
             //fHistVPhaseSpace1[i]->GetXaxis()->SetTitle("x");
             fHistVPhaseSpace1[i]->GetYaxis()->SetTitle("y");
@@ -966,7 +1053,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
             rp->SetLeftMargin(0.15);
             rp->SetSplitFraction(0.35);
             rp->SetSeparationMargin(0.);
-            rp->GetLowerRefYaxis()->SetTitle("#epsilon");
+            rp->GetLowerRefYaxis()->SetTitle("#varepsilon");
             rp->GetUpperRefYaxis()->SetTitle("# entries");
             rp->GetLowerRefYaxis()->SetTitleOffset(1.);
             rp->GetUpperRefYaxis()->SetTitleOffset(1.);

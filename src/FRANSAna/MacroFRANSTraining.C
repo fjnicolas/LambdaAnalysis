@@ -18,12 +18,12 @@
 #include "TMVA/Tools.h"
 #include "TMVA/TMVAGui.h"
 
-int MacroFRANSTraining(std::string fInputFileName="", int view = 2, double nTrainFrac = -1, std::string fTreeDirName = "FRANSCheatedVx/", std::string fTreeName = "FRANSTree")
+int MacroFRANSTraining(std::string fInputFileName="", double nTrainFrac = -1, int view = 2, std::string fBGLabel = "", std::string fTreeDirName = "FRANSCheatedVx/", std::string fTreeName = "FRANSTree")
 {
 
   //--------- Configuration Parameters
   bool fUseMultiplicityVars = false; //fUseMultiplicityVars = true;
-  std::string fBGLabel = "";  //fBGLabel = "QE"; //fBGLabel = "RES";
+  bool fApplyFiducialCut = true; //fApplyFiducialCut = false;
   std::string fVw = std::to_string(view);
 
   //--------- Input file
@@ -50,21 +50,33 @@ int MacroFRANSTraining(std::string fInputFileName="", int view = 2, double nTrai
   // Neural Networks (all are feed-forward Multilayer Perceptrons)
   Use["MLP"]             = 0;
 
+  //--------- Variables to use
+  std::map<std::string,int> UseVars;
+  UseVars["Eta"] = 1;
+  UseVars["Delta"] = 1;
+  UseVars["Alpha"] = 0;
+  UseVars["Iota"] = 1;
+  UseVars["FitScore"] = 1;
+  // get number of vafriables to use
+  int nVars = 0;
+  for(auto it = UseVars.begin(); it != UseVars.end(); ++it){
+    if(it->second) nVars++;
+  }
 
   //---------  Load TMVA
   TMVA::Tools::Instance();
+  std::string PreTransformations = nVars>1 ? "I;D;P;G,D" : "I;D;G,D";
   TMVA::Factory *factory = new TMVA::Factory( "FRANSSelectionTMVA", outputFile,
-                                              "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
+                                              "!V:!Silent:Color:DrawProgressBar:Transformations="+PreTransformations+":AnalysisType=Classification" );
   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
 
 
   //---------  Add variables to the dataloader
-  //dataloader->AddVariable( "FRANSObj"+fVw+".fAlpha", "#alpha", "", 'D' );
-  dataloader->AddVariable( "FRANSObj"+fVw+".fIota", "#iota", "", 'D' );
-  dataloader->AddVariable( "FRANSObj"+fVw+".fEta", "#eta", "", 'D' );
-  dataloader->AddVariable( "FRANSObj"+fVw+".fDelta", "#Delta", "", 'D' );
-  dataloader->AddVariable( "FRANSObj"+fVw+".fFitScore", "r", "", 'D' );
-
+  if(UseVars["Eta"]) dataloader->AddVariable( "FRANSObj"+fVw+".fEta", "#eta", "", 'D' );
+  if(UseVars["Delta"]) dataloader->AddVariable( "FRANSObj"+fVw+".fDelta", "#Delta", "", 'D' );
+  if(UseVars["Alpha"]) dataloader->AddVariable( "FRANSObj"+fVw+".fAlpha", "#alpha", "", 'D' );
+  if(UseVars["Iota"]) dataloader->AddVariable( "FRANSObj"+fVw+".fIota", "#iota", "", 'D' );
+  if(UseVars["FitScore"]) dataloader->AddVariable( "FRANSObj"+fVw+".fFitScore", "r", "", 'D' );
   if(fUseMultiplicityVars){
     dataloader->AddVariable( "FRANSObj"+fVw+".fNOrigins", "N", "", 'I' );
     dataloader->AddVariable( "FRANSObj"+fVw+".fNOriginsM1", "N^{1}", "", 'I' );
@@ -73,28 +85,33 @@ int MacroFRANSTraining(std::string fInputFileName="", int view = 2, double nTrai
     dataloader->AddVariable( "FRANSObj"+fVw+".fHitDensity", "d", "", 'D' );
   }
 
-
-  // Spectator variables
+  //--------- Add spectators
   dataloader->AddSpectator( "Gap", "Gap", "", 'D' );
   dataloader->AddSpectator( "ProtonKE", "ProtonKE", "", 'D' );
   dataloader->AddSpectator( "PionKE", "PionKE", "", 'D' );
 
-  // You can add an arbitrary number of signal or background trees
+  //--------- Add the signal and background trees
   Double_t signalWeight     = 1.0;
   Double_t backgroundWeight = 1.0;
   dataloader->AddSignalTree    ( fTree,     signalWeight );
   dataloader->AddBackgroundTree( fTree, backgroundWeight );
 
   //-------- Signal and BG definitions
-  TCut signalCut      = "IsSignal==1";
-  TCut bgCut          = "IsSignal!=1";
+  TCut signalCut  = "IsSignal==1";
+  TCut bgCut   = "IsSignal!=1";
   TCut bgCutQE = "IsSignal!=1 && IntMode==0";
   TCut bgCutRES = "IsSignal!=1  && IntMode==1";
+  TCut bgCutDIS = "IsSignal!=1  && IntMode==2";
   if(fBGLabel=="QE") bgCut = bgCutQE;
   else if(fBGLabel=="RES") bgCut = bgCutRES;
+  else if(fBGLabel=="DIS") bgCut = bgCutDIS;
 
-
-
+  //--------- Fiducial cut
+  TCut fiducialCut = "abs(TrueVx)<190 && abs(TrueVy)<190 && TrueVz>10 && TrueVz<490";
+  if(fApplyFiducialCut){
+    signalCut = signalCut && fiducialCut;
+    bgCut = bgCut && fiducialCut;
+  }
 
   //--------- Set the training and testing fractions
   int nMaxSignal = fTree->Draw(">>selectedEntries", signalCut, "entrylist")-1;

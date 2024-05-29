@@ -26,7 +26,7 @@ alias loadLambdaAna2D='root $LAMBDAANA_DIR/src/Analysis/LambdaPlot2DDistribution
 alias loadLambdaCalo='root $LAMBDAANA_DIR/src/Analysis/PlotCalorimetryDisplay.C'
 alias loadLambdaAnaKinematics='root $LAMBDAANA_DIR/src/Analysis/PlotRecoKinematics.C'
 
-
+alias loadFRANSAna='root $LAMBDAANA_DIR/src/FRANSAna/LoadFRANSAna.C'
 
 
 #Search Paths

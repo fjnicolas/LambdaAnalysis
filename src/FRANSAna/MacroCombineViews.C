@@ -21,8 +21,8 @@ void MacroCompareViews(std::string path="./",
 {
     
     bool fTrainBDT = false; fTrainBDT = true;
-    bool fUseIota = false; //fUseIota = true;
-    bool fUseAlpha = false; fUseAlpha = true;
+    bool fUseIota = false; fUseIota = true;
+    bool fUseAlpha = false; //fUseAlpha = true;
     // map with label and file name
     std::map<std::string, std::string> fTMVAWeightsMap;
     // also for ROOT files
@@ -86,12 +86,12 @@ void MacroCompareViews(std::string path="./",
     for (auto it = fTMVAWeightsMap.begin(); it != fTMVAWeightsMap.end(); ++it) {
         std::cout<<"Loading TMVA for "<<it->first<<" "<<it->second<<std::endl;
         TMVA::Reader* reader = new TMVA::Reader();
+        reader->AddVariable("FRANSObj"+it->first+".fEta", &eta);
+        reader->AddVariable("FRANSObj"+it->first+".fDelta", &delta);
         if(fUseAlpha)
             reader->AddVariable("FRANSObj"+it->first+".fAlpha", &alpha);
         if(fUseIota)
             reader->AddVariable("FRANSObj"+it->first+".fIota", &iota);
-        reader->AddVariable("FRANSObj"+it->first+".fEta", &eta);
-        reader->AddVariable("FRANSObj"+it->first+".fDelta", &delta);
         reader->AddVariable("FRANSObj"+it->first+".fFitScore", &fitScore);
         reader->AddSpectator("Gap", &_gap);
         reader->AddSpectator("ProtonKE", &_protonKE);
@@ -253,15 +253,21 @@ void MacroCompareViews(std::string path="./",
     hScore1Background.SetStats(0);
     hScore2Background.SetStats(0);
 
+    int fSignalLS = kSolid;
+    int fBackgroundLS = kDashed;
+    int fSignalLC = kAzure+1;
+    int fBackgroundLC = kOrange+1;
+    SetFRANSStyle();
+    
+
     // Output canvas
-    // Set bottom margin
+    TCanvas* c = new TCanvas("c", "Score comparison", 800, 800);
     gStyle->SetPadBottomMargin(0.15);
-
-    TCanvas* c = new TCanvas("c", "Score comparison", 800, 600);
-    c->Divide(2, 2);
-
+    std::vector<TPad*> Tp = buildpadcanvas(2,2);
+    gStyle->SetPadBottomMargin(0.15);
+    
     // Draw the histograms for signal and
-    c->cd(1);
+    Tp.at(1)->cd();
     t->Draw("score0>>hScore0Signal", signalCut);
     t->Draw("score0>>hScore0Background", bgCut);
     // Area normalized
@@ -269,17 +275,22 @@ void MacroCompareViews(std::string path="./",
     hScore0Background.Scale(1./hScore0Background.Integral());
     hScore0Background.Draw("hist");
     hScore0Signal.Draw("hist same");
-    
     //Colors
-    hScore0Signal.SetLineColor(kRed);
-    hScore0Background.SetLineColor(kBlue);
+    hScore0Signal.SetLineColor(fSignalLC);
+    hScore0Background.SetLineColor(fBackgroundLC);
+    // Lines
+    hScore0Signal.SetLineStyle(fSignalLS);
+    hScore0Background.SetLineStyle(fBackgroundLS);
+    // Offset
+    hScore0Background.GetYaxis()->SetTitleOffset(1.3);
     // Legend
-    TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+    TLegend* legend = new TLegend(0.55, 0.55, 0.8, 0.75);
     legend->AddEntry(&hScore0Signal, "Signal", "l");
     legend->AddEntry(&hScore0Background, "Background", "l");
+    legend->SetBorderSize(0);
     legend->Draw("same");
 
-    c->cd(2);
+    Tp.at(2)->cd();
     t->Draw("score1>>hScore1Background", bgCut);
     t->Draw("score1>>hScore1Signal", signalCut);
     // Area normalized
@@ -287,13 +298,18 @@ void MacroCompareViews(std::string path="./",
     hScore1Background.Scale(1./hScore1Background.Integral());
     hScore1Background.Draw("hist");
     hScore1Signal.Draw("hist same");
-    //Colors
-    hScore1Signal.SetLineColor(kRed);
-    hScore1Background.SetLineColor(kBlue);
+    // Colors
+    hScore1Signal.SetLineColor(fSignalLC);
+    hScore1Background.SetLineColor(fBackgroundLC);
+    // Lines
+    hScore1Signal.SetLineStyle(fSignalLS);
+    hScore1Background.SetLineStyle(fBackgroundLS);
+    // Offset
+    hScore1Background.GetYaxis()->SetTitleOffset(1.3);
     // Legend
     legend->Draw("same");
     
-    c->cd(3);
+    Tp.at(3)->cd();
     t->Draw("score2>>hScore2Signal", signalCut);
     t->Draw("score2>>hScore2Background", bgCut);
     // Area normalized
@@ -302,16 +318,29 @@ void MacroCompareViews(std::string path="./",
     hScore2Background.Draw("hist");
     hScore2Signal.Draw("hist same");
     //Colors
-    hScore2Signal.SetLineColor(kRed);
-    hScore2Background.SetLineColor(kBlue);
+    hScore2Signal.SetLineColor(fSignalLC);
+    hScore2Background.SetLineColor(fBackgroundLC);
+    // Offset
+    hScore2Background.GetYaxis()->SetTitleOffset(1.3);
+    // Lines
+    hScore2Signal.SetLineStyle(fSignalLS);
+    hScore2Background.SetLineStyle(fBackgroundLS);
     // Legend
     legend->Draw("same");
 
     c->cd();
     c->Update();
-
-
+    c->WaitPrimitive();
+    c->Update();
     
+    // Save
+    c->SaveAs("ScoreComparison.pdf");
+    // Save PADs
+    Tp.at(1)->SaveAs("FRANSBDTScore0.eps");
+    Tp.at(2)->SaveAs("FRANSBDTScore1.eps");
+    Tp.at(3)->SaveAs("FRANSBDTScore2.eps");
+
+
     // Draw signal and background efficiency curves for each ROOT file
     TCanvas* c1 = new TCanvas("c1", "Efficiency comparison", 800, 600);
     c1->Divide(2, 2);

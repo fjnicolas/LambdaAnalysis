@@ -11,33 +11,6 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-vector<TPad*> buildpadcanvas(int nx, int ny){
-    vector<TPad*> Tp;
-    double x=0, y=1, dx=1./nx, dy=1./ny;
-    TPad *pad = new TPad("","", 0, 0, 1, 1, -1, -1, -1);
-    Tp.push_back(pad);
-    for(int i=1; i<=nx; i++){
-      y=1;
-      for(int j=1; j<=ny; j++){
-        //TPad *pad = new TPad("a", "a",x, y, x+dx,y+dy);
-        //TPad pad("a", "a",x, y, x+dx,y+dy,1, 1, 2);
-        //cout<<x<<" "<<y<<endl;
-        TPad *pad = new TPad("","", x, y-dy, x+dx, y, -1, -1, -1);
-        Tp.push_back(pad);
-        y-=dy;
-        // Bottom margin
-        pad->SetBottomMargin(0.15);
-        // Left margin
-        pad->SetLeftMargin(0.15);
-      }
-      x+=dx;
-      
-    }
-    for(int i=0; i<=nx*ny; i++){
-      Tp.at(i)->Draw();
-    }
-    return Tp;
-}
 
 int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::string fTreeDirName = "FRANSCheatedVx/", std::string fTreeName = "FRANSTree")
 {
@@ -52,14 +25,12 @@ int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::st
   fFile->ls();
   TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
 
-  // Axis offsets
-  gStyle->SetTitleOffset(1.25, "Y");
-  // Set divisions
-  gStyle->SetNdivisions(505, "X");
-  // Line widths
-  gStyle->SetLineWidth(2);
-  // Graphs line widths
-  gStyle->SetHistLineWidth(3);
+  int fSignalLS = kSolid;
+  int fBackgroundLS = kDashed;
+  int fSignalLC = kAzure+1;
+  int fBackgroundLC = kOrange+1;
+  SetFRANSStyle();
+
   // Draw variables for signal and background
   TCanvas* c = new TCanvas("c", "Variables", 1000, 700);
   std::vector<TPad*> Tp = buildpadcanvas(3,2);
@@ -76,16 +47,21 @@ int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::st
   hAlphaBG->Scale(1./hAlphaBG->Integral());
   // Set maximum
   hAlphaFrame->SetMaximum(std::max(hAlphaSig->GetMaximum(), hAlphaBG->GetMaximum())*1.2);
-  // Set colors
-  hAlphaSig->SetLineColor(kAzure+1);
-  hAlphaBG->SetLineColor(kOrange+1);
+  // Set colors and line style
+  hAlphaSig->SetLineColor(fSignalLC);
+  hAlphaSig->SetLineStyle(fSignalLS);
+  hAlphaBG->SetLineColor(fBackgroundLC);
+  hAlphaBG->SetLineStyle(fBackgroundLS);
+
   hAlphaFrame->Draw();
   hAlphaSig->Draw("hist same");
   hAlphaBG->Draw("hist same");
   // Legend
-  TLegend* legend = new TLegend(0.7, 0.7, 0.9, 0.9);
+  TLegend* legend = new TLegend(0.55, 0.7, 0.89, 0.89);
   legend->AddEntry(hAlphaSig, "Signal", "l");
   legend->AddEntry(hAlphaBG, "Background", "l");
+  legend->SetBorderSize(0);
+  legend->SetTextSize(0.05);
   legend->Draw("same");
 
   Tp.at(2)->cd();
@@ -101,8 +77,11 @@ int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::st
   // Set maximum
   hEtaFrame->SetMaximum(std::max(hEtaSig->GetMaximum(), hEtaBG->GetMaximum())*1.2);
   // Set colors
-  hEtaSig->SetLineColor(kAzure+1);
-  hEtaBG->SetLineColor(kOrange+1);
+  hEtaSig->SetLineColor(fSignalLC);
+  hEtaSig->SetLineStyle(fSignalLS);
+  hEtaBG->SetLineColor(fBackgroundLC);
+  hEtaBG->SetLineStyle(fBackgroundLS);
+
   hEtaFrame->Draw();
   hEtaSig->Draw("hist same");
   hEtaBG->Draw("hist same");
@@ -122,8 +101,11 @@ int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::st
   // Set maximum
   hDeltaFrame->SetMaximum(std::max(hDeltaSig->GetMaximum(), hDeltaBG->GetMaximum())*1.2);
   // Set colors
-  hDeltaSig->SetLineColor(kAzure+1);
-  hDeltaBG->SetLineColor(kOrange+1);
+  hDeltaSig->SetLineColor(fSignalLC);
+  hDeltaSig->SetLineStyle(fSignalLS);
+  hDeltaBG->SetLineColor(fBackgroundLC);
+  hDeltaBG->SetLineStyle(fBackgroundLS);
+
   hDeltaFrame->Draw();
   hDeltaSig->Draw("hist same");
   hDeltaBG->Draw("hist same");
@@ -143,8 +125,11 @@ int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::st
   // Set maximum
   hFitScoreFrame->SetMaximum(std::max(hFitScoreSig->GetMaximum(), hFitScoreBG->GetMaximum())*1.2);
   // Set colors
-  hFitScoreSig->SetLineColor(kAzure+1);
-  hFitScoreBG->SetLineColor(kOrange+1);
+  hFitScoreSig->SetLineColor(fSignalLC);
+  hFitScoreSig->SetLineStyle(fSignalLS);
+  hFitScoreBG->SetLineColor(fBackgroundLC);
+  hFitScoreBG->SetLineStyle(fBackgroundLS);
+
   hFitScoreFrame->Draw();
   hFitScoreSig->Draw("hist same");
   hFitScoreBG->Draw("hist same");
@@ -164,8 +149,11 @@ int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::st
   // Set maximum
   hIotaFrame->SetMaximum(std::max(hIotaSig->GetMaximum(), hIotaBG->GetMaximum())*1.2);
   // Set colors
-  hIotaSig->SetLineColor(kAzure+1);
-  hIotaBG->SetLineColor(kOrange+1);
+  hIotaSig->SetLineColor(fSignalLC);
+  hIotaSig->SetLineStyle(fSignalLS);
+  hIotaBG->SetLineColor(fBackgroundLC);
+  hIotaBG->SetLineStyle(fBackgroundLS);
+
   hIotaFrame->Draw();
   hIotaSig->Draw("hist same");
   hIotaBG->Draw("hist same");
@@ -174,8 +162,15 @@ int MacroFRANSPlotVariables(std::string fInputFileName="", int view = 2, std::st
 
   c->Update();
   c->WaitPrimitive();
+  // Remove and create output directory
+  gSystem->Exec("rm -rf HistogramsFRANSPlotVariables");
+  gSystem->Exec("mkdir HistogramsFRANSPlotVariables");
   // Save as pdf
-  c->SaveAs(("FRANSPlotVariables_"+fVw+".pdf").c_str());
+  c->SaveAs(("HistogramsFRANSPlotVariables/FRANSPlotVariables_"+fVw+".pdf").c_str());
+  // Save individual pads
+  for(int i=1; i<Tp.size(); i++){
+    Tp.at(i)->SaveAs(("HistogramsFRANSPlotVariables/FRANSPlotVariables_"+fVw+"_"+std::to_string(i)+".eps").c_str());
+  }
 
   return 0;
 }

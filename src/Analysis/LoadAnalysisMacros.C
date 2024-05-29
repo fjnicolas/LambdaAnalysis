@@ -40,7 +40,7 @@ void MacroMVAAnalysis(std::string fInputFileName="", double nTrainFrac = -1, std
 }
 
 
-void MacroRunAndEvaluateMVAAnalysis(std::string fInputFileName, std::string fInputFileNameTest, std::string configFile="configMVA.txt", std::string method="BDT", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree"){
+void MacroRunAndEvaluateMVAAnalysis(std::string fInputFileName, std::string fInputFileNameTest, std::string configFile="configMVA.txt", std::string method="BDT", bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTree"){
 
     //Batch mode
     batchMode? gROOT->SetBatch(kTRUE): gROOT->SetBatch(kFALSE);

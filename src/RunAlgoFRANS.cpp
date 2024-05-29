@@ -28,6 +28,7 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     if(ConfPsetPath==""){
         ConfPsetPath="config.txt";
     }
+
     int DebugMode = parser.getDebugMode();
     int n = parser.getN();
     int nskip = parser.getNskip();
@@ -49,14 +50,10 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     // Get input files
     std::vector<TString> fFilePaths = GetInputFileList(file_name, ext, directory_path);
 
-    // ----------- ALGORITHM PARAMETERS --------------------------------- 
-
-    // ---- FRANS parameters ----------------------------------------
-    FRANSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
-    fPsetFRANS.Verbose = Debug;
-    fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
-    
+    // ----------- ALGORITHM PARAMETERS ---------------------------------
     // ---- TPCLines parameters ----------------------------------------
+    CaloAlgorithmPsetType fPsetCalo = ReadCaloAlgorithmPset( FindFile("caloalg_config.fcl"), "CaloAlg:");
+    fPsetCalo.Verbose = Debug;
     TrackFinderAlgorithmPsetType fPsetTrackFinder = ReadTrackFinderAlgorithmPset( FindFile("trackfinderalg_config.fcl"), "TrackFinderAlg:");
     fPsetTrackFinder.Verbose = Debug;
     HoughAlgorithmPsetType fPsetHough = ReadHoughAlgorithmPset( FindFile("houghalg_config.fcl"), "HoughAlg:");
@@ -69,7 +66,22 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     fPsetAnaView.HoughAlgorithmPset = fPsetHough;
     fPsetAnaView.TrackFinderAlgorithmPset = fPsetTrackFinder;
     fPsetAnaView.VertexFinderAlgorithmPset = fPsetVertexFinder;
+    fPsetAnaView.CaloAlgorithmPset = fPsetCalo;
+    fPsetAnaView.View = parser.getView();
+    fPsetAnaView.Print();
+    // ---- FRANS parameters ----------------------------------------
+    FRANSPsetType fPsetFRANS = ReadFRANSPset( FindFile("chargedensityalg_config.fcl"), "ChargeDensityAlg:");
+    fPsetFRANS.Verbose = Debug;
+        
+    fPsetFRANS.TMVAFilename = FindFile(fPsetFRANS.TMVAFilename);
+    if(parser.getView()==0)
+        fPsetFRANS.TMVAFilename = FindFile("FRANSSelectionTMVA_BDT_ViewUWithWidth_Iota.weights.xml");
+    else if(parser.getView()==1)
+        fPsetFRANS.TMVAFilename = FindFile("FRANSSelectionTMVA_BDT_ViewVWithWidth_Iota.weights.xml");
+    std::cout<<"FRANS TMVA file: "<<fPsetFRANS.TMVAFilename<<std::endl;
+    fPsetFRANS.Print();
 
+    
     // Define the program control variables
     int fNEv = n;
     int fEv = event;
@@ -91,12 +103,10 @@ void RunAlgoFRANS(const CommandLineParser& parser)
     //FRANSTTree myTree(fTree);
     FRANSTree myTree(fTree, false);
 
-
-
     // Define FRANS LINES ALGORITHM
-    ChargeDensity _FRANSAlgo(fPsetFRANS);
-    ChargeDensity _FRANSAlgoPANDORA(fPsetFRANS);
-    // Define TPC LINES ALGORITHM
+    ChargeDensity _FRANSAlgo(fPsetFRANS, fPsetAnaView.View);
+    ChargeDensity _FRANSAlgoPANDORA(fPsetFRANS, fPsetAnaView.View);    
+
     TPCLinesAlgo _TPCLinesAlgo(fPsetAnaView, fPsetFRANS);
     // Effiency status
     EfficiencyCalculator _EfficiencyCalculator;
@@ -232,6 +242,23 @@ void RunAlgoFRANS(const CommandLineParser& parser)
                 img->Write( ("image/"+outputLabel+"_"+ev.Label()+"_vw"+std::to_string(view)+".pdf").c_str() );
                 cDisplay->Write();
 
+                // Get TPads in the canvas
+                TPad *pad1A = (TPad*)cDisplay->GetPrimitive("pad1A");
+                pad1A->SaveAs("pad1A.pdf");
+                TPad *pad1B = (TPad*)cDisplay->GetPrimitive("pad1B");
+                pad1B->SaveAs("pad1B.pdf");
+                TPad *pad2A = (TPad*)cDisplay->GetPrimitive("pad2A");
+                pad2A->SaveAs("pad2A.pdf");
+                TPad *pad2B = (TPad*)cDisplay->GetPrimitive("pad2B");
+                pad2B->SaveAs("pad2B.pdf");
+                TPad *pad3A = (TPad*)cDisplay->GetPrimitive("pad3A");
+                pad3A->SaveAs("pad3A.pdf");
+                TPad *pad3B = (TPad*)cDisplay->GetPrimitive("pad3B");
+                pad3B->SaveAs("pad3B.pdf");
+
+                
+                cDisplay->WaitPrimitive();
+
                 delete cDisplay;
                 delete img;
             }
@@ -264,14 +291,29 @@ void RunAlgoFRANS(const CommandLineParser& parser)
 int main(int argc, char* argv[]){
 
     CommandLineParser parser(argc, argv);
-    
+
+    std::cout << "Debug: " << parser.getDebug() << std::endl;
+    std::cout << "DebugMode: " << parser.getDebugMode() << std::endl;
+    std::cout << "n: " << parser.getN() << std::endl;
+    std::cout << "nskip: " << parser.getNskip() << std::endl;
+    std::cout << "event: " << parser.getEvent() << std::endl;
+    std::cout << "sr: " << parser.getSr() << std::endl;
+    std::cout << "file_name: " << parser.getFileName() << std::endl;
+    std::cout << "directory_path: " << parser.getDirectoryPath() << std::endl;
+    std::cout << "ext: " << parser.getExtension() << std::endl;
+    std::cout << "treeName: " << parser.getTreeName() << std::endl;
+    std::cout << "plotFRANS: " << parser.getPlotFRANS() << std::endl;
+    std::cout << "view: " << parser.getView() << std::endl;
+
     // Create a ROOT application object
     TApplication *myApp = new TApplication("myApp", &argc, argv);
 
     RunAlgoFRANS(parser);
 
+
     // Run the ROOT event loop
-    myApp->Run();
+    myApp->Run();    
 
     return 0;
+
 }

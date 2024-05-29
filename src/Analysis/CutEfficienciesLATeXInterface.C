@@ -19,14 +19,15 @@ void ReadPOT(TFile *fFile, double totalPOTNorm, double& potScaling, double& potS
     double pot = 0;
     double averageintmode;
     bool inclusive;
+    int nnuinteractions;
     fTreePOT->SetBranchAddress("pot",&pot);
     fTreePOT->SetBranchAddress("averageintmode",&averageintmode);
     fTreePOT->SetBranchAddress("inclusive",&inclusive);
+    fTreePOT->SetBranchAddress("nnuinteractions",&nnuinteractions);
     double totalPOT = 0;
     double totalPOTSignal = 0;
     for (int i = 0; i < fTreePOT->GetEntries(); ++i) {
         fTreePOT->GetEntry(i);
-        //std::cout<<"averageintmode: "<<averageintmode<<" inclusive: "<<inclusive<<" POT: "<<pot<<std::endl;
         if(averageintmode==0 && inclusive==0) totalPOTSignal+=pot;
         else if(pot<1e17) totalPOT+=pot;
     }
@@ -42,7 +43,7 @@ void ReadPOT(TFile *fFile, double totalPOTNorm, double& potScaling, double& potS
 
 
 // --------- Create output list with events that pass the cuts
-void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<SampleDef> sampleDefs){
+void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<SampleDef> sampleDefs, bool bgOnly = false){
 
     //--------- Loop over the TreeHeader
     unsigned int fSubRunId;
@@ -63,8 +64,11 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
         //if(fLArInputFileName->find("V0Lambda") != std::string::npos || fLArInputFileName->find("V0Overlay") != std::string::npos) continue;
         
 
-        if(fLArInputFileName->find("Inclusive") == std::string::npos) continue;
+        if(bgOnly && (fLArInputFileName->find("Inclusive") == std::string::npos
+                        && fLArInputFileName->find("cosmic_rockbox_sbnd") == std::string::npos)
+                    ) continue;
         
+
         
         std::string runSubrunLabel = std::to_string(fRunId) + ":" + std::to_string(fSubRunId);
 
@@ -106,7 +110,7 @@ void CreateHandScanList(TTree *fTree, TTree *fTreeHeader, TCut cut, std::vector<
         std::cout << " Sample: " << sampleDefs[k].GetLabel() << std::endl;
 
         // Create the histogram
-        TH3D* h3_all = new TH3D("h3_all", "3D Histogram", 100, 1, 101, 2100, 1, 2101, 2100, 1, 2101);
+        TH3D* h3_all = new TH3D("h3_all", "3D Histogram", 2, 1, 3, 10000, 1, 10001, 2100, 1, 2101);
 
         // Create the cut
         TCut debugCut = cut && (TCut(sampleDefs[k].GetVar()));
@@ -223,7 +227,6 @@ void GenerateAndCompileTeXTable(
 
         cont=0;
         for (size_t j = 0; j < matrixCounter[i].size(); ++j) {
-        //for(auto& sampleName : histogramCounts){
 
             double potScaling = potScalingMap[j];
             std::string sampleName = sampleDefs[j].GetLabelS();
@@ -240,9 +243,9 @@ void GenerateAndCompileTeXTable(
 
             // Get string from out
             if(  cont == sampleDefs.size()-1 )
-                texFile << potScaling*counts << streamObjEff.str();
+                texFile << (int)(potScaling*counts) << streamObjEff.str();
             else
-                texFile << potScaling*counts << streamObjEff.str() << " & ";
+                texFile << (int)(potScaling*counts) << streamObjEff.str() << " & ";
             cont++;
         }
 
@@ -313,6 +316,390 @@ void GenerateAndCompileTeXTable(
     gSystem->Exec( ("rm "+fileName+".{aux,log,tex,pdf}").c_str() );
 
     return;
+
+}
+
+void SetCustomYAxisLabelsLog(TCanvas *c, double minBinContentDecade, double yLabelXPos=0.5){
+    c->cd();
+    int nDecades = static_cast<int>(floor(log10(100 / minBinContentDecade)));
+
+    
+    for (int j = 0; j <= nDecades; ++j) {
+        double decade = minBinContentDecade * std::pow(10, j);
+        int exponent = static_cast<int>(log10(decade));
+        std::string label = "10^{" + std::to_string(exponent) + "}";
+        TLatex *latex = new TLatex(yLabelXPos+0.25, decade, label.c_str());
+        latex->SetTextSize(0.04);
+        latex->SetTextAlign(12);
+        latex->SetTextAngle(90);
+        latex->Draw();
+    }
+
+}
+
+
+void SetCustomYAxisLabels(TCanvas *c, int nLabels, double yLabelXPos=0.5){
+    c->cd();
+   
+    double labelStep = 100./(nLabels-1);
+    
+    for (int j = 0; j <= nLabels; ++j) {
+        
+        // label to integer
+        int labelInt = (int)j*labelStep;
+        std::string label = std::to_string(labelInt);
+        TLatex *latex = new TLatex(yLabelXPos+0.25, j*labelStep, label.c_str());
+        latex->SetTextSize(0.04);
+        latex->SetTextAlign(12);
+        latex->SetTextAngle(90);
+        latex->Draw();
+    }
+
+}
+
+//--------- Make the cut flow plot
+void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
+                    const std::vector<SampleDef> sampleDefs,
+                    const std::vector<std::vector<int>> matrixCounter,
+                    const std::string dirLabel,
+                    double potNorm=1,
+                    double potNormSignal=1,
+                    double totalPOTNorm=1
+)
+{
+
+    //--- POT scaling map weights
+    std::vector<double> potScalingMap;
+    for(auto& sampleName : sampleDefs){
+        if(sampleName.GetLabelS()=="Signal")
+            potScalingMap.push_back( potNormSignal );
+        else
+            potScalingMap.push_back( potNorm );
+    }
+
+    //--- Styler
+    CutStyler *fStyler(new CutStyler(0));
+    double yLabelXPos = plotDefs.size();
+    
+    // Vector of TH1F, one per sample, for efficiency
+    std::vector<TH1F*> hEfficiencyV;
+    // Vector of TH1F, one per sample, for fraction of events
+    std::vector<TH1F*> hFractionV;
+    int nCutBins = plotDefs.size();
+    for (size_t i = 0; i < sampleDefs.size(); ++i) {
+        hEfficiencyV.push_back(new TH1F(("hEfficiency"+sampleDefs[i].GetLabelS()).c_str(), ";;Efficiency [%]", plotDefs.size(), 0, plotDefs.size()));
+        hFractionV.push_back(new TH1F(("hFraction"+sampleDefs[i].GetLabelS()).c_str(), ("Fraction "+sampleDefs[i].GetLabelS()+";;Fraction [%]").c_str(), plotDefs.size(), 0, plotDefs.size()));
+        // Set the labels
+        for (size_t j = 0; j <nCutBins; ++j) {
+            hEfficiencyV[i]->GetXaxis()->SetBinLabel(j+1, plotDefs[j].GetVarLabel());
+            hFractionV[i]->GetXaxis()->SetBinLabel(j+1, plotDefs[j].GetVarLabel());
+        }
+
+        // center bins
+        hEfficiencyV[i]->GetXaxis()->SetLabelSize(0.05);
+        hFractionV[i]->GetXaxis()->SetLabelSize(0.05);
+
+        // Hide Y axis ticks
+        hEfficiencyV[i]->GetXaxis()->SetTickLength(0);
+        hFractionV[i]->GetXaxis()->SetTickLength(0);
+    }
+    // For purity
+    TH1F* hPurity = new TH1F("hPurity", "Purity;Cut;Purity [%]", plotDefs.size(), 0, plotDefs.size());
+    TH1F* hEfficiencySignal = new TH1F("hEfficiencySignal", "Signal efficiency;Cut;Efficiency [%]", plotDefs.size(), 0, plotDefs.size());
+    for (size_t j = 0; j <nCutBins; ++j) {
+        hPurity->GetXaxis()->SetBinLabel(j+1, plotDefs[j].GetVarLabel());
+        hEfficiencySignal->GetXaxis()->SetBinLabel(j+1, plotDefs[j].GetVarLabel());
+    }
+    // center bins
+    hPurity->GetXaxis()->SetLabelSize(0.05);
+    hEfficiencySignal->GetXaxis()->SetLabelSize(0.05);
+    // Hide Y axis ticks
+    hPurity->GetXaxis()->SetTickLength(0);
+    hEfficiencySignal->GetXaxis()->SetTickLength(0);
+    
+    size_t lastStoredIndex = 0;
+    size_t cont = 0;
+    size_t signalIndex = 0;
+    for (size_t i = 0; i < matrixCounter.size(); ++i) {
+
+        std::vector<int> counts = matrixCounter[i];
+        cont=0;
+        std::vector<double> eventsFraction;
+        
+        for (size_t j = 0; j < counts.size(); ++j) {
+            cont++;
+            double eff = 100. * counts[j]/(double)matrixCounter[0][j];
+            hEfficiencyV[j]->SetBinContent(i+1, eff);
+
+            if(sampleDefs[j].IsSignal()){
+                signalIndex = j;
+                hEfficiencySignal->SetBinContent(i+1, eff);
+            }
+
+            eventsFraction.push_back( potScalingMap[j]*counts[j] );
+            
+        }
+
+        // Fraction of events
+        double totalEvents = std::accumulate(eventsFraction.begin(), eventsFraction.end(), 0.);
+        for (size_t j = 0; j < eventsFraction.size(); ++j) {
+            hFractionV[j]->SetBinContent(i+1, 100. * eventsFraction[j]/totalEvents);
+            std::cout << "Sample: " << sampleDefs[j].GetLabelS() << " Events: " << eventsFraction[j] << " Total: " << totalEvents << " Fraction: " << 100. * eventsFraction[j]/totalEvents << std::endl;
+        }
+        double purity = 100. * eventsFraction[signalIndex]/totalEvents;
+        hPurity->SetBinContent(i+1, purity);
+
+    }
+
+    // Canvas per sample
+    double minDecade = 1;
+    for(int i=0; i<sampleDefs.size(); i++){
+        TCanvas *c = new TCanvas(("cEfficiency"+sampleDefs[i].GetLabelS()).c_str(), ("Efficiency "+sampleDefs[i].GetLabelS()).c_str(), 600, 800);
+        c->SetFrameLineColor(0);    
+        gPad->SetLeftMargin(0.1);
+        gPad->SetRightMargin(0.15);
+        gPad->SetBottomMargin(0.25);
+        gPad->SetTopMargin(0.06);  
+        gPad->SetLogy(1); 
+        gPad->Update();
+    
+        hEfficiencyV[i]->SetStats(0);
+        hEfficiencyV[i]->SetFillColor(fStyler->GetColor(i));
+        hEfficiencyV[i]->SetBarWidth(0.45);
+        hEfficiencyV[i]->SetBarOffset(0.1);
+       
+        hEfficiencyV[i]->GetXaxis()->LabelsOption("v"); 
+        hEfficiencyV[i]->Draw("bar Y+");
+
+        // Custom Y axis labels
+        hEfficiencyV[i]->GetYaxis()->SetLabelSize(0);
+        double minBinContent = hEfficiencyV[i]->GetMinimum(1e-5);
+        double minBinContentDecade = std::pow(10, floor(log10(minBinContent)));
+        hEfficiencyV[i]->GetYaxis()->SetRangeUser(minBinContentDecade, 100);
+        SetCustomYAxisLabelsLog(c, minBinContentDecade, yLabelXPos);
+        if(minBinContentDecade < minDecade) minDecade = minBinContentDecade;
+
+        // Add label with the efficiency
+        for (size_t j = 1; j <=nCutBins; ++j) {
+            double eff = hEfficiencyV[i]->GetBinContent(j);
+            double xpos = j-1+0.25;
+            const char *formatEff = (eff < 1) ? "%.1g" : "%.1f";
+            // Add the label
+            TLatex *latex = new TLatex(xpos, eff, Form(formatEff, eff));
+            latex->SetTextSize(0.04);
+            latex->SetTextAlign(12);
+            latex->SetTextAngle(90);
+            latex->Draw();
+        }
+
+        // Save
+        c->SaveAs((dirLabel+"/Efficiency"+sampleDefs[i].GetLabelS()+".pdf").c_str());
+    }
+
+
+    // All in the same canvas
+    double boxesMinY = 0.2;
+    double boxesMaxY = 0.9;
+    double sampleLegSpace = (boxesMaxY-boxesMinY)/sampleDefs.size();
+    double boxRelSize = 0.2 * sampleLegSpace;
+
+
+    TCanvas *cAll = new TCanvas("cEfficiencyAll", "Efficiency All",  600, 800);
+    cAll->SetFrameLineColor(0);    
+    gPad->SetLeftMargin(0.1);
+    gPad->SetRightMargin(0.15);
+    gPad->SetBottomMargin(0.25);
+    gPad->SetTopMargin(0.05);
+    gPad->SetLogy(1);
+    gPad->Update();
+    THStack *hsAll = new THStack("hsAll", "");
+    for(int i=0; i<sampleDefs.size(); i++){
+        hEfficiencyV[i]->SetStats(0);
+        hEfficiencyV[i]->SetFillColor(fStyler->GetColor(i));
+        hEfficiencyV[i]->SetBarWidth(0.45);
+        hEfficiencyV[i]->SetBarOffset(0.1);
+        hsAll->Add(hEfficiencyV[i]);        
+    }
+    hsAll->Draw("nostackb Y+");
+    // Title and labels
+    hsAll->GetYaxis()->SetTitle("Efficiency [%]");
+    hsAll->GetXaxis()->LabelsOption("v"); 
+    
+
+    // Custom Y axis labels
+    hsAll->GetYaxis()->SetLabelSize(0);
+    double minBinContentDecade = std::pow(10, floor(log10(minDecade)));
+    hsAll->GetYaxis()->SetRangeUser(minBinContentDecade, 100);
+    SetCustomYAxisLabelsLog(cAll, minBinContentDecade, yLabelXPos);
+
+    // Draw Text equispaced for each sample
+    for(int i=0; i<sampleDefs.size(); i++){
+        TLatex *latex = new TLatex(0.075, boxesMinY+sampleLegSpace*i+boxRelSize, sampleDefs[i].GetLabelS().c_str());
+        latex->SetTextSize(0.05);
+        latex->SetTextAngle(90);
+        latex->SetNDC(kTRUE);
+        latex->Draw();
+    }
+
+    // Draw TLatex with efficiency numbers for each cut and sample
+    double sampleStep = 1./sampleDefs.size();
+    for (size_t j = 0; j <nCutBins; ++j) {
+        for(int i=0; i<sampleDefs.size(); i++){
+            double eff = hEfficiencyV[i]->GetBinContent(j+1);
+            const char *formatEff = (eff < 1) ? "%.1g" : "%.1f";
+            TLatex *latexEff = new TLatex(j+sampleStep*(i+0.5), eff, Form(formatEff, eff));
+            latexEff->SetTextSize(0.025);
+            latexEff->SetTextAlign(12);
+            latexEff->SetTextAngle(90);
+            latexEff->SetTextColor(fStyler->GetColor(i));
+            latexEff->Draw();
+        }
+    }
+
+    TPad *pLeg = new TPad("p","p",0., 0., 0.1, 1.);
+    pLeg->SetFillStyle(0);
+    pLeg->Draw();
+    pLeg->cd();
+    // Draw boxes equispaced for each sample
+    for(int i=0; i<sampleDefs.size(); i++){
+        TBox *box = new TBox(0.25, boxesMinY+sampleLegSpace*i, 0.75, boxesMinY+sampleLegSpace*i+boxRelSize);
+        box->SetFillColor(fStyler->GetColor(i));
+        box->Draw();
+    }
+
+
+    cAll->SaveAs((dirLabel+"/EfficiencyAll.pdf").c_str());
+
+    
+    // Draw signal efficiency and purity together
+    int fEffColor = kAzure+7;
+    int fPurColor = kOrange+7;
+    int fPurHatched = 3144;
+    int fLineWidth = 10;
+    TCanvas *cSignal = new TCanvas("cSignal", "Signal efficiency and purity",  600, 800);
+    cSignal->SetFrameLineColor(0);    
+    gPad->SetLeftMargin(0.1);
+    gPad->SetRightMargin(0.15);
+    gPad->SetBottomMargin(0.25);
+    gPad->SetTopMargin(0.05);
+    gPad->Update();
+
+    THStack *hsSignal = new THStack("hsSignal", "");
+    hEfficiencySignal->SetFillColor(fEffColor);
+    hPurity->SetFillColor(fPurColor);
+    hPurity->SetFillStyle(fPurHatched);
+
+    hsSignal->Add(hEfficiencySignal);
+    hsSignal->Add(hPurity);
+
+    hsSignal->Draw("nostackb Y+");
+    hsSignal->GetXaxis()->LabelsOption("v");
+    hsSignal->GetYaxis()->SetRangeUser(0, 100);
+    hsSignal->GetYaxis()->SetLabelSize(0);
+    SetCustomYAxisLabels(cSignal, 6, yLabelXPos);
+
+
+
+    // Add latex with the purity and efficiency
+    for (size_t j = 0; j <nCutBins; ++j) {
+        double eff = hEfficiencySignal->GetBinContent(j+1);
+        double pur = hPurity->GetBinContent(j+1);
+        TLatex *latexEff = new TLatex(j+0.25,hEfficiencySignal->GetBinContent(j+1), Form("%.1f", eff));
+        latexEff->SetTextSize(0.025);
+        latexEff->SetTextAlign(12);
+        latexEff->SetTextAngle(90);
+        latexEff->SetTextColor(fEffColor);
+        latexEff->Draw();
+        TLatex *latexPur = new TLatex(j+0.75,hPurity->GetBinContent(j+1), Form("%.1f", pur));
+        latexPur->SetTextSize(0.025);
+        latexPur->SetTextAlign(12);
+        latexPur->SetTextAngle(90);
+        latexPur->SetTextColor(fPurColor);
+        latexPur->Draw();
+    }
+
+    TLatex tEff(.075,.32,"Efficiency");  
+    tEff.SetTextAngle(90);
+    tEff.SetNDC(kTRUE);
+    tEff.Draw();
+    TLatex tPur(.075,.67,"Purity");
+    tPur.SetTextAngle(90);
+    tPur.SetNDC(kTRUE);
+    tPur.Draw();
+
+    // Draw TBox
+    TPad *p = new TPad("p","p",0., 0., 0.1, 1.);
+    p->SetFillStyle(0);
+    p->Draw();
+    p->cd();
+    TBox *boxEff = new TBox(0.25, 0.25, 0.75, 0.3);
+    boxEff->SetFillColor(fEffColor);
+    boxEff ->Draw();
+    TBox *boxPur = new TBox(0.25, 0.6, 0.75, 0.65);
+    boxPur->SetFillColor(fPurColor);
+    boxPur->SetFillStyle(fPurHatched);
+    boxPur ->Draw();
+
+    cSignal->SaveAs((dirLabel+"/EfficiencyAndPuritySignal.pdf").c_str());
+
+
+    // Fraction of events, in THStack
+    TCanvas *cFraction = new TCanvas("cFraction", "Fraction of events", 600, 800);
+    cFraction->SetFrameLineColor(0);
+    gPad->SetLeftMargin(0.1);
+    gPad->SetRightMargin(0.15);
+    gPad->SetBottomMargin(0.25);
+    gPad->SetTopMargin(0.05);
+    gPad->Update();
+    THStack *hs = new THStack("hs", "");
+    for(int i=0; i<sampleDefs.size(); i++){
+        hFractionV[i]->SetStats(0);
+        hFractionV[i]->SetFillColor(fStyler->GetColor(i));
+        hFractionV[i]->SetBarWidth(0.45);
+        hFractionV[i]->SetBarOffset(0.1);
+        hs->Add(hFractionV[i]);
+    }
+    hs->Draw("");
+    hs->GetXaxis()->LabelsOption("v"); 
+    hs->GetYaxis()->SetRangeUser(0, 100);
+    hs->GetYaxis()->SetLabelSize(0);
+    hs->GetYaxis()->SetTickLength(0);
+
+    TGaxis *axis = new TGaxis(yLabelXPos, 0, yLabelXPos, 100, 0, 100, 510, "+L");
+    axis->SetLabelSize(0.);
+    //Colot Y axis
+    axis->SetLineColor(kBlack);
+    axis->Draw();
+    axis->SetTitle("Fraction of events [%]");
+    axis->SetTitleSize(0.05);
+    axis->SetTitleOffset(0.85);
+    SetCustomYAxisLabels(cFraction, 6, yLabelXPos);
+
+    // Draw Text equispaced for each sample
+    for(int i=0; i<sampleDefs.size(); i++){
+        TLatex *latex = new TLatex(0.075, boxesMinY+sampleLegSpace*i+boxRelSize, sampleDefs[i].GetLabelS().c_str());
+        latex->SetTextSize(0.05);
+        latex->SetTextAngle(90);
+        latex->SetNDC(kTRUE);
+        latex->Draw();
+    }
+
+    pLeg->Draw();
+    pLeg->cd();
+    // Draw boxes equispaced for each sample
+    for(int i=0; i<sampleDefs.size(); i++){
+        TBox *box = new TBox(0.25, boxesMinY+sampleLegSpace*i, 0.75, boxesMinY+sampleLegSpace*i+boxRelSize);
+        box->SetFillColor(fStyler->GetColor(i));
+        box->Draw();
+    }
+
+    cFraction->SaveAs((dirLabel+"/FractionOfEvents.pdf").c_str());
+
+
+    
+
+
+
 
 }
 

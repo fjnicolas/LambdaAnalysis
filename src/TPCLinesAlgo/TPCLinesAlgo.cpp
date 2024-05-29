@@ -610,6 +610,10 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     std::vector<SLinearCluster> finalLinearClusterV;
 
 
+    if(fTPCLinesPset.Verbose>=2){
+        fDisplay.Show(true, "Input hits", fHitList, LineEquation(-1, -1));
+    }
+
     for(std::pair<int, int> clusterPair: fClusterIdCounter){
             
         //std::vector<SHit> hitListForHough = fHitList;
@@ -751,7 +755,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     vertexList.clear();
     std::vector<SOrigin> associatedOrigins;
     associatedOrigins.clear();
-
+    
     if(finalLinearClusterV.size()>0){
         
         // ------- Get the parallel tracks
@@ -806,6 +810,11 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
             NewTrackList[ix].AssignId(ix);
         }
+
+        // Display
+        if(fTPCLinesPset.Verbose>=2)
+            fDisplay.Show(true, "Reconstructed line clusters", fHitList, LineEquation(-1, -1), {}, NewTrackList);
+        
 
         //Find secondary vertices
         if(NewTrackList.size()>0){
