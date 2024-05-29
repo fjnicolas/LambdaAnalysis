@@ -68,6 +68,7 @@ void GetMVAConfigurationVariables(TMVA::DataLoader *dataloader, TCut &minimalCut
     if (is_in(variables, "AngleCoveredArea")) dataloader->AddVariable( "AngleCoveredArea", "Covered Area", "", 'D' );
     if (is_in(variables, "AngleDirtHits")) dataloader->AddVariable( "AngleDirtHits", "Dirt Hits", "", 'I' );
     if (is_in(variables, "NUnassociatedHits")) dataloader->AddVariable( "NUnassociatedHits", "# unassociated hits", "", 'I' );
+    if (is_in(variables, "NMaxDirtUnassociatedHits")) dataloader->AddVariable( "NMaxDirtUnassociatedHits", "Max Dirt Unassociated Hits", "", 'I' );
     // --- Kinematics
     if (is_in(variables, "AngleDecayContainedDiff")) dataloader->AddVariable( "AngleDecayContainedDiff", "#alpha", "", 'D' );
     if (is_in(variables, "AngleOpeningAngle")) dataloader->AddVariable( "AngleOpeningAngle", "Opening Angle [º]", "", 'I' );
@@ -97,6 +98,9 @@ void GetMVAConfigurationVariables(TMVA::DataLoader *dataloader, TCut &minimalCut
     if (is_in(variables, "NShowers")) dataloader->AddVariable( "NShowers", "# showers", "", 'I' );
     if (is_in(variables, "NShowerHits")) dataloader->AddVariable( "NShowerHits", "# shower hits", "", 'I' );
     if (is_in(variables, "ShowerEnergy")) dataloader->AddVariable( "ShowerEnergy", "Shower Energy", "", 'D' );   
+    // --- PID
+    if (is_in(variables, "NTracksLI")) dataloader->AddVariable( "NTracksLI", "NTracksLI", "", 'I' );
+    if (is_in(variables, "NTracksHI")) dataloader->AddVariable( "NTracksHI", "NTracksHI", "", 'I' );
 }
 
 

@@ -394,49 +394,12 @@ void ChargeDensity::Fill(std::vector<SHit> hitsVect, SVertex vertex) {
 // ----------- Display function -----------
 void ChargeDensity::Display(TCanvas *c){
 
-  gStyle->SetPalette(112,0);
-  gStyle->SetTitleFont(132, "TXYZ");
-  gStyle->SetTitleSize(0.05, "TXYZ");
-
-  gStyle->SetTitleFont(132, "titleFont"); 
-  
-  // Off stats
-  gStyle->SetOptStat(0); 
-
-  //LABELS SIZE AND FONT
-  gStyle->SetLabelFont(132, "XYZ");
-  gStyle->SetLabelSize(0.05, "XYZ");
-  gStyle->SetTitleYOffset (1.4);
-  
   c->cd();
 
-  TPad *pad1 = new TPad("pad1", "pad1", 0., 0.66, .98, 0.99);
-  pad1->Draw();
-  
-  TPad *pad2A = new TPad("pad2A", "pad2A", 0., .33, .49, .66);
-  pad2A->Draw();
-  TPad *pad2B = new TPad("pad2B", "pad2B", 0.49, .33, .98, .66);
-  pad2B->Draw();
-
-  TPad *pad3A = new TPad("pad3A", "pad3A", 0., 0., .49, 0.33);
-  pad3A->Draw();
-  TPad *pad3B = new TPad("pad3B", "pad3B", 0.49, 0., .98, 0.33);
-  pad3B->Draw();
-
- 
-
-  pad1->SetBottomMargin(0.15);
-  pad1->SetLeftMargin(0.12);
-  pad2A->SetBottomMargin(0.15);
-  pad2A->SetLeftMargin(0.2);
-  pad2A->SetRightMargin(0.);
-  pad2B->SetBottomMargin(0.15);
-  pad3A->SetBottomMargin(0.15);
-  pad3A->SetLeftMargin(0.2);
-  pad3B->SetBottomMargin(0.15);
-  pad3B->SetRightMargin(0.);
-
-
+  gStyle->SetPalette(112,0);  
+  // Off stats
+  gStyle->SetOptStat(0); 
+  //TITLE SIZE AND FONT
   gStyle->SetTitleFont(52, "TXYZ");
   gStyle->SetTitleSize(0.05);
   //LABELS SIZE AND FONT
@@ -448,26 +411,50 @@ void ChargeDensity::Display(TCanvas *c){
   gStyle->SetTitleYOffset (0.65);
   gStyle->SetTitleYSize (0.08);
 
+  // X axis only 4 digits
+  gStyle->SetNdivisions(505, "XY");
 
-  pad1->cd();
+  double fYTitleOffset = 1.2;
+
+  double fTopMargin = 0.1;
+  double fBottomMargin = 0.15;
+  double fLeftMargin = 0.2;
+  double fRightMargin = 0.1;
+  gStyle->SetPadTopMargin(fTopMargin);
+  gStyle->SetPadBottomMargin(fBottomMargin);
+  gStyle->SetPadLeftMargin(fLeftMargin);
+  gStyle->SetPadRightMargin(fRightMargin);
+
+  TPad *pad1A = new TPad("pad1A", "pad1A", 0.0, 0.66, 0.5, 0.99);
+  pad1A->Draw();
+  TPad *pad1B = new TPad("pad1B", "pad1B", 0.5, 0.66, 1.0, 0.99);
+  pad1B->Draw();
+  
+  TPad *pad2A = new TPad("pad2A", "pad2A", 0.0, 0.33, 0.5, 0.66);
+  pad2A->Draw();
+  TPad *pad2B = new TPad("pad2B", "pad2B", 0.5, 0.33, 1.0, 0.66);
+  pad2B->Draw();
+
+  TPad *pad3A = new TPad("pad3A", "pad3A", 0.0, 0.00, 0.5, 0.33);
+  pad3A->Draw();
+  TPad *pad3B = new TPad("pad3B", "pad3B", 0.5, 0.00, 1.0, 0.33);
+  pad3B->Draw();
+
+  pad1A->cd();
   TGraph *gr = new TGraph(fRho.size(), &fRho[0], &fZ[0]);
   gr->SetTitle("");
-  gr->GetHistogram()->GetYaxis()->SetTitle("#zeta(#rho) [ADCxTT]");
+  gr->GetHistogram()->GetYaxis()->SetTitle("#zeta^{raw}(#rho) [ADCxTT]");
   gr->GetHistogram()->GetXaxis()->SetTitle("#rho");
-  gr->Draw("ALP");
+  gr->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
+  gr->Draw("alp");
 
-  double score = fTMVAReader.EvaluateMVA( "FRANS BDT" );
-  TLegend* leg1 = new TLegend(0.5, 0.60, 0.85, 0.85);
-  leg1->SetBorderSize(1); leg1->SetTextFont(62); leg1->SetTextSize(0.1);
-  std::ostringstream legLabel1; legLabel1 << std::setprecision(2);
-  legLabel1 << "Score=" << score;
-  leg1->SetBorderSize(0);
-  leg1->SetFillStyle(0);
-  leg1->SetTextFont(62);
-  leg1->SetTextSize(0.075);
-  leg1->AddEntry(gr, legLabel1.str().c_str(), "");
-  leg1->Draw("same");
-
+  pad1B->cd();
+  TGraph *grCounter = new TGraph(fRho.size(), &fRho[0], &fZCounter[0]);
+  grCounter->SetTitle("");
+  grCounter->GetHistogram()->GetYaxis()->SetTitle("# hits(#rho)");
+  grCounter->GetHistogram()->GetXaxis()->SetTitle("#rho");
+  grCounter->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
+  grCounter->Draw("alp");
 
   pad2A->cd();
   TGraph *grCum = new TGraph(fRho.size(), &fRho[0], &fZCum[0]);
@@ -475,25 +462,69 @@ void ChargeDensity::Display(TCanvas *c){
   grCum->GetHistogram()->GetYaxis()->SetTitle("Z(#rho) [ADCxTT]");
   grCum->GetHistogram()->GetXaxis()->SetTitle("#rho");
   grCum->GetHistogram()->GetYaxis()->SetRangeUser(0, 1);
-  grCum->GetHistogram()->GetYaxis()->SetTitleOffset(1.2);
+  grCum->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
   grCum->Draw("alp");
-
   
   pad2B->cd();
+  TGraph *grDer = new TGraphErrors(fZCumDer.size(), &fRho[0], &fZCumDer[0], 0, &fZCumDerErr[0]);
+  grDer->SetTitle("");
+  grDer->GetHistogram()->GetYaxis()->SetTitle("#zeta(#rho) [ADCxTT]");
+  grDer->GetHistogram()->GetXaxis()->SetTitle("#rho");
+  grDer->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
+  grDer->Draw("alp");
+
+
+  pad3A->cd();
+  pad3A->SetTopMargin(0.17);
+  pad3A->Draw();
   TGraph *grCumStart = new TGraph(fZCumStart.size(), &fRho[0], &fZCumStart[0]);
   grCumStart->SetTitle("");
-  //grCumStart->GetHistogram()->GetYaxis()->SetTitle("Z(#rho) [ADCxTT]");
+  grCumStart->GetHistogram()->GetYaxis()->SetTitle("#tilde{Z}(#rho) [ADCxTT]");
   grCumStart->GetHistogram()->GetXaxis()->SetTitle("#rho");
-  grCumStart->GetHistogram()->GetYaxis()->SetRangeUser(0, 1);
-  grCumStart->SetLineColor(kRed+2);
+  grCumStart->GetHistogram()->GetYaxis()->SetRangeUser(-0.1, 1.1);
+  grCumStart->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
+  grCumStart->SetLineColor(kBlack);
   grCumStart->Draw("alp");
+  grCumStart->GetXaxis()->CenterTitle();
+  // Draw secondary X-axis
+  double yAxisPos = grCumStart->GetHistogram()->GetYaxis()->GetXmax();
+  TGaxis *axis2 = new TGaxis(0, yAxisPos, fZCumStart.size(), yAxisPos, "ftau", 005, "-");
+  axis2->CenterTitle();
+  axis2->SetTitle("#rho/#rho_{max}");
+  axis2->SetLineColor(kGray+2);
+  axis2->SetLabelColor(kGray+2);
+  axis2->SetTitleColor(kGray+2);
+  axis2->SetTitleOffset(.95);
+  axis2->SetTitleSize(0.08);
+  axis2->SetLabelSize(0.08);
+  axis2->Draw();
+  // Draw line at 0.5, and Delta
+  TLine *line = new TLine(0, 0.5, fDelta*fZCumStart.size(), 0.5);
+  line->SetLineColor(kGray);
+  line->SetLineStyle(4);
+  line->Draw();
+  // Draw vertical line
+  TLine *line2 = new TLine(fDelta*fZCumStart.size(), -0.1, fDelta*fZCumStart.size(), 1.1);
+  line2->SetLineColor(kBlue-7);
+  line2->SetLineStyle(2);
+  line2->SetLineWidth(2);
+  line2->Draw();
 
-  TLegend* leg2 = new TLegend(0.5, 0.60, 0.85, 0.85);
+
+  pad3B->cd();
+  TLegend* leg2 = new TLegend(0.1, 0.10, 0.85, 0.85);
   leg2->SetBorderSize(0);
   leg2->SetFillStyle(0);
   leg2->SetTextFont(62);
   leg2->SetTextSize(0.075);
-  leg2->SetHeader("Start");
+  leg2->SetHeader("FRANS Parameters");
+
+  double score = fTMVAReader.EvaluateMVA( "FRANS BDT" );
+  std::ostringstream legLabel1;
+  legLabel1 << std::setprecision(2);
+  legLabel1 << "Score=" << score;
+  leg2->AddEntry(gr, legLabel1.str().c_str(), "");
+
   std::ostringstream legLabel2;
   legLabel2 << std::setprecision(3);
   legLabel2 << "#Delta=" << fDelta;
@@ -503,46 +534,21 @@ void ChargeDensity::Display(TCanvas *c){
   leg2->AddEntry(grCumStart, legLabel2.str().c_str(), "");
   leg2->Draw("same");
 
-
-  pad3A->cd();
-  TGraph *grDer = new TGraphErrors(fZCumDer.size(), &fRho[0], &fZCumDer[0], 0, &fZCumDerErr[0]);
-  grDer->SetTitle("");
-  grDer->GetHistogram()->GetYaxis()->SetTitle("Z'(#rho) [ADCxTT]");
-  grDer->GetHistogram()->GetXaxis()->SetTitle("#rho");
-  grDer->Draw("alp");
-
-  TLegend* leg3 = new TLegend(0.5, 0.60, 0.85, 0.85);
-  leg3->SetBorderSize(0);
-  leg3->SetFillStyle(0);
-  leg3->SetTextFont(62);
-  leg3->SetTextSize(0.075);
   std::ostringstream legLabel3;
   legLabel3 << std::setprecision(3);
   legLabel3 << "#eta=" << fEta;
-  leg3->AddEntry(grDer, legLabel3.str().c_str(), "");
+  leg2->AddEntry(grDer, legLabel3.str().c_str(), "");
   legLabel3.str("");
   legLabel3 << " #alpha="<<fAlpha;
-  leg3->AddEntry(grDer, legLabel3.str().c_str(), "");
-  leg3->Draw("same");
+  leg2->AddEntry(grDer, legLabel3.str().c_str(), "");
 
-  pad3B->cd();
-  TGraph *grCounter = new TGraph(fRho.size(), &fRho[0], &fZCounter[0]);
-  grCounter->SetTitle("");
-  grCounter->GetHistogram()->GetYaxis()->SetTitle("# hits(#rho)");
-  grCounter->GetHistogram()->GetXaxis()->SetTitle("#rho");
-  grCounter->Draw("ALP");
-
-  TLegend* leg4 = new TLegend(0.5, 0.60, 0.85, 0.85);
-  leg4->SetBorderSize(0);
-  leg4->SetFillStyle(0);
-  leg4->SetTextFont(62);
-  leg4->SetTextSize(0.075);
   std::ostringstream legLabel4;
   legLabel4 << std::setprecision(3);
   legLabel4 << "#iota=" << fIota;
-  leg4->AddEntry(grDer, legLabel4.str().c_str(), "");
-  leg4->Draw("same");
+  leg2->AddEntry(grDer, legLabel4.str().c_str(), "");
+  leg2->Draw("same");
 
+  leg2->Draw();
 
   c->cd();
   c->Update();

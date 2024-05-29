@@ -345,13 +345,41 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
         c1->WaitPrimitive();
         
     }
-
-
     
 
-    
-    
-    
-    
+}
+
+
+
+//---------  Main function
+void RunPlotAveragedEdx(std::string fInputFileName="", std::string fTreeDirName = "lambdaPidPandoraAna/", std::string fTreeName = "CalorimetryTree")
+{
+
+    //--------- Input TTree
+    TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
+    TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
+
+    //--------- Binning
+    Int_t nBinsX = 100;
+    Double_t xMin = 0;
+    Double_t xMax = 20;
+    Int_t nBinsY = 50;
+    Double_t yMin = 0;
+    Double_t yMax = 40;
+
+    // TH2F
+    TCanvas *c1 = new TCanvas("c1","c1",1200,650);
+    TH2F *h_dEdxLI = new TH2F("h_dEdxLI",";Residual Range [cm]; dE/dx [MeV]",nBinsX,xMin,xMax, nBinsY,yMin,yMax);
+    TH2F *h_dEdxHI = new TH2F("h_dEdxHI",";Residual Range [cm]; dE/dx [MeV]",nBinsX,xMin,xMax, nBinsY,yMin,yMax);
+
+    // Draw
+    fTree->Draw("DepositedEnergyLI:ResidualRangeLI>>h_dEdxLI","","colz");
+    fTree->Draw("DepositedEnergyHI:ResidualRangeHI>>h_dEdxHI","","colz");
+
+    c1->cd();
+    h_dEdxLI->Draw("colz");
+    h_dEdxHI->Draw("colz same");
+    c1->Update();
+    c1->WaitPrimitive();
 
 }

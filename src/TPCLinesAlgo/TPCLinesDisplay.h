@@ -41,7 +41,7 @@
 
 class TPCLinesDisplay {
     private:
-        void DrawHitScatter(std::vector<SHit> hitV, TLegend* leg, std::string label, int color, int style, double size, double errorAlpha, bool markerByCluster=false);
+        void DrawHitScatter(std::vector<SHit> hitV, TLegend* leg, std::string label, int color, int style, double size, double errorAlpha, bool markerByCluster=false, bool addClusterIDLabels=false);
         void DrawLinearCluster(SLinearCluster cluster, TLegend* leg, std::string label, int color, double size=1.1, int style=4);
         void DrawLine(LineEquation line, double xmin, double xmax, TLegend* leg, std::string label, int color, int style);
         TH2F* GetFrame(std::vector<SHit> hitsV, std::string label);
@@ -61,7 +61,7 @@ class TPCLinesDisplay {
             bool wait,
             std::string eventLabel,
             std::vector<SHit> allHitsV,
-            LineEquation houghLine,
+            LineEquation houghLine=LineEquation(-1, -1),
             std::vector<SHit> selectedHitsV={},
             std::vector<SLinearCluster> clustersV={},
             SLinearCluster mainDirection = SLinearCluster(std::vector<SHit> {}),

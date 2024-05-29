@@ -29,7 +29,7 @@ target_include_directories(RunAlgoTPCLines PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/T
 target_link_libraries(RunAlgoTPCLines PUBLIC  sobjects_library frans_library  seventhandle_library tpclines_library ROOT::Tree)
 
 # Add main executable
-#add_executable(RunAlgoFRANS RunAlgoFRANS.cpp)
+add_executable(RunAlgoFRANS RunAlgoFRANS.cpp)
 # Link the libraries to the main executable
-#target_include_directories(RunAlgoFRANS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/FRANS ${CMAKE_CURRENT_SOURCE_DIR}/TPCLinesAlgo)
-#target_link_libraries(RunAlgoFRANS PUBLIC seventhandle_library sobjects_library tpclines_library frans_library)
+target_include_directories(RunAlgoFRANS PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/FRANS ${CMAKE_CURRENT_SOURCE_DIR}/TPCLinesAlgo)
+target_link_libraries(RunAlgoFRANS PUBLIC seventhandle_library sobjects_library tpclines_library frans_library)

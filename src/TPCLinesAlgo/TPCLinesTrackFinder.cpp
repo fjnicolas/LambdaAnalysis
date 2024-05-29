@@ -487,7 +487,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "Connectedness clusters", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
+        fDisplay.Show(true, "DBSCAN clusters: connectedness", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
     }
 
     // Capture missing hits by the original PCA direction
@@ -499,7 +499,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
     
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "Connectedness clusters with capture", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
+        fDisplay.Show(true, "DBSCAN clusters: connectedness", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
     }
     
     //---------- Compactness clusters block
@@ -607,7 +607,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
         //::DISPLAY
         if(fTPCLinesTrackFinderPset.Verbose>=2){
-            fDisplay.Show(true, "Compactness clusters: ", hitList, houghLine, hitPCATubeList, finalClustersV);
+            fDisplay.Show(true, "DBSCAN clusters: compactness", hitList, houghLine, hitPCATubeList, finalClustersV);
         }
 
     }
