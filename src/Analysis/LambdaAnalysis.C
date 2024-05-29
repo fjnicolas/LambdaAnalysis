@@ -25,7 +25,7 @@ std::vector<SampleDef> sampleDefs = {
     fSaLambdaQENuMu
     ,fSaBNBInclusive
     ,fSaDirt
-    //,fSaCosmic
+    ,fSaCosmic
 };
 
 std::vector<SampleDef> sampleDefsExtended = {

@@ -563,20 +563,47 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(SOrigin mainOrigin, STriang
 
     // set double precision limit
     double dVertexTrack = std::numeric_limits<double>::max();
+    double distW_MainHit_MainTrack = std::numeric_limits<double>::max();
+
     // if the triangle vertex is within the main track start/end, check the drift
     if(Triangle.GetMainVertex().X() > MainDirection.GetMinX() && Triangle.GetMainVertex().X() < MainDirection.GetMaxX()){
         // Get distance to the vertex
         LineEquation trackEq = MainDirection.GetTrackEquation();
         dVertexTrack = trackEq.GetDistance(Triangle.GetMainVertex());
-        passJunctionIsFree = passJunctionIsFree && (dVertexTrack > 1.5 * MainDirection.GetAverageWidth());
+        
+        // OldMay passJunctionIsFree = passJunctionIsFree && (dVertexTrack > 1.5 * MainDirection.GetAverageWidth());
+
+        SHit mainVertexHit = Triangle.GetMainVertexHit();
+        distW_MainHit_MainTrack = MainDirection.GetHitCluster().GetMinDistanceToClusterW(mainVertexHit);
+        passJunctionIsFree = passJunctionIsFree && (distW_MainHit_MainTrack > 1.5 * MainDirection.GetAverageWidth());        
     }
-    
+
     if (fTPCLinesVertexFinderPset.Verbose >= 1) {
         std::cout << " - - - Check 3: Junction does not intersect with other tracks - - - \n";
         std::cout << "NHits in the middle: " << nHitsInMiddle << " Pass? " << passJunctionIsFree << std::endl;
         std::cout << "Main track average width: " << MainDirection.GetAverageWidth() << " Distance to the vertex: " << dVertexTrack << std::endl;
+        std::cout<<"   -- Vertex hits distanceW to main track: "<<distW_MainHit_MainTrack<<std::endl;
         std::cout << "  ** Pass: " << passJunctionIsFree << std::endl;
     }
+
+    // -------- CHECK 4: EndPoint of the triangle
+    
+    SHit triangleEndHitA = Triangle.GetTrack1().GetOppositeEdgeHit(Triangle.GetMainVertex());
+    SHit triangleEndHitB = Triangle.GetTrack2().GetOppositeEdgeHit(Triangle.GetMainVertex());
+    double distW_EndHitA_MainTrack = MainDirection.GetHitCluster().GetMinDistanceToClusterW(triangleEndHitA);
+    double distW_EndHitB_MainTrack = MainDirection.GetHitCluster().GetMinDistanceToClusterW(triangleEndHitB);
+
+    double mainTrackWidthTol = 1.5 * MainDirection.GetAverageWidth();
+    bool passTriangleEndHits = (distW_EndHitA_MainTrack > mainTrackWidthTol) && (distW_EndHitB_MainTrack > mainTrackWidthTol);
+
+    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
+        std::cout << " - - - Check 4: End hits of the triangle not contained in the main track - - - \n";
+        std::cout << " End hit 1: " << triangleEndHitA.X() << " " << triangleEndHitA.Y() << " " << distW_EndHitA_MainTrack << std::endl;
+        std::cout << " End hit 2: " << triangleEndHitB.X() << " " << triangleEndHitB.Y() << " " << distW_EndHitB_MainTrack << std::endl;
+        std::cout << " Main track wdith tol: " << mainTrackWidthTol << std::endl;
+        std::cout << " Pass? "<< passTriangleEndHits << std::endl;
+    }
+
 
     // CHECK 4: Check how many hits of triangle tracks are contained in the main direction hypothesis
     /*bool passAngleTracksNotInMain = true;
@@ -651,7 +678,7 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(SOrigin mainOrigin, STriang
         std::cout << "  Pass triangle inequality? " << passTriangleInequality << std::endl;
     }
 
-    bool passKinematicChecks = junctionContained && passJunctionIsFree && passTriangleInequality;
+    bool passKinematicChecks = junctionContained && passJunctionIsFree && passTriangleEndHits && passTriangleInequality;
 
     if (fTPCLinesVertexFinderPset.Verbose >= 1) {
         std::cout << " \n - - - PASS ALL CHECKS? - - - " << passKinematicChecks << std::endl;

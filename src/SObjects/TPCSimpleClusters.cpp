@@ -531,6 +531,33 @@ SPoint SLinearCluster::GetEdgeHit(SPoint p){
     return SPoint(edgeHit.X(), edgeHit.Y());
 }
 
+SHit SLinearCluster::GetOppositeEdgeHit(SPoint p){
+    
+    double minX=1e4;
+    double maxX = -1e4;
+    SHit hitAtMinX;
+    SHit hitAtMaxX;
+   
+    for(SHit &h:GetHits()){
+        SPoint projP = fTrackEquation.GetLineClosestPoint(h);
+        if(projP.X()>maxX) {
+            maxX = projP.X();
+            hitAtMaxX = h;
+        }
+        if(projP.X()<minX){
+            minX = projP.X();
+            hitAtMinX = h;
+        }
+
+    }
+
+    if( std::abs(p.X()-minX) < std::abs(p.X()-maxX) )
+        return hitAtMaxX;
+    else
+        return hitAtMinX;
+
+}
+
 double SLinearCluster::GetLength(){
     return std::hypot( 0.3*(fMaxX-fMinX), 0.075*(fYAtMaxX-fYAtMinX) );
 }
