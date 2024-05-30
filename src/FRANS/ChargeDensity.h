@@ -23,7 +23,7 @@
 #include "TGraphErrors.h"
 #include "TH1F.h"
 #include "TGraph.h"
-#include "TGAxis.h"
+#include "TGaxis.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 #include <TROOT.h>

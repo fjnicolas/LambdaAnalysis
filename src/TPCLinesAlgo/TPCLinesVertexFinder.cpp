@@ -565,6 +565,7 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(SOrigin mainOrigin, STriang
     double dVertexTrack = std::numeric_limits<double>::max();
     double distW_MainHit_MainTrack = std::numeric_limits<double>::max();
 
+    double mainTrackWidthTol = 1. * MainDirection.GetAverageWidth();
     // if the triangle vertex is within the main track start/end, check the drift
     if(Triangle.GetMainVertex().X() > MainDirection.GetMinX() && Triangle.GetMainVertex().X() < MainDirection.GetMaxX()){
         // Get distance to the vertex
@@ -575,7 +576,7 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(SOrigin mainOrigin, STriang
 
         SHit mainVertexHit = Triangle.GetMainVertexHit();
         distW_MainHit_MainTrack = MainDirection.GetHitCluster().GetMinDistanceToClusterW(mainVertexHit);
-        passJunctionIsFree = passJunctionIsFree && (distW_MainHit_MainTrack > 1.5 * MainDirection.GetAverageWidth());        
+        passJunctionIsFree = passJunctionIsFree && (distW_MainHit_MainTrack > mainTrackWidthTol);
     }
 
     if (fTPCLinesVertexFinderPset.Verbose >= 1) {
@@ -593,7 +594,6 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(SOrigin mainOrigin, STriang
     double distW_EndHitA_MainTrack = MainDirection.GetHitCluster().GetMinDistanceToClusterW(triangleEndHitA);
     double distW_EndHitB_MainTrack = MainDirection.GetHitCluster().GetMinDistanceToClusterW(triangleEndHitB);
 
-    double mainTrackWidthTol = 1.5 * MainDirection.GetAverageWidth();
     bool passTriangleEndHits = (distW_EndHitA_MainTrack > mainTrackWidthTol) && (distW_EndHitB_MainTrack > mainTrackWidthTol);
 
     if (fTPCLinesVertexFinderPset.Verbose >= 1) {
@@ -805,12 +805,19 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 }
 
                 bool inEdgeOrigin;
+                bool oneEdgeOrigin;
                 
                 float maxDEdge = fTPCLinesVertexFinderPset.MaxDistToEdge;
 
                 if( (dEdge2 >= maxDEdge || dEdge1 >= maxDEdge)) {
                     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "   *** Intersection is not with edge hits" << std::endl;
                     inEdgeOrigin = false;
+                    if(dEdge1 >= maxDEdge && dEdge2 >= maxDEdge){
+                        oneEdgeOrigin = false;
+                    }
+                    else{
+                        oneEdgeOrigin = true;
+                    }
                 }
                 else{
                     inEdgeOrigin = true;
@@ -824,6 +831,12 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     if(dEdge1Comp>maxDEdge || dEdge2Comp>maxDEdge){
                         if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout << "   *** Intersection is not with edge hits" << std::endl;
                         inEdgeOrigin = false;
+                        if(dEdge1Comp >= maxDEdge && dEdge2Comp >= maxDEdge){
+                            oneEdgeOrigin = false;
+                        }
+                        else{
+                            oneEdgeOrigin = true;
+                        }
                     }
                 }
                 if(vertexHits.size()>0){
@@ -843,6 +856,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                         std::cout<<"   Connectedness Overlap HitsCluster 1/2: "<<connOvVertexHitsCluster1<<" "<<connOvVertexHitsCluster2<<std::endl;
                         std::cout<<"   Connectedness X HitsCluster 1/2: "<<connXVertexHitsCluster1<<" "<<connXVertexHitsCluster2<<std::endl;
                     }
+                    
                     // vertex hits must be connected to the tracks
                     if( connXVertexHitsCluster1>2 || connXVertexHitsCluster2>2){
                         if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" VERTEX HITS NOT CONNECTED\n";
@@ -872,13 +886,15 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 
                 // check distance to the PANDORA vertex
                 float dIntPBallVertex = std::hypot( 0.3*(intP.X() - ballVertex.X()), 0.075*(intP.Y() - ballVertex.Y()) );
-                if(fTPCLinesVertexFinderPset.Verbose>=1)
-                        std::cout << "     Distance to PANDORA vertex: " << dIntPBallVertex << std::endl;
+                if(fTPCLinesVertexFinderPset.Verbose>=1){
+                    std::cout << "     Distance to PANDORA vertex: " << dIntPBallVertex << std::endl;
+                    std::cout << " Edge origin: " << inEdgeOrigin << " One edge origin: " << oneEdgeOrigin << std::endl;
+                }
                 
                 // keep the vertex if is within the PANDORA ROI
                 bool isIntersection= (intP.X()!=-1 && intP.Y()!=-1 && dIntPBallVertex<fTPCLinesVertexFinderPset.VertexDistanceROI);
 
-                if(isIntersection){
+                if(isIntersection && (inEdgeOrigin || oneEdgeOrigin)){
                     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"    Adding potential intersection..."<<std::endl;
                     SOrigin newOr = SOrigin(intP, {track1, track2}, inEdgeOrigin, intPYerror);
                     allIntersections.push_back(newOr);
