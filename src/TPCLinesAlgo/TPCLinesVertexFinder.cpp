@@ -1072,6 +1072,10 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         float d = std::min(d1, d2);
         SPoint edgePointClosest = (d1<d2)? track.GetStartPoint() : track.GetEndPoint();
         SPoint edgePointFarthest = (d1>d2)? track.GetStartPoint() : track.GetEndPoint();
+        if(fTPCLinesVertexFinderPset.Verbose>=1){
+            std::cout<<" Edge point closest: "<<edgePointClosest;
+            std::cout<<" Edge point farthest: "<<edgePointFarthest;
+        }
 
         double trackLength = std::hypot( 0.3*(track.GetStartPoint().X() - track.GetEndPoint().X()), 0.075*(track.GetStartPoint().Y()-track.GetEndPoint().Y()) );
     
