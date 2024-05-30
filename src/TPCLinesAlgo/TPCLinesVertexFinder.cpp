@@ -956,6 +956,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 continue;
             }
         }
+        
 
         if(deltaRayIntersection){
             
@@ -1035,27 +1036,35 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             int kinkTrackIx;
             int parentKinkTrackIx;
             SLinearCluster kinkTrack;
+            SLinearCluster parentKinkTrack;
             if( track1.NHits()>track2.NHits() ){
                 kinkTrackIx = track2.GetId();
                 kinkTrack = track2;
+                parentKinkTrack = track1;
                 parentKinkTrackIx = track1.GetId();
             }
             else{
                 kinkTrackIx = track1.GetId();
                 kinkTrack = track1; 
+                parentKinkTrack = track2;
                 parentKinkTrackIx = track2.GetId();
             }
 
-            if(usedTrack[kinkTrackIx]==false){
+            /*if(usedTrack[kinkTrackIx]==false){
                 SOrigin newOr(ori.GetPoint(), {kinkTrack}, false, ori.GetYError(), parentKinkTrackIx);
                 originList.push_back( newOr );
                 usedTrack[kinkTrackIx]=true;
                 if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  Adding kink track "<<kinkTrack.GetId()<<" at "<<ori.GetPoint();
-            }
+            }*/
+            SOrigin newOr(ori.GetPoint(), {kinkTrack, parentKinkTrack}, false, ori.GetYError(), parentKinkTrackIx);
+            originList.push_back( newOr );
+            usedTrack[kinkTrackIx]=true;
+            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  Adding kink track "<<kinkTrack.GetId()<<" at "<<ori.GetPoint();
         }
     }
     
     // Third create origins for the unmatched tracks
+    if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" MERGING UNMATCHED TRACKS\n";
     for(SLinearCluster & track:trackList){
 
         float d1 = std::hypot( 0.3*(track.GetStartPoint().X() - ballVertex.X()), 0.075*(track.GetStartPoint().Y() - ballVertex.Y()) );
@@ -1092,7 +1101,7 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
         }
 
         // in matched, but its a long track and the closest hit is not matched, add origin
-        else if(usedTrack[track.GetId()]==true && track.NHits()>=10){
+        /*else if(usedTrack[track.GetId()]==true && track.NHits()>=10){
     
             bool unmatchedClosestEdge = true;
             for(SOrigin &ori:originList){
@@ -1113,11 +1122,11 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 }
             }
             if(unmatchedClosestEdge){
-                if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  Adding new origin for unmatched closest edge "<<track.GetId()<<" at "<<edgePointClosest;
+                if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  Adding new origin for closest edge "<<track.GetId()<<" at "<<edgePointClosest;
                 originList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );
                 usedTrack[track.GetId()]=true;
             }
-        }
+        }*/
                
     }
 
@@ -1149,9 +1158,9 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
 
         double occ1 = track1.GetOccupancy1D();
         double occ2 = track2.GetOccupancy1D();
-        if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"Occupancy: "<<occ1<<" "<<occ2<<std::endl;
+        if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"    Occupancy: "<<occ1<<" "<<occ2<<std::endl;
         if(occ1<fTPCLinesVertexFinderPset.MinTrackOccupancy || occ2<fTPCLinesVertexFinderPset.MinTrackOccupancy){
-            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" SKIP... low occupancy\n";
+            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"    SKIP... low occupancy\n";
             continue;
         }
 
@@ -1162,13 +1171,13 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             SLinearCluster mainTrack = ori1.GetTrackEntry(0);
 
             // Only intersetctions between "good" tracks
-            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  Main track "<<mainTrack.GetId()<<" goodness: "<<mainTrack.GetTrackEquation().Goodness()<<std::endl;
+            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  ** Testing main track "<<mainTrack.GetId()<<" goodness: "<<mainTrack.GetTrackEquation().Goodness()<<std::endl;
             if(std::abs(mainTrack.GetTrackEquation().Goodness())>fTPCLinesVertexFinderPset.MinTrackGoodness) continue;
 
             double occ3 = mainTrack.GetOccupancy1D();
-            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"Occupancy 3: "<<occ3<<std::endl;
+            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"    Occupancy 3: "<<occ3<<std::endl;
             if(occ3<fTPCLinesVertexFinderPset.MinTrackOccupancy){
-                if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" SKIP... low occupancy for long track\n";
+                if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"    SKIP... low occupancy for long track\n";
                 continue;
             }
 
@@ -1178,38 +1187,62 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             
             // Origins associated to main track and the V tracks
             std::vector<SOrigin> mainTrackOrigins;
-            std::vector<SOrigin> VTracksDeltaOrigins;
+            std::vector<SOrigin> VTracksOrigins;
             for(SOrigin &ori2:originList){
                 for(int k=0; k<ori2.Multiplicity(); k++){
                     if(mainTrack.GetId()==ori2.GetTrackEntry(k).GetId()){
                         mainTrackOrigins.push_back(ori2);
                     }
-                    else if(ori2.IsEdgeOrigin()==false && (track1.GetId()==ori2.GetTrackEntry(k).GetId() || track2.GetId()==ori2.GetTrackEntry(k).GetId()) ){
-                        VTracksDeltaOrigins.push_back(ori2);
+                    else if( track1.GetId()==ori2.GetTrackEntry(k).GetId() || track2.GetId()==ori2.GetTrackEntry(k).GetId() ){
+                        VTracksOrigins.push_back(ori2);
                     }
+                }
+            }
+
+            std::unordered_set<int> mainConnectedTrackIDs;
+            for(SOrigin &ori2:mainTrackOrigins){
+                for(int k=0; k<ori2.Multiplicity(); k++){
+                    mainConnectedTrackIDs.insert(ori2.GetTrackEntry(k).GetId());
+                }
+            }            
+            std::unordered_set<int> VConnectedTrackIDs;
+            for(SOrigin &ori2:VTracksOrigins){
+                for(int k=0; k<ori2.Multiplicity(); k++){
+                    VConnectedTrackIDs.insert(ori2.GetTrackEntry(k).GetId());
+                }
+            }
+
+
+            if(fTPCLinesVertexFinderPset.Verbose>=1){
+                std::cout<<"\n    Main track origins: ";
+                for( auto &connTrkID:mainConnectedTrackIDs){
+                    std::cout<<connTrkID<<" ";
+                }
+                std::cout<<"\n    V tracks delta ray origins: ";
+                for( auto &connTrkID:VConnectedTrackIDs){
+                    std::cout<<connTrkID<<" ";
                 }
             }
 
             //main track and the V tracks cannot be connected
-            bool connectedThroughOthers = false;
-            for(SOrigin &ori2:mainTrackOrigins){
-                for(int k=0; k<ori2.Multiplicity(); k++){
-                    if(track1.GetId()==ori2.GetTrackEntry(k).GetId() || track2.GetId()==ori2.GetTrackEntry(k).GetId()){
-                        connectedThroughOthers=true;
-                    }
+            std::unordered_set<int> intersectionOrigins;
+            for(int connTrkID:mainConnectedTrackIDs){
+                if(VConnectedTrackIDs.find(connTrkID)!=VConnectedTrackIDs.end()){
+                    intersectionOrigins.insert(connTrkID);
                 }
             }
-            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" Connected through others "<<connectedThroughOthers<<std::endl;
+            
+            if(fTPCLinesVertexFinderPset.Verbose>=1){
+                std::cout<<"\n    Intersection tracks: ";
+                for( auto &connTrkID:intersectionOrigins){
+                    std::cout<<connTrkID<<" ";
+                }
+            }
+
+            bool connectedThroughOthers = !intersectionOrigins.empty();
+            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"    Connected through others "<<connectedThroughOthers<<std::endl;
             if(connectedThroughOthers==true)
                 continue;
-
-            // delta ray check
-            bool deltaRayIntersection = VTracksDeltaOrigins.size()>=1;
-            if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" Delta ray intersection "<<deltaRayIntersection<<std::endl;
-            if(deltaRayIntersection){
-                if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" SKIP... delta ray intersection\n";
-                continue;
-            }
             
 
             // ------ Create the triangle object
