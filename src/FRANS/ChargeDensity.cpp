@@ -488,7 +488,7 @@ void ChargeDensity::Display(TCanvas *c){
   grCumStart->GetXaxis()->CenterTitle();
   // Draw secondary X-axis
   double yAxisPos = grCumStart->GetHistogram()->GetYaxis()->GetXmax();
-  TGaxis *axis2 = new TGaxis(0, yAxisPos, fZCumStart.size(), yAxisPos, "ftau", 005, "-");
+  TGaxis *axis2 = new TGaxis(0, yAxisPos, fZCumStart.size(), yAxisPos, 0, 1, 505, "R-");
   axis2->CenterTitle();
   axis2->SetTitle("#rho/#rho_{max}");
   axis2->SetLineColor(kGray+2);

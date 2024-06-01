@@ -234,7 +234,7 @@ void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::st
 
     } while (std::next_permutation(loopCuts.begin(), loopCuts.end()));
 
-    return 0;
+    return;
 }
 
 

@@ -62,6 +62,10 @@ public:
     int fIntNElectronP;
     int fIntNElectronM;
     int fIntNLambda;
+    int fIntNSigma0;
+    int fIntNSigmaPlus;
+    int fIntNSigmaMinus;
+    int fIntNHyperons;
 
     // True Vertex information
     double fNuvE, fNuvT, fNuvX, fNuvY, fNuvZ;
@@ -98,6 +102,9 @@ public:
     double fLambdaDecayLongitudinalAsymmetry;
     double fLambdaBeta;
     double fLambdaGamma;
+    double fLambdaX;
+    double fLambdaY;
+    double fLambdaZ;
 
     // Cosmic rejection
     double fCRUMBSScore;
@@ -211,6 +218,7 @@ public:
     double fAngleChargeRelativeDifferenceFit;
 
     // Calorimetry
+    int fNTracks;
     int fNTracksLI;
     int fNTracksHI;
     double fKEHI;
@@ -230,7 +238,13 @@ public:
     double fRecoDecayLongitudinalAsymmetryFromGap;
     double fRecoDecayGapAngleDifference;
 
-
+    // Final reco vertices
+    double fRecoLeptonX;
+    double fRecoLeptonY;
+    double fRecoLeptonZ;
+    double fRecoHyperonX;
+    double fRecoHyperonY;
+    double fRecoHyperonZ;
 
 
     void FillTree() { fTree->Fill(); }

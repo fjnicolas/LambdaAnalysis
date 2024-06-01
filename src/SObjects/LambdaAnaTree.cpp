@@ -72,6 +72,10 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("IntNElectronP", &fIntNElectronP, readMode);
     SetBranch("IntNElectronM", &fIntNElectronM, readMode);
     SetBranch("IntNLambda", &fIntNLambda, readMode);
+    SetBranch("IntNSigma0", &fIntNSigma0, readMode);
+    SetBranch("IntNSigmaPlus", &fIntNSigmaPlus, readMode);
+    SetBranch("IntNSigmaMinus", &fIntNSigmaMinus, readMode);
+    SetBranch("IntNHyperons", &fIntNHyperons, readMode);
 
     // Set branch addresses for true vertex information
     SetBranch("NuvE", &fNuvE, readMode);
@@ -110,6 +114,9 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("LambdaGamma", &fLambdaGamma, readMode);
     SetBranch("LambdaDecayTransverseMomentum", &fLambdaDecayTransverseMomentum, readMode);
     SetBranch("LambdaDecayLongitudinalAsymmetry", &fLambdaDecayLongitudinalAsymmetry, readMode);
+    SetBranch("LambdaX", &fLambdaX, readMode);
+    SetBranch("LambdaY", &fLambdaY, readMode);
+    SetBranch("LambdaZ", &fLambdaZ, readMode);
     SetBranch("HasLambda", &fHasLambda, readMode);
     SetBranch("HasLambdaVDecayed", &fHasLambdaVDecayed, readMode);
 
@@ -221,6 +228,7 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("AngleChargeRelativeDifferenceFit", &fAngleChargeRelativeDifferenceFit, readMode);
 
     // Set branch addresses for calorimetry information
+    SetBranch("NTracks", &fNTracks, readMode);
     SetBranch("NTracksLI", &fNTracksLI, readMode);
     SetBranch("NTracksHI", &fNTracksHI, readMode);
     SetBranch("KEHI", &fKEHI, readMode);
@@ -240,6 +248,13 @@ void LambdaAnaTree::InitializeTree(bool readMode){
     SetBranch("RecoDecayLongitudinalAsymmetryFromGap", &fRecoDecayLongitudinalAsymmetryFromGap, readMode);
     SetBranch("RecoDecayGapAngleDifference", &fRecoDecayGapAngleDifference, readMode);
 
+    // Final reco vertices
+    SetBranch("RecoLeptonX", &fRecoLeptonX, readMode);
+    SetBranch("RecoLeptonY", &fRecoLeptonY, readMode);
+    SetBranch("RecoLeptonZ", &fRecoLeptonZ, readMode);
+    SetBranch("RecoHyperonX", &fRecoHyperonX, readMode);
+    SetBranch("RecoHyperonY", &fRecoHyperonY, readMode);
+    SetBranch("RecoHyperonZ", &fRecoHyperonZ, readMode);
 
     if(readMode==false)
         SetBranch("InputFileName", &fInputFileName, readMode);
@@ -273,6 +288,10 @@ void LambdaAnaTree::ResetVars(){
     fIntNElectronP = -999;
     fIntNElectronM = -999;
     fIntNLambda = -999;
+    fIntNSigma0 = -999;
+    fIntNSigmaPlus = -999;
+    fIntNSigmaMinus = -999;
+    fIntNHyperons = -999;
 
     fNuvE = -999;
     fNuvT = -999;
@@ -307,6 +326,9 @@ void LambdaAnaTree::ResetVars(){
     fLambdaGamma = -999;
     fLambdaDecayTransverseMomentum = -999;
     fLambdaDecayLongitudinalAsymmetry = -999;
+    fLambdaX = -999;
+    fLambdaY = -999;
+    fLambdaZ = -999;
     fHasLambda = false;
     fHasLambdaVDecayed = false;
 
@@ -409,6 +431,7 @@ void LambdaAnaTree::ResetVars(){
     fAngleChargeRelativeDifferenceFit = -999;
 
     // Calorimetry
+    fNTracks = -999;
     fNTracksLI = -999;
     fNTracksHI = -999;
     fKEHI = -999;
@@ -428,7 +451,13 @@ void LambdaAnaTree::ResetVars(){
     fRecoDecayLongitudinalAsymmetryFromGap = -999;
     fRecoDecayGapAngleDifference = -999;
 
-    
+    // Final reco vertices
+    fRecoLeptonX = -999;
+    fRecoLeptonY = -999;
+    fRecoLeptonZ = -999;
+    fRecoHyperonX = -999;
+    fRecoHyperonY = -999;
+    fRecoHyperonZ = -999;
 
 }
 
