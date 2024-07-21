@@ -20,7 +20,7 @@ void MacroCompareViews(std::string path="./",
                        const std::string fTreeName = "FRANSTree")
 {
     
-    bool fTrainBDT = false; fTrainBDT = true;
+    bool fTrainBDT = false; //fTrainBDT = true;
     bool fUseIota = false; fUseIota = true;
     bool fUseAlpha = false; //fUseAlpha = true;
     // map with label and file name
@@ -86,16 +86,19 @@ void MacroCompareViews(std::string path="./",
     for (auto it = fTMVAWeightsMap.begin(); it != fTMVAWeightsMap.end(); ++it) {
         std::cout<<"Loading TMVA for "<<it->first<<" "<<it->second<<std::endl;
         TMVA::Reader* reader = new TMVA::Reader();
-        reader->AddVariable("FRANSObj"+it->first+".fEta", &eta);
-        reader->AddVariable("FRANSObj"+it->first+".fDelta", &delta);
+
         if(fUseAlpha)
             reader->AddVariable("FRANSObj"+it->first+".fAlpha", &alpha);
         if(fUseIota)
             reader->AddVariable("FRANSObj"+it->first+".fIota", &iota);
+        reader->AddVariable("FRANSObj"+it->first+".fEta", &eta);
+        reader->AddVariable("FRANSObj"+it->first+".fDelta", &delta);
         reader->AddVariable("FRANSObj"+it->first+".fFitScore", &fitScore);
+
         reader->AddSpectator("Gap", &_gap);
         reader->AddSpectator("ProtonKE", &_protonKE);
         reader->AddSpectator("PionKE", &_pionKE);
+
         
         reader->BookMVA("FRANS BDT", it->second.c_str());
         fTMVAReaders[it->first] = reader;
@@ -236,15 +239,24 @@ void MacroCompareViews(std::string path="./",
     TCut signalCut("isSignal==1");
     TCut bgCut("isSignal==0");
 
+
+
+    // Output canvas
+    gStyle->SetNdivisions(505, "X");
+    gStyle->SetPadBottomMargin(0.15);
+    TCanvas* c = new TCanvas("c", "Score comparison", 800, 800);
+    std::vector<TPad*> Tp = buildpadcanvas(2,2);
+
     //--------- Score histograms for the different views
     double binLow = -0.5;
     double binHigh = 0.5;
-    TH1F hScore0Signal("hScore0Signal", "U plane;FRANS Score;# entries", 50, -0.5, 0.5);
-    TH1F hScore1Signal("hScore1Signal", "V plane;FRANS Score;# entries", 50, -0.5, 0.5);
-    TH1F hScore2Signal("hScore2Signal", "C pane;FRANS Score;# entries", 50, -0.5, 0.5);
-    TH1F hScore0Background("hScore0Background", "U plane;FRANS Score;# entries", 50, -0.5, 0.5);
-    TH1F hScore1Background("hScore1Background", "V plane;FRANS Score;# entries", 50, -0.5, 0.5);
-    TH1F hScore2Background("hScore2Background", "C plane;FRANS Score;# entries", 50, -0.5, 0.5);
+    int nBins = 25;    
+    TH1F hScore0Signal("hScore0Signal", "U plane;FRANS Score;AU", nBins, binLow, binHigh);
+    TH1F hScore1Signal("hScore1Signal", "V plane;FRANS Score;AU", nBins, binLow, binHigh);
+    TH1F hScore2Signal("hScore2Signal", "C pane;FRANS Score;AU", nBins, binLow, binHigh);
+    TH1F hScore0Background("hScore0Background", "U plane;FRANS Score;AU", nBins, binLow, binHigh);
+    TH1F hScore1Background("hScore1Background", "V plane;FRANS Score;AU", nBins, binLow, binHigh);
+    TH1F hScore2Background("hScore2Background", "C plane;FRANS Score;AU", nBins, binLow, binHigh);
     // Set stats
     hScore0Signal.SetStats(0);
     hScore1Signal.SetStats(0);
@@ -252,21 +264,22 @@ void MacroCompareViews(std::string path="./",
     hScore0Background.SetStats(0);
     hScore1Background.SetStats(0);
     hScore2Background.SetStats(0);
+    // Line widths
+    int fLineWidth = 3;
 
     int fSignalLS = kSolid;
     int fBackgroundLS = kDashed;
     int fSignalLC = kAzure+1;
     int fBackgroundLC = kOrange+1;
-    SetFRANSStyle();
-    
 
-    // Output canvas
-    TCanvas* c = new TCanvas("c", "Score comparison", 800, 800);
-    gStyle->SetPadBottomMargin(0.15);
-    std::vector<TPad*> Tp = buildpadcanvas(2,2);
-    gStyle->SetPadBottomMargin(0.15);
-    
-    // Draw the histograms for signal and
+    hScore0Signal.SetLineWidth(fLineWidth);
+    hScore1Signal.SetLineWidth(fLineWidth);
+    hScore2Signal.SetLineWidth(fLineWidth);
+    hScore0Background.SetLineWidth(fLineWidth);
+    hScore1Background.SetLineWidth(fLineWidth);
+    hScore2Background.SetLineWidth(fLineWidth);
+
+    // Draw the histograms for signal and background (view 0)
     Tp.at(1)->cd();
     t->Draw("score0>>hScore0Signal", signalCut);
     t->Draw("score0>>hScore0Background", bgCut);
@@ -290,6 +303,7 @@ void MacroCompareViews(std::string path="./",
     legend->SetBorderSize(0);
     legend->Draw("same");
 
+    // Draw the histograms for signal and background (view 1)
     Tp.at(2)->cd();
     t->Draw("score1>>hScore1Background", bgCut);
     t->Draw("score1>>hScore1Signal", signalCut);
@@ -309,6 +323,7 @@ void MacroCompareViews(std::string path="./",
     // Legend
     legend->Draw("same");
     
+    // Draw the histograms for signal and background (view 2)
     Tp.at(3)->cd();
     t->Draw("score2>>hScore2Signal", signalCut);
     t->Draw("score2>>hScore2Background", bgCut);

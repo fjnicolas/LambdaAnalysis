@@ -380,6 +380,8 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
     //--- Styler
     CutStyler *fStyler(new CutStyler(0));
     double yLabelXPos = plotDefs.size();
+    double fLabelTextSize=0.04;
+    double fEffLabelSize=0.04;
     
     // Vector of TH1F, one per sample, for efficiency
     std::vector<TH1F*> hEfficiencyV;
@@ -464,7 +466,7 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
         gPad->Update();
     
         hEfficiencyV[i]->SetStats(0);
-        hEfficiencyV[i]->SetFillColor(fStyler->GetColor(i));
+        hEfficiencyV[i]->SetFillColor(fStyler->GetColor( sampleDefs[i].Style() ));
         hEfficiencyV[i]->SetBarWidth(0.45);
         hEfficiencyV[i]->SetBarOffset(0.1);
        
@@ -486,7 +488,7 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
             const char *formatEff = (eff < 1) ? "%.1g" : "%.1f";
             // Add the label
             TLatex *latex = new TLatex(xpos, eff, Form(formatEff, eff));
-            latex->SetTextSize(0.04);
+            latex->SetTextSize(fLabelTextSize);
             latex->SetTextAlign(12);
             latex->SetTextAngle(90);
             latex->Draw();
@@ -515,7 +517,7 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
     THStack *hsAll = new THStack("hsAll", "");
     for(int i=0; i<sampleDefs.size(); i++){
         hEfficiencyV[i]->SetStats(0);
-        hEfficiencyV[i]->SetFillColor(fStyler->GetColor(i));
+        hEfficiencyV[i]->SetFillColor(fStyler->GetColor( sampleDefs[i].Style() ));
         hEfficiencyV[i]->SetBarWidth(0.45);
         hEfficiencyV[i]->SetBarOffset(0.1);
         hsAll->Add(hEfficiencyV[i]);        
@@ -534,8 +536,8 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
 
     // Draw Text equispaced for each sample
     for(int i=0; i<sampleDefs.size(); i++){
-        TLatex *latex = new TLatex(0.075, boxesMinY+sampleLegSpace*i+boxRelSize, sampleDefs[i].GetLabelS().c_str());
-        latex->SetTextSize(0.05);
+        TLatex *latex = new TLatex(0.05, boxesMinY+sampleLegSpace*i+boxRelSize, sampleDefs[i].GetLabelS().c_str());
+        latex->SetTextSize(fLabelTextSize);
         latex->SetTextAngle(90);
         latex->SetNDC(kTRUE);
         latex->Draw();
@@ -548,10 +550,10 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
             double eff = hEfficiencyV[i]->GetBinContent(j+1);
             const char *formatEff = (eff < 1) ? "%.1g" : "%.1f";
             TLatex *latexEff = new TLatex(j+sampleStep*(i+0.5), eff, Form(formatEff, eff));
-            latexEff->SetTextSize(0.025);
+            latexEff->SetTextSize(fEffLabelSize);
             latexEff->SetTextAlign(12);
             latexEff->SetTextAngle(90);
-            latexEff->SetTextColor(fStyler->GetColor(i));
+            latexEff->SetTextColor(fStyler->GetColor( sampleDefs[i].Style() ));
             latexEff->Draw();
         }
     }
@@ -563,7 +565,7 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
     // Draw boxes equispaced for each sample
     for(int i=0; i<sampleDefs.size(); i++){
         TBox *box = new TBox(0.25, boxesMinY+sampleLegSpace*i, 0.75, boxesMinY+sampleLegSpace*i+boxRelSize);
-        box->SetFillColor(fStyler->GetColor(i));
+        box->SetFillColor(fStyler->GetColor( sampleDefs[i].Style() ));
         box->Draw();
     }
 
@@ -605,13 +607,13 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
         double eff = hEfficiencySignal->GetBinContent(j+1);
         double pur = hPurity->GetBinContent(j+1);
         TLatex *latexEff = new TLatex(j+0.25,hEfficiencySignal->GetBinContent(j+1), Form("%.1f", eff));
-        latexEff->SetTextSize(0.025);
+        latexEff->SetTextSize(fEffLabelSize);
         latexEff->SetTextAlign(12);
         latexEff->SetTextAngle(90);
         latexEff->SetTextColor(fEffColor);
         latexEff->Draw();
         TLatex *latexPur = new TLatex(j+0.75,hPurity->GetBinContent(j+1), Form("%.1f", pur));
-        latexPur->SetTextSize(0.025);
+        latexPur->SetTextSize(fEffLabelSize);
         latexPur->SetTextAlign(12);
         latexPur->SetTextAngle(90);
         latexPur->SetTextColor(fPurColor);
@@ -654,7 +656,7 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
     THStack *hs = new THStack("hs", "");
     for(int i=0; i<sampleDefs.size(); i++){
         hFractionV[i]->SetStats(0);
-        hFractionV[i]->SetFillColor(fStyler->GetColor(i));
+        hFractionV[i]->SetFillColor(fStyler->GetColor( sampleDefs[i].Style() ));
         hFractionV[i]->SetBarWidth(0.45);
         hFractionV[i]->SetBarOffset(0.1);
         hs->Add(hFractionV[i]);
@@ -678,7 +680,7 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
     // Draw Text equispaced for each sample
     for(int i=0; i<sampleDefs.size(); i++){
         TLatex *latex = new TLatex(0.075, boxesMinY+sampleLegSpace*i+boxRelSize, sampleDefs[i].GetLabelS().c_str());
-        latex->SetTextSize(0.05);
+        latex->SetTextSize(fLabelTextSize);
         latex->SetTextAngle(90);
         latex->SetNDC(kTRUE);
         latex->Draw();
@@ -689,7 +691,7 @@ void MakeCutFlowPlot(const std::vector<PlotDef> plotDefs,
     // Draw boxes equispaced for each sample
     for(int i=0; i<sampleDefs.size(); i++){
         TBox *box = new TBox(0.25, boxesMinY+sampleLegSpace*i, 0.75, boxesMinY+sampleLegSpace*i+boxRelSize);
-        box->SetFillColor(fStyler->GetColor(i));
+        box->SetFillColor(fStyler->GetColor( sampleDefs[i].Style() ));
         box->Draw();
     }
 

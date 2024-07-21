@@ -400,10 +400,10 @@ void ChargeDensity::Display(TCanvas *c){
   // Off stats
   gStyle->SetOptStat(0); 
   //TITLE SIZE AND FONT
-  gStyle->SetTitleFont(52, "TXYZ");
+  //gStyle->SetTitleFont(52, "TXYZ");
   gStyle->SetTitleSize(0.05);
   //LABELS SIZE AND FONT
-  gStyle->SetLabelFont(60, "XYZ");
+  //gStyle->SetLabelFont(60, "XYZ");
   gStyle->SetLabelSize(0.08, "XYZ");
   //AXIS OFFSETS AND SIZES
   gStyle->SetTitleXOffset (0.85);
@@ -414,6 +414,7 @@ void ChargeDensity::Display(TCanvas *c){
   // X axis only 4 digits
   gStyle->SetNdivisions(505, "XY");
 
+  std::string units = ""; //units =" [ADCxTT]";
   double fYTitleOffset = 1.2;
 
   double fTopMargin = 0.1;
@@ -443,7 +444,7 @@ void ChargeDensity::Display(TCanvas *c){
   pad1A->cd();
   TGraph *gr = new TGraph(fRho.size(), &fRho[0], &fZ[0]);
   gr->SetTitle("");
-  gr->GetHistogram()->GetYaxis()->SetTitle("#zeta^{raw}(#rho) [ADCxTT]");
+  gr->GetHistogram()->GetYaxis()->SetTitle( ("#zeta^{raw}(#rho)"+units).c_str() );
   gr->GetHistogram()->GetXaxis()->SetTitle("#rho");
   gr->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
   gr->Draw("alp");
@@ -459,7 +460,7 @@ void ChargeDensity::Display(TCanvas *c){
   pad2A->cd();
   TGraph *grCum = new TGraph(fRho.size(), &fRho[0], &fZCum[0]);
   grCum->SetTitle("");
-  grCum->GetHistogram()->GetYaxis()->SetTitle("Z(#rho) [ADCxTT]");
+  grCum->GetHistogram()->GetYaxis()->SetTitle( ("Z(#rho)"+units).c_str() );
   grCum->GetHistogram()->GetXaxis()->SetTitle("#rho");
   grCum->GetHistogram()->GetYaxis()->SetRangeUser(0, 1);
   grCum->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
@@ -468,7 +469,7 @@ void ChargeDensity::Display(TCanvas *c){
   pad2B->cd();
   TGraph *grDer = new TGraphErrors(fZCumDer.size(), &fRho[0], &fZCumDer[0], 0, &fZCumDerErr[0]);
   grDer->SetTitle("");
-  grDer->GetHistogram()->GetYaxis()->SetTitle("#zeta(#rho) [ADCxTT]");
+  grDer->GetHistogram()->GetYaxis()->SetTitle( ("#zeta(#rho)"+units).c_str() );
   grDer->GetHistogram()->GetXaxis()->SetTitle("#rho");
   grDer->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
   grDer->Draw("alp");
@@ -479,7 +480,7 @@ void ChargeDensity::Display(TCanvas *c){
   pad3A->Draw();
   TGraph *grCumStart = new TGraph(fZCumStart.size(), &fRho[0], &fZCumStart[0]);
   grCumStart->SetTitle("");
-  grCumStart->GetHistogram()->GetYaxis()->SetTitle("#tilde{Z}(#rho) [ADCxTT]");
+  grCumStart->GetHistogram()->GetYaxis()->SetTitle( ("#tilde{Z}(#rho)"+units).c_str() );
   grCumStart->GetHistogram()->GetXaxis()->SetTitle("#rho");
   grCumStart->GetHistogram()->GetYaxis()->SetRangeUser(-0.1, 1.1);
   grCumStart->GetHistogram()->GetYaxis()->SetTitleOffset(fYTitleOffset);
@@ -488,7 +489,7 @@ void ChargeDensity::Display(TCanvas *c){
   grCumStart->GetXaxis()->CenterTitle();
   // Draw secondary X-axis
   double yAxisPos = grCumStart->GetHistogram()->GetYaxis()->GetXmax();
-  TGaxis *axis2 = new TGaxis(0, yAxisPos, fZCumStart.size(), yAxisPos, "ftau", 005, "-");
+  TGaxis *axis2 = new TGaxis(0, yAxisPos, fZCumStart.size(), yAxisPos, 0, 1, 505, "R-");
   axis2->CenterTitle();
   axis2->SetTitle("#rho/#rho_{max}");
   axis2->SetLineColor(kGray+2);

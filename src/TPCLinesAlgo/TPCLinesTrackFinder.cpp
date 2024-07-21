@@ -28,7 +28,6 @@ double TPCLinesTrackFinder::GetHitLinearDensity(std::vector<SHit> data){
         if(h.X()>maxX) maxX = h.X();
     }
     
-    //if(snderPset.Verbose>=2)  std::cout<<"MinX "<<minX<<" MaxX "<<maxX<<" "<<data.size()<<" "<<(maxX+1-minX)<<std::endl;
     return 1.*data.size()/(maxX+1-minX);
 }
     
@@ -336,8 +335,6 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::CaptureMissingHits(std::vector<
                 return hitCluster.GetMinDistanceToCluster(h1) < hitCluster.GetMinDistanceToCluster(h2);
             });
 
-            
-
             for (SHit& hit : candidateHitList) {
                 if(fTPCLinesTrackFinderPset.Verbose>=2)  std::cout<<"   Check conn "<<hit.X()<<std::endl;
                 double epsilon = hitCluster.GetConnectedness() + 3 * hitCluster.GetConnectednessRMS();
@@ -358,7 +355,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::CaptureMissingHits(std::vector<
 
         }
 
-        // add thw updated track
+        // add the updated track
         newRecoTrackV.push_back(newRecoTrack);
 
         // Return the updated newRecoTrack and unmatchedHitList and update the free hit list
@@ -470,7 +467,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
         std::cout<<pcaCluster<<std::endl;
     }
 
-    // Get the epsilon paramter for the 2D clustering
+    // Get the epsilon parameter for the 2D clustering
     std::vector<double> clusterConnV = pcaCluster.GetConnectednessV();
     
     double weightWidth = fTPCLinesTrackFinderPset.ConnectednessWidthTol * pcaCluster.GetAverageWidth();
@@ -487,7 +484,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
     //::DISPLAY
     if(fTPCLinesTrackFinderPset.Verbose>=2){
-        fDisplay.Show(true, "DBSCAN clusters: connectedness", hitList, houghLine, hitPCATubeList, connectedLinearClustersV);
+        fDisplay.Show(true, "DBSCAN clusters: connectedness", hitList, pcaLine, hitPCATubeList, connectedLinearClustersV);
     }
 
     // Capture missing hits by the original PCA direction
@@ -607,7 +604,7 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
 
         //::DISPLAY
         if(fTPCLinesTrackFinderPset.Verbose>=2){
-            fDisplay.Show(true, "DBSCAN clusters: compactness", hitList, houghLine, hitPCATubeList, finalClustersV);
+            fDisplay.Show(true, "DBSCAN clusters: compactness", hitList, pcaLine, hitPCATubeList, finalClustersV);
         }
 
     }
@@ -618,8 +615,6 @@ std::vector<SLinearCluster> TPCLinesTrackFinder::ReconstructTracksFromHoughDirec
         finalRecoTracks = MakeTrack(finalClustersV);
     
     std::vector<SLinearCluster> recoTracks;
-    /*if(finalRecoTracks.size()>0)
-        recoTracks.push_back(finalRecoTracks[0]);*/
     recoTracks = finalRecoTracks;
 
     // Free hits for the next iteration

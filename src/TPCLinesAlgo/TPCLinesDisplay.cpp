@@ -20,6 +20,8 @@ TPCLinesDisplay::TPCLinesDisplay(bool show, std::string outputPath):
 
     fHitsMarkers = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
+    std::iota(std::begin(fAlbet), std::end(fAlbet), 'a');
+
     if(show==false){
         gROOT->SetBatch(true);
     }
@@ -115,7 +117,7 @@ void TPCLinesDisplay::DrawHitScatter(std::vector<SHit> hitsV, TLegend * leg, std
                     leg->AddEntry(g, label.c_str(), "p");
             }
             else{
-                leg->AddEntry(g, ("Cluster "+std::to_string(cluster.first)).c_str(), "p");
+                leg->AddEntry(g, ("PFP "+std::to_string(cluster.first)).c_str(), "p");
             }
 
             clusterCounter++;
@@ -135,7 +137,7 @@ void TPCLinesDisplay::DrawVertex(SVertex vertex, TLegend * leg, std::string labe
     //pointGraph->SetMarkerColorAlpha(color, alpha);
     pointGraph->SetMarkerColor(color);
 
-    if(label!="")
+    if(label!="" && leg!=nullptr)
         leg->AddEntry(pointGraph, label.c_str(), "p");
 
     // Draw the point
@@ -168,7 +170,7 @@ void TPCLinesDisplay::DrawTriangle(STriangle tri, TLegend * leg, std::string lab
     triangle->Draw("F same");
 }
 
-void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend * leg, std::string label, int color, double size, int style){
+void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, int cID, TLegend * leg, std::string label, int color, double size, int style){
     if(cluster.NHits()>0){
         std::vector<SHit> hits = cluster.GetHits();
         std::vector<double> x, y;
@@ -193,7 +195,13 @@ void TPCLinesDisplay::DrawLinearCluster(SLinearCluster cluster, TLegend * leg, s
         DrawLine(cluster.GetTrackEquationStart(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
         DrawLine(cluster.GetTrackEquationEnd(), cluster.GetMinX(), cluster.GetMaxX(), leg, "", color, kDashed);
 
-        leg->AddEntry(g, ( "Cluster  "+std::to_string(cluster.GetId())).c_str(), "p");
+        int preClusterCounter=0;
+        if(cluster.GetId()!=-1)
+            leg->AddEntry(g, ( "Cluster "+std::to_string(cID)).c_str(), "p");
+        else{
+            leg->AddEntry(g, ("Pre-cluster "+std::to_string(cID)).c_str(), "p");
+            preClusterCounter++;
+        }
     }
 
     
@@ -265,7 +273,8 @@ void TPCLinesDisplay::Show(
     if(clustersV.size()>0){
 
         for(size_t cIx=0; cIx<clustersV.size(); cIx++){
-            DrawLinearCluster(clustersV[cIx], legend, "Cluster", fColors[cIx], .75, 8);
+            int cIDLabel = ( clustersV[cIx].GetId()!=-1)?  clustersV[cIx].GetId():cIx;
+            DrawLinearCluster(clustersV[cIx], cIDLabel, legend, "Cluster", fColors[cIx], .75, 8);
         }
     }
 
@@ -283,12 +292,21 @@ void TPCLinesDisplay::Show(
 
     if(origins.size()>0){
         for(size_t oIx=0; oIx<origins.size(); oIx++){
-            std::string originLabel = "#omicron_{"+std::to_string(oIx)+"} (m="+std::to_string(origins[oIx].Multiplicity())+"),";
-            for(SLinearCluster & trk:origins[oIx].GetTracks()){
-                int sign = (origins[oIx].IsEdgeOrigin())? 1:-1;
-                originLabel += " "+std::to_string(sign*trk.GetId());
+            // get letter abs for the origin
+
+            std::string originLabel = "#upsilon_{"+std::string(1, fAlbet[oIx])+"}^{"+std::to_string(origins[oIx].Multiplicity())+"} (";
+            bool first = true;
+             int sign = (origins[oIx].IsEdgeOrigin())? 1:-1;
+            for(SLinearCluster & trk:origins[oIx].GetTracks()){  
+                if(!first) originLabel += ", ";
+                originLabel += std::to_string(sign*trk.GetId());
+                first = false;
             }
-            DrawVertex(origins[oIx].GetPoint(), legend, originLabel.c_str(), fColorsOrigins[oIx], 90, 0.5);
+            originLabel += ")";
+            if(sign==1)
+                DrawVertex(origins[oIx].GetPoint(), legend, originLabel.c_str(), fColorsOrigins[oIx], 90, 0.5);
+            else
+                DrawVertex(origins[oIx].GetPoint(), nullptr, originLabel.c_str(), fColorsOrigins[oIx], 90, 0.5);
         }
     }
 
