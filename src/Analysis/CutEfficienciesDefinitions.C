@@ -7,8 +7,14 @@
 // ------- Class for the definition of the samples -------
 class SampleDef {
 public:
-    SampleDef(const std::string& var = "", const std::string& label = "", bool isSignal = false, const std::string& latexLabel = "",  const std::string& weight = "1")
-        : fVar(var), fLabel(label), fIsSignal(isSignal), fLatexLabel(latexLabel), fWeight(weight), fNEvents(0) {
+    SampleDef(const std::string& var = "", const std::string& label = "", bool isSignal = false, const std::string& latexLabel = "", int styleIndex=-1,  const std::string& weight = "1")
+        : fVar(var),
+        fLabel(label),
+        fIsSignal(isSignal),
+        fLatexLabel(latexLabel),
+        fStyleIndex(styleIndex),
+        fWeight(weight),
+        fNEvents(0) {
     }
 
     // Getter methods
@@ -69,11 +75,15 @@ public:
         return fNEvents;
     }
 
+    int Style() const {
+        return fStyleIndex;
+    }
 private:
     TString fVar;
     TString fLabel;
     std::string fLatexLabel;
     bool fIsSignal;
+    int fStyleIndex;
     TString fWeight;
     int fNEvents;
 };
@@ -131,7 +141,7 @@ enum class CutType {
 };
 
 
-// ------- Class for the definition of the plotss -------
+// ------- Class for the definition of the plots -------
 class PlotDef {
 public:
 
@@ -398,8 +408,6 @@ AnaPlot::AnaPlot(int plotIndex, PlotDef plotDef, std::vector<SampleDef> intTypes
         hAux1->SetStats(0);
         hAux0->SetLineColor(kOrange-3);
         hAux1->SetLineColor(kAzure+2);
-        hAux0->SetLineWidth(2);
-        hAux1->SetLineWidth(2);
         hAux0->SetLineStyle(kSolid);
         hAux1->SetLineStyle(kDashed);
 
@@ -535,8 +543,6 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
         std::cout<<" Cut name " << fPlotDef.GetVarS() << std::endl; 
         for (size_t j = 0; j < fIntTypes.size(); ++j) {
-        
-           
             
             TCut sampelCut(fIntTypes[j].GetVar());
             std::string plotLabel = "hAux2D";
@@ -568,6 +574,10 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     fCanvas->cd();
     std::vector<TPad*> padV = buildpadcanvas(3, 2);
 
+    // Top margins
+    for (size_t i = 0; i < padV.size(); ++i) {
+        padV[i]->SetTopMargin(0.15);
+    }
     std::string plotAxisLabels=";"+fPlotDef.GetVarLabelS()+"; # events";
 
     std::string plotLabel = "hAux"+std::to_string(fPlotIndex);
@@ -583,10 +593,15 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     TH1F *hCounter = new TH1F( plotLabel.c_str(), plotAxisLabels.c_str(), 1, 0, 1);
 
     double legX1 = 0.6;
-    double legX2 = 0.9;
+    double legX2 = 0.95;
     double legY1 = 0.6;
-    double legY2 = 0.9;
+    double legY2 = 0.95;
+    legX1 = 0.15;
+    legX2 = .95;
+    legY1 = 0.85;
+    legY2 = 1.;
     TLegend *legend = new TLegend(legX1, legY1, legX2, legY2);
+    legend->SetNColumns(fIntTypes.size());
     legend->SetLineColorAlpha(0, 0);
     legend->SetFillColorAlpha(0, 0);
        
@@ -648,23 +663,20 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
 
         // --- Set styles
-        fHistV[intTypeLabel]->SetLineColor(fStyler->GetColor(j)); 
-        fHistV[intTypeLabel]->SetLineWidth(2);
-        fHistV[intTypeLabel]->SetLineStyle(fStyler->GetLineStyle(j));
-        fHistV[intTypeLabel]->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-        fHistV[intTypeLabel]->SetMarkerColor(fStyler->GetColor(j));
-        fHistV[intTypeLabel]->SetMarkerSize(1);
+        fHistV[intTypeLabel]->SetLineColor(fStyler->GetColor( fIntTypes[j].Style() )); 
+        
+        fHistV[intTypeLabel]->SetLineStyle(fStyler->GetLineStyle( fIntTypes[j].Style() ));
+        fHistV[intTypeLabel]->SetMarkerStyle(fStyler->GetMarkerStyle( fIntTypes[j].Style() ));
+        fHistV[intTypeLabel]->SetMarkerColor(fStyler->GetColor( fIntTypes[j].Style() ));
         fHistV[intTypeLabel]->SetStats(0);
         legend->AddEntry(fHistV[intTypeLabel], fIntTypes[j].GetLabelS().c_str(), "lp");
         
 
-        fHistCumulativeV[intTypeLabel]->SetLineColor(fStyler->GetColor(j));
-        fHistCumulativeV[intTypeLabel]->SetLineWidth(2);
-        fHistCumulativeV[intTypeLabel]->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-        fHistCumulativeV[intTypeLabel]->SetMarkerColor(fStyler->GetColor(j));
-        fHistCumulativeV[intTypeLabel]->SetMarkerSize(1);
+        fHistCumulativeV[intTypeLabel]->SetLineColor(fStyler->GetColor( fIntTypes[j].Style() ));
+        fHistCumulativeV[intTypeLabel]->SetMarkerStyle(fStyler->GetMarkerStyle( fIntTypes[j].Style() ));
+        fHistCumulativeV[intTypeLabel]->SetMarkerColor(fStyler->GetColor( fIntTypes[j].Style() ));
         fHistCumulativeV[intTypeLabel]->Scale(100./fHistV[intTypeLabel]->Integral());
-        fHistCumulativeV[intTypeLabel]->SetLineStyle(fStyler->GetLineStyle(j));
+        fHistCumulativeV[intTypeLabel]->SetLineStyle(fStyler->GetLineStyle( fIntTypes[j].Style() ));
         fHistCumulativeV[intTypeLabel]->SetStats(0);
         
 
@@ -706,15 +718,16 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     }
 
     // ------ Draw histograms ------ 
-    padV[1]->cd();
-    bool fNormalize = fPlotDef.GetNormalize();
-    
     // Frame histogram
+    bool fNormalize = fPlotDef.GetNormalize();
     plotLabel = "hAuxFrame"+std::to_string(fPlotIndex);
-    double frameYMin = fNormalize? 0.9*(1.*minVal/minValInt):0;
-    double frameYMax = fNormalize? 1.1*(1.*maxVal/maxValInt):maxVal*1.1;
+    double frameYMin = fNormalize? 0.8*(1.*minVal/minValInt):0.9*minVal;
+    double frameYMax = fNormalize? 1.2*(1.*maxVal/maxValInt):maxVal*1.1;
+
+    padV[1]->cd();
     TH2F *hAuxFrame = new TH2F( plotLabel.c_str(), plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2(), 100, frameYMin, frameYMax);
     hAuxFrame->SetStats(0);
+    if(fNormalize) hAuxFrame->GetYaxis()->SetTitle("AU");
     hAuxFrame->Draw();
     
     // Draw histograms
@@ -731,15 +744,18 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
     // ------ Draw histograms (log) ------ 
     padV[2]->cd();
-
-    // Frame histogram and log scale
-    hAuxFrame->Draw();
     padV[2]->SetLogy();
+    TH2F *hAuxFrame2 = new TH2F( plotLabel.c_str(), plotAxisLabels.c_str(), fPlotDef.GetBins().GetNBins(), fPlotDef.GetBins().GetX1(), fPlotDef.GetBins().GetX2(), 100, frameYMin, frameYMax);
+    hAuxFrame2->SetStats(0);
+    if(fNormalize) hAuxFrame2->GetYaxis()->SetTitle("AU");
+    hAuxFrame2->Draw();
 
     // Draw histograms
     for (size_t j = 0; j < fIntTypes.size(); ++j) {
         fHistV[fIntTypes[j].GetLabelS()]->Draw("same hist");
     }
+
+    
     
     // Legend and vertical lines
     DrawVerticalLineWithArrow( fPlotDef.GetCutValue(), hAux->GetXaxis()->GetXmin(),  hAux->GetXaxis()->GetXmax(), 0, maxVal*1.1, fPlotDef.GetCutType() );
@@ -782,6 +798,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
     // Legend for significance
     TLegend *legendSig = new TLegend(legX1, legY1, legX2, legY2);
+    legendSig->SetNColumns(fIntTypes.size()-1);
     legendSig->SetLineColorAlpha(0, 0);
     legendSig->SetFillColorAlpha(0, 0);
 
@@ -809,12 +826,10 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
             // create TGraph
             TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
-            gr->SetLineColor(fStyler->GetColor(j));
-            gr->SetLineWidth(2);
-            gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-            gr->SetMarkerColor(fStyler->GetColor(j));
-            gr->SetMarkerSize(1);
-            gr->SetLineStyle(fStyler->GetLineStyle(j));
+            gr->SetLineColor(fStyler->GetColor( fIntTypes[j].Style() ));
+            gr->SetMarkerStyle(fStyler->GetMarkerStyle( fIntTypes[j].Style() ));
+            gr->SetMarkerColor(fStyler->GetColor( fIntTypes[j].Style() ));
+            gr->SetLineStyle(fStyler->GetLineStyle( fIntTypes[j].Style() ));
 
             grV.push_back(gr);
 
@@ -877,12 +892,10 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
                 // create TGraph
                 TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
-                gr->SetLineColor(fStyler->GetColor(j));
-                gr->SetLineWidth(2);
-                gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-                gr->SetMarkerColor(fStyler->GetColor(j));
-                gr->SetMarkerSize(1);
-                gr->SetLineStyle(fStyler->GetLineStyle(j));
+                gr->SetLineColor(fStyler->GetColor( fIntTypes[j].Style() ));
+                gr->SetMarkerStyle(fStyler->GetMarkerStyle( fIntTypes[j].Style() ));
+                gr->SetMarkerColor(fStyler->GetColor( fIntTypes[j].Style() ));
+                gr->SetLineStyle(fStyler->GetLineStyle( fIntTypes[j].Style() ));
 
                 grVROC.push_back(gr);   
             }
@@ -933,12 +946,10 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
             // create TGraph
             TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
-            gr->SetLineColor(fStyler->GetColor(j));
-            gr->SetLineWidth(2);
-            gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-            gr->SetMarkerColor(fStyler->GetColor(j));
-            gr->SetMarkerSize(1);
-            gr->SetLineStyle(fStyler->GetLineStyle(j));
+            gr->SetLineColor(fStyler->GetColor( fIntTypes[j].Style() ));
+            gr->SetMarkerStyle(fStyler->GetMarkerStyle( fIntTypes[j].Style() ));
+            gr->SetMarkerColor(fStyler->GetColor( fIntTypes[j].Style() ));
+            gr->SetLineStyle(fStyler->GetLineStyle( fIntTypes[j].Style() ));
 
             grVPurity.push_back(gr);
         }
@@ -993,12 +1004,10 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
 
             // create TGraph
             TGraph *gr = new TGraph(x.size(), &x[0], &y[0]);
-            gr->SetLineColor(fStyler->GetColor(j));
-            gr->SetLineWidth(2);
-            gr->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-            gr->SetMarkerColor(fStyler->GetColor(j));
-            gr->SetMarkerSize(1);
-            gr->SetLineStyle(fStyler->GetLineStyle(j));
+            gr->SetLineColor(fStyler->GetColor( fIntTypes[j].Style() ));
+            gr->SetMarkerStyle(fStyler->GetMarkerStyle( fIntTypes[j].Style() ));
+            gr->SetMarkerColor(fStyler->GetColor( fIntTypes[j].Style() ));
+            gr->SetLineStyle(fStyler->GetLineStyle( fIntTypes[j].Style() ));
 
             grVEffPurity.push_back(gr);
         }
@@ -1028,14 +1037,15 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
     // ------ Draw phase space ------ 
     if(fDrawPhaseSpace){
         fCanvasPhaseSpace->cd();
-
+        fCanvasPhaseSpace->SetLogy();
         // Create the pads
         int nRows = std::ceil(std::sqrt( fPhaseSpaceVars.size() ));
         std::vector<TPad*> padVPhaseSpace = buildpadcanvas( nRows, nRows);
 
-        TLegend *legendRP = new TLegend(legX1, legY1, legX2, legY2);
+        TLegend *legendRP = new TLegend(0.7, 0.7, 0.9, 0.9);
         legendRP->SetLineColorAlpha(0, 0);
         legendRP->SetFillColorAlpha(0, 0);
+
 
         // Draw each plot
         for(int i=0; i<fPhaseSpaceVars.size(); i++){
@@ -1043,7 +1053,11 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
             //fHistVPhaseSpace1[i]->GetXaxis()->SetTitle("x");
             fHistVPhaseSpace1[i]->GetYaxis()->SetTitle("y");
             fHistVPhaseSpace0[i]->GetYaxis()->SetTitle("y");
+            // POT scaling
+            fHistVPhaseSpace1[i]->Scale(signalScale);
+            fHistVPhaseSpace0[i]->Scale(signalScale);
             TRatioPlot * rp = new TRatioPlot(fHistVPhaseSpace1[i], fHistVPhaseSpace0[i]);
+            padVPhaseSpace[i+1]->SetLogy();
             rp->SetH1DrawOpt("HIST");
             rp->SetH2DrawOpt("HIST SAME");
             rp->SetGraphDrawOpt("lp");
@@ -1058,7 +1072,7 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
             rp->GetLowerRefYaxis()->SetTitleOffset(1.);
             rp->GetUpperRefYaxis()->SetTitleOffset(1.);
             rp->GetLowYaxis()->SetNdivisions(1005);
-            rp->GetUpperRefYaxis()->SetRangeUser(0., fHistVPhaseSpace0[i]->GetMaximum()*1.1);
+            rp->GetUpperRefYaxis()->SetRangeUser(0.1, fHistVPhaseSpace0[i]->GetMaximum()*1.1);
             rp->GetLowerRefGraph()->SetMarkerStyle(20);
             rp->GetLowerRefGraph()->SetMarkerSize(1);
             rp->GetLowerRefGraph()->SetLineColor(kBlack);
@@ -1089,11 +1103,9 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
             for (size_t j = 0; j < fIntTypes.size(); ++j) {
                 fHistVOther[i][fIntTypes[j].GetLabelS()]->Draw("same hist");
                 // --- Set styles
-                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetLineColor(fStyler->GetColor(j));
-                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetLineWidth(2);
-                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetMarkerStyle(fStyler->GetMarkerStyle(j));
-                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetMarkerSize(1);
-                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetMarkerColorAlpha(fStyler->GetColor(j), 0.6);
+                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetLineColor(fStyler->GetColor( fIntTypes[j].Style() ));
+                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetMarkerStyle(fStyler->GetMarkerStyle( fIntTypes[j].Style() ));
+                fHistVOther[i][fIntTypes[j].GetLabelS()]->SetMarkerColorAlpha(fStyler->GetColor( fIntTypes[j].Style() ), 0.6);
             }
 
             // Set limits with 0 and maxVal
@@ -1107,12 +1119,13 @@ void AnaPlot::DrawHistograms(TTree* fTree, TCut currentCut, bool afterCut, doubl
         
 
     // --- Save canvas
+    fCanvas->WaitPrimitive();
     fCanvas->Update();
     fCanvasPhaseSpace->Update();
     fCanvasOther->Update();
     std::string stageLabel = afterCut ? "1after" : "0before";
-    fCanvas->SaveAs(("OutputPlots/plot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+".pdf").c_str());
-    if(fDrawPhaseSpace) fCanvasPhaseSpace->SaveAs(("OutputPlots/PhaseSpace/zphaseSpacePlot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+"PhaseSpace.pdf").c_str());
+    fCanvas->SaveAs(("OutputPlots/plot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarLabelS()+".pdf").c_str());
+    if(fDrawPhaseSpace) fCanvasPhaseSpace->SaveAs(("OutputPlots/PhaseSpace/zphaseSpacePlot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarLabelS()+"PhaseSpace.pdf").c_str());
     if(fDrawOtherDistributions && afterCut) fCanvasOther->SaveAs(("OutputPlots/OtherDistributions/otherDistributionsPlot"+std::to_string(fPlotIndex)+stageLabel+fPlotDef.GetVarS()+"OtherDistributions.pdf").c_str());
     TFile *fFile = new TFile("OutputPlots/OutputPlots.root","UPDATE");
     fFile->cd();

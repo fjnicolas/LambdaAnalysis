@@ -12,9 +12,12 @@ void PlotCalorimetryDisplay(){
 }
 
 //---------  Color list
-std::vector<int> fColorList = {kRed, kBlue, kGreen, kMagenta, kCyan, kYellow, kOrange, kViolet, kTeal, kAzure, kGray, kPink, kSpring, kWhite, kBlack};
+std::vector<int> fColorList = { kAzure+7, kRed+2,  kAzure-5, kGreen+3, kOrange-3, kMagenta+1, kCyan- 3, kYellow+2, kViolet-1, kTeal-1};
 int fColorLI = kAzure+7;
 int fColorHI = kRed+2;
+
+//-------- Draw all space points
+bool fDrawAllSpacePoints = false;
 
 //--------- Define a function to add points to the graph and create a TGraph2D
 void addPointsAndCreateGraph(TGraph2D *graph, std::vector<double> x, std::vector<double> y, std::vector<double> z){
@@ -47,9 +50,18 @@ auto getMinMax = [](std::vector<double> v){
 void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::string fTreeDirName = "lambdaPidPandoraAna/", std::string fTreeName = "CalorimetryTree")
 {
 
+    //--------- Read dEdx templates, path relative to LAMBDAANA_SRC environment variable
+    std::string fTemplatesDir = std::getenv("LAMBDAANA_SRC");
+    fTemplatesDir += "/Analysis/dEdxrestemplates.root";
+    TFile *fFileTemplates = new TFile(fTemplatesDir.c_str(),"READ");
+    TProfile *fProfiledEdxProton = (TProfile*)fFileTemplates->Get("dedx_range_pro");
+    TProfile *fProfiledEMuon = (TProfile*)fFileTemplates->Get("dedx_range_mu");
+
+
     //--------- Input TTree
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
     TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
+    fTree->Print(); 
 
     //--------- Binning
     Int_t nBins = 200;
@@ -151,6 +163,8 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
         std::string canvasTitle = "RunID: "+std::to_string(RunID)+", SubRunID: "+std::to_string(SubRunID)+", EventID: "+std::to_string(EventID);
         TCanvas *c1 = new TCanvas("c1",canvasTitle.c_str(),1200,650);
         gStyle->SetPadBottomMargin(0.2);
+        gStyle->SetPadLeftMargin(0.15);
+        gStyle->SetTitleYOffset(1.2);
         TPad *pad1 = new TPad("pad1","This is pad1",0.02,0.5,0.31,1);
         TPad *pad2 = new TPad("pad2","This is pad2",0.35,0.5,0.64,1);
         TPad *pad3 = new TPad("pad3","This is pad3",0.68,0.5,0.98,1);
@@ -187,7 +201,7 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
             h_dEdxHI->Draw("same");
             
             // Legend
-            TLegend *leg = new TLegend(0.1,0.7,0.3,0.9);
+            TLegend *leg = new TLegend(0.4,0.65,0.89,0.89);
             leg->AddEntry(h_dEdxLI,"Low Ionization","p");
             leg->AddEntry(h_dEdxHI,"High Ionization","p");
             leg->Draw("same");
@@ -208,7 +222,7 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
 
             //Draw histograms
             h_dQdxLI->GetYaxis()->SetTitle("dQ/dx [ADC/cm]");
-            h_dQdxLI->GetXaxis()->SetTitle("Residual Range [cm]");
+            h_dQdxLI->GetXaxis()->SetTitle("Residual range [cm]");
             h_dQdxLI->Draw("");
             h_dQdxHI->Draw("same");
 
@@ -220,35 +234,46 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
         //-------- Plot dEdx (all tracks)
         pad3->cd();
         std::vector<TH1F*> h_dEdxAll;
+        THStack *hs_dEdx = new THStack("hs_dEdx",";Residual range [cm];dE/dx [MeV]");
         for(int j=0; j<ResidualRange->size(); j++){
             std::string histName = "h_dEdx_"+std::to_string(j);
-            TH1F *h_dEdx = new TH1F(histName.c_str(),histName.c_str(),nBins,xMin,xMax);
+            TH1F *h_dEdx = new TH1F(histName.c_str(),";Residual range [cm];dE/dx [MeV];", nBins,xMin,xMax);
             for(int k=0; k<ResidualRange->at(j).size(); k++){
                 h_dEdx->Fill(ResidualRange->at(j).at(k), DepositedEnergy->at(j).at(k));
             }
             h_dEdx->SetMarkerColor(fColorList.at(j));
             h_dEdx->SetMarkerStyle(20);
+            h_dEdx->SetLineColor(fColorList.at(j));
+            hs_dEdx->Add(h_dEdx);
             h_dEdxAll.push_back(h_dEdx);
         }
-        
-        if(h_dEdxAll.size()>0){
-            h_dEdxAll.at(0)->Draw("p");
-            for(int j=1; j<h_dEdxAll.size(); j++){
-                h_dEdxAll.at(j)->Draw("p same");
-            }
 
-            TLegend *leg = new TLegend(0.1,0.7,0.3,0.9);
-            for(int j=0; j<h_dEdxAll.size(); j++){
-                std::string pidLabel = "Track "+std::to_string(j)+" PDG="+std::to_string(BestPIDAll->at(j));
-                leg->AddEntry(h_dEdxAll.at(j), pidLabel.c_str(),"p");
-            }
-            leg->Draw("same");
-            // fontsize
-            leg->SetTextSize(0.04);
-            h_dEdxAll.at(0)->GetYaxis()->SetTitle("dE/dx [MeV]");
-            h_dEdxAll.at(0)->GetXaxis()->SetTitle("Residual Range [cm]");
-        }
+        // TH2 Frame with minimum and maximum values
+        TH2F *hFrame2 = new TH2F("hFrame",";Residual range [cm]; dE/dx [MeV]", nBins,xMin,xMax, nBins,yMin,yMax);
+        hFrame2->Draw();
+        hs_dEdx->Draw("nostack same  PLC HIST P");
         
+    
+        // Draw templates for proton and muon
+        fProfiledEdxProton->SetLineColor(kOrange);
+        fProfiledEdxProton->SetFillColorAlpha(kOrange, 0.5);
+        fProfiledEMuon->SetLineColor(kAzure);
+        fProfiledEMuon->SetFillColorAlpha(kAzure, 0.5);
+        fProfiledEdxProton->Draw("E4 same");
+        fProfiledEMuon->Draw("E4 same");
+
+        TLegend *leg = new TLegend(0.4,0.65,0.89,0.89);
+        for(int j=0; j<h_dEdxAll.size(); j++){
+            std::string pidLabel = "Track "+std::to_string(j)+" (best PDG="+std::to_string(BestPIDAll->at(j)) + ")";
+            leg->AddEntry(h_dEdxAll.at(j), pidLabel.c_str(),"p");
+        }
+        leg->AddEntry(fProfiledEdxProton, "Proton template","l");
+        leg->AddEntry(fProfiledEMuon, "Pion template","l");
+        leg->Draw("same");
+        leg->SetTextSize(0.04);
+        
+
+
 
         //-------- Draw SpacePoints
         pad4->cd();
@@ -262,7 +287,7 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
         std::pair<double, double> zMinMaxGlobal = {500, 0};
         
         // Draw AllSpacePoints
-        if(AllSpacePointsX->size()>0){
+        if(AllSpacePointsX->size()>0 && fDrawAllSpacePoints){
             TGraph2D *graphAll = new TGraph2D();
             addPointsAndCreateGraph(graphAll, *AllSpacePointsZ, *AllSpacePointsX, *AllSpacePointsY);
             graphAll->SetMarkerColorAlpha(kBlack, 0.5);
@@ -302,16 +327,31 @@ void RunCalorimetryDisplay(std::string fInputFileName="", int event=-1, std::str
                 TGraph2D *graph = new TGraph2D();
                 addPointsAndCreateGraph(graph, SpacePointsZ->at(j), SpacePointsX->at(j), SpacePointsY->at(j));    
                 graphList.push_back(graph);
-                graphColorList.push_back(fColorList.at(j));
-            
+                graphColorList.push_back(fColorList.at(j));            
             }
         }
 
+
+        TLegend *legSP = new TLegend(0.75,0.8,0.95,0.95);
         TH3F *hFrame = new TH3F("frame",";Z [cm]; X [cm]; Y [cm]", nBins,zMinMaxGlobal.first,zMinMaxGlobal.second, nBins, xMinMaxGlobal.first,xMinMaxGlobal.second, nBins,yMinMaxGlobal.first,yMinMaxGlobal.second);
         hFrame->Draw();
         for(int j=0; j<graphList.size(); j++){
             drawGraph(graphList.at(j), "SpacePoints", graphColorList.at(j));
+            legSP->AddEntry(graphList[j], ("Track "+std::to_string(j)).c_str(), "p");
         }
+        // Title offsets
+        hFrame->GetXaxis()->SetTitleOffset(1.3);
+        hFrame->GetYaxis()->SetTitleOffset(1.3);
+        hFrame->GetZaxis()->SetTitleOffset(1.3);
+        // Left margin
+        gPad->SetLeftMargin(0.15);
+        // NDivisions
+        hFrame->GetXaxis()->SetNdivisions(505);
+        hFrame->GetYaxis()->SetNdivisions(505);
+        hFrame->GetZaxis()->SetNdivisions(505);
+        // Draw legend
+        legSP->Draw("same");
+
         pad4->Update();
 
         
@@ -369,8 +409,8 @@ void RunPlotAveragedEdx(std::string fInputFileName="", std::string fTreeDirName 
 
     // TH2F
     TCanvas *c1 = new TCanvas("c1","c1",1200,650);
-    TH2F *h_dEdxLI = new TH2F("h_dEdxLI",";Residual Range [cm]; dE/dx [MeV]",nBinsX,xMin,xMax, nBinsY,yMin,yMax);
-    TH2F *h_dEdxHI = new TH2F("h_dEdxHI",";Residual Range [cm]; dE/dx [MeV]",nBinsX,xMin,xMax, nBinsY,yMin,yMax);
+    TH2F *h_dEdxLI = new TH2F("h_dEdxLI",";Residual range [cm]; dE/dx [MeV]",nBinsX,xMin,xMax, nBinsY,yMin,yMax);
+    TH2F *h_dEdxHI = new TH2F("h_dEdxHI",";Residual range [cm]; dE/dx [MeV]",nBinsX,xMin,xMax, nBinsY,yMin,yMax);
 
     // Draw
     fTree->Draw("DepositedEnergyLI:ResidualRangeLI>>h_dEdxLI","","colz");

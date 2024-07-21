@@ -28,11 +28,11 @@ vector<TPad*> buildpadcanvas(int nx, int ny){
 
 void SetFRANSStyle(){
   // Axis offsets
-  gStyle->SetTitleOffset(22.25, "Y");
+  gStyle->SetTitleOffset(1.3, "Y");
   // Set divisions
   gStyle->SetNdivisions(505, "X");
   // Line widths
   gStyle->SetLineWidth(2);
   // Graphs line widths
-  gStyle->SetHistLineWidth(3);
+  gStyle->SetHistLineWidth(5);
 }

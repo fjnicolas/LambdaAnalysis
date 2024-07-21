@@ -11,41 +11,30 @@
 
 //--------- Settings ---------
 //--------- Scale POT
-bool fScaleHistogramsToPOT = 0;
+bool fScaleHistogramsToPOT = 1;
 //--------- Plot all the variables
 bool fPlotAllVars = 0;
 //-------- POT normalization
-double fPOTTotalNorm = 3.3e20;
+double fPOTTotalNorm = 10e20;
 //---------  LATeX output file
 std::string fOutputFileName = "CutEfficiencies";
 std::string fOutputFileNameNormalized = "CutEfficienciesNormalized";
 
 //--------- Signal and BG definitions
-std::vector<SampleDef> sampleDefs = {
-    fSaLambdaQENuMu
-    ,fSaBNBInclusive
-    ,fSaDirt
-    ,fSaCosmic
-};
+std::vector<SampleDef> sampleDefs = fSampleDefsStd;
+std::vector<SampleDef> sampleDefsExtended = fSampleDefsStd;
 
-std::vector<SampleDef> sampleDefsExtended = {
-    fSaLambdaQENuMu,
-    fSaBNBInclusiveNoLambda,
-    fSaCosmicDirt,
-    fSaLambdaQENuE,
-    fSaLambdaResNuMu,
-    fSaLambdaDisNuMu
-};
+//fSampleDefsStd;
 
 //---------  Phase space cuts
 std::vector<PlotDef> fPhaseSpaceDefs = {};//psLambdaKinematics;
 
 //---------  Cuts
-std::vector<PlotDef> fCutDefs = cutDefsPID;
+std::vector<PlotDef> fCutDefs = cutDefsFinalSelection;
 //std::vector<PlotDef> fCutDefs = cutDefsTalk2Induction;
 //std::vector<PlotDef> fCutDefs = cutDefsOriginsDistributions;
 
-std::vector<PlotDef> fCutDefsCol = cutDefsCol;
+std::vector<PlotDef> fCutDefsCol = cutDefsPIDFull;
 std::vector<PlotDef> fCutDefsInd = cutDefsInd;
 
 
@@ -148,13 +137,11 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
     }
 
     // --- Final plot with all the cuts, all samples
-    AnaPlot anaPlotFinal(-1, fCutDefs.back(), sampleDefsExtended, fPhaseSpaceDefs, {});
+    AnaPlot anaPlotFinal(-1, fCutDefs.back(), sampleDefs, fPhaseSpaceDefs, {});
     anaPlotFinal.DrawHistograms(fTree, previousCut, 0, potScalingSignalForPlots, potScalingBgForPlots);
 
-
     //--------- Create the LaTeX table
-    MakeCutFlowPlot(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputDirName, potScalingBg, potScalingSignal, fPOTTotalNorm);
-
+    MakeCutFlowPlot(cutDefsForTable, sampleDefsExtended, nEventsMatrix, fOutputDirName, potScalingBg, potScalingSignal, fPOTTotalNorm);
     
     //--------- Create the LaTeX table
     GenerateAndCompileTeXTable(cutDefsForTable, sampleDefs, nEventsMatrix, fOutputFileName, "Cut efficiencies", fOutputDirName);
@@ -170,7 +157,7 @@ void RunLambdaAnalysis(std::string fInputFileName="", bool batchMode=1, std::str
 
 
 
-void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAna/", std::string fTreeName = "LambdaAnaTree")
+void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTree")
 {
 
     //Batch mode
@@ -186,6 +173,19 @@ void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::st
     TTree *fTree = (TTree *)fFile->Get((fTreeDirName+fTreeName).c_str());
     // Read TreeHeader 
     TTree *fTreeHeader = (TTree *)fFile->Get( (fTreeDirName+"TreeHeader").c_str() );
+    
+    //----------------- POT normalization
+    double potScalingBg = 1;
+    double potScalingSignal = 1;
+    double potScalingBgForPlots = 1;
+    double potScalingSignalForPlots = 1;
+
+    ReadPOT(fFile, fPOTTotalNorm, potScalingBg, potScalingSignal, (fTreeDirName+"pottree").c_str());
+    if(fScaleHistogramsToPOT){
+        potScalingBgForPlots = potScalingBg;
+        potScalingSignalForPlots = potScalingSignal;
+    }
+    std::cout<<"POT scaling: "<<potScalingBg<<" POT scaling signal: "<<potScalingSignal<<std::endl;
     
     
     //---------- Set of cuts to loop over
@@ -227,7 +227,7 @@ void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::st
 
 
         //--------- Create the LaTeX table
-        GenerateAndCompileTeXTable(loopCutsWithMinimal, sampleDefs, nEventsMatrix, fOutputFileName+std::to_string(permutationId), "Cut efficiencies "+std::to_string(permutationId), fOutputDirName);
+        GenerateAndCompileTeXTable(loopCutsWithMinimal, sampleDefs, nEventsMatrix, fOutputFileName+std::to_string(permutationId), "Cut efficiencies "+std::to_string(permutationId), fOutputDirName, potScalingBg, potScalingSignal, fPOTTotalNorm);
 
         permutationId++;
 
@@ -240,7 +240,7 @@ void RunCutLoopAnalysis(std::string fInputFileName="", bool batchMode=1, std::st
 
 
 //---------  Main function
-void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTreePost")
+void RunTreeSelector(std::string fInputFileName="", bool scalePOT=1, bool batchMode=1, std::string fTreeDirName = "originsAnaPost/", std::string fTreeName = "LambdaAnaTreePost")
 {
 
 
@@ -251,10 +251,12 @@ void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::strin
     //--------- Input TTree list
     std::vector<std::string> treeNames{
         "originsAnaPost/LambdaAnaTree",
-        "originsAnaU/LambdaAnaTree",
-        "originsAnaV/LambdaAnaTree"
+        "originsAnaPostU/LambdaAnaTree",
+        "originsAnaPostV/LambdaAnaTree"
     };
 
+    std::string inductionULabel = "originsAnaPostU";
+    std::string inductionVLabel = "originsAnaPostV";
 
     //---------  Maps to store number of events per signal type
     std::map<std::string, int> nEventsMap;
@@ -276,6 +278,13 @@ void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::strin
     //--------- Input TFile
     TFile *fFile = new TFile(fInputFileName.c_str(),"READ");
 
+    
+    //----------------- POT normalization
+    double potScalingBg = 1;
+    double potScalingSignal = 1;
+    ReadPOT(fFile, fPOTTotalNorm, potScalingBg, potScalingSignal, (fTreeDirName+"pottree").c_str());
+    std::cout<<"POT scaling: "<<potScalingBg<<" POT scaling signal: "<<potScalingSignal<<std::endl;
+
     //--------- Loop over the TTrees
     for(const auto& treeName : treeNames){
         TTree *fTree = (TTree *)fFile->Get(treeName.c_str());
@@ -292,7 +301,7 @@ void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::strin
 
         //--------- Get the accumulated cut   
         std::vector<PlotDef> thisCutDefs = fCutDefsCol;
-        if(treeName.find("originsAnaU")!=std::string::npos || treeName.find("originsAnaV")!=std::string::npos){
+        if(treeName.find(inductionULabel)!=std::string::npos || treeName.find(inductionVLabel)!=std::string::npos){
             std::cout<<"Using induction cuts"<<std::endl;
             thisCutDefs = fCutDefsInd;
         }
@@ -313,10 +322,10 @@ void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::strin
 
             std::cout<<"Entries for "<<sample.GetLabelS()<<": "<<elist->GetN()<<std::endl;
             for (size_t i = 0; i < elist->GetN(); ++i) {
-                if(treeName.find("originsAnaU")!=std::string::npos){
+                if(treeName.find(inductionULabel)!=std::string::npos){
                     entriesMapU[sample.GetLabelS()].insert(elist->GetEntry(i));
                 }
-                else if(treeName.find("originsAnaV")!=std::string::npos){
+                else if(treeName.find(inductionVLabel)!=std::string::npos){
                     entriesMapV[sample.GetLabelS()].insert(elist->GetEntry(i));
                 }
                 else if(treeName.find("originsAna")!=std::string::npos){
@@ -333,6 +342,7 @@ void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::strin
     std::cout<<"\n\n Summary: \n\n";
     for(const auto& sample : sampleDefs){
         std::cout<<"Sample: "<<sample.GetLabelS()<<" --- NEvents: "<<nEventsMap[sample.GetLabelS()]<<std::endl;
+
         std::cout<<"Sample: "<<sample.GetLabelS()<<" --- Entries U: "<<entriesMapU[sample.GetLabelS()].size()<<"   eff: "<<100.*entriesMapU[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()]<<std::endl;
         std::cout<<"Sample: "<<sample.GetLabelS()<<" --- Entries V: "<<entriesMapV[sample.GetLabelS()].size()<<"   eff: "<<100.*entriesMapV[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()]<<std::endl;
         std::cout<<"Sample: "<<sample.GetLabelS()<<" --- Entries C: "<<entriesMapC[sample.GetLabelS()].size()<<"   eff: "<<100.*entriesMapC[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()]<<std::endl;
@@ -366,15 +376,27 @@ void RunTreeSelector(std::string fInputFileName="", bool batchMode=1, std::strin
     // Make all the above an output table with efficiences between parenthesis
     int sep = 15;
     std::cout<<"\n\n Summary table: \n\n";
-    std::cout << std::setw(sep) << "Sample" << std::setw(sep) << "Events" << std::setw(sep) << "U" << std::setw(sep) << "V" << std::setw(sep) << "C" << std::setw(sep) << "U&V" << std::setw(sep) << "(U&V)|C" << std::endl;
+    std::cout << std::setw(2*sep) << "Sample" << std::setw(sep) << "Events" << std::setw(sep) << "U" << std::setw(sep) << "V" << std::setw(sep) << "C" << std::setw(sep) << "U&V" << std::setw(sep) << "(U&V)|C" << std::endl;
     for(const auto& sample : sampleDefs){
-        std::cout << std::setw(sep) << sample.GetLabelS() << std::setw(sep) << nEventsMap[sample.GetLabelS()] << std::setw(sep) << entriesMapU[sample.GetLabelS()].size() << std::setw(sep) << entriesMapV[sample.GetLabelS()].size() << std::setw(sep) << entriesMapC[sample.GetLabelS()].size() << std::setw(sep) << intersectionMap[sample.GetLabelS()].size() << std::setw(sep) << unionMap[sample.GetLabelS()].size() << std::endl;
+       
+        double potScale = 1.;
+        if(scalePOT==1){
+            if(sample.IsSignal()==1){
+                potScale = potScalingSignal;
+            }
+            else{
+                potScale = potScalingBg;
+            }
+        }   
+
+        std::cout << std::setw(2*sep) << sample.GetLabelS() << std::setw(sep) << nEventsMap[sample.GetLabelS()] << std::setw(sep) << potScale*entriesMapU[sample.GetLabelS()].size() << std::setw(sep) << potScale*entriesMapV[sample.GetLabelS()].size() << std::setw(sep) << potScale*entriesMapC[sample.GetLabelS()].size() << std::setw(sep) << potScale*intersectionMap[sample.GetLabelS()].size() << std::setw(sep) << potScale*unionMap[sample.GetLabelS()].size() << std::endl;
     }
 
     // Make all the above an output table with efficiences between parenthesis, 3 decimal places and with %
-    std::cout << std::setw(sep) << "Sample" << std::setw(sep) << "Events" << std::setw(sep) << "U" << std::setw(sep) << "V" << std::setw(sep) << "C" << std::setw(sep) << "U&V" << std::setw(sep) << "(U&V)|C" << std::endl;
+     std::cout<<"\n\n Summary efficiency table: \n\n";
+    std::cout << std::setw(2*sep) << "Sample" << std::setw(sep) << "Events" << std::setw(sep) << "U" << std::setw(sep) << "V" << std::setw(sep) << "C" << std::setw(sep) << "U&V" << std::setw(sep) << "(U&V)|C" << std::endl;
     for(const auto& sample : sampleDefs){
-        std::cout << std::setw(sep) << sample.GetLabelS() << std::setw(sep) << nEventsMap[sample.GetLabelS()] << std::setw(sep) << std::setprecision(3) << 100.*entriesMapU[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*entriesMapV[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*entriesMapC[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*intersectionMap[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*unionMap[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::endl;
+        std::cout << std::setw(2*sep) << sample.GetLabelS() << std::setw(sep) << nEventsMap[sample.GetLabelS()] << std::setw(sep) << std::setprecision(3) << 100.*entriesMapU[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*entriesMapV[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*entriesMapC[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*intersectionMap[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::setw(sep) << std::setprecision(3) << 100.*unionMap[sample.GetLabelS()].size()/nEventsMap[sample.GetLabelS()] << " %" << std::endl;
     }
     
 

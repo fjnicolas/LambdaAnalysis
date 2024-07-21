@@ -162,24 +162,6 @@ SPoint TPCLinesVertexFinder::GetTracksIntersection(SLinearCluster track1, SLinea
 
         intP = SPoint(xInt, yInt);
 
-        /*if (useEdgeSlopes == true) {
-            if (std::abs(intP.X() - track1.GetMinX()) < std::abs(intP.X() - track1.GetMaxX())) {
-                lineEq1 = track1.GetTrackEquationStart();
-            } else {
-                lineEq1 = track1.GetTrackEquationEnd();
-            }
-
-            if (std::abs(intP.X() - track2.GetMinX()) < std::abs(intP.X() - track2.GetMaxX())) {
-                lineEq2 = track2.GetTrackEquationStart();
-            } else {
-                lineEq2 = track2.GetTrackEquationEnd();
-            }
-
-            xInt = (lineEq1.Intercept() - lineEq2.Intercept()) / (lineEq2.Slope() - lineEq1.Slope());
-            yInt = lineEq1.Slope() * xInt + lineEq1.Intercept();
-            intP = SPoint(xInt, yInt);
-        }*/
-
         if (useEdgeSlopes == true) {
             lineEq1 = track1.GetLineEquationAtX(intP.X());
             lineEq2 = track2.GetLineEquationAtX(intP.X());
@@ -604,66 +586,6 @@ bool TPCLinesVertexFinder::LambdaDecayKinematicCheck(SOrigin mainOrigin, STriang
         std::cout << " Pass? "<< passTriangleEndHits << std::endl;
     }
 
-
-    // CHECK 4: Check how many hits of triangle tracks are contained in the main direction hypothesis
-    /*bool passAngleTracksNotInMain = true;
-    int nhits_track1_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track1.GetHits());
-    int nhits_track2_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track2.GetHits());
-    passAngleTracksNotInMain = (1.0 * nhits_track1_inMainDir / track1.NHits() < fTPCLinesVertexFinderPset.MaxTrackFractionInMain &&
-                                1.0 * nhits_track2_inMainDir / track2.NHits() < fTPCLinesVertexFinderPset.MaxTrackFractionInMain);
-
-    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
-        std::cout << " - - - Check 4: Hits contained in the main direction - - - \n";
-        std::cout << "NHits of track " << track1.GetId() << " in main direction: " << nhits_track1_inMainDir << std::endl;
-        std::cout << "NHits of track " << track2.GetId() << " in main direction: " << nhits_track2_inMainDir << std::endl;
-        std::cout << "Pass AngleTracksNotInMain: " << passAngleTracksNotInMain << std::endl;
-        std::cout << "  ** Pass: " << passAngleTracksNotInMain << std::endl;
-    }*/
-
-
-    // CHECK 5: Check that the triangle tracks' start/end are not next to the main track edge hits
-    /*bool passTriangleEdgesNotInMain = true;
-    double distanceBMainStart = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexB(), MainDirection.GetStartPoint());
-    double distanceBMainEnd = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexB(), MainDirection.GetEndPoint());
-    double distanceCMainStart = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexC(), MainDirection.GetStartPoint());
-    double distanceCMainEnd = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexC(), MainDirection.GetEndPoint());
-    double meanComp = MainDirection.GetCompactness();
-    double _tol = 1.0;
-
-    passTriangleEdgesNotInMain = distanceBMainStart > _tol * meanComp &&
-                                distanceBMainEnd > _tol * meanComp &&
-                                distanceCMainStart > _tol * meanComp &&
-                                distanceCMainEnd > _tol * meanComp;
-
-    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
-        std::cout << " - - - Check 5: Triangle tracks are not the main track edge hits - - - \n";
-        std::cout << "Triangle vertex BC: " << Triangle.GetVertexB().X() << " " << Triangle.GetVertexB().Y() << " " << Triangle.GetVertexC().X() << " " << Triangle.GetVertexC().Y()
-        std::cout << "MainDirectionEdgeHits: " << MainDirection.GetStartPoint().X() << " " << MainDirection.GetStartPoint().Y() << " " << MainDirection.GetEndPoint().X() << " " << MainDirection.GetEndPoint().Y() << std::endl;
-        std::cout << "MainDir compactness: " << meanComp << std::endl;
-        std::cout << "Distances B: " << distanceBMainStart << " " << distanceBMainEnd << std::endl;
-        std::cout << "Distances C: " << distanceCMainStart << " " << distanceCMainEnd << std::endl;
-        std::cout << "  ** Pass: " << passTriangleEdgesNotInMain << std::endl;
-    } */
-
-    /* // ------ CHECK 6: Check that the opening angle is not 0
-    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
-        std::cout << " - - - Check 6: Opening angle - - - \n";
-        std::cout << " Opening Angle " << Triangle.GetOpeningAngle() << "\n";
-    }
-    bool passOpeningAngle = Triangle.GetOpeningAngle() > 2 && Triangle.GetOpeningAngle() < 178;
-    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
-        std::cout << "Pass? " << passOpeningAngle << std::endl;
-    }*/
-
-
-    /* //------- CHECK 7: Triangle goodness
-    double triangleMAE = Triangle.GetTriangleMAE();
-    std::cout<<"  TRIANGLE MAE "<<triangleMAE<<std::endl;
-    bool passTriangleGoodness = triangleMAE<fTPCLinesVertexFinderPset.MinTrackGoodness;
-    if(fTPCLinesVertexFinderPset.Verbose>=1){
-        std::cout<<" Pass triangle MAE? "<<passTriangleGoodness<<std::endl;
-    }*/
-
     // ---- CHECK 7: Sides of the triangle
     double lengthB = Triangle.GetSideLenghtB();
     double lengthC = Triangle.GetSideLenghtC();
@@ -694,11 +616,12 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
     if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<" In Origin finder\n";
     
 
-    // ------- First look for all possible intersections
-    // Fill sliding window instersections
+    // ------- Fill sliding window line equations for each track
     for(SLinearCluster &trk:trackList){
         trk.FillSlidingWindowLineEquations(fTPCLinesVertexFinderPset.SlidingWindowN);
     }
+
+    // ------- First look for all possible intersections
     // Vector to store the intersections
     std::vector<SOrigin> allIntersections;
     // ------ Loop 1
@@ -711,11 +634,13 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 SLinearCluster track2 = trackList[jx];
 
                 // ------ First check if the tracks are connected
-                // calculate connection based on the tracks connectedes
+                
+                // Calculate connection based on the tracks connectedness
                 float connTol =  5 * (track1.GetConnectedness() + track2.GetConnectedness()) / 2;
                 float conn = TPCLinesDistanceUtils::GetClusterConnectedness(track1.GetHitCluster(), track2.GetHitCluster());
                 bool connected = (conn < connTol); 
 
+                // Don't waste time if tracks are not connected (very loose connected cut here)
                 if (!connected) {
                     continue;
                 }
@@ -769,11 +694,11 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                     std::cout<<" Intersection point is compactness compatible: "<<intersectionPointCompactnessCompatible<<std::endl;
                 }
 
-                // Keep the interesection if
+                // Keep the intersection if
                 // there are common vertex hits or
                 // the intersection point is compatible with both track compactness
                 if(vertexHits.size()==0 && intersectionPointCompactnessCompatible==false){
-                    std::cout<<"SKIP... no veertex hit founds or intersection point not compactness compatible\n";
+                    std::cout<<"SKIP... no vertex hit founds or intersection point not compactness compatible\n";
                     continue;
                 }
 
@@ -1050,12 +975,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
                 parentKinkTrackIx = track2.GetId();
             }
 
-            /*if(usedTrack[kinkTrackIx]==false){
-                SOrigin newOr(ori.GetPoint(), {kinkTrack}, false, ori.GetYError(), parentKinkTrackIx);
-                originList.push_back( newOr );
-                usedTrack[kinkTrackIx]=true;
-                if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  Adding kink track "<<kinkTrack.GetId()<<" at "<<ori.GetPoint();
-            }*/
             SOrigin newOr(ori.GetPoint(), {kinkTrack, parentKinkTrack}, false, ori.GetYError(), parentKinkTrackIx);
             originList.push_back( newOr );
             usedTrack[kinkTrackIx]=true;
@@ -1103,34 +1022,6 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
             usedTrack[track.GetId()]=true;
             
         }
-
-        // in matched, but its a long track and the closest hit is not matched, add origin
-        /*else if(usedTrack[track.GetId()]==true && track.NHits()>=10){
-    
-            bool unmatchedClosestEdge = true;
-            for(SOrigin &ori:originList){
-                
-                bool originInTrack = false;
-                for(int j=0; j<ori.Multiplicity(); j++){
-                    if(ori.GetTrackEntry(j).GetId() == track.GetId())
-                        originInTrack = true;
-                }
-
-
-                if(originInTrack==true){
-                    float dClosest = std::hypot( 0.3*(edgePointClosest.X() - ori.GetPoint().X()), 0.075*(edgePointClosest.Y() - ori.GetPoint().Y()) );
-                    float dFarthest = std::hypot( 0.3*(edgePointFarthest.X() - ori.GetPoint().X()), 0.075*(edgePointFarthest.Y() - ori.GetPoint().Y()) );
-                    if(dFarthest>dClosest){
-                        unmatchedClosestEdge=false;
-                    }
-                }
-            }
-            if(unmatchedClosestEdge){
-                if(fTPCLinesVertexFinderPset.Verbose>=1) std::cout<<"  Adding new origin for closest edge "<<track.GetId()<<" at "<<edgePointClosest;
-                originList.push_back( SOrigin(edgePointClosest, {track}, true, track.GetAverageWidth()) );
-                usedTrack[track.GetId()]=true;
-            }
-        }*/
                
     }
 
@@ -1292,3 +1183,72 @@ std::vector<SOrigin> TPCLinesVertexFinder::GetAngleVertices(std::vector<SLinearC
     return originList;
 
 }
+
+
+
+
+
+
+
+
+
+
+
+// CHECK 4: Check how many hits of triangle tracks are contained in the main direction hypothesis
+    /*bool passAngleTracksNotInMain = true;
+    int nhits_track1_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track1.GetHits());
+    int nhits_track2_inMainDir = GetHitsContainedInLineEquation(MainDirection.GetTrackEquation(), track2.GetHits());
+    passAngleTracksNotInMain = (1.0 * nhits_track1_inMainDir / track1.NHits() < fTPCLinesVertexFinderPset.MaxTrackFractionInMain &&
+                                1.0 * nhits_track2_inMainDir / track2.NHits() < fTPCLinesVertexFinderPset.MaxTrackFractionInMain);
+
+    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
+        std::cout << " - - - Check 4: Hits contained in the main direction - - - \n";
+        std::cout << "NHits of track " << track1.GetId() << " in main direction: " << nhits_track1_inMainDir << std::endl;
+        std::cout << "NHits of track " << track2.GetId() << " in main direction: " << nhits_track2_inMainDir << std::endl;
+        std::cout << "Pass AngleTracksNotInMain: " << passAngleTracksNotInMain << std::endl;
+        std::cout << "  ** Pass: " << passAngleTracksNotInMain << std::endl;
+    }*/
+
+
+    // CHECK 5: Check that the triangle tracks' start/end are not next to the main track edge hits
+    /*bool passTriangleEdgesNotInMain = true;
+    double distanceBMainStart = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexB(), MainDirection.GetStartPoint());
+    double distanceBMainEnd = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexB(), MainDirection.GetEndPoint());
+    double distanceCMainStart = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexC(), MainDirection.GetStartPoint());
+    double distanceCMainEnd = TPCLinesDistanceUtils::GetHitDistance(Triangle.GetVertexC(), MainDirection.GetEndPoint());
+    double meanComp = MainDirection.GetCompactness();
+    double _tol = 1.0;
+
+    passTriangleEdgesNotInMain = distanceBMainStart > _tol * meanComp &&
+                                distanceBMainEnd > _tol * meanComp &&
+                                distanceCMainStart > _tol * meanComp &&
+                                distanceCMainEnd > _tol * meanComp;
+
+    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
+        std::cout << " - - - Check 5: Triangle tracks are not the main track edge hits - - - \n";
+        std::cout << "Triangle vertex BC: " << Triangle.GetVertexB().X() << " " << Triangle.GetVertexB().Y() << " " << Triangle.GetVertexC().X() << " " << Triangle.GetVertexC().Y()
+        std::cout << "MainDirectionEdgeHits: " << MainDirection.GetStartPoint().X() << " " << MainDirection.GetStartPoint().Y() << " " << MainDirection.GetEndPoint().X() << " " << MainDirection.GetEndPoint().Y() << std::endl;
+        std::cout << "MainDir compactness: " << meanComp << std::endl;
+        std::cout << "Distances B: " << distanceBMainStart << " " << distanceBMainEnd << std::endl;
+        std::cout << "Distances C: " << distanceCMainStart << " " << distanceCMainEnd << std::endl;
+        std::cout << "  ** Pass: " << passTriangleEdgesNotInMain << std::endl;
+    } */
+
+    /* // ------ CHECK 6: Check that the opening angle is not 0
+    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
+        std::cout << " - - - Check 6: Opening angle - - - \n";
+        std::cout << " Opening Angle " << Triangle.GetOpeningAngle() << "\n";
+    }
+    bool passOpeningAngle = Triangle.GetOpeningAngle() > 2 && Triangle.GetOpeningAngle() < 178;
+    if (fTPCLinesVertexFinderPset.Verbose >= 1) {
+        std::cout << "Pass? " << passOpeningAngle << std::endl;
+    }*/
+
+
+    /* //------- CHECK 7: Triangle goodness
+    double triangleMAE = Triangle.GetTriangleMAE();
+    std::cout<<"  TRIANGLE MAE "<<triangleMAE<<std::endl;
+    bool passTriangleGoodness = triangleMAE<fTPCLinesVertexFinderPset.MinTrackGoodness;
+    if(fTPCLinesVertexFinderPset.Verbose>=1){
+        std::cout<<" Pass triangle MAE? "<<passTriangleGoodness<<std::endl;
+    }*/

@@ -9,10 +9,10 @@ class CutStyler{
     public:
         CutStyler(bool batchMode):
             fBatchMode(batchMode),
-            fColors({kRed-3,  kAzure-5, kGreen+3, kOrange-3, kMagenta+1, kCyan- 3, kYellow+2, kViolet-1, kTeal-1,}),
+            fColors({kBlack, kRed-3,  kAzure-5, kGreen+3, kOrange-3, kMagenta+1, kCyan- 3, kYellow+2, kViolet-1, kTeal-1,}),
             //fColors({kRed+1, kBlue-4, kGreen+4, kOrange+5, kMagenta+2, kCyan+3, kYellow+2, kViolet-1, kTeal-1, kAzure-5}),
-            fLineStyle({1, 2, 9, 3, 6, 10, 7, 4, 5, 8}),
-            fMarkerStyle({20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30})
+            fLineStyle({0, 1, 2, 9, 3, 6, 10, 7, 4, 5, 8}),
+            fMarkerStyle({0, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30})
         {
             SetGStyle();
         }
@@ -49,13 +49,20 @@ void CutStyler::SetGStyle(){
   gStyle->SetMarkerSize(1.5);
   gStyle->SetLineColor(46);
   gStyle->SetLineWidth(1);
-  
+
+  gStyle->SetHistLineWidth(2);
+  gStyle->SetMarkerSize(1);
+
   // Draw horizontal and vertical grids
   //gStyle->SetPadGridX(kTRUE);                     
   //gStyle->SetPadGridY(kTRUE);
 
   // set left margin to 10%
   gStyle->SetPadLeftMargin(0.15);
+  gStyle->SetPadBottomMargin(0.1);
+
+  // N divisions
+  gStyle->SetNdivisions(505);
 
   //gStyle->SetOptLogy(1);
 }

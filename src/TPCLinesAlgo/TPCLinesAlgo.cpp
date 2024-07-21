@@ -31,8 +31,9 @@ TPCLinesAlgo::TPCLinesAlgo(TPCLinesAlgoPsetType tpcLinesAlgoPset, FRANSPsetType 
 {
 }
 
+
 // ---------------------------------------------------------------------
-// Overlap with APA
+// Check overlap with APA
 int TPCLinesAlgo::GetNOverlappedChannelsWithAPABadChannels(int ch1, int ch2){
     int nOverlappedChannels = 0;
     int minCh = std::min(ch1, ch2);
@@ -44,6 +45,7 @@ int TPCLinesAlgo::GetNOverlappedChannelsWithAPABadChannels(int ch1, int ch2){
 
     return nOverlappedChannels;
 }
+
 
 //----------------------------------------------------------------------
 // Display function
@@ -649,8 +651,10 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
                 trkIterCluster = fTPCLinesPset.MaxHoughTracks;
             }
 
-            // -- Call the track finfder otherwise
+            // -- Call the track finder otherwise
             else{
+
+                // -- Reconstruct the tracks from the Hough hits
                 std::vector<SLinearCluster> linearClusterV = fTrackFinder.ReconstructTracksFromHoughDirection(hitListForHough, houghLine.GetLineEquation(), trkIterCluster);
 
                 // -- check the found tracks has enough hits
@@ -683,7 +687,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
                 if (fTPCLinesPset.RemoveIsolatedHits) {
                     hitListForHough = RemoveIsolatedHits(hitListForHough, discardedHits, fTPCLinesPset.MaxNeighbourDistance, fTPCLinesPset.MinNeighboursHits);
                 }
-                
+
             }
 
             trkIterCluster++;
@@ -695,18 +699,19 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
 
     
     
-    // Slope track merger
+    // -- Slope track merger
     // sort by minX
     std::sort(finalLinearClusterV.begin(), finalLinearClusterV.end(), [&](SLinearCluster& l1, SLinearCluster& l2) {return l1.GetMinX() < l2.GetMinX();} );    
     finalLinearClusterV = TPCLinesDirectionUtils::SlopeTrackMerger(finalLinearClusterV, 2, 15, fTPCLinesPset.Verbose); 
 
-    // Characterize the tracks
+    // -- Characterize the tracks
     for(size_t ix = 0; ix<finalLinearClusterV.size(); ix++){
         finalLinearClusterV[ix].FillResidualHits(fTPCLinesPset.CustomKinkPoint);
         finalLinearClusterV[ix].AssignId(ix);
     }
+        
 
-    // ------ Get the short/vertex tracks and remove them
+    // -- Get the short/vertex tracks and remove them
     std::map<int, std::vector<int>> shortToLongTrackDict;
     std::map<int, int> shortConnectionTrackDict;
     std::vector<SLinearCluster> shortTrackList = TPCLinesDirectionUtils::GetVertexTracks(finalLinearClusterV, shortToLongTrackDict, shortConnectionTrackDict, 6, 3, 5, fTPCLinesPset.Verbose); 
@@ -758,7 +763,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
     
     if(finalLinearClusterV.size()>0){
         
-        // ------- Get the parallel tracks
+        // -- Get the parallel tracks
         std::vector<std::vector<SLinearCluster>> parallelTracks = TPCLinesDirectionUtils::GetParallelTracks(finalLinearClusterV, -2, 15, fTPCLinesPset.ParallelTracksMaxD, fTPCLinesPset.Verbose);
         NewTrackList.clear();
 
@@ -774,9 +779,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList.push_back( newTrack );    
         }
 
-
-
-        // Isolated hit merger
+        // -- Isolated hit merger
         std::vector<SHit> remainingHits;// = hitListForHough;
         remainingHits.insert(remainingHits.end(), discardedHits.begin(), discardedHits.end());
         discardedHits.clear();
@@ -787,8 +790,8 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             NewTrackList[ix].AssignId(ix);
         }
 
-        // --- Out of ROI hits merger ---
-        // Fill sliding window instersections
+        // -- Out of ROI hits merger
+        // Fill sliding window intersections
         for(SLinearCluster &trk:NewTrackList) trk.FillSlidingWindowLineEquations(10);
         
         std::vector<SHit> missingHits = discardedHits;
@@ -816,7 +819,7 @@ void TPCLinesAlgo::AnaView(std::string eventLabel)
             fDisplay.Show(true, "Reconstructed line clusters", fHitList, LineEquation(-1, -1), {}, NewTrackList);
         
 
-        //Find secondary vertices
+        // -- Find secondary vertices
         if(NewTrackList.size()>0){
             intersectionsInBall = fVertexFinder.GetAngleVertices(NewTrackList, fVertex.Point(), vertexList, associatedOrigins, mainDirection);
         }

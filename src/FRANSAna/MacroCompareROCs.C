@@ -63,7 +63,7 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
     }
 
 
-    TCanvas* c = new TCanvas("c", "ROC Comparison", 800, 600);
+    TCanvas* c = new TCanvas("c", "ROC Comparison", 800, 800);
     c->Divide(1,1);
 
     c->cd(1);
@@ -101,7 +101,7 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
         }
     }
 
-    TH2F hFrame("hFrame", ";Signal efficiency; BG rejection", 500, 0, 1, 500, 0, 1);
+    TH2F hFrame("hFrame", ";Signal efficiency; Background rejection", 500, 0, 1, 500, 0, 1);
     hFrame.SetStats(0);
     hFrame.Draw();
     hFrame.GetXaxis()->SetTitleOffset(1.2);
@@ -111,6 +111,8 @@ void CompareROCCurves(std::string path="./", std::string keyLabel="") {
 
     int rocCounter = 0;
     for (auto it = rocs.begin(); it != rocs.end(); ++it) {
+
+        std::cout<<it->first<<" "<<it->second->Integral()<<std::endl;
 
         rocs[it->first]->SetLineColor(colors.at(rocCounter));
         rocs[it->first]->SetLineStyle(lines.at(rocCounter));

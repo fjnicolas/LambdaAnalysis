@@ -28,9 +28,9 @@ void MacroComputeXSec()
     double fDecayBR = 0.642; // branching ratio
 
     // Event selection
-    int fNEvents = 23; // number of events
+    int fNEvents = 22; // number of events
     int fNBackground = 10; // number of background events
-    double fEfficiency = 0.07; // efficiency
+    double fEfficiency = 0.075; // efficiency
 
     // Cross section
     double fXSec = (fNEvents - fNBackground) / (fNTargets * fIntegratedFlux * fEfficiency * fDecayBR); // cm^2
